@@ -13,11 +13,12 @@ internals, per-service SDK shape) are out of scope for this workspace.
 | `@onenexus/sdk-core`      | Credential primitives (`AccessToken`, `Credentials`, `ClientContext`), `ClientBase`, Ky-based HTTP transport, custom mutator factory, RFC 9457 error mapping. |
 | `@onenexus/sdk-core/node` | Node-only subpath. Exports `WorkloadIdentityFileCredentials` (reads a runtime-mounted token file off disk).         |
 | `@onenexus/cas-client`    | Generated client for the Central Auth Service, built from `specs/cas/openapi.json` via `orval@8.10.0`.            |
+| `@onenexus/cas-support-client` | Generated client for the Central Auth Service support API, built from `specs/cas-support/openapi.json` via `orval@8.10.0`. |
 
 ## Prerequisites
 
-- Node.js ≥ 20
-- pnpm ≥ 9 (pinned via `packageManager` in `package.json` — corepack will install the right version automatically)
+- Node.js > 24.17
+- pnpm ≥ 11.7 (pinned via `packageManager` in `package.json`)
 
 ## Commands
 
@@ -47,7 +48,34 @@ header/claims while debugging CAS `invalid_client` responses.
 
 `pnpm package` is the single pre-release/local-consumption command. It regenerates
 all service clients from the committed OpenAPI specs, builds every package, runs
-the package tests, and writes local tarballs under `ts/.local-packages/`.
+the package tests, synchronizes package versions from `../VERSION`, and writes
+local tarballs under `ts/.local-packages/`.
+
+## Release packages
+
+TypeScript package versions are synchronized from the repository-level
+`../VERSION` file before packaging and publishing. When `VERSION` changes on the
+`main` branch, the SDK release workflow builds and tests the TypeScript packages,
+uploads the `.tgz` tarballs as a workflow artifact, attaches them to the GitHub
+release tagged `v<VERSION>`, and publishes the packages to GitHub Packages' npm
+registry.
+
+Consumers using GitHub Packages need an npm token that can read packages and a
+scope mapping for the OneNexus packages:
+
+```sh
+@onenexus:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN_OR_PAT}
+```
+
+Then install package versions normally:
+
+```sh
+pnpm add @onenexus/sdk-core@0.0.1 @onenexus/cas-client@0.0.1
+```
+
+The generated release also contains tarballs that can be installed directly from
+the GitHub release assets when registry consumption is not desired.
 
 ## Architecture
 

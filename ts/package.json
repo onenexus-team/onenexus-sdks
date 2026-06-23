@@ -9,7 +9,8 @@
         "pnpm": ">=11.7.0"
     },
     "scripts": {
-        "package": "pnpm -r --filter './packages/*-client' run generate && pnpm -r run build && pnpm -r run test && pnpm -r --filter './packages/*' exec pnpm pack --pack-destination ../../.local-packages"
+        "sync-version": "node ../scripts/sync-ts-package-versions.mjs",
+        "package": "pnpm run sync-version && pnpm -r --filter './packages/*-client' run generate && pnpm -r run build && pnpm -r run test && pnpm -r --filter './packages/*' exec pnpm pack --pack-destination ../../.local-packages"
     },
     "devDependencies": {
         "@aws-sdk/client-s3": "3.1068.0",

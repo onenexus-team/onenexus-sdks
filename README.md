@@ -141,13 +141,15 @@ can be overridden with `ONENEXUS_DOTNET_SDK_VERSION`, `ONENEXUS_NODE_VERSION`,
 ## Publishing SDK packages
 
 SDK package versions are specified by the repository-level `VERSION` file.
-Python packages use that file as their wheel metadata version. When `VERSION`
-changes on the `main` branch, the Python SDK Release workflow builds the Python
-wheels, uploads them as a workflow artifact, and attaches them to the GitHub
-release tagged `v<VERSION>`.
+Python packages use that file as their wheel metadata version, and TypeScript
+packages are synchronized to that version before packaging and publishing. When
+`VERSION` changes on the `main` branch, the SDK release workflow builds the
+Python wheels and TypeScript package tarballs, uploads them as workflow
+artifacts, attaches them to the GitHub release tagged `v<VERSION>`, and
+publishes the TypeScript SDK packages to GitHub Packages' npm registry.
 
-For local wheel builds and GitHub release asset install examples, see
-[`python/README.md`](python/README.md).
+For local builds and consumption examples, see [`python/README.md`](python/README.md)
+and [`ts/README.md`](ts/README.md).
 
 ## Credentials systems
 

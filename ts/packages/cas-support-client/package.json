@@ -1,7 +1,12 @@
 {
     "name": "@onenexus/cas-support-client",
-    "version": "0.1.0",
+    "version": "0.0.1",
     "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/onenexus-team/onenexus-sdks.git",
+        "directory": "ts/packages/cas-support-client"
+    },
     "exports": {
         ".": {
             "development": "./src/index.ts",
@@ -13,6 +18,7 @@
         "dist"
     ],
     "publishConfig": {
+        "registry": "https://npm.pkg.github.com",
         "exports": {
             ".": {
                 "types": "./dist/index.d.ts",
