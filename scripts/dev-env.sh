@@ -26,7 +26,7 @@ _onenexus_ensure_command() {
 
 _onenexus_node_version="${ONENEXUS_NODE_VERSION:-}"
 if [[ -z "$_onenexus_node_version" && -f "$_onenexus_dev_env_root/.node-version" ]]; then
-    IFS= read -r _onenexus_node_version < "$_onenexus_dev_env_root/.node-version"
+    _onenexus_node_version="$(tr -d '[:space:]' < "$_onenexus_dev_env_root/.node-version")"
 fi
 [[ -n "$_onenexus_node_version" ]] || _onenexus_abort "could not read Node.js version from .node-version"
 
