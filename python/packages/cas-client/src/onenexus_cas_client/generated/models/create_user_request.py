@@ -1,0 +1,51 @@
+from __future__ import annotations
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from kiota_abstractions.serialization import Parsable, ParseNode, SerializationWriter
+from typing import Any, Optional, TYPE_CHECKING, Union
+
+@dataclass
+class CreateUserRequest(Parsable):
+    # The clientToken property
+    client_token: Optional[str] = None
+    # The displayName property
+    display_name: Optional[str] = None
+    # The email property
+    email: Optional[str] = None
+    
+    @staticmethod
+    def create_from_discriminator_value(parse_node: ParseNode) -> CreateUserRequest:
+        """
+        Creates a new instance of the appropriate class based on discriminator value
+        param parse_node: The parse node to use to read the discriminator value and create the object
+        Returns: CreateUserRequest
+        """
+        if parse_node is None:
+            raise TypeError("parse_node cannot be null.")
+        return CreateUserRequest()
+    
+    def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
+        """
+        The deserialization information for the current model
+        Returns: dict[str, Callable[[ParseNode], None]]
+        """
+        fields: dict[str, Callable[[Any], None]] = {
+            "clientToken": lambda n : setattr(self, 'client_token', n.get_str_value()),
+            "displayName": lambda n : setattr(self, 'display_name', n.get_str_value()),
+            "email": lambda n : setattr(self, 'email', n.get_str_value()),
+        }
+        return fields
+    
+    def serialize(self,writer: SerializationWriter) -> None:
+        """
+        Serializes information the current object
+        param writer: Serialization writer to use to serialize this model
+        Returns: None
+        """
+        if writer is None:
+            raise TypeError("writer cannot be null.")
+        writer.write_str_value("clientToken", self.client_token)
+        writer.write_str_value("displayName", self.display_name)
+        writer.write_str_value("email", self.email)
+    
+

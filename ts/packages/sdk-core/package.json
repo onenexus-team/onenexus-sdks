@@ -1,0 +1,43 @@
+{
+    "name": "@onenexus/sdk-core",
+    "version": "0.1.0",
+    "type": "module",
+    "exports": {
+        ".": {
+            "development": "./src/index.ts",
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./node": {
+            "development": "./src/node/index.ts",
+            "types": "./dist/node/index.d.ts",
+            "import": "./dist/node/index.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "exports": {
+            ".": {
+                "types": "./dist/index.d.ts",
+                "import": "./dist/index.js"
+            },
+            "./node": {
+                "types": "./dist/node/index.d.ts",
+                "import": "./dist/node/index.js"
+            }
+        }
+    },
+    "scripts": {
+        "build": "tsup",
+        "typecheck": "tsc --noEmit",
+        "lint": "eslint .",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
+    "dependencies": {
+        "ky": "1.7.4",
+        "openid-client": "6.8.4"
+    }
+}

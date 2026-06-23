@@ -1,0 +1,31 @@
+{
+  "descriptionHash": "D16CBC0C0EB0070D1ECF8B0D49080B5A12D67235DEF6B32D09DDC90CDFBD6903E785522B0AE8C5F18F83F4974B7B1D1C473892BE7126E29467105F268694D245",
+  "descriptionLocation": "../../../../../../specs/cas/openapi.json",
+  "lockFileVersion": "1.0.0",
+  "kiotaVersion": "1.32.2",
+  "clientClassName": "CasGeneratedClient",
+  "typeAccessModifier": "Public",
+  "clientNamespaceName": "onenexus_cas_client.generated",
+  "language": "Python",
+  "usesBackingStore": false,
+  "excludeBackwardCompatible": true,
+  "includeAdditionalData": false,
+  "disableSSLValidation": false,
+  "serializers": [
+    "Microsoft.Kiota.Serialization.Json.JsonSerializationWriterFactory",
+    "Microsoft.Kiota.Serialization.Text.TextSerializationWriterFactory",
+    "Microsoft.Kiota.Serialization.Form.FormSerializationWriterFactory",
+    "Microsoft.Kiota.Serialization.Multipart.MultipartSerializationWriterFactory"
+  ],
+  "deserializers": [
+    "Microsoft.Kiota.Serialization.Json.JsonParseNodeFactory",
+    "Microsoft.Kiota.Serialization.Text.TextParseNodeFactory",
+    "Microsoft.Kiota.Serialization.Form.FormParseNodeFactory"
+  ],
+  "structuredMimeTypes": [
+    "application/json"
+  ],
+  "includePatterns": [],
+  "excludePatterns": [],
+  "disabledValidationRules": []
+}

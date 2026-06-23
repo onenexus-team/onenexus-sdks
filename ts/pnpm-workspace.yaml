@@ -1,0 +1,9 @@
+packages:
+    - 'packages/*'
+
+allowBuilds:
+    esbuild: true
+    msw: false
+
+saveExact: true
+strictPeerDependencies: true

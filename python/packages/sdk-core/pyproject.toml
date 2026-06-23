@@ -1,0 +1,50 @@
+[project]
+name = "onenexus-sdk-core"
+dynamic = ["version"]
+description = "Credential primitives and async HTTP transport shared by every OneNexus Python SDK."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "microsoft-kiota-abstractions>=1.10",
+    "microsoft-kiota-http>=1.9",
+    "pyjwt[crypto]>=2.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "cryptography>=43.0",
+    "mypy>=1.11",
+    "pytest>=8.2",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "../../../VERSION"
+pattern = "^(?P<version>.+)$"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/onenexus_sdk_core"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["onenexus_sdk_core"]
+mypy_path = "src"

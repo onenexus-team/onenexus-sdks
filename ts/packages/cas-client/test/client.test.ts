@@ -1,0 +1,344 @@
+import {
+    AlreadyExistsError,
+    InvalidArgumentError,
+    TokenGrantCredentials,
+    type AccessToken,
+    type ClientContext,
+    type Credentials,
+} from '@onenexus/sdk-core';
+import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+
+import { CasClient } from '../src/client.js';
+
+const BASE_URL = 'https://cas.test.invalid';
+
+function staticCreds(label = 'static'): Credentials {
+    return new TokenGrantCredentials({
+        token: {
+            accessToken: `at-${label}`,
+            tokenType: 'Bearer',
+            expiresAt: new Date('2030-01-01T00:00:00Z'),
+        },
+    });
+}
+
+const userResponse = (overrides?: { tenantId?: string; email?: string; displayName?: string }) => ({
+    user: {
+        userId: '0193fabc-1234-7def-abcd-1234567890ab',
+        tenantId: overrides?.tenantId ?? 'tn_acme',
+        email: overrides?.email ?? 'a@b.c',
+        displayName: overrides?.displayName ?? 'A B',
+        emailConfirmed: false,
+        createdAt: '2026-05-13T10:00:00Z',
+    },
+    acceptInvitationUrl: 'https://portal.acme.com/user/accept?token=abc',
+    acceptInvitationExpiresAt: '2026-05-20T10:00:00Z',
+});
+
+const server = setupServer();
+beforeAll(() => {
+    server.listen({ onUnhandledRequest: 'error' });
+});
+afterEach(() => {
+    server.resetHandlers();
+});
+afterAll(() => {
+    server.close();
+});
+
+describe('CasClient', () => {
+    describe('happy path', () => {
+        it('createUser POSTs to /api/CreateUser with the request body and Bearer auth, parses the response', async () => {
+            let observedBody: unknown;
+            let observedAuth: string | null = null;
+
+            server.use(
+                http.post(`${BASE_URL}/api/CreateUser`, async ({ request }) => {
+                    observedAuth = request.headers.get('authorization');
+                    observedBody = await request.json();
+                    return HttpResponse.json(userResponse());
+                }),
+            );
+
+            const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds('happy') });
+            const result = await cas.createUser({
+                email: 'a@b.c',
+                displayName: 'A B',
+                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+            });
+
+            expect(result.user.email).toBe('a@b.c');
+            expect(observedAuth).toBe('Bearer at-happy');
+            expect(observedBody).toEqual({
+                email: 'a@b.c',
+                displayName: 'A B',
+                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+            });
+        });
+
+        it('passes client-level refreshLeewayMs through ClientBase context', async () => {
+            server.use(
+                http.post(`${BASE_URL}/api/CreateUser`, () => HttpResponse.json(userResponse())),
+            );
+
+            const token: AccessToken = {
+                accessToken: 'at-soon-stale',
+                tokenType: 'Bearer',
+                expiresAt: new Date(Date.now() + 60_000),
+            };
+            const credentials = new TokenGrantCredentials({ token });
+            const cas = new CasClient({
+                baseUrl: BASE_URL,
+                credentials,
+                refreshLeewayMs: 120_000,
+            });
+
+            await expect(
+                cas.createUser({
+                    email: 'a@b.c',
+                    displayName: 'A B',
+                    clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                }),
+            ).rejects.toThrow(/stale/i);
+        });
+
+        it('acceptInvitation binds through the same transport', async () => {
+            server.use(
+                http.post(`${BASE_URL}/api/AcceptInvitation`, () =>
+                    HttpResponse.json({
+                        userId: '0193fabc-1234-7def-abcd-1234567890ab',
+                        tenantId: 'tn_acme',
+                        email: 'a@b.c',
+                        loginUrl: 'https://portal.acme.com/user/login?tenant=tn_acme',
+                    }),
+                ),
+            );
+
+            const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+
+            const user = await cas.acceptInvitation({
+                userId: '0193fabc-1234-7def-abcd-1234567890ab',
+                token: 'invite-token-abc',
+                password: 'a-good-password',
+                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+            });
+            expect(user.email).toBe('a@b.c');
+            expect(user.loginUrl).toContain('tn_acme');
+        });
+    });
+
+    describe('error mapping', () => {
+        it('translates a 409 with already_exists into AlreadyExistsError', async () => {
+            server.use(
+                http.post(`${BASE_URL}/api/CreateUser`, () =>
+                    HttpResponse.json(
+                        {
+                            type: 'https://docs.onenexus.vn/errors/already-exists',
+                            title: 'User already exists',
+                            status: 409,
+                            detail: "User 'a@b.c' already exists.",
+                            instance: '/api/CreateUser',
+                            code: 'already_exists',
+                            requestId: 'trace-conflict',
+                        },
+                        { status: 409, headers: { 'content-type': 'application/problem+json' } },
+                    ),
+                ),
+            );
+
+            const cas = new CasClient({
+                baseUrl: BASE_URL,
+                credentials: staticCreds(),
+                retry: { limit: 0 },
+            });
+
+            const promise = cas.createUser({
+                email: 'a@b.c',
+                displayName: 'A B',
+                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+            });
+
+            await expect(promise).rejects.toBeInstanceOf(AlreadyExistsError);
+            await promise.catch((error: unknown) => {
+                const e = error as AlreadyExistsError;
+                expect(e.code).toBe('already_exists');
+                expect(e.requestId).toBe('trace-conflict');
+                expect(e.detail).toBe("User 'a@b.c' already exists.");
+            });
+        });
+
+        it('translates a 400 with field errors into InvalidArgumentError with fieldErrors populated', async () => {
+            server.use(
+                http.post(`${BASE_URL}/api/CreateUser`, () =>
+                    HttpResponse.json(
+                        {
+                            code: 'invalid_argument',
+                            status: 400,
+                            detail: 'See errors for per-field details.',
+                            errors: { email: ['Required.'], displayName: ['Required.'] },
+                        },
+                        { status: 400, headers: { 'content-type': 'application/problem+json' } },
+                    ),
+                ),
+            );
+
+            const cas = new CasClient({
+                baseUrl: BASE_URL,
+                credentials: staticCreds(),
+                retry: { limit: 0 },
+            });
+
+            const promise = cas.createUser({
+                email: '',
+                displayName: '',
+                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+            });
+
+            await expect(promise).rejects.toBeInstanceOf(InvalidArgumentError);
+            await promise.catch((error: unknown) => {
+                const e = error as InvalidArgumentError;
+                expect(e.fieldErrors).toEqual({
+                    email: ['Required.'],
+                    displayName: ['Required.'],
+                });
+            });
+        });
+    });
+
+    describe('401 retry with server-clock update', () => {
+        it('end-to-end through CasClient: first 401 records server time; retry resolves fresh token and succeeds', async () => {
+            const stale: AccessToken = {
+                accessToken: 'at-stale',
+                tokenType: 'Bearer',
+                expiresAt: new Date('2030-01-01T00:00:00Z'),
+            };
+            const fresh: AccessToken = { ...stale, accessToken: 'at-fresh' };
+            const cutoff = Date.now() + 60_000;
+
+            const credentials: Credentials = {
+                resolve: vi.fn((context: ClientContext) =>
+                    Promise.resolve(context.clock.serverNow() >= cutoff ? fresh : stale),
+                ),
+            };
+
+            const observedAuth: string[] = [];
+            let serverCallCount = 0;
+
+            server.use(
+                http.post(`${BASE_URL}/api/CreateUser`, ({ request }) => {
+                    observedAuth.push(request.headers.get('authorization') ?? '');
+                    serverCallCount += 1;
+                    if (serverCallCount === 1) {
+                        return HttpResponse.json(
+                            { code: 'unauthenticated', detail: 'token expired' },
+                            {
+                                status: 401,
+                                headers: {
+                                    'content-type': 'application/problem+json',
+                                    date: new Date(cutoff + 1_000).toUTCString(),
+                                },
+                            },
+                        );
+                    }
+                    return HttpResponse.json(userResponse());
+                }),
+            );
+
+            const cas = new CasClient({ baseUrl: BASE_URL, credentials });
+            const result = await cas.createUser({
+                email: 'a@b.c',
+                displayName: 'A B',
+                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+            });
+
+            expect(result.user.email).toBe('a@b.c');
+            expect(observedAuth).toEqual(['Bearer at-stale', 'Bearer at-fresh']);
+            expect(credentials.resolve).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe('cancellation', () => {
+        it('aborts an in-flight request when the caller-supplied signal fires', async () => {
+            let serverResolved = false;
+            server.use(
+                http.post(`${BASE_URL}/api/CreateUser`, async () => {
+                    await new Promise((r) => setTimeout(r, 250));
+                    serverResolved = true;
+                    return HttpResponse.json(userResponse());
+                }),
+            );
+
+            const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            const controller = new AbortController();
+            setTimeout(() => controller.abort(), 10);
+
+            await expect(
+                cas.createUser(
+                    {
+                        email: 'a@b.c',
+                        displayName: 'A B',
+                        clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                    },
+                    { signal: controller.signal },
+                ),
+            ).rejects.toBeDefined();
+            expect(serverResolved).toBe(false);
+        });
+    });
+
+    describe('instance isolation', () => {
+        it('two clients with different credentials do not share auth state', async () => {
+            const observed: string[] = [];
+
+            server.use(
+                http.post(`${BASE_URL}/api/CreateUser`, ({ request }) => {
+                    observed.push(request.headers.get('authorization') ?? '');
+                    return HttpResponse.json(userResponse());
+                }),
+            );
+
+            const casA = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds('userA') });
+            const casB = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds('userB') });
+
+            // Issue concurrently to ensure no module-level state can leak
+            // between them under race conditions.
+            await Promise.all([
+                casA.createUser({
+                    email: 'a@a.c',
+                    displayName: 'A',
+                    clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                }),
+                casB.createUser({
+                    email: 'b@b.c',
+                    displayName: 'B',
+                    clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK3',
+                }),
+            ]);
+
+            expect(observed).toHaveLength(2);
+            expect(new Set(observed)).toEqual(new Set(['Bearer at-userA', 'Bearer at-userB']));
+        });
+    });
+
+    describe('method binding ergonomics', () => {
+        it('methods are auto-bound — destructuring keeps `this`', async () => {
+            server.use(
+                http.post(`${BASE_URL}/api/CreateUser`, () =>
+                    HttpResponse.json(userResponse({ email: 'x@x.c', displayName: 'X' })),
+                ),
+            );
+
+            const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            const { createUser } = cas;
+
+            const result = await createUser({
+                email: 'x@x.c',
+                displayName: 'X',
+                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+            });
+            expect(result.user.email).toBe('x@x.c');
+        });
+    });
+});

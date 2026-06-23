@@ -1,0 +1,805 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "OneNexus Central Auth Service — Customer API",
+    "description": "Customer-facing JSON RPC operations under `/api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/connect/.well-known/openid-configuration`.",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "https://cas.onenexus.local/"
+    }
+  ],
+  "paths": {
+    "/api/CreateUser": {
+      "post": {
+        "tags": ["TenantUser"],
+        "operationId": "CreateUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/AcceptInvitation": {
+      "post": {
+        "tags": ["TenantUser"],
+        "operationId": "AcceptInvitation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptInvitationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ListS3Roles": {
+      "post": {
+        "tags": ["TenantS3"],
+        "operationId": "ListS3Roles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyS3Request"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyS3Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListS3RolesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/AssumeS3Role": {
+      "post": {
+        "tags": ["TenantS3"],
+        "operationId": "AssumeS3Role",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssumeS3RoleRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssumeS3RoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssumeS3RoleResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ListServiceClients": {
+      "post": {
+        "tags": ["TenantServiceClient"],
+        "operationId": "ListServiceClients",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyServiceClientRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyServiceClientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListServiceClientsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/CreateServiceClient": {
+      "post": {
+        "tags": ["TenantServiceClient"],
+        "operationId": "CreateServiceClient",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServiceClientRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServiceClientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateServiceClientResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/AddServiceClientKey": {
+      "post": {
+        "tags": ["TenantServiceClient"],
+        "operationId": "AddServiceClientKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddServiceClientKeyRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddServiceClientKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddServiceClientKeyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EmptyS3Request": {
+        "type": "object",
+        "properties": {}
+      },
+      "S3RoleDto": {
+        "required": ["name", "arn"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "arn": {
+            "type": "string"
+          },
+          "id": {
+            "type": ["null", "string"]
+          },
+          "path": {
+            "type": ["null", "string"]
+          },
+          "trustPolicy": {
+            "type": ["null", "string"]
+          },
+          "permissionPolicies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/S3RolePolicyDto"
+            }
+          }
+        }
+      },
+      "S3RolePolicyDto": {
+        "required": ["name", "document"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "document": {
+            "type": "string"
+          }
+        }
+      },
+      "ListS3RolesResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/S3RoleDto"
+            }
+          }
+        }
+      },
+      "AssumeS3RoleRequest": {
+        "required": ["roleName"],
+        "type": "object",
+        "properties": {
+          "roleName": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "AssumeS3RoleResponse": {
+        "required": ["accessKeyId", "secretAccessKey", "sessionToken", "expiration"],
+        "type": "object",
+        "properties": {
+          "accessKeyId": {
+            "type": "string"
+          },
+          "secretAccessKey": {
+            "type": "string"
+          },
+          "sessionToken": {
+            "type": "string"
+          },
+          "expiration": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EmptyServiceClientRequest": {
+        "type": "object",
+        "properties": {}
+      },
+      "ServiceClientKeyDto": {
+        "required": ["kid", "kty", "publicJwk"],
+        "type": "object",
+        "properties": {
+          "kid": {
+            "type": "string"
+          },
+          "kty": {
+            "type": "string"
+          },
+          "alg": {
+            "type": ["null", "string"]
+          },
+          "crv": {
+            "type": ["null", "string"]
+          },
+          "publicJwk": {
+            "type": "string"
+          }
+        }
+      },
+      "ServiceClientDto": {
+        "required": ["id", "clientId", "displayName"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceClientKeyDto"
+            }
+          }
+        }
+      },
+      "ListServiceClientsResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceClientDto"
+            }
+          }
+        }
+      },
+      "CreateServiceClientRequest": {
+        "required": ["displayName", "publicJwk"],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "publicJwk": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "CreateServiceClientResponse": {
+        "required": ["serviceClient"],
+        "type": "object",
+        "properties": {
+          "serviceClient": {
+            "$ref": "#/components/schemas/ServiceClientDto"
+          }
+        }
+      },
+      "AddServiceClientKeyRequest": {
+        "required": ["serviceClientId", "publicJwk"],
+        "type": "object",
+        "properties": {
+          "serviceClientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "publicJwk": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "AddServiceClientKeyResponse": {
+        "required": ["serviceClient"],
+        "type": "object",
+        "properties": {
+          "serviceClient": {
+            "$ref": "#/components/schemas/ServiceClientDto"
+          }
+        }
+      },
+      "AcceptInvitationRequest": {
+        "required": ["userId", "token", "password", "clientToken"],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "type": "string"
+          },
+          "clientToken": {
+            "maxLength": 128,
+            "minLength": 16,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string"
+          }
+        }
+      },
+      "AcceptInvitationResponse": {
+        "required": ["userId", "tenantId", "email", "loginUrl"],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "loginUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "required": ["email", "displayName", "clientToken"],
+        "type": "object",
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "minLength": 3,
+            "type": "string"
+          },
+          "displayName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "clientToken": {
+            "maxLength": 128,
+            "minLength": 16,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string"
+          }
+        }
+      },
+      "CreateUserResponse": {
+        "required": [
+          "user",
+          "acceptInvitationUrl",
+          "acceptInvitationExpiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "acceptInvitationUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "acceptInvitationExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": ["null", "string"]
+          },
+          "title": {
+            "type": ["null", "string"]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": ["null", "integer", "string"],
+            "format": "int32"
+          },
+          "detail": {
+            "type": ["null", "string"]
+          },
+          "instance": {
+            "type": ["null", "string"]
+          }
+        }
+      },
+      "UserDto": {
+        "required": [
+          "userId",
+          "tenantId",
+          "email",
+          "displayName",
+          "emailConfirmed",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "emailConfirmed": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": ["null", "string"]
+          },
+          "title": {
+            "type": ["null", "string"]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": ["null", "integer", "string"],
+            "format": "int32"
+          },
+          "detail": {
+            "type": ["null", "string"]
+          },
+          "instance": {
+            "type": ["null", "string"]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "TenantUser"
+    },
+    {
+      "name": "TenantS3"
+    }
+  ]
+}

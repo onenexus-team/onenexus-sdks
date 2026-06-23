@@ -1,0 +1,80 @@
+name: Python SDK Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - VERSION
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release-python-wheels:
+    name: Build and release Python wheels
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Read release version
+        id: version
+        shell: bash
+        run: |
+          version="$(tr -d '[:space:]' < VERSION)"
+          if [[ -z "$version" ]]; then
+            echo "VERSION must not be empty" >&2
+            exit 1
+          fi
+          if [[ ! "$version" =~ ^[0-9]+(\.[0-9]+)*([a-zA-Z0-9.+_-]+)?$ ]]; then
+            echo "VERSION does not look like a Python package version: $version" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Bootstrap repository toolchain
+        shell: bash
+        run: |
+          source scripts/dev-env.sh
+          dotnet --version
+          uv --version
+
+      - name: Test Python packages
+        shell: bash
+        working-directory: python
+        run: |
+          source ../scripts/dev-env.sh
+          uv sync --all-extras
+          uv run pytest
+
+      - name: Build Python wheels
+        shell: bash
+        run: |
+          source scripts/dev-env.sh
+          bash scripts/build-python-wheels.sh .artifacts/python-wheels
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheels-${{ steps.version.outputs.version }}
+          path: .artifacts/python-wheels/*.whl
+          if-no-files-found: error
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" .artifacts/python-wheels/*.whl --clobber
+          else
+            gh release create "$RELEASE_TAG" .artifacts/python-wheels/*.whl \
+              --title "OneNexus SDKs $RELEASE_VERSION" \
+              --notes "Python SDK wheels built from VERSION $RELEASE_VERSION."
+          fi
