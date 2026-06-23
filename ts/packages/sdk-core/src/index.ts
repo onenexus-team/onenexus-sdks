@@ -1,5 +1,5 @@
 /**
- * `@onenexus/sdk-core` — credential primitives and HTTP transport shared by
+ * `@onenexus-team/sdk-core` — credential primitives and HTTP transport shared by
  * every service-specific SDK package.
  *
  * The credential object system is documented in the repository `README.md`.

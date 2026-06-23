@@ -56,13 +56,13 @@ importers:
 
   packages/cas-client:
     dependencies:
-      '@onenexus/sdk-core':
+      '@onenexus-team/sdk-core':
         specifier: workspace:^
         version: link:../sdk-core
 
   packages/cas-support-client:
     dependencies:
-      '@onenexus/sdk-core':
+      '@onenexus-team/sdk-core':
         specifier: workspace:^
         version: link:../sdk-core
 

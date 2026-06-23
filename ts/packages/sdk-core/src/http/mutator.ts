@@ -85,7 +85,7 @@ export const platformMutator = async <T>(
 ): Promise<T> => {
     if (options?.http === undefined) {
         throw new Error(
-            '@onenexus/sdk-core: platformMutator requires options.http. ' +
+            '@onenexus-team/sdk-core: platformMutator requires options.http. ' +
                 'Ensure the service-client class passes its ClientBase transport via ' +
                 'the second argument of every generated operation.',
         );

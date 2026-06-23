@@ -5,7 +5,7 @@ import {
     type AccessToken,
     type ClientContext,
     type Credentials,
-} from '@onenexus/sdk-core';
+} from '@onenexus-team/sdk-core';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';

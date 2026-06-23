@@ -68,7 +68,7 @@ export interface WorkloadIdentityFileCredentialsConfig {
  * access token until shortly before expiry; concurrent `resolve()` calls during
  * a refresh share one in-flight request (single-flight).
  *
- * **Node-only.** Lives under the `@onenexus/sdk-core/node` subpath because the
+ * **Node-only.** Lives under the `@onenexus-team/sdk-core/node` subpath because the
  * token mount is a Node filesystem read. Browser bundles cannot include this;
  * importing this subpath in a browser build errors on `node:fs/promises`.
  *

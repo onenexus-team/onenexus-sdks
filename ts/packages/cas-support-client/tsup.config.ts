@@ -11,7 +11,7 @@ export default defineConfig({
     treeshake: true,
     splitting: false,
     // Workspace peer. Don't bundle it into cas-support-client's dist —
-    // consumers install `@onenexus/sdk-core` separately so credential
+    // consumers install `@onenexus-team/sdk-core` separately so credential
     // primitives and the mutator code live in exactly one place at runtime.
-    external: ['@onenexus/sdk-core'],
+    external: ['@onenexus-team/sdk-core'],
 });

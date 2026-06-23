@@ -11,6 +11,7 @@ on:
 permissions:
   contents: write
   packages: write
+  id-token: write
 
 jobs:
   release-python-wheels:
@@ -135,7 +136,7 @@ jobs:
           cd ts
           npmrc="${RUNNER_TEMP:-$PWD}/onenexus-npmrc"
           cat > "$npmrc" <<EOF
-          @onenexus:registry=https://npm.pkg.github.com
+          @onenexus-team:registry=https://npm.pkg.github.com
           //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
           always-auth=true
           EOF

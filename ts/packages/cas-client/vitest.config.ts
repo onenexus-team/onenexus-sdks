@@ -6,7 +6,7 @@ export default defineConfig({
     // resolution and would otherwise pick the `import` condition → `dist/`
     // (not built yet during tests). Listing `development` first here mirrors
     // tsc's behaviour so cas-client tests resolve sibling workspace packages
-    // (notably `@onenexus/sdk-core`) directly from source.
+    // (notably `@onenexus-team/sdk-core`) directly from source.
     resolve: {
         conditions: ['development', 'import', 'module', 'node', 'default'],
     },

@@ -1,5 +1,5 @@
 /**
- * `@onenexus/cas-client` — typed client for the Central Auth Service.
+ * `@onenexus-team/cas-client` — typed client for the Central Auth Service.
  *
  * Generated from `specs/cas/openapi.json` via orval; consumed via the
  * hand-written {@link CasClient} class which extends `ClientBase` and threads
@@ -7,7 +7,7 @@
  *
  * Credential primitives, the HTTP transport (`createKy`), and the typed
  * error hierarchy (`PlatformError` and subclasses) live in
- * `@onenexus/sdk-core`. Import from there directly when you need them.
+ * `@onenexus-team/sdk-core`. Import from there directly when you need them.
  */
 
 export { CasClient, type CasClientConfig, type CasRequestOptions } from './client.js';

@@ -1,4 +1,4 @@
-import { ClientBase, type ClientBaseConfig } from '@onenexus/sdk-core';
+import { ClientBase, type ClientBaseConfig } from '@onenexus-team/sdk-core';
 
 import type {
     AddTenantUserRequest,
@@ -59,9 +59,9 @@ export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * surface.
  *
  * This is the support-team operations surface — distinct from the regular CAS
- * client (`@onenexus/cas-client`, `/api/*`). It is generated from a separate
+ * client (`@onenexus-team/cas-client`, `/api/*`). It is generated from a separate
  * OpenAPI spec (`specs/cas-support/openapi.json`) and shares the same
- * transport, credential, and error primitives from `@onenexus/sdk-core`.
+ * transport, credential, and error primitives from `@onenexus-team/sdk-core`.
  *
  * Each method is a thin binding around an orval-generated function: the client
  * inherits {@link ClientBase}'s Ky transport, credentials, retry policy, and
@@ -77,8 +77,8 @@ export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  *
  * @example
  * ```ts
- * import { CasSupportClient } from '@onenexus/cas-support-client';
- * import { TokenGrantCredentials } from '@onenexus/sdk-core';
+ * import { CasSupportClient } from '@onenexus-team/cas-support-client';
+ * import { TokenGrantCredentials } from '@onenexus-team/sdk-core';
  *
  * const support = new CasSupportClient({
  *     baseUrl: 'https://cas.acme.com',

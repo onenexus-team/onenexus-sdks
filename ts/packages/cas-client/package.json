@@ -1,6 +1,6 @@
 {
-    "name": "@onenexus/cas-client",
-    "version": "0.0.1",
+    "name": "@onenexus-team/cas-client",
+    "version": "0.0.2",
     "type": "module",
     "repository": {
         "type": "git",
@@ -34,6 +34,6 @@
         "generate": "orval --config ./orval.config.ts"
     },
     "dependencies": {
-        "@onenexus/sdk-core": "workspace:^"
+        "@onenexus-team/sdk-core": "workspace:^"
     }
 }

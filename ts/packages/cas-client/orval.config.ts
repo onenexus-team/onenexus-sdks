@@ -1,7 +1,7 @@
 import { defineConfig } from 'orval';
 
 /**
- * Orval configuration for `@onenexus/cas-client`.
+ * Orval configuration for `@onenexus-team/cas-client`.
  *
  * - `input.target` points at the OpenAPI spec under `specs/cas/`.
  *   Path is resolved relative to this config file.
@@ -16,7 +16,7 @@ import { defineConfig } from 'orval';
  *   Ky instance through as `{ http: KyInstance }`. The `CasClient` grouped
  *   API adapters bind that option once per group, so consumers never pass it.
  * - The `mutator.path` is service-local; it points at `./src/mutator.ts`
- *   which re-exports `platformMutator` from `@onenexus/sdk-core`. orval
+ *   which re-exports `platformMutator` from `@onenexus-team/sdk-core`. orval
  *   bakes that path into the generated `import` statements.
  */
 export default defineConfig({

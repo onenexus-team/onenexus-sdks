@@ -10,10 +10,10 @@ internals, per-service SDK shape) are out of scope for this workspace.
 
 | Package                   | Description                                                                                                               |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `@onenexus/sdk-core`      | Credential primitives (`AccessToken`, `Credentials`, `ClientContext`), `ClientBase`, Ky-based HTTP transport, custom mutator factory, RFC 9457 error mapping. |
-| `@onenexus/sdk-core/node` | Node-only subpath. Exports `WorkloadIdentityFileCredentials` (reads a runtime-mounted token file off disk).         |
-| `@onenexus/cas-client`    | Generated client for the Central Auth Service, built from `specs/cas/openapi.json` via `orval@8.10.0`.            |
-| `@onenexus/cas-support-client` | Generated client for the Central Auth Service support API, built from `specs/cas-support/openapi.json` via `orval@8.10.0`. |
+| `@onenexus-team/sdk-core`      | Credential primitives (`AccessToken`, `Credentials`, `ClientContext`), `ClientBase`, Ky-based HTTP transport, custom mutator factory, RFC 9457 error mapping. |
+| `@onenexus-team/sdk-core/node` | Node-only subpath. Exports `WorkloadIdentityFileCredentials` (reads a runtime-mounted token file off disk).         |
+| `@onenexus-team/cas-client`    | Generated client for the Central Auth Service, built from `specs/cas/openapi.json` via `orval@8.10.0`.            |
+| `@onenexus-team/cas-support-client` | Generated client for the Central Auth Service support API, built from `specs/cas-support/openapi.json` via `orval@8.10.0`. |
 
 ## Prerequisites
 
@@ -64,14 +64,14 @@ Consumers using GitHub Packages need an npm token that can read packages and a
 scope mapping for the OneNexus packages:
 
 ```sh
-@onenexus:registry=https://npm.pkg.github.com
+@onenexus-team:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN_OR_PAT}
 ```
 
 Then install package versions normally:
 
 ```sh
-pnpm add @onenexus/sdk-core@0.0.1 @onenexus/cas-client@0.0.1
+pnpm add @onenexus-team/sdk-core@0.0.1 @onenexus-team/cas-client@0.0.1
 ```
 
 The generated release also contains tarballs that can be installed directly from
@@ -83,14 +83,14 @@ Three layers, separated by package boundary:
 
 ```mermaid
 flowchart LR
-    subgraph cas["@onenexus/cas-client"]
+    subgraph cas["@onenexus-team/cas-client"]
         direction LR
         client["CasClient<br/>(hand-written wrapper)"]
         gen["src/generated/<br/>(orval — schemas + operations)"]
         client -- wraps --> gen
     end
 
-    subgraph core["@onenexus/sdk-core"]
+    subgraph core["@onenexus-team/sdk-core"]
         coreNode["Credentials interface + concrete types<br/>(TokenGrantCredentials, PrivateKeyJwtCredentials,<br/>KubernetesSACredentials, …)<br/><br/>ClientBase(baseUrl, credentials, context?, retry, timeout)<br/>— owns ClientContext + Ky transport<br/><br/>createKy(baseUrl, credentials, context, retry, timeout)<br/>— pre-wires beforeRequest auth +<br/>afterResponse server clock observation<br/><br/>platformMutator(config, options)<br/>— orval-facing entry point; dispatches via<br/>options.http, parses Problem Details<br/><br/>PlatformError + 9 subclasses<br/>(keyed by RFC 9457 'code')"]
     end
 
@@ -150,7 +150,7 @@ packages/<service>-client/
 
 ```jsonc
 {
-    "name": "@onenexus/<service>-client",
+    "name": "@onenexus-team/<service>-client",
     "version": "0.0.0",
     "private": true,
     "type": "module",
@@ -170,7 +170,7 @@ packages/<service>-client/
         "generate": "orval --config ./orval.config.ts",
     },
     "dependencies": {
-        "@onenexus/sdk-core": "workspace:^",
+        "@onenexus-team/sdk-core": "workspace:^",
     },
 }
 ```
@@ -183,7 +183,7 @@ tsc/vitest read sources without a build step — paired with
 ### 4. Write `src/mutator.ts` as a wrapper _function_
 
 Orval's `mutator.path` parser only recognises locally-declared `function` exports.
-A bare `export { x } from '@onenexus/sdk-core'` or a `const` alias is silently
+A bare `export { x } from '@onenexus-team/sdk-core'` or a `const` alias is silently
 dropped, producing the misleading error
 `Your mutator file doesn't have the platformMutator exported function`.
 
@@ -194,7 +194,7 @@ import {
     platformMutator as _platformMutator,
     type PlatformMutatorOptions,
     type PlatformMutatorRequestConfig,
-} from '@onenexus/sdk-core';
+} from '@onenexus-team/sdk-core';
 
 export async function platformMutator<T>(
     config: PlatformMutatorRequestConfig,
@@ -204,7 +204,7 @@ export async function platformMutator<T>(
 }
 ```
 
-Pure pass-through; the real implementation stays in `@onenexus/sdk-core`.
+Pure pass-through; the real implementation stays in `@onenexus-team/sdk-core`.
 
 ### 5. Configure orval
 
@@ -237,7 +237,7 @@ slot for the per-call `{ http }` mutator options we need to thread through.
 
 ### 6. Configure tsup, tsconfig, vitest
 
-**`tsup.config.ts`** — externalize `@onenexus/sdk-core` so it isn't bundled
+**`tsup.config.ts`** — externalize `@onenexus-team/sdk-core` so it isn't bundled
 into the service-client's dist:
 
 ```ts
@@ -253,7 +253,7 @@ export default defineConfig({
     sourcemap: true,
     treeshake: true,
     splitting: false,
-    external: ['@onenexus/sdk-core'],
+    external: ['@onenexus-team/sdk-core'],
 });
 ```
 
@@ -289,14 +289,14 @@ export default defineConfig({
 });
 ```
 
-Without this, vitest tries to resolve `@onenexus/sdk-core` to `dist/index.js`,
+Without this, vitest tries to resolve `@onenexus-team/sdk-core` to `dist/index.js`,
 which may not exist or be stale. With it, vitest reads from source.
 
 ### 7. Run codegen
 
 ```sh
 pnpm install                                   # picks up the new package
-pnpm --filter @onenexus/<service>-client run generate
+pnpm --filter @onenexus-team/<service>-client run generate
 ```
 
 The generated files land under `src/generated/`. **Commit them.** The root-level
@@ -309,7 +309,7 @@ Hand-written client class binding the generated operations. See
 `packages/cas-client/src/client.ts` for the template. The shape:
 
 ```ts
-import { ClientBase, type ClientBaseConfig, type PlatformMutatorOptions } from '@onenexus/sdk-core';
+import { ClientBase, type ClientBaseConfig, type PlatformMutatorOptions } from '@onenexus-team/sdk-core';
 import { getXxx } from './generated/xxx/xxx.js';
 import type { /* schema types */ } from './generated/schemas/index.js';
 
@@ -393,7 +393,7 @@ bare `export { x } from 'pkg'` or `const` alias produces a misleading
 "doesn't have the … exported function" error.
 
 **Why the `"development"` export condition?** Lets `tsc`, `tsup`, and `vitest`
-read `@onenexus/sdk-core` (and future workspace packages) directly from source
+read `@onenexus-team/sdk-core` (and future workspace packages) directly from source
 during development. No build-before-typecheck dance, no stale `dist/`. Set in
 three places:
 
@@ -405,20 +405,20 @@ External consumers (after `pnpm pack` / publish) don't have `customConditions`
 set, so they fall through to `types` + `import` and get the built `dist/` —
 correct behaviour.
 
-**Why `external: ['@onenexus/sdk-core']` in tsup?** Don't bundle the workspace
+**Why `external: ['@onenexus-team/sdk-core']` in tsup?** Don't bundle the workspace
 peer into the service-client's `dist`. Consumers install both packages
 separately; auth and HTTP code lives in exactly one place at runtime.
 
 **Why is `WorkloadIdentityFileCredentials` on a `/node` subpath?** It's the
 only credential that reads from `node:fs/promises` (the runtime-mounted identity
-token file). Putting it behind `@onenexus/sdk-core/node` means SPA bundles
+token file). Putting it behind `@onenexus-team/sdk-core/node` means SPA bundles
 can't accidentally include it; every other credential works in both runtimes
 via Web Crypto.
 
 ## Status
 
-- `@onenexus/sdk-core` owns the credential primitives, `ClientBase`, Ky
+- `@onenexus-team/sdk-core` owns the credential primitives, `ClientBase`, Ky
     transport, mutator, and Problem Details error mapping.
-- `@onenexus/cas-client` and `@onenexus/cas-support-client` extend `ClientBase`
+- `@onenexus-team/cas-client` and `@onenexus-team/cas-support-client` extend `ClientBase`
     and bind generated operations to the shared mutator.
 - Token exchange is not currently exported as an SDK credential type.

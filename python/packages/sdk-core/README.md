@@ -1,7 +1,7 @@
 # `onenexus-sdk-core`
 
 Credential primitives and the async HTTP transport shared by every OneNexus
-Python SDK. The Python counterpart of `@onenexus/sdk-core`.
+Python SDK. The Python counterpart of `@onenexus-team/sdk-core`.
 
 The language-agnostic credential design is documented in
 [`../../../README.md`](../../../README.md).

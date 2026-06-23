@@ -1,4 +1,4 @@
-import { ClientBase, type ClientBaseConfig } from '@onenexus/sdk-core';
+import { ClientBase, type ClientBaseConfig } from '@onenexus-team/sdk-core';
 
 import type {
     AcceptInvitationRequest,
@@ -47,7 +47,7 @@ export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  *
  * This is the customer-facing user surface (`CreateUser`, `AcceptInvitation`).
  * Tenant-management and support operations live in a separate spec and are
- * served by `@onenexus/cas-support-client` (`/support-api/*`).
+ * served by `@onenexus-team/cas-support-client` (`/support-api/*`).
  *
  * Each method is a thin binding around an orval-generated function: the client
  * inherits {@link ClientBase}'s Ky transport, credentials, retry policy, and
@@ -64,8 +64,8 @@ export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  *
  * @example
  * ```ts
- * import { CasClient } from '@onenexus/cas-client';
- * import { TokenGrantCredentials } from '@onenexus/sdk-core';
+ * import { CasClient } from '@onenexus-team/cas-client';
+ * import { TokenGrantCredentials } from '@onenexus-team/sdk-core';
  *
  * const cas = new CasClient({
  *     baseUrl: 'https://cas.acme.com',

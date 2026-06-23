@@ -1,7 +1,7 @@
 # `onenexus-cas-client`
 
 Typed async client for the OneNexus Central Auth Service Customer API (`/api/*`),
-the Python counterpart of `@onenexus/cas-client`.
+the Python counterpart of `@onenexus-team/cas-client`.
 
 - `CasClient` (hand-written, in `client.py`) is the flat facade.
 - `generated/` holds the committed Microsoft Kiota output produced from

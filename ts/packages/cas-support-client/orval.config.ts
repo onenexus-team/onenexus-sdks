@@ -1,9 +1,9 @@
 import { defineConfig } from 'orval';
 
 /**
- * Orval configuration for `@onenexus/cas-support-client`.
+ * Orval configuration for `@onenexus-team/cas-support-client`.
  *
- * Mirrors `@onenexus/cas-client`'s setup — the only differences are the input
+ * Mirrors `@onenexus-team/cas-client`'s setup — the only differences are the input
  * spec and the generated output filename. See cas-client's `orval.config.ts`
  * for the full rationale behind each option.
  *
@@ -16,7 +16,7 @@ import { defineConfig } from 'orval';
  *   the mutator as `mutator(config, options)`; `CasSupportClient` binds the
  *   per-call `{ http: KyInstance }` option once per group.
  * - `mutator.path` is service-local and re-exports `platformMutator` from
- *   `@onenexus/sdk-core`.
+ *   `@onenexus-team/sdk-core`.
  */
 export default defineConfig({
     'cas-support': {

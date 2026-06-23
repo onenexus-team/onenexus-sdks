@@ -1,5 +1,5 @@
 /**
- * Local wrapper around `@onenexus/sdk-core`'s `platformMutator`.
+ * Local wrapper around `@onenexus-team/sdk-core`'s `platformMutator`.
  *
  * The wrapper exists so orval's `mutator.path` parser can detect the export.
  * orval's parser only recognises a locally-declared `function platformMutator`
@@ -9,7 +9,7 @@
  *
  * Behaviour-wise this is a pure pass-through; the actual implementation
  * (auth header injection, RFC 9457 error parsing, Ky transport) lives in
- * `@onenexus/sdk-core`.
+ * `@onenexus-team/sdk-core`.
  *
  * `CasSupportClient` receives mutator options from `ClientBase`; generated
  * operations receive those options through their second argument.
@@ -18,7 +18,7 @@ import {
     platformMutator as _platformMutator,
     type PlatformMutatorOptions as CorePlatformMutatorOptions,
     type PlatformMutatorRequestConfig,
-} from '@onenexus/sdk-core';
+} from '@onenexus-team/sdk-core';
 
 export type PlatformMutatorOptions = CorePlatformMutatorOptions;
 

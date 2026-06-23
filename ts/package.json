@@ -1,5 +1,5 @@
 {
-    "name": "@onenexus/sdk-ts-workspace",
+    "name": "@onenexus-team/sdk-ts-workspace",
     "version": "0.0.0",
     "private": true,
     "type": "module",

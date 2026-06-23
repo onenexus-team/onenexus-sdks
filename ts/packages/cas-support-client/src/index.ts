@@ -1,5 +1,5 @@
 /**
- * `@onenexus/cas-support-client` — typed client for the Central Auth Service
+ * `@onenexus-team/cas-support-client` — typed client for the Central Auth Service
  * Support API (`/support-api/*`).
  *
  * Generated from `specs/cas-support/openapi.json` via orval; consumed via
@@ -7,10 +7,10 @@
  * and threads its transport through to the orval-generated functions on every
  * call.
  *
- * This is a distinct API surface from `@onenexus/cas-client` (the regular CAS
+ * This is a distinct API surface from `@onenexus-team/cas-client` (the regular CAS
  * `/api/*` RPCs). Credential primitives, the HTTP transport (`createKy`), and
  * the typed error hierarchy (`PlatformError` and subclasses) live in
- * `@onenexus/sdk-core`. Import from there directly when you need them.
+ * `@onenexus-team/sdk-core`. Import from there directly when you need them.
  */
 
 export {
