@@ -133,10 +133,14 @@ jobs:
         run: |
           source scripts/dev-env.sh
           cd ts
-          cat > .npmrc <<'EOF'
+          npmrc="${RUNNER_TEMP:-$PWD}/onenexus-npmrc"
+          cat > "$npmrc" <<EOF
           @onenexus:registry=https://npm.pkg.github.com
           //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          always-auth=true
           EOF
+          chmod 600 "$npmrc"
+          export NPM_CONFIG_USERCONFIG="$npmrc"
 
           for package_dir in packages/sdk-core packages/cas-client packages/cas-support-client; do
             package_name="$(node -p "require('./${package_dir}/package.json').name")"
