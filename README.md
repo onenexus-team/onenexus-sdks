@@ -1,5 +1,35 @@
 # OneNexus SDKs
 
+## Install packages from GitHub Packages
+
+TypeScript SDK packages are published to the OneNexus GitHub Packages npm
+registry. To install them from a consuming application, configure npm for the
+`@onenexus-team` scope before running your package manager.
+
+Add your GitHub personal access token and scope mapping to your home `.npmrc`
+(`~/.npmrc`):
+
+```ini
+@onenexus-team:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=<YOUR_GITHUB_PAT>
+always-auth=true
+```
+
+Use a personal access token with `read:packages` access; if the package or
+repository is private, the token may also need repository read access. Do not
+commit token values to source control.
+
+Then install the packages normally:
+
+```sh
+pnpm add @onenexus-team/sdk-core @onenexus-team/cas-client
+pnpm add @onenexus-team/cas-support-client
+```
+
+Python SDK packages are distributed as wheel assets on GitHub releases rather
+than through the npm registry. See [`python/README.md`](python/README.md) for
+the direct wheel URL format.
+
 This repository contains the client SDKs that apps use to call OneNexus platform services.
 
 ## Client convention & generation
