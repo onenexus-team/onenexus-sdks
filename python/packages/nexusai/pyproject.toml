@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nexusai"
+version = "0.0.3"
+description = "NexusAI MLOps SDK and CLI"
+requires-python = ">=3.11"
+dependencies = [
+    "boto3>=1.34",
+    "PyJWT[crypto]>=2.8",
+    "onenexus-sdk-core @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v0.0.2/onenexus_sdk_core-0.0.2-py3-none-any.whl",
+    "onenexus-cas-client @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v0.0.2/onenexus_cas_client-0.0.2-py3-none-any.whl",
+]
+
+[project.scripts]
+nexusai = "nexusai.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nexusai*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
