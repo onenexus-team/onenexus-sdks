@@ -11,8 +11,13 @@ if TYPE_CHECKING:
     from .assume_s3_role.assume_s3_role_request_builder import AssumeS3RoleRequestBuilder
     from .create_service_client.create_service_client_request_builder import CreateServiceClientRequestBuilder
     from .create_user.create_user_request_builder import CreateUserRequestBuilder
+    from .delete_policy.delete_policy_request_builder import DeletePolicyRequestBuilder
+    from .get_policy.get_policy_request_builder import GetPolicyRequestBuilder
+    from .list_policies.list_policies_request_builder import ListPoliciesRequestBuilder
     from .list_s3_roles.list_s3_roles_request_builder import ListS3RolesRequestBuilder
     from .list_service_clients.list_service_clients_request_builder import ListServiceClientsRequestBuilder
+    from .publish_policy.publish_policy_request_builder import PublishPolicyRequestBuilder
+    from .update_policy.update_policy_request_builder import UpdatePolicyRequestBuilder
 
 class ApiRequestBuilder(BaseRequestBuilder):
     """
@@ -73,6 +78,33 @@ class ApiRequestBuilder(BaseRequestBuilder):
         return CreateUserRequestBuilder(self.request_adapter, self.path_parameters)
     
     @property
+    def delete_policy(self) -> DeletePolicyRequestBuilder:
+        """
+        The DeletePolicy property
+        """
+        from .delete_policy.delete_policy_request_builder import DeletePolicyRequestBuilder
+
+        return DeletePolicyRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def get_policy(self) -> GetPolicyRequestBuilder:
+        """
+        The GetPolicy property
+        """
+        from .get_policy.get_policy_request_builder import GetPolicyRequestBuilder
+
+        return GetPolicyRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def list_policies(self) -> ListPoliciesRequestBuilder:
+        """
+        The ListPolicies property
+        """
+        from .list_policies.list_policies_request_builder import ListPoliciesRequestBuilder
+
+        return ListPoliciesRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
     def list_s3_roles(self) -> ListS3RolesRequestBuilder:
         """
         The ListS3Roles property
@@ -89,5 +121,23 @@ class ApiRequestBuilder(BaseRequestBuilder):
         from .list_service_clients.list_service_clients_request_builder import ListServiceClientsRequestBuilder
 
         return ListServiceClientsRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def publish_policy(self) -> PublishPolicyRequestBuilder:
+        """
+        The PublishPolicy property
+        """
+        from .publish_policy.publish_policy_request_builder import PublishPolicyRequestBuilder
+
+        return PublishPolicyRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def update_policy(self) -> UpdatePolicyRequestBuilder:
+        """
+        The UpdatePolicy property
+        """
+        from .update_policy.update_policy_request_builder import UpdatePolicyRequestBuilder
+
+        return UpdatePolicyRequestBuilder(self.request_adapter, self.path_parameters)
     
 

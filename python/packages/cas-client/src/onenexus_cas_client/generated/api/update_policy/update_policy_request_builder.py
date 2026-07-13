@@ -14,28 +14,28 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from warnings import warn
 
 if TYPE_CHECKING:
-    from ...models.create_service_client_request import CreateServiceClientRequest
-    from ...models.create_service_client_response import CreateServiceClientResponse
     from ...models.problem_details import ProblemDetails
+    from ...models.update_policy_request import UpdatePolicyRequest
+    from ...models.update_policy_response import UpdatePolicyResponse
 
-class CreateServiceClientRequestBuilder(BaseRequestBuilder):
+class UpdatePolicyRequestBuilder(BaseRequestBuilder):
     """
-    Builds and executes requests for operations under /api/CreateServiceClient
+    Builds and executes requests for operations under /api/UpdatePolicy
     """
     def __init__(self,request_adapter: RequestAdapter, path_parameters: Union[str, dict[str, Any]]) -> None:
         """
-        Instantiates a new CreateServiceClientRequestBuilder and sets the default values.
+        Instantiates a new UpdatePolicyRequestBuilder and sets the default values.
         param path_parameters: The raw url or the url-template parameters for the request.
         param request_adapter: The request adapter to use to execute the requests.
         Returns: None
         """
-        super().__init__(request_adapter, "{+baseurl}/api/CreateServiceClient", path_parameters)
+        super().__init__(request_adapter, "{+baseurl}/api/UpdatePolicy", path_parameters)
     
-    async def post(self,body: CreateServiceClientRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[CreateServiceClientResponse]:
+    async def post(self,body: UpdatePolicyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[UpdatePolicyResponse]:
         """
         param body: The request body
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
-        Returns: Optional[CreateServiceClientResponse]
+        Returns: Optional[UpdatePolicyResponse]
         """
         if body is None:
             raise TypeError("body cannot be null.")
@@ -47,14 +47,17 @@ class CreateServiceClientRequestBuilder(BaseRequestBuilder):
         error_mapping: dict[str, type[ParsableFactory]] = {
             "400": ProblemDetails,
             "401": ProblemDetails,
+            "403": ProblemDetails,
+            "409": ProblemDetails,
+            "503": ProblemDetails,
         }
         if not self.request_adapter:
             raise Exception("Http core is null") 
-        from ...models.create_service_client_response import CreateServiceClientResponse
+        from ...models.update_policy_response import UpdatePolicyResponse
 
-        return await self.request_adapter.send_async(request_info, CreateServiceClientResponse, error_mapping)
+        return await self.request_adapter.send_async(request_info, UpdatePolicyResponse, error_mapping)
     
-    def to_post_request_information(self,body: CreateServiceClientRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
+    def to_post_request_information(self,body: UpdatePolicyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
         param body: The request body
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
@@ -68,18 +71,18 @@ class CreateServiceClientRequestBuilder(BaseRequestBuilder):
         request_info.set_content_from_parsable(self.request_adapter, "application/json", body)
         return request_info
     
-    def with_url(self,raw_url: str) -> CreateServiceClientRequestBuilder:
+    def with_url(self,raw_url: str) -> UpdatePolicyRequestBuilder:
         """
         Returns a request builder with the provided arbitrary URL. Using this method means any other path or query parameters are ignored.
         param raw_url: The raw URL to use for the request builder.
-        Returns: CreateServiceClientRequestBuilder
+        Returns: UpdatePolicyRequestBuilder
         """
         if raw_url is None:
             raise TypeError("raw_url cannot be null.")
-        return CreateServiceClientRequestBuilder(self.request_adapter, raw_url)
+        return UpdatePolicyRequestBuilder(self.request_adapter, raw_url)
     
     @dataclass
-    class CreateServiceClientRequestBuilderPostRequestConfiguration(RequestConfiguration[QueryParameters]):
+    class UpdatePolicyRequestBuilderPostRequestConfiguration(RequestConfiguration[QueryParameters]):
         """
         Configuration for the request such as headers, query parameters, and middleware options.
         """

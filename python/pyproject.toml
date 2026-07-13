@@ -32,3 +32,9 @@ strict = true
 [[tool.mypy.overrides]]
 module = ["onenexus_cas_client.generated.*"]
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+# boto3/botocore do not ship type information. This is the sole bridge
+# boundary that imports them, so preserve strict checks elsewhere.
+module = ["onenexus_boto3.credentials"]
+disable_error_code = ["import-untyped"]

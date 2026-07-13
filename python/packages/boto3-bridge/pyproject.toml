@@ -49,5 +49,5 @@ mypy_path = "src"
 
 # boto3/botocore ship no type information; treat them as untyped at the seam.
 [[tool.mypy.overrides]]
-module = ["boto3.*", "botocore.*"]
-ignore_missing_imports = true
+module = ["onenexus_boto3.credentials"]
+disable_error_code = ["import-untyped"]

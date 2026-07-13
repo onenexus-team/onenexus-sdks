@@ -4,10 +4,16 @@ from __future__ import annotations
 
 import urllib.parse
 from datetime import UTC, datetime, timedelta
+from typing import Literal, TypeAlias
 
 import httpx
 
 from onenexus_sdk_core import AccessToken, ClientContext
+
+QueuedTokenResponse: TypeAlias = (
+    tuple[Literal["ok"], dict[str, object]]
+    | tuple[Literal["err"], tuple[int, str, str | None]]
+)
 
 
 class MockOidc:
@@ -21,7 +27,7 @@ class MockOidc:
         self.issuer = issuer
         self.token_endpoint = f"{issuer}/token"
         self.token_requests: list[dict[str, str]] = []
-        self._queue: list[tuple[str, object]] = []
+        self._queue: list[QueuedTokenResponse] = []
 
     def queue_token(self, **payload: object) -> None:
         self._queue.append(("ok", payload))
@@ -44,11 +50,10 @@ class MockOidc:
             self.token_requests.append(form)
             if not self._queue:
                 return httpx.Response(500, json={"error": "no_queued_response"})
-            kind, data = self._queue.pop(0)
-            if kind == "ok":
-                assert isinstance(data, dict)
-                return httpx.Response(200, json={"token_type": "Bearer", **data})
-            status, error, description = data  # type: ignore[misc]
+            response = self._queue.pop(0)
+            if response[0] == "ok":
+                return httpx.Response(200, json={"token_type": "Bearer", **response[1]})
+            status, error, description = response[1]
             body = {"error": error}
             if description is not None:
                 body["error_description"] = description

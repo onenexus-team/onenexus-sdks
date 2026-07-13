@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from ...models.add_service_client_key_request import AddServiceClientKeyRequest
     from ...models.add_service_client_key_response import AddServiceClientKeyResponse
     from ...models.problem_details import ProblemDetails
-    from ...models.validation_problem_details import ValidationProblemDetails
 
 class AddServiceClientKeyRequestBuilder(BaseRequestBuilder):
     """
@@ -44,10 +43,9 @@ class AddServiceClientKeyRequestBuilder(BaseRequestBuilder):
             body, request_configuration
         )
         from ...models.problem_details import ProblemDetails
-        from ...models.validation_problem_details import ValidationProblemDetails
 
         error_mapping: dict[str, type[ParsableFactory]] = {
-            "400": ValidationProblemDetails,
+            "400": ProblemDetails,
             "401": ProblemDetails,
             "404": ProblemDetails,
             "409": ProblemDetails,
