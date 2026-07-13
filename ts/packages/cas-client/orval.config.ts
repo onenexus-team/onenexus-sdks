@@ -7,6 +7,8 @@ import { defineConfig } from 'orval';
  *   Path is resolved relative to this config file.
  * - `mode: 'tags-split'` produces one generated module per OpenAPI tag
  *   (TenantUser, …) under `src/generated/`.
+ * - `clean: true` removes generated files for operations that no longer exist
+ *   in the spec before writing the current contract.
  * - `baseUrl: ''` keeps URLs path-relative; the runtime base URL is
  *   supplied by `CasClient` via Ky's `prefixUrl` inside the mutator.
  * - `client: 'axios'` picks the axios-shaped generator: every generated
@@ -28,6 +30,7 @@ export default defineConfig({
             mode: 'tags-split',
             target: './src/generated/cas.ts',
             schemas: './src/generated/schemas',
+            clean: true,
             client: 'axios',
             baseUrl: '',
             override: {

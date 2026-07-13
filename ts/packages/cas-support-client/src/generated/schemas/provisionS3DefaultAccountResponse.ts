@@ -10,5 +10,5 @@ import type { S3RootUserDto } from './s3RootUserDto';
 
 export interface ProvisionS3DefaultAccountResponse {
   account: S3AccountDto;
-  rootUser?: S3RootUserDto;
+  rootUser?: null | S3RootUserDto;
 }

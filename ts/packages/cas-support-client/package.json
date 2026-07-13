@@ -1,6 +1,6 @@
 {
     "name": "@onenexus-team/cas-support-client",
-    "version": "0.0.2",
+    "version": "0.0.5",
     "type": "module",
     "repository": {
         "type": "git",

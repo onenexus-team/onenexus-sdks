@@ -127,6 +127,111 @@ describe('CasClient', () => {
             expect(user.email).toBe('a@b.c');
             expect(user.loginUrl).toContain('tn_acme');
         });
+
+        it('binds authorization policy methods to their generated RPC operations', async () => {
+            const observedBodies = new Map<string, unknown>();
+            const summary = {
+                id: '0193fabc-1234-7def-abcd-1234567890ab',
+                policyId: 'policy-read-only',
+                name: 'Read-only',
+                status: 1,
+                documentHash: 'sha256:abc',
+                stateToken: 'state-1',
+            };
+
+            server.use(
+                http.post(`${BASE_URL}/api/PublishPolicy`, async ({ request }) => {
+                    observedBodies.set('publish', await request.json());
+                    return HttpResponse.json({
+                        disposition: 1,
+                        reasonCode: 'published',
+                        diagnostics: [],
+                        stateToken: 'state-1',
+                    });
+                }),
+                http.post(`${BASE_URL}/api/ListPolicies`, async ({ request }) => {
+                    observedBodies.set('list', await request.json());
+                    return HttpResponse.json({ items: [summary] });
+                }),
+                http.post(`${BASE_URL}/api/GetPolicy`, async ({ request }) => {
+                    observedBodies.set('get', await request.json());
+                    return HttpResponse.json({
+                        policy: {
+                            ...summary,
+                            document: { Version: '2012-10-17' },
+                            roleIds: ['role-read-only'],
+                            createdBy: 'user-1',
+                            updatedBy: 'user-1',
+                        },
+                    });
+                }),
+                http.post(`${BASE_URL}/api/UpdatePolicy`, async ({ request }) => {
+                    observedBodies.set('update', await request.json());
+                    return HttpResponse.json({
+                        disposition: 1,
+                        reasonCode: 'updated',
+                        diagnostics: [],
+                        stateToken: 'state-2',
+                    });
+                }),
+                http.post(`${BASE_URL}/api/DeletePolicy`, async ({ request }) => {
+                    observedBodies.set('delete', await request.json());
+                    return HttpResponse.json({ policyId: 'policy-read-only' });
+                }),
+            );
+
+            const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            const publishRequest = {
+                requestId: 'request-1',
+                policyId: 'policy-read-only',
+                name: 'Read-only',
+                document: { Version: '2012-10-17' },
+                roleIds: ['role-read-only'],
+            };
+
+            const published = await cas.publishPolicy(publishRequest);
+            const listed = await cas.listPolicies({ limit: 25, after: 'policy-previous' });
+            const fetched = await cas.getPolicy({ policyId: 'policy-read-only' });
+            const updated = await cas.updatePolicy({
+                ...publishRequest,
+                requestId: 'request-2',
+                expectedStateToken: 'state-1',
+            });
+            const deleted = await cas.deletePolicy({
+                requestId: 'request-3',
+                policyId: 'policy-read-only',
+                expectedStateToken: 'state-2',
+            });
+
+            expect(published.stateToken).toBe('state-1');
+            expect(listed.items).toEqual([summary]);
+            expect(fetched.policy.roleIds).toEqual(['role-read-only']);
+            expect(updated.stateToken).toBe('state-2');
+            expect(deleted.policyId).toBe('policy-read-only');
+            expect(observedBodies).toEqual(
+                new Map([
+                    ['publish', publishRequest],
+                    ['list', { limit: 25, after: 'policy-previous' }],
+                    ['get', { policyId: 'policy-read-only' }],
+                    [
+                        'update',
+                        {
+                            ...publishRequest,
+                            requestId: 'request-2',
+                            expectedStateToken: 'state-1',
+                        },
+                    ],
+                    [
+                        'delete',
+                        {
+                            requestId: 'request-3',
+                            policyId: 'policy-read-only',
+                            expectedStateToken: 'state-2',
+                        },
+                    ],
+                ]),
+            );
+        });
     });
 
     describe('error mapping', () => {

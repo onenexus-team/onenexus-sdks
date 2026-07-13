@@ -9,20 +9,14 @@ import type {
     DescribeTenantResponse,
     EmptyS3Request,
     ListS3AccountsResponse,
-    ListS3OidcProvidersResponse,
     ListTenantsRequest,
     ListTenantsResponse,
     ListTenantUsersRequest,
     ListTenantUsersResponse,
     ProvisionS3DefaultAccountResponse,
-    RegisterS3OidcProviderRequest,
     S3DefaultAccountResponse,
-    S3OidcProviderDto,
-    S3OidcProviderRequest,
-    S3OperationResponse,
-    UpdateS3OidcProviderThumbprintsRequest,
 } from './generated/schemas/index.js';
-import { getS3Administration } from './generated/s3-administration/s3-administration.js';
+import { getCephS3 } from './generated/ceph-s3/ceph-s3.js';
 import { getTenant } from './generated/tenant/tenant.js';
 import type { PlatformMutatorOptions } from './mutator.js';
 
@@ -100,12 +94,12 @@ export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  */
 export class CasSupportClient extends ClientBase {
     private readonly tenant: ReturnType<typeof getTenant>;
-    private readonly s3: ReturnType<typeof getS3Administration>;
+    private readonly cephS3: ReturnType<typeof getCephS3>;
 
     constructor(config: CasSupportClientConfig) {
         super(config);
         this.tenant = getTenant();
-        this.s3 = getS3Administration();
+        this.cephS3 = getCephS3();
     }
 
     // -- Tenant management ---------------------------------------------------
@@ -140,41 +134,13 @@ export class CasSupportClient extends ClientBase {
     // -- Ceph S3 administration ---------------------------------------------
 
     getS3DefaultAccount = (options?: CasSupportRequestOptions): Promise<S3DefaultAccountResponse> =>
-        this.s3.getS3DefaultAccount(EMPTY_S3_REQUEST, this.mutatorOptions(options));
+        this.cephS3.getS3DefaultAccount(EMPTY_S3_REQUEST, this.mutatorOptions(options));
 
     provisionS3DefaultAccount = (
         options?: CasSupportRequestOptions,
     ): Promise<ProvisionS3DefaultAccountResponse> =>
-        this.s3.provisionS3DefaultAccount(EMPTY_S3_REQUEST, this.mutatorOptions(options));
+        this.cephS3.provisionS3DefaultAccount(EMPTY_S3_REQUEST, this.mutatorOptions(options));
 
     listS3Accounts = (options?: CasSupportRequestOptions): Promise<ListS3AccountsResponse> =>
-        this.s3.listS3Accounts(EMPTY_S3_REQUEST, this.mutatorOptions(options));
-
-    listS3OidcProviders = (
-        options?: CasSupportRequestOptions,
-    ): Promise<ListS3OidcProvidersResponse> =>
-        this.s3.listS3OidcProviders(EMPTY_S3_REQUEST, this.mutatorOptions(options));
-
-    getS3OidcProvider = (
-        req: S3OidcProviderRequest,
-        options?: CasSupportRequestOptions,
-    ): Promise<S3OidcProviderDto> => this.s3.getS3OidcProvider(req, this.mutatorOptions(options));
-
-    registerS3OidcProvider = (
-        req: RegisterS3OidcProviderRequest,
-        options?: CasSupportRequestOptions,
-    ): Promise<S3OidcProviderDto> =>
-        this.s3.registerS3OidcProvider(req, this.mutatorOptions(options));
-
-    updateS3OidcProviderThumbprints = (
-        req: UpdateS3OidcProviderThumbprintsRequest,
-        options?: CasSupportRequestOptions,
-    ): Promise<S3OidcProviderDto> =>
-        this.s3.updateS3OidcProviderThumbprints(req, this.mutatorOptions(options));
-
-    deleteS3OidcProvider = (
-        req: S3OidcProviderRequest,
-        options?: CasSupportRequestOptions,
-    ): Promise<S3OperationResponse> =>
-        this.s3.deleteS3OidcProvider(req, this.mutatorOptions(options));
+        this.cephS3.listS3Accounts(EMPTY_S3_REQUEST, this.mutatorOptions(options));
 }

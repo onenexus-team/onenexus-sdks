@@ -11,6 +11,151 @@
     }
   ],
   "paths": {
+    "/support-api/GetS3DefaultAccount": {
+      "post": {
+        "tags": [
+          "CephS3"
+        ],
+        "operationId": "GetS3DefaultAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyS3Request"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyS3Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/S3DefaultAccountResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support-api/ProvisionS3DefaultAccount": {
+      "post": {
+        "tags": [
+          "CephS3"
+        ],
+        "operationId": "ProvisionS3DefaultAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyS3Request"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyS3Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvisionS3DefaultAccountResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support-api/ListS3Accounts": {
+      "post": {
+        "tags": [
+          "CephS3"
+        ],
+        "operationId": "ListS3Accounts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyS3Request"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyS3Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListS3AccountsResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/support-api/CreateTenant": {
       "post": {
         "tags": [
@@ -275,673 +420,10 @@
           }
         }
       }
-    },
-    "/support-api/GetS3DefaultAccount": {
-      "post": {
-        "tags": [
-          "S3Administration"
-        ],
-        "operationId": "GetS3DefaultAccount",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmptyS3Request"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmptyS3Request"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/S3DefaultAccountResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/support-api/ProvisionS3DefaultAccount": {
-      "post": {
-        "tags": [
-          "S3Administration"
-        ],
-        "operationId": "ProvisionS3DefaultAccount",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmptyS3Request"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmptyS3Request"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProvisionS3DefaultAccountResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/support-api/ListS3Accounts": {
-      "post": {
-        "tags": [
-          "S3Administration"
-        ],
-        "operationId": "ListS3Accounts",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmptyS3Request"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmptyS3Request"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListS3AccountsResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/support-api/ListS3OidcProviders": {
-      "post": {
-        "tags": [
-          "S3Administration"
-        ],
-        "operationId": "ListS3OidcProviders",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmptyS3Request"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmptyS3Request"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListS3OidcProvidersResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/support-api/GetS3OidcProvider": {
-      "post": {
-        "tags": [
-          "S3Administration"
-        ],
-        "operationId": "GetS3OidcProvider",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/S3OidcProviderRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/S3OidcProviderRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/S3OidcProviderDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/support-api/RegisterS3OidcProvider": {
-      "post": {
-        "tags": [
-          "S3Administration"
-        ],
-        "operationId": "RegisterS3OidcProvider",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterS3OidcProviderRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterS3OidcProviderRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/S3OidcProviderDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/support-api/UpdateS3OidcProviderThumbprints": {
-      "post": {
-        "tags": [
-          "S3Administration"
-        ],
-        "operationId": "UpdateS3OidcProviderThumbprints",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateS3OidcProviderThumbprintsRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateS3OidcProviderThumbprintsRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/S3OidcProviderDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/support-api/DeleteS3OidcProvider": {
-      "post": {
-        "tags": [
-          "S3Administration"
-        ],
-        "operationId": "DeleteS3OidcProvider",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/S3OidcProviderRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/S3OidcProviderRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/S3OperationResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
-      "EmptyS3Request": {
-        "type": "object",
-        "properties": {}
-      },
-      "S3AccountDto": {
-        "required": [
-          "id"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "tenant": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "email": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "S3AccessKeyDto": {
-        "required": [
-          "accessKeyId"
-        ],
-        "type": "object",
-        "properties": {
-          "accessKeyId": {
-            "type": "string"
-          },
-          "secretAccessKey": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "userName": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "S3RootUserDto": {
-        "required": [
-          "userId"
-        ],
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string"
-          },
-          "keys": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/S3AccessKeyDto"
-            }
-          }
-        }
-      },
-      "S3OidcProviderDto": {
-        "required": [
-          "arn"
-        ],
-        "type": "object",
-        "properties": {
-          "arn": {
-            "type": "string"
-          }
-        }
-      },
-      "S3DefaultAccountResponse": {
-        "required": [
-          "name",
-          "rootUserId"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "rootUserId": {
-            "type": "string"
-          },
-          "account": {
-            "$ref": "#/components/schemas/S3AccountDto"
-          }
-        }
-      },
-      "ProvisionS3DefaultAccountResponse": {
-        "required": [
-          "account"
-        ],
-        "type": "object",
-        "properties": {
-          "account": {
-            "$ref": "#/components/schemas/S3AccountDto"
-          },
-          "rootUser": {
-            "$ref": "#/components/schemas/S3RootUserDto"
-          }
-        }
-      },
-      "ListS3AccountsResponse": {
-        "required": [
-          "items"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/S3AccountDto"
-            }
-          }
-        }
-      },
-      "ListS3OidcProvidersResponse": {
-        "required": [
-          "items"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/S3OidcProviderDto"
-            }
-          }
-        }
-      },
-      "S3OidcProviderRequest": {
-        "required": [
-          "providerArn"
-        ],
-        "type": "object",
-        "properties": {
-          "providerArn": {
-            "maxLength": 512,
-            "minLength": 1,
-            "type": "string"
-          }
-        }
-      },
-      "RegisterS3OidcProviderRequest": {
-        "required": [
-          "url",
-          "clientIds"
-        ],
-        "type": "object",
-        "properties": {
-          "url": {
-            "maxLength": 512,
-            "minLength": 1,
-            "type": "string",
-            "format": "uri"
-          },
-          "clientIds": {
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "thumbprints": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "UpdateS3OidcProviderThumbprintsRequest": {
-        "required": [
-          "providerArn",
-          "thumbprints"
-        ],
-        "type": "object",
-        "properties": {
-          "providerArn": {
-            "maxLength": 512,
-            "minLength": 1,
-            "type": "string"
-          },
-          "thumbprints": {
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "S3OperationResponse": {
-        "required": [
-          "ok"
-        ],
-        "type": "object",
-        "properties": {
-          "ok": {
-            "type": "boolean"
-          }
-        }
-      },
       "AddTenantUserRequest": {
         "required": [
           "name",
@@ -1056,6 +538,77 @@
           }
         }
       },
+      "EmptyS3Request": {
+        "type": "object"
+      },
+      "ListS3AccountsResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/S3AccountDto"
+            }
+          }
+        }
+      },
+      "ListTenantsRequest": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "maximum": 200,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "after": {
+            "maxLength": 36,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "before": {
+            "maxLength": 36,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ListTenantsResponse": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TenantSummary"
+            }
+          },
+          "before": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "after": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ListTenantUsersRequest": {
         "required": [
           "tenantId"
@@ -1120,63 +673,6 @@
           }
         }
       },
-      "ListTenantsRequest": {
-        "type": "object",
-        "properties": {
-          "limit": {
-            "maximum": 200,
-            "minimum": 1,
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "after": {
-            "maxLength": 36,
-            "minLength": 0,
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "before": {
-            "maxLength": 36,
-            "minLength": 0,
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "ListTenantsResponse": {
-        "required": [
-          "items"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TenantSummary"
-            }
-          },
-          "before": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "after": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -1212,6 +708,127 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ProvisionS3DefaultAccountResponse": {
+        "required": [
+          "account"
+        ],
+        "type": "object",
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/S3AccountDto"
+          },
+          "rootUser": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/S3RootUserDto"
+              }
+            ]
+          }
+        }
+      },
+      "S3AccessKeyDto": {
+        "required": [
+          "accessKeyId"
+        ],
+        "type": "object",
+        "properties": {
+          "accessKeyId": {
+            "type": "string"
+          },
+          "secretAccessKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "userName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "S3AccountDto": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tenant": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "S3DefaultAccountResponse": {
+        "required": [
+          "name",
+          "rootUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rootUserId": {
+            "type": "string"
+          },
+          "account": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/S3AccountDto"
+              }
+            ]
+          }
+        }
+      },
+      "S3RootUserDto": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/S3AccessKeyDto"
+            }
           }
         }
       },
@@ -1407,6 +1024,9 @@
     }
   },
   "tags": [
+    {
+      "name": "CephS3"
+    },
     {
       "name": "Tenant"
     }

@@ -11,20 +11,22 @@
     }
   ],
   "paths": {
-    "/api/CreateUser": {
+    "/api/PublishPolicy": {
       "post": {
-        "tags": ["TenantUser"],
-        "operationId": "CreateUser",
+        "tags": [
+          "AuthorizationPolicy"
+        ],
+        "operationId": "PublishPolicy",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateUserRequest"
+                "$ref": "#/components/schemas/PublishPolicyRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateUserRequest"
+                "$ref": "#/components/schemas/PublishPolicyRequest"
               }
             }
           },
@@ -36,7 +38,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateUserResponse"
+                  "$ref": "#/components/schemas/PublishPolicyResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishPolicyResponse"
                 }
               }
             }
@@ -46,7 +58,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                  "$ref": "#/components/schemas/PublishPolicyResponse"
                 }
               }
             }
@@ -61,12 +73,32 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishPolicyResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
+                  "$ref": "#/components/schemas/PublishPolicyResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishPolicyResponse"
                 }
               }
             }
@@ -74,20 +106,22 @@
         }
       }
     },
-    "/api/AcceptInvitation": {
+    "/api/ListPolicies": {
       "post": {
-        "tags": ["TenantUser"],
-        "operationId": "AcceptInvitation",
+        "tags": [
+          "AuthorizationPolicy"
+        ],
+        "operationId": "ListPolicies",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AcceptInvitationRequest"
+                "$ref": "#/components/schemas/ListPoliciesRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AcceptInvitationRequest"
+                "$ref": "#/components/schemas/ListPoliciesRequest"
               }
             }
           },
@@ -99,7 +133,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AcceptInvitationResponse"
+                  "$ref": "#/components/schemas/ListPoliciesResponse"
                 }
               }
             }
@@ -109,13 +143,288 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/GetPolicy": {
+      "post": {
+        "tags": [
+          "AuthorizationPolicy"
+        ],
+        "operationId": "GetPolicy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetPolicyRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPolicyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/UpdatePolicy": {
+      "post": {
+        "tags": [
+          "AuthorizationPolicy"
+        ],
+        "operationId": "UpdatePolicy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePolicyRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatePolicyResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatePolicyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/DeletePolicy": {
+      "post": {
+        "tags": [
+          "AuthorizationPolicy"
+        ],
+        "operationId": "DeletePolicy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeletePolicyRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeletePolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletePolicyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
             "content": {
               "application/json": {
                 "schema": {
@@ -129,7 +438,9 @@
     },
     "/api/ListS3Roles": {
       "post": {
-        "tags": ["TenantS3"],
+        "tags": [
+          "TenantS3"
+        ],
         "operationId": "ListS3Roles",
         "requestBody": {
           "content": {
@@ -192,7 +503,9 @@
     },
     "/api/AssumeS3Role": {
       "post": {
-        "tags": ["TenantS3"],
+        "tags": [
+          "TenantS3"
+        ],
         "operationId": "AssumeS3Role",
         "requestBody": {
           "content": {
@@ -255,7 +568,9 @@
     },
     "/api/ListServiceClients": {
       "post": {
-        "tags": ["TenantServiceClient"],
+        "tags": [
+          "TenantServiceClient"
+        ],
         "operationId": "ListServiceClients",
         "requestBody": {
           "content": {
@@ -298,7 +613,9 @@
     },
     "/api/CreateServiceClient": {
       "post": {
-        "tags": ["TenantServiceClient"],
+        "tags": [
+          "TenantServiceClient"
+        ],
         "operationId": "CreateServiceClient",
         "requestBody": {
           "content": {
@@ -331,7 +648,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -351,7 +668,9 @@
     },
     "/api/AddServiceClientKey": {
       "post": {
-        "tags": ["TenantServiceClient"],
+        "tags": [
+          "TenantServiceClient"
+        ],
         "operationId": "AddServiceClientKey",
         "requestBody": {
           "content": {
@@ -384,7 +703,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -421,203 +740,137 @@
           }
         }
       }
+    },
+    "/api/CreateUser": {
+      "post": {
+        "tags": [
+          "TenantUser"
+        ],
+        "operationId": "CreateUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/AcceptInvitation": {
+      "post": {
+        "tags": [
+          "TenantUser"
+        ],
+        "operationId": "AcceptInvitation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptInvitationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
-      "EmptyS3Request": {
-        "type": "object",
-        "properties": {}
-      },
-      "S3RoleDto": {
-        "required": ["name", "arn"],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "arn": {
-            "type": "string"
-          },
-          "id": {
-            "type": ["null", "string"]
-          },
-          "path": {
-            "type": ["null", "string"]
-          },
-          "trustPolicy": {
-            "type": ["null", "string"]
-          },
-          "permissionPolicies": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/S3RolePolicyDto"
-            }
-          }
-        }
-      },
-      "S3RolePolicyDto": {
-        "required": ["name", "document"],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "document": {
-            "type": "string"
-          }
-        }
-      },
-      "ListS3RolesResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/S3RoleDto"
-            }
-          }
-        }
-      },
-      "AssumeS3RoleRequest": {
-        "required": ["roleName"],
-        "type": "object",
-        "properties": {
-          "roleName": {
-            "maxLength": 128,
-            "minLength": 1,
-            "type": "string"
-          }
-        }
-      },
-      "AssumeS3RoleResponse": {
-        "required": ["accessKeyId", "secretAccessKey", "sessionToken", "expiration"],
-        "type": "object",
-        "properties": {
-          "accessKeyId": {
-            "type": "string"
-          },
-          "secretAccessKey": {
-            "type": "string"
-          },
-          "sessionToken": {
-            "type": "string"
-          },
-          "expiration": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "EmptyServiceClientRequest": {
-        "type": "object",
-        "properties": {}
-      },
-      "ServiceClientKeyDto": {
-        "required": ["kid", "kty", "publicJwk"],
-        "type": "object",
-        "properties": {
-          "kid": {
-            "type": "string"
-          },
-          "kty": {
-            "type": "string"
-          },
-          "alg": {
-            "type": ["null", "string"]
-          },
-          "crv": {
-            "type": ["null", "string"]
-          },
-          "publicJwk": {
-            "type": "string"
-          }
-        }
-      },
-      "ServiceClientDto": {
-        "required": ["id", "clientId", "displayName"],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "clientId": {
-            "type": "string"
-          },
-          "displayName": {
-            "type": "string"
-          },
-          "keys": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ServiceClientKeyDto"
-            }
-          }
-        }
-      },
-      "ListServiceClientsResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ServiceClientDto"
-            }
-          }
-        }
-      },
-      "CreateServiceClientRequest": {
-        "required": ["displayName", "publicJwk"],
-        "type": "object",
-        "properties": {
-          "displayName": {
-            "maxLength": 128,
-            "minLength": 1,
-            "type": "string"
-          },
-          "publicJwk": {
-            "maxLength": 8192,
-            "minLength": 1,
-            "type": "string"
-          }
-        }
-      },
-      "CreateServiceClientResponse": {
-        "required": ["serviceClient"],
-        "type": "object",
-        "properties": {
-          "serviceClient": {
-            "$ref": "#/components/schemas/ServiceClientDto"
-          }
-        }
-      },
-      "AddServiceClientKeyRequest": {
-        "required": ["serviceClientId", "publicJwk"],
-        "type": "object",
-        "properties": {
-          "serviceClientId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "publicJwk": {
-            "maxLength": 8192,
-            "minLength": 1,
-            "type": "string"
-          }
-        }
-      },
-      "AddServiceClientKeyResponse": {
-        "required": ["serviceClient"],
-        "type": "object",
-        "properties": {
-          "serviceClient": {
-            "$ref": "#/components/schemas/ServiceClientDto"
-          }
-        }
-      },
       "AcceptInvitationRequest": {
-        "required": ["userId", "token", "password", "clientToken"],
+        "required": [
+          "userId",
+          "token",
+          "password",
+          "clientToken"
+        ],
         "type": "object",
         "properties": {
           "userId": {
@@ -643,7 +896,12 @@
         }
       },
       "AcceptInvitationResponse": {
-        "required": ["userId", "tenantId", "email", "loginUrl"],
+        "required": [
+          "userId",
+          "tenantId",
+          "email",
+          "loginUrl"
+        ],
         "type": "object",
         "properties": {
           "userId": {
@@ -662,8 +920,211 @@
           }
         }
       },
+      "AddServiceClientKeyRequest": {
+        "required": [
+          "serviceClientId",
+          "publicJwk"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceClientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "publicJwk": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "AddServiceClientKeyResponse": {
+        "required": [
+          "serviceClient"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceClient": {
+            "$ref": "#/components/schemas/ServiceClientDto"
+          }
+        }
+      },
+      "AssumeS3RoleRequest": {
+        "required": [
+          "roleName"
+        ],
+        "type": "object",
+        "properties": {
+          "roleName": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "AssumeS3RoleResponse": {
+        "required": [
+          "accessKeyId",
+          "secretAccessKey",
+          "sessionToken",
+          "expiration"
+        ],
+        "type": "object",
+        "properties": {
+          "accessKeyId": {
+            "type": "string"
+          },
+          "secretAccessKey": {
+            "type": "string"
+          },
+          "sessionToken": {
+            "type": "string"
+          },
+          "expiration": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AuthorizationPolicyDto": {
+        "required": [
+          "id",
+          "policyId",
+          "name",
+          "status",
+          "document",
+          "roleIds",
+          "stateToken",
+          "documentHash",
+          "createdBy",
+          "updatedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AuthorizationPolicyLifecycleStatus"
+          },
+          "document": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "roleIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stateToken": {
+            "type": "string"
+          },
+          "documentHash": {
+            "type": "string"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "updatedBy": {
+            "type": "string"
+          },
+          "publishedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "AuthorizationPolicyLifecycleStatus": {
+        "type": "integer"
+      },
+      "AuthorizationPolicyPublicationDisposition": {
+        "type": "integer"
+      },
+      "AuthorizationPolicySummary": {
+        "required": [
+          "id",
+          "policyId",
+          "name",
+          "status",
+          "documentHash",
+          "stateToken"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AuthorizationPolicyLifecycleStatus"
+          },
+          "documentHash": {
+            "type": "string"
+          },
+          "stateToken": {
+            "type": "string"
+          },
+          "publishedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateServiceClientRequest": {
+        "required": [
+          "displayName",
+          "publicJwk"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "publicJwk": {
+            "maxLength": 8192,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "CreateServiceClientResponse": {
+        "required": [
+          "serviceClient"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceClient": {
+            "$ref": "#/components/schemas/ServiceClientDto"
+          }
+        }
+      },
       "CreateUserRequest": {
-        "required": ["email", "displayName", "clientToken"],
+        "required": [
+          "email",
+          "displayName",
+          "clientToken"
+        ],
         "type": "object",
         "properties": {
           "email": {
@@ -705,25 +1166,435 @@
           }
         }
       },
+      "DeletePolicyRequest": {
+        "required": [
+          "requestId",
+          "policyId",
+          "expectedStateToken"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string"
+          },
+          "policyId": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string"
+          },
+          "expectedStateToken": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "DeletePolicyResponse": {
+        "required": [
+          "policyId"
+        ],
+        "type": "object",
+        "properties": {
+          "policyId": {
+            "type": "string"
+          }
+        }
+      },
+      "EmptyS3Request": {
+        "type": "object"
+      },
+      "EmptyServiceClientRequest": {
+        "type": "object"
+      },
+      "GetPolicyRequest": {
+        "required": [
+          "policyId"
+        ],
+        "type": "object",
+        "properties": {
+          "policyId": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string"
+          }
+        }
+      },
+      "GetPolicyResponse": {
+        "required": [
+          "policy"
+        ],
+        "type": "object",
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/AuthorizationPolicyDto"
+          }
+        }
+      },
+      "JsonElement": { },
+      "ListPoliciesRequest": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "maximum": 200,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "after": {
+            "maxLength": 36,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ListPoliciesResponse": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthorizationPolicySummary"
+            }
+          },
+          "after": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ListS3RolesResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/S3RoleDto"
+            }
+          }
+        }
+      },
+      "ListServiceClientsResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceClientDto"
+            }
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
           "type": {
-            "type": ["null", "string"]
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "title": {
-            "type": ["null", "string"]
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "status": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": ["null", "integer", "string"],
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
             "format": "int32"
           },
           "detail": {
-            "type": ["null", "string"]
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "instance": {
-            "type": ["null", "string"]
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PublishPolicyRequest": {
+        "required": [
+          "requestId",
+          "policyId",
+          "name",
+          "document",
+          "roleIds"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string"
+          },
+          "policyId": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "document": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "roleIds": {
+            "maxItems": 128,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expectedStateToken": {
+            "maxLength": 128,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PublishPolicyResponse": {
+        "required": [
+          "disposition",
+          "reasonCode",
+          "diagnostics"
+        ],
+        "type": "object",
+        "properties": {
+          "disposition": {
+            "$ref": "#/components/schemas/AuthorizationPolicyPublicationDisposition"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stateToken": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "S3RoleDto": {
+        "required": [
+          "name",
+          "arn"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "arn": {
+            "type": "string"
+          },
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "path": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "trustPolicy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "permissionPolicies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/S3RolePolicyDto"
+            }
+          }
+        }
+      },
+      "S3RolePolicyDto": {
+        "required": [
+          "name",
+          "document"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "document": {
+            "type": "string"
+          }
+        }
+      },
+      "ServiceClientDto": {
+        "required": [
+          "id",
+          "clientId",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceClientKeyDto"
+            }
+          }
+        }
+      },
+      "ServiceClientKeyDto": {
+        "required": [
+          "kid",
+          "kty",
+          "publicJwk"
+        ],
+        "type": "object",
+        "properties": {
+          "kid": {
+            "type": "string"
+          },
+          "kty": {
+            "type": "string"
+          },
+          "alg": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "crv": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "publicJwk": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePolicyRequest": {
+        "required": [
+          "requestId",
+          "policyId",
+          "name",
+          "document",
+          "roleIds",
+          "expectedStateToken"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string"
+          },
+          "policyId": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "document": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "roleIds": {
+            "maxItems": 128,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expectedStateToken": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePolicyResponse": {
+        "required": [
+          "disposition",
+          "reasonCode",
+          "diagnostics"
+        ],
+        "type": "object",
+        "properties": {
+          "disposition": {
+            "$ref": "#/components/schemas/AuthorizationPolicyPublicationDisposition"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stateToken": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -765,21 +1636,37 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": ["null", "string"]
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "title": {
-            "type": ["null", "string"]
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "status": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": ["null", "integer", "string"],
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
             "format": "int32"
           },
           "detail": {
-            "type": ["null", "string"]
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "instance": {
-            "type": ["null", "string"]
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "errors": {
             "type": "object",
@@ -796,10 +1683,16 @@
   },
   "tags": [
     {
-      "name": "TenantUser"
+      "name": "AuthorizationPolicy"
     },
     {
       "name": "TenantS3"
+    },
+    {
+      "name": "TenantServiceClient"
+    },
+    {
+      "name": "TenantUser"
     }
   ]
 }

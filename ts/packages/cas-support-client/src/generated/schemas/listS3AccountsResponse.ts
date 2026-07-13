@@ -8,5 +8,5 @@
 import type { S3AccountDto } from './s3AccountDto';
 
 export interface ListS3AccountsResponse {
-  items: S3AccountDto[];
+  items?: S3AccountDto[];
 }

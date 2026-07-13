@@ -11,10 +11,21 @@ import type {
     CreateServiceClientResponse,
     CreateUserRequest,
     CreateUserResponse,
+    DeletePolicyRequest,
+    DeletePolicyResponse,
     EmptyS3Request,
+    GetPolicyRequest,
+    GetPolicyResponse,
+    ListPoliciesRequest,
+    ListPoliciesResponse,
     ListS3RolesResponse,
     ListServiceClientsResponse,
+    PublishPolicyRequest,
+    PublishPolicyResponse,
+    UpdatePolicyRequest,
+    UpdatePolicyResponse,
 } from './generated/schemas/index.js';
+import { getAuthorizationPolicy } from './generated/authorization-policy/authorization-policy.js';
 import { getTenantServiceClient } from './generated/tenant-service-client/tenant-service-client.js';
 import { getTenantS3 } from './generated/tenant-s3/tenant-s3.js';
 import { getTenantUser } from './generated/tenant-user/tenant-user.js';
@@ -87,12 +98,14 @@ export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * ```
  */
 export class CasClient extends ClientBase {
+    private readonly authorizationPolicy: ReturnType<typeof getAuthorizationPolicy>;
     private readonly tenantUser: ReturnType<typeof getTenantUser>;
     private readonly tenantS3: ReturnType<typeof getTenantS3>;
     private readonly tenantServiceClient: ReturnType<typeof getTenantServiceClient>;
 
     constructor(config: CasClientConfig) {
         super(config);
+        this.authorizationPolicy = getAuthorizationPolicy();
         this.tenantUser = getTenantUser();
         this.tenantS3 = getTenantS3();
         this.tenantServiceClient = getTenantServiceClient();
@@ -159,4 +172,36 @@ export class CasClient extends ClientBase {
         options?: CasRequestOptions,
     ): Promise<AddServiceClientKeyResponse> =>
         this.tenantServiceClient.addServiceClientKey(req, this.mutatorOptions(options));
+
+    // -- Authorization policies --------------------------------------------
+
+    publishPolicy = (
+        req: PublishPolicyRequest,
+        options?: CasRequestOptions,
+    ): Promise<PublishPolicyResponse> =>
+        this.authorizationPolicy.publishPolicy(req, this.mutatorOptions(options));
+
+    listPolicies = (
+        req: ListPoliciesRequest = {},
+        options?: CasRequestOptions,
+    ): Promise<ListPoliciesResponse> =>
+        this.authorizationPolicy.listPolicies(req, this.mutatorOptions(options));
+
+    getPolicy = (
+        req: GetPolicyRequest,
+        options?: CasRequestOptions,
+    ): Promise<GetPolicyResponse> =>
+        this.authorizationPolicy.getPolicy(req, this.mutatorOptions(options));
+
+    updatePolicy = (
+        req: UpdatePolicyRequest,
+        options?: CasRequestOptions,
+    ): Promise<UpdatePolicyResponse> =>
+        this.authorizationPolicy.updatePolicy(req, this.mutatorOptions(options));
+
+    deletePolicy = (
+        req: DeletePolicyRequest,
+        options?: CasRequestOptions,
+    ): Promise<DeletePolicyResponse> =>
+        this.authorizationPolicy.deletePolicy(req, this.mutatorOptions(options));
 }

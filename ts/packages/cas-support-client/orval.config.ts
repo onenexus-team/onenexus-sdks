@@ -11,7 +11,9 @@ import { defineConfig } from 'orval';
  *   Path is resolved relative to this config file. This is the Support API
  *   (`/support-api/*`), a distinct surface from the regular CAS `/api/*` RPCs.
  * - `mode: 'tags-split'` produces one generated module per OpenAPI tag
- *   (currently just `Tenant`) under `src/generated/`.
+ *   (`CephS3`, `Tenant`) under `src/generated/`.
+ * - `clean: true` removes generated files for operations that no longer exist
+ *   in the spec before writing the current contract.
  * - `client: 'axios'` selects the axios-shaped generator whose calls invoke
  *   the mutator as `mutator(config, options)`; `CasSupportClient` binds the
  *   per-call `{ http: KyInstance }` option once per group.
@@ -27,6 +29,7 @@ export default defineConfig({
             mode: 'tags-split',
             target: './src/generated/cas-support.ts',
             schemas: './src/generated/schemas',
+            clean: true,
             client: 'axios',
             baseUrl: '',
             override: {

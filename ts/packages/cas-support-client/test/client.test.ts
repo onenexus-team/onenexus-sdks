@@ -116,6 +116,50 @@ describe('CasSupportClient', () => {
             expect(created.user.email).toBe('a@b.c');
             expect(created.acceptInvitationUrl).toContain('token=abc');
         });
+
+        it('binds the retained Ceph S3 operations to the regenerated group', async () => {
+            const observedBodies = new Map<string, unknown>();
+
+            server.use(
+                http.post(`${BASE_URL}/support-api/GetS3DefaultAccount`, async ({ request }) => {
+                    observedBodies.set('get', await request.json());
+                    return HttpResponse.json({
+                        name: 'tenant-root',
+                        rootUserId: 'root-user-1',
+                        account: null,
+                    });
+                }),
+                http.post(`${BASE_URL}/support-api/ProvisionS3DefaultAccount`, async ({ request }) => {
+                    observedBodies.set('provision', await request.json());
+                    return HttpResponse.json({
+                        account: { id: 'account-1', name: 'tenant-root' },
+                        rootUser: null,
+                    });
+                }),
+                http.post(`${BASE_URL}/support-api/ListS3Accounts`, async ({ request }) => {
+                    observedBodies.set('list', await request.json());
+                    return HttpResponse.json({
+                        items: [{ id: 'account-1', name: 'tenant-root' }],
+                    });
+                }),
+            );
+
+            const support = new CasSupportClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            const account = await support.getS3DefaultAccount();
+            const provisioned = await support.provisionS3DefaultAccount();
+            const listed = await support.listS3Accounts();
+
+            expect(account.rootUserId).toBe('root-user-1');
+            expect(provisioned.account.id).toBe('account-1');
+            expect(listed.items).toEqual([{ id: 'account-1', name: 'tenant-root' }]);
+            expect(observedBodies).toEqual(
+                new Map([
+                    ['get', {}],
+                    ['provision', {}],
+                    ['list', {}],
+                ]),
+            );
+        });
     });
 
     describe('error mapping', () => {

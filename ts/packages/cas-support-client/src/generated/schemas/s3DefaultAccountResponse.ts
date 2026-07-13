@@ -12,5 +12,5 @@ export interface S3DefaultAccountResponse {
   /** @nullable */
   email?: string | null;
   rootUserId: string;
-  account?: S3AccountDto;
+  account?: null | S3AccountDto;
 }
