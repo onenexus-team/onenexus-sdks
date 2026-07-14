@@ -7,8 +7,8 @@ from typing import Any
 import jwt
 from onenexus_sdk_core import Credentials, PrivateKeyJwtCredentials
 
-from .client import OneNexusClient
-from .config import (
+from ..client import OneNexusClient
+from ..config import (
     CAS_BASE_URL,
     CAS_S3_ROLE_NAME,
     PLATFORM_API_BASE_URL,

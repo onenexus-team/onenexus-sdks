@@ -5,15 +5,17 @@ import importlib
 import json
 import unittest
 from argparse import Namespace
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
+from importlib.util import find_spec
 from unittest.mock import patch
 
 from nexusai.auth import decode_jwt_payload, token_profile
 from nexusai.cas import create_cas_client_with_credentials, credentials_from_token
 from nexusai.client import OneNexusClient
-from nexusai.cli import build_parser, handle_login
+from nexusai.cli import build_parser
+from nexusai.cli_handlers import handle_login
 from nexusai.config import PLATFORM_BASE_URL
-from nexusai.http import APIClient
+from nexusai._internal.http import APIClient
 
 
 def fake_jwt(payload: dict) -> str:
@@ -64,17 +66,12 @@ class CasAuthTest(unittest.TestCase):
 
     def test_cas_credentials_forward_token_without_local_expiry_gate(self):
         token = fake_jwt({"exp": 1})
-        before = datetime.now(UTC)
 
         credentials = credentials_from_token(token)
         access_token = credentials._cached
 
         self.assertEqual(access_token.access_token, token)
-        self.assertGreaterEqual(access_token.expires_at, before)
-        self.assertLessEqual(
-            access_token.expires_at,
-            before + timedelta(minutes=5, seconds=2),
-        )
+        self.assertEqual(access_token.expires_at, datetime.max.replace(tzinfo=UTC))
 
     def test_client_uses_single_token_interface(self):
         client = OneNexusClient(token="opaque-token")
@@ -152,10 +149,6 @@ class CasAuthTest(unittest.TestCase):
                     "FinalizeDatasetUpload",
                     "--dataset-id",
                     "dataset-1",
-                    "--file-count",
-                    "2",
-                    "--total-size-bytes",
-                    "100",
                 ],
                 "FinalizeDatasetUpload",
             ),
@@ -218,62 +211,10 @@ class CasAuthTest(unittest.TestCase):
                 self.assertEqual(parsed.domain, "ModelRegistry")
                 self.assertEqual(parsed.command, command)
 
-    def test_cli_exposes_training_checkpoint_and_tokenizer_lifecycle_commands(self):
+    def test_cli_only_exposes_high_level_checkpoint_and_tokenizer_transfers(self):
         parser = build_parser()
 
-        cases = (
-            (
-                [
-                    "Training",
-                    "StartCheckpointUpload",
-                    "--experiment-id",
-                    "experiment-1",
-                    "--run-id",
-                    "run-1",
-                    "--checkpoint-name",
-                    "step-10",
-                ],
-                "StartCheckpointUpload",
-            ),
-            (
-                [
-                    "Training",
-                    "FinalizeCheckpointUpload",
-                    "--experiment-id",
-                    "experiment-1",
-                    "--run-id",
-                    "run-1",
-                    "--checkpoint-name",
-                    "step-10",
-                ],
-                "FinalizeCheckpointUpload",
-            ),
-            (
-                [
-                    "Training",
-                    "FailCheckpointUpload",
-                    "--experiment-id",
-                    "experiment-1",
-                    "--run-id",
-                    "run-1",
-                    "--checkpoint-name",
-                    "step-10",
-                ],
-                "FailCheckpointUpload",
-            ),
-            (
-                [
-                    "Training",
-                    "CancelCheckpointUpload",
-                    "--experiment-id",
-                    "experiment-1",
-                    "--run-id",
-                    "run-1",
-                    "--checkpoint-name",
-                    "step-10",
-                ],
-                "CancelCheckpointUpload",
-            ),
+        public_cases = (
             (
                 [
                     "Training",
@@ -292,50 +233,6 @@ class CasAuthTest(unittest.TestCase):
             (
                 [
                     "Training",
-                    "StartRunTokenizerUpload",
-                    "--experiment-id",
-                    "experiment-1",
-                    "--run-id",
-                    "run-1",
-                ],
-                "StartRunTokenizerUpload",
-            ),
-            (
-                [
-                    "Training",
-                    "FinalizeRunTokenizerUpload",
-                    "--experiment-id",
-                    "experiment-1",
-                    "--run-id",
-                    "run-1",
-                ],
-                "FinalizeRunTokenizerUpload",
-            ),
-            (
-                [
-                    "Training",
-                    "FailRunTokenizerUpload",
-                    "--experiment-id",
-                    "experiment-1",
-                    "--run-id",
-                    "run-1",
-                ],
-                "FailRunTokenizerUpload",
-            ),
-            (
-                [
-                    "Training",
-                    "CancelRunTokenizerUpload",
-                    "--experiment-id",
-                    "experiment-1",
-                    "--run-id",
-                    "run-1",
-                ],
-                "CancelRunTokenizerUpload",
-            ),
-            (
-                [
-                    "Training",
                     "UploadToRunTokenizer",
                     "--experiment-id",
                     "experiment-1",
@@ -348,11 +245,28 @@ class CasAuthTest(unittest.TestCase):
             ),
         )
 
-        for args, command in cases:
+        for args, command in public_cases:
             with self.subTest(command=command):
                 parsed = parser.parse_args(["--token", "opaque-token", *args])
                 self.assertEqual(parsed.domain, args[0])
                 self.assertEqual(parsed.command, command)
+
+        for command in (
+            "StartCheckpointUpload",
+            "FinalizeCheckpointUpload",
+            "FailCheckpointUpload",
+            "CancelCheckpointUpload",
+            "StartRunTokenizerUpload",
+            "FinalizeRunTokenizerUpload",
+            "FailRunTokenizerUpload",
+            "CancelRunTokenizerUpload",
+        ):
+            with (
+                self.subTest(command=command),
+                contextlib.redirect_stderr(io.StringIO()),
+            ):
+                with self.assertRaises(SystemExit):
+                    parser.parse_args(["Training", command])
 
     def test_login_defaults_to_current_platform_url_not_saved_legacy_url(self):
         token = fake_jwt({"exp": 1_893_456_000})
@@ -362,7 +276,7 @@ class CasAuthTest(unittest.TestCase):
             patch(
                 "nexusai.cli.load_api_url", return_value="http://165.245.166.16:30210/"
             ),
-            patch("nexusai.cli.save_login") as save_login,
+            patch("nexusai.cli_handlers.save_login") as save_login,
         ):
             result = handle_login(args)
 
@@ -370,7 +284,7 @@ class CasAuthTest(unittest.TestCase):
         save_login.assert_called_once()
         self.assertEqual(save_login.call_args.kwargs["api_url"], PLATFORM_BASE_URL)
 
-    def test_rest_style_modules_are_not_exposed(self):
+    def test_public_modules_drop_rpc_transport_prefix(self):
         for module_name in (
             "nexusai.data_hub",
             "nexusai.training",
@@ -380,8 +294,40 @@ class CasAuthTest(unittest.TestCase):
             "nexusai.tenant_workspace",
         ):
             with self.subTest(module_name=module_name):
-                with self.assertRaises(ModuleNotFoundError):
-                    importlib.import_module(module_name)
+                self.assertIsNotNone(importlib.import_module(module_name))
+
+        import nexusai
+
+        self.assertFalse(hasattr(nexusai, "RpcDataHubClient"))
+        self.assertFalse(hasattr(nexusai, "RpcTrainingClient"))
+        self.assertFalse(hasattr(nexusai, "WorkloadClient"))
+        self.assertFalse(hasattr(nexusai, "InternalWorkloadClient"))
+
+        for legacy_module in (
+            "nexusai.rpc_data_hub",
+            "nexusai.rpc_training",
+            "nexusai.rpc_model_registry",
+            "nexusai.rpc_inference",
+            "nexusai.rpc_platform_catalog",
+            "nexusai.rpc_tenant_workspace",
+            "nexusai.internal_workload",
+            "nexusai.workload_auth",
+            "nexusai.http",
+            "nexusai.storage",
+            "nexusai.cas_storage",
+        ):
+            with self.subTest(legacy_module=legacy_module):
+                self.assertIsNone(find_spec(legacy_module))
+
+    def test_cli_reports_package_version(self):
+        parser = build_parser()
+
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            with self.assertRaises(SystemExit) as exit_info:
+                parser.parse_args(["--version"])
+
+        self.assertEqual(exit_info.exception.code, 0)
+        self.assertRegex(output.getvalue(), r"^nexusai \d+\.\d+\.\d+\n$")
 
 
 if __name__ == "__main__":

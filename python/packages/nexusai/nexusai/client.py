@@ -13,14 +13,14 @@ from .config import (
     S3_ENDPOINT_URL,
     normalize_api_base_url,
 )
-from .http import APIClient
-from .internal_workload import WorkloadClient
-from .rpc_data_hub import RpcDataHubClient
-from .rpc_inference import RpcInferenceClient
-from .rpc_model_registry import RpcModelRegistryClient
-from .rpc_platform_catalog import RpcPlatformCatalogClient
-from .rpc_tenant_workspace import RpcTenantWorkspaceClient
-from .rpc_training import RpcTrainingClient
+from .data_hub import DataHubClient
+from ._internal.http import APIClient
+from .inference import InferenceClient
+from .model_registry import ModelRegistryClient
+from .platform_catalog import PlatformCatalogClient
+from .retry import RetryPolicy
+from .tenant_workspace import TenantWorkspaceClient
+from .training import TrainingClient
 
 
 class OneNexusClient:
@@ -32,6 +32,7 @@ class OneNexusClient:
         s3_endpoint_url: str = S3_ENDPOINT_URL,
         s3_role_name: str = CAS_S3_ROLE_NAME,
         timeout: float = 60.0,
+        retry_policy: RetryPolicy | None = None,
     ) -> None:
         if not token:
             raise ValueError("token is required")
@@ -44,6 +45,7 @@ class OneNexusClient:
             s3_endpoint_url=s3_endpoint_url,
             s3_role_name=s3_role_name,
             timeout=timeout,
+            retry_policy=retry_policy,
         )
 
     @classmethod
@@ -56,6 +58,7 @@ class OneNexusClient:
         s3_endpoint_url: str = S3_ENDPOINT_URL,
         s3_role_name: str = CAS_S3_ROLE_NAME,
         timeout: float = 60.0,
+        retry_policy: RetryPolicy | None = None,
     ) -> "OneNexusClient":
         client = cls.__new__(cls)
         client._configure(
@@ -66,6 +69,7 @@ class OneNexusClient:
             s3_endpoint_url=s3_endpoint_url,
             s3_role_name=s3_role_name,
             timeout=timeout,
+            retry_policy=retry_policy,
         )
         return client
 
@@ -79,6 +83,7 @@ class OneNexusClient:
         s3_endpoint_url: str,
         s3_role_name: str,
         timeout: float,
+        retry_policy: RetryPolicy | None,
     ) -> None:
 
         self.token = token
@@ -92,38 +97,36 @@ class OneNexusClient:
             context=self._context,
             base_url=normalize_api_base_url(base_url),
             timeout=timeout,
+            retry_policy=retry_policy,
         )
-        self.platform_catalog = RpcPlatformCatalogClient(self._api)
-        self.tenant_workspace = RpcTenantWorkspaceClient(self._api)
-        self.data_hub = RpcDataHubClient(
-            self._api,
-            cas_client_factory=lambda: create_cas_client_with_credentials(
+
+        def cas_client_factory() -> CasClient:
+            return create_cas_client_with_credentials(
                 credentials,
                 base_url=self.cas_url,
-            ),
+            )
+
+        self.platform_catalog = PlatformCatalogClient(self._api)
+        self.tenant_workspace = TenantWorkspaceClient(self._api)
+        self.data_hub = DataHubClient(
+            self._api,
+            cas_client_factory=cas_client_factory,
             s3_endpoint_url=self.s3_endpoint_url,
             s3_role_name=self.s3_role_name,
         )
-        self.model_registry = RpcModelRegistryClient(
+        self.model_registry = ModelRegistryClient(
             self._api,
-            cas_client_factory=lambda: create_cas_client_with_credentials(
-                credentials,
-                base_url=self.cas_url,
-            ),
+            cas_client_factory=cas_client_factory,
             s3_endpoint_url=self.s3_endpoint_url,
             s3_role_name=self.s3_role_name,
         )
-        self.training = RpcTrainingClient(
+        self.training = TrainingClient(
             self._api,
-            cas_client_factory=lambda: create_cas_client_with_credentials(
-                credentials,
-                base_url=self.cas_url,
-            ),
+            cas_client_factory=cas_client_factory,
             s3_endpoint_url=self.s3_endpoint_url,
             s3_role_name=self.s3_role_name,
         )
-        self.inference = RpcInferenceClient(self._api)
-        self.workload = WorkloadClient(self._api)
+        self.inference = InferenceClient(self._api)
 
     def create_cas_client(
         self,

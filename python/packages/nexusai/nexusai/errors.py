@@ -12,8 +12,11 @@ class OneNexusAPIError(OneNexusError):
         message: str,
         code: Optional[str] = None,
         payload: Optional[dict[str, Any]] = None,
+        request_id: Optional[str] = None,
     ):
         self.status_code = status_code
         self.code = code
+        self.message = message
         self.payload = payload or {}
+        self.request_id = request_id
         super().__init__(f"{status_code} {code or ''} {message}".strip())

@@ -1,13 +1,14 @@
 from typing import Any, Optional
 
-from .http import APIClient
+from ._internal.http import APIClient
+from .models import Page, TenantWorkspaceDetail, TenantWorkspaceSummary
 
 
 def _clean(body: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in body.items() if value is not None}
 
 
-class RpcTenantWorkspaceClient:
+class TenantWorkspaceClient:
     def __init__(self, api: APIClient):
         self._api = api
 
@@ -20,9 +21,10 @@ class RpcTenantWorkspaceClient:
         tokenizer_bucket: str,
         tenant_gpus_quota: int = 16,
         extras_data: Optional[dict[str, Any]] = None,
-    ) -> dict[str, Any]:
-        return self._api.post_dict(
+    ) -> TenantWorkspaceDetail:
+        return self._api.post_model(
             "/v1/TenantWorkspace/CreateTenantWorkspace",
+            TenantWorkspaceDetail,
             body=_clean(
                 {
                     "name": name,
@@ -36,9 +38,10 @@ class RpcTenantWorkspaceClient:
             ),
         )
 
-    def get_tenant_workspace(self, workspace_id: str) -> dict[str, Any]:
-        return self._api.post_dict(
+    def get_tenant_workspace(self, workspace_id: str) -> TenantWorkspaceDetail:
+        return self._api.post_model(
             "/v1/TenantWorkspace/GetTenantWorkspace",
+            TenantWorkspaceDetail,
             body={"workspace_id": workspace_id},
         )
 
@@ -49,9 +52,10 @@ class RpcTenantWorkspaceClient:
         name: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
-    ) -> list[dict[str, Any]]:
-        return self._api.post_list(
+    ) -> Page[TenantWorkspaceSummary]:
+        return self._api.post_page(
             "/v1/TenantWorkspace/ListTenantWorkspaces",
+            TenantWorkspaceSummary,
             body=_clean(
                 {
                     "page": page,

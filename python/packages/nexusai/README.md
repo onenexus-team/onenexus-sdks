@@ -1,433 +1,313 @@
 # NexusAI Python SDK
 
-Python SDK and CLI for the OneNexus MLOps platform. The SDK only uses the
-PascalCase RPC API and targets:
+NexusAI is the typed Python SDK and CLI for OneNexus Data Hub, Model Registry,
+Training, Inference, and Tenant Workspace APIs. The public SDK uses PascalCase
+RPC operations on the wire while exposing idiomatic Python client methods.
 
-- Data Hub dataset metadata and upload lifecycle.
-- Training experiments, runs, logs, metrics, checkpoints, and tokenizers.
-- Model Registry models and model versions.
-- Inference instances and OpenAI-compatible endpoint discovery.
-
-Default URLs:
+Default services:
 
 - Platform API: `https://ai-api-v2.onenexus-do.cloud`
 - CAS: `https://cas.onenexus-do.cloud`
-- S3 endpoint: `https://s3.onenexus-do.cloud`
 
-The SDK sends `Authorization: Bearer <token>` to the MLOps API. Dataset/model
-upload and download do not use MLOps credential-returning endpoints. The SDK
-exchanges the saved token with CAS at runtime, obtains temporary S3 credentials,
-performs the S3 transfer, then calls the MLOps finalize API.
+The SDK accepts one token and sends it to the Platform API. High-level transfer
+methods exchange that token through CAS for short-lived, resource-scoped S3
+access. Public API responses never contain S3 credentials, bucket names,
+Kubernetes identifiers, upload sessions, leases, or execution records.
+
+## Requirements
+
+- Python 3.11 or newer
+- A OneNexus token authorized for the target tenant
+- Network access to the Platform API, CAS, and configured object storage
 
 ## Install
 
-Install the current internal wheel from the public S3 artifact bucket:
+Install the immutable wheel attached to the NexusAI GitHub release:
 
 ```bash
-python -m pip install --upgrade \
-  https://s3.onenexus-do.cloud/019eee637b887feb858b1c6250a19e0c%3Aonenexus-public-sdk-artifacts/nexusai/releases/v0.0.3/nexusai-0.0.3-py3-none-any.whl
+python -m pip install \
+  "https://github.com/onenexus-team/onenexus-sdks/releases/download/nexusai-v0.1.0/nexusai-0.1.0-py3-none-any.whl"
 ```
 
-For local development from this repository:
+Verify the wheel against `SHA256SUMS` from the same release before installing
+it in a production image. The MLOps upload instruction resolves the current
+reviewed release URL from Platform Catalog.
+
+For repository development, run this from the SDK repository root:
 
 ```bash
-cd /Users/hoangbui2/Desktop/OneNexusWorkspace/onenexus-sdks/python/packages/nexusai
-python -m pip install -e .
+python -m pip install -e python/packages/nexusai
 ```
 
-## Login
+## Authentication
 
-Interactive login:
+Interactive login stores the token and service URLs in the current user's
+configuration directory:
 
 ```bash
 nexusai login --url https://ai-api-v2.onenexus-do.cloud
 ```
 
-Non-interactive login:
+For non-interactive use, pass a token explicitly:
 
 ```bash
 export NEXUSAI_TOKEN="<token>"
-nexusai login \
-  --url https://ai-api-v2.onenexus-do.cloud \
-  --cas-url https://cas.onenexus-do.cloud \
-  --token "$NEXUSAI_TOKEN"
-```
-
-You can also pass the token on every command:
-
-```bash
 nexusai --token "$NEXUSAI_TOKEN" DataHub ListDatasets
 ```
 
-## Python Full Flow
+`nexusai whoami` decodes JWT claims locally for display only. Its output marks
+those claims as unverified; authorization is always decided by the server.
 
-This example simulates a real user flow:
-
-1. Upload a local dataset.
-2. Create a training experiment and run with Qwen3-0.6B.
-3. Read logs, metrics, and checkpoints.
-4. Register a model version from a checkpoint.
-5. Create an inference instance.
-6. Call the inference endpoint with the OpenAI-compatible API.
-
-The final inference call uses `requests`; install it with
-`python -m pip install requests` if your environment does not already have it.
+## Python Quick Start
 
 ```python
 import os
-import time
-from pathlib import Path
 
-import requests
-from nexusai import OneNexusClient
+from nexusai import OneNexusClient, RetryPolicy
 
 
 client = OneNexusClient(
     token=os.environ["NEXUSAI_TOKEN"],
-    base_url="https://ai-api-v2.onenexus-do.cloud",
-    cas_url="https://cas.onenexus-do.cloud",
+    retry_policy=RetryPolicy(max_attempts=3, max_elapsed_seconds=15),
 )
 
+datasets = client.data_hub.list_datasets(limit=20)
+for dataset in datasets:
+    print(dataset.id, dataset.name, dataset.status)
+```
 
-def wait_for_terminal_run(experiment_id: str, run_id: str, timeout_seconds: int = 7200):
-    deadline = time.time() + timeout_seconds
-    while time.time() < deadline:
-        run = client.training.get_run(experiment_id=experiment_id, run_id=run_id)
-        status = str(run.get("status", "")).upper()
-        print("training status:", status)
-        if status in {"SUCCEEDED", "FAILED", "CANCELED", "STOPPED"}:
-            return run
-        time.sleep(30)
-    raise TimeoutError(f"training run did not finish within {timeout_seconds}s")
+List methods return a typed `Page[T]`. The page preserves response metadata:
 
+```python
+page = client.model_registry.list_models(limit=20)
+print(page.total_pages, page.request_id)
+for model in page:
+    print(model.id, model.latest_version)
+```
 
-def wait_for_inference_endpoint(inference_instance_id: str, timeout_seconds: int = 3600):
-    deadline = time.time() + timeout_seconds
-    while time.time() < deadline:
-        endpoint = client.inference.get_inference_instance_endpoint(
-            inference_instance_id=inference_instance_id
-        )
-        status = str(endpoint.get("status", "")).upper()
-        print("inference status:", status, "endpoint:", endpoint.get("endpoint"))
-        if endpoint.get("endpoint"):
-            return endpoint
-        if status in {"FAILED", "STOPPED", "DELETED"}:
-            raise RuntimeError(endpoint)
-        time.sleep(20)
-    raise TimeoutError(f"inference endpoint was not ready within {timeout_seconds}s")
+## Dataset Upload and Download
+
+High-level methods own the complete create, transfer, and finalize workflow.
+They do not expose upload sessions or temporary credentials.
+
+```python
+from pathlib import Path
 
 
-# 1. Prepare and upload a dataset.
-dataset_dir = Path("tmp/qwen3-smoke-dataset")
-dataset_dir.mkdir(parents=True, exist_ok=True)
-(dataset_dir / "train.jsonl").write_text(
-    '{"text":"OneNexus training sample 1."}\n'
-    '{"text":"OneNexus training sample 2."}\n',
+source = Path("training-data")
+source.mkdir(exist_ok=True)
+(source / "train.jsonl").write_text(
+    '{"text":"OneNexus sample 1"}\n'
+    '{"text":"OneNexus sample 2"}\n',
     encoding="utf-8",
 )
 
-dataset_upload = client.data_hub.upload_dataset(
-    name="qwen3-smoke-dataset",
-    source_path=str(dataset_dir),
-    extras_data={"purpose": "sdk-readme-smoke"},
+upload = client.data_hub.upload_dataset(
+    name="qwen3-training-data",
+    source_path=str(source),
 )
-dataset = dataset_upload.resource
-dataset_id = dataset["id"]
-print("dataset:", dataset_id)
-print("dataset files:", client.data_hub.list_dataset_files(dataset_id))
+dataset = upload.resource
+print(dataset.id, dataset.status, len(upload.files))
 
-
-# 2. Create a training experiment and run.
-experiment = client.training.create_experiment(
-    name="qwen3-smoke-experiment",
-    extras_data={"purpose": "sdk-readme-smoke"},
+download = client.data_hub.download_dataset(
+    dataset_id=dataset.id,
+    destination_path="downloaded-data",
 )
-experiment_id = experiment["id"]
+print(download.resource.id, len(download.files))
+```
 
-run = client.training.create_run(
-    experiment_id=experiment_id,
-    name="qwen3-0-6b-smoke-run",
-    dataset_id=dataset_id,
+Each transfer entry contains only a path relative to the requested source or
+destination and its byte size. Storage object keys, bucket names, credentials,
+and absolute local paths remain internal.
+
+Upload sources cannot be symbolic links. Downloads reject unsafe object keys,
+write through temporary files, verify object size, and atomically replace the
+final path.
+
+## Training and Monitoring
+
+```python
+experiment = client.training.create_experiment(name="qwen3-experiment")
+run_action = client.training.create_run(
+    experiment_id=experiment.id,
+    name="qwen3-0-6b-run",
+    dataset_id=dataset.id,
     training_type="pretraining",
     flavor="2x2-mi355",
     input_model_id="Qwen/Qwen3-0.6B",
+    hyperparameters={},
     num_checkpoint=1,
-    hyperparameters={
-        "model": {
-            "from": "registry",
-            "module": "nexus_titan.torchtitan_ft_configs",
-            "config": "qwen3_0_6b_ft_pretrain",
-        }
-    },
-    extras_data={"purpose": "sdk-readme-smoke"},
 )
-run_id = run["id"]
-print("run:", run_id)
 
-
-# 3. Observe logs and metrics while the run is active.
-print("run logs iframe:", client.training.get_run_logs(experiment_id, run_id))
-print("run metrics iframe:", client.training.get_run_metrics(experiment_id, run_id))
-
-final_run = wait_for_terminal_run(experiment_id, run_id)
-if str(final_run.get("status", "")).upper() != "SUCCEEDED":
-    raise RuntimeError(final_run)
-
-checkpoints = client.training.list_run_checkpoints(experiment_id, run_id)
-print("checkpoints:", checkpoints)
-checkpoint_name = checkpoints[-1]["name"] if checkpoints else "step-10"
-
-
-# 4. Register a model version from the selected training checkpoint.
-model = client.model_registry.create_model(
-    name="qwen3-0-6b-smoke-model",
-    extras_data={"source": "training-checkpoint"},
+run = client.training.wait_for_run(
+    experiment_id=experiment.id,
+    run_id=run_action.resource_id,
+    target_statuses={"COMPLETED", "FAILED", "CANCELED"},
 )
-model_version = client.model_registry.create_model_version_from_checkpoint(
-    model_id=model["id"],
-    name=f"{checkpoint_name}-hf",
-    experiment_id=experiment_id,
-    run_id=run_id,
-    checkpoint_name=checkpoint_name,
-    extras_data={"source_checkpoint": checkpoint_name},
+print(run.id, run.status, run.status_message)
+
+logs = client.training.get_run_logs(experiment.id, run.id)
+metrics = client.training.get_run_metrics(experiment.id, run.id)
+print(logs.overview.iframe_url)
+print(metrics.overview.model_metrics_iframe_url)
+
+for attempt in logs.attempts:
+    print(attempt.attempt, attempt.status, attempt.iframe_url)
+```
+
+Monitoring results contain one overall projection and one projection per run
+attempt. Iframe URLs are opaque: clients must not derive Grafana queries,
+execution IDs, namespaces, or JobSet names.
+
+## Model Registry
+
+Register a model version from a finalized checkpoint:
+
+```python
+checkpoints = client.training.list_run_checkpoints(experiment.id, run.id)
+checkpoint = checkpoints[-1]
+
+model = client.model_registry.create_model(name="qwen3-private")
+version_action = client.model_registry.create_model_version_from_checkpoint(
+    model_id=model.id,
+    name=f"{checkpoint.name}-hf",
+    experiment_id=experiment.id,
+    run_id=run.id,
+    checkpoint_name=checkpoint.name,
 )
-print("model:", model["id"])
-print("model version:", model_version["id"])
+version = client.model_registry.get_model_version(
+    model_id=model.id,
+    model_version_id=version_action.resource_id,
+)
+print(version.id, version.status, version.artifact_format)
+```
 
+You can also upload and download a model version directly with
+`upload_model_version`, `upload_to_model_version`, and
+`download_model_version`. These methods keep transfer credentials private.
 
-# 5. Create inference from the registered model version.
-inference = client.inference.create_inference_instance(
-    name="qwen3-0-6b-smoke-inference",
-    model_id=model["id"],
-    model_version_id=model_version["id"],
-    served_model_name="qwen3-0.6b",
+## Inference
+
+```python
+instance_action = client.inference.create_inference_instance(
+    name="qwen3-private-inference",
+    model_id=model.id,
+    model_version_id=version.id,
+    served_model_name="qwen3-private",
     flavor="1x1-mi355",
     configuration={},
 )
-inference_instance_id = inference["id"]
-endpoint = wait_for_inference_endpoint(inference_instance_id)
-base_url = endpoint["endpoint"].rstrip("/")
 
-
-# 6. Call the OpenAI-compatible chat completion endpoint.
-response = requests.post(
-    f"{base_url}/v1/chat/completions",
-    headers={"Content-Type": "application/json"},
-    json={
-        "model": "qwen3-0.6b",
-        "messages": [{"role": "user", "content": "hello world"}],
-        "temperature": 0.2,
-        "max_tokens": 128,
-    },
-    timeout=120,
-    verify=False,
+instance = client.inference.wait_for_inference_instance(
+    instance_action.resource_id,
+    target_statuses={"RUNNING", "FAILED"},
 )
-response.raise_for_status()
-print(response.json())
+if instance.status != "RUNNING":
+    raise RuntimeError(instance.status_message)
+
+endpoint = client.inference.get_inference_instance_endpoint(instance.id)
+print(endpoint.endpoint)
 ```
 
-## CLI Full Flow
-
-The commands below use only PascalCase resource and operation names. They assume
-`jq` is installed.
-
-### 1. Login
+The returned endpoint is OpenAI compatible. Use a normal TLS-verified request:
 
 ```bash
-export NEXUSAI_TOKEN="<token>"
-
-nexusai login \
-  --url https://ai-api-v2.onenexus-do.cloud \
-  --cas-url https://cas.onenexus-do.cloud \
-  --token "$NEXUSAI_TOKEN"
-
-nexusai whoami
-```
-
-### 2. Prepare a sample dataset
-
-```bash
-mkdir -p /tmp/onenexus-qwen3-dataset
-cat > /tmp/onenexus-qwen3-dataset/train.jsonl <<'JSONL'
-{"text":"OneNexus training sample 1."}
-{"text":"OneNexus training sample 2."}
-JSONL
-```
-
-### 3. Create and upload the dataset
-
-```bash
-nexusai DataHub CreateDataset \
-  --name qwen3-smoke-dataset \
-  --extras-json '{"purpose":"cli-smoke"}' | tee /tmp/onenexus-dataset.json
-
-export DATASET_ID="$(jq -r '.id' /tmp/onenexus-dataset.json)"
-
-nexusai DataHub GetUploadDatasetInstruction \
-  --dataset-id "$DATASET_ID"
-
-nexusai DataHub UploadToDataset \
-  --dataset-id "$DATASET_ID" \
-  --source-path /tmp/onenexus-qwen3-dataset | tee /tmp/onenexus-dataset-upload.json
-
-nexusai DataHub ListDatasetFiles --dataset-id "$DATASET_ID"
-nexusai DataHub GetDatasetSize --dataset-id "$DATASET_ID"
-```
-
-### 4. Create a training experiment
-
-```bash
-nexusai Training CreateExperiment \
-  --name qwen3-smoke-experiment \
-  --extras-json '{"purpose":"cli-smoke"}' | tee /tmp/onenexus-experiment.json
-
-export EXPERIMENT_ID="$(jq -r '.id' /tmp/onenexus-experiment.json)"
-```
-
-### 5. Start a Qwen3-0.6B training run
-
-```bash
-nexusai Training CreateRun \
-  --experiment-id "$EXPERIMENT_ID" \
-  --name qwen3-0-6b-smoke-run \
-  --dataset-id "$DATASET_ID" \
-  --training-type pretraining \
-  --flavor 2x2-mi355 \
-  --input-model-id Qwen/Qwen3-0.6B \
-  --num-checkpoint 1 \
-  --hyperparameters-json '{"model":{"from":"registry","module":"nexus_titan.torchtitan_ft_configs","config":"qwen3_0_6b_ft_pretrain"}}' \
-  --extras-json '{"purpose":"cli-smoke"}' | tee /tmp/onenexus-run.json
-
-export RUN_ID="$(jq -r '.id' /tmp/onenexus-run.json)"
-```
-
-### 6. Observe run status, logs, metrics, and checkpoints
-
-```bash
-nexusai Training GetRun \
-  --experiment-id "$EXPERIMENT_ID" \
-  --run-id "$RUN_ID"
-
-nexusai Training GetRunLogs \
-  --experiment-id "$EXPERIMENT_ID" \
-  --run-id "$RUN_ID" | tee /tmp/onenexus-run-logs.json
-
-nexusai Training GetRunMetrics \
-  --experiment-id "$EXPERIMENT_ID" \
-  --run-id "$RUN_ID" | tee /tmp/onenexus-run-metrics.json
-
-nexusai Training ListRunCheckpoints \
-  --experiment-id "$EXPERIMENT_ID" \
-  --run-id "$RUN_ID" | tee /tmp/onenexus-checkpoints.json
-
-export CHECKPOINT_NAME="$(jq -r '.[-1].name // "step-10"' /tmp/onenexus-checkpoints.json)"
-```
-
-### 7. Optional: resume from a checkpoint
-
-```bash
-nexusai Training ResumeRun \
-  --experiment-id "$EXPERIMENT_ID" \
-  --run-id "$RUN_ID" \
-  --checkpoint-name "$CHECKPOINT_NAME"
-```
-
-### 8. Register a model version from the training checkpoint
-
-```bash
-nexusai ModelRegistry CreateModel \
-  --name qwen3-0-6b-smoke-model \
-  --extras-json '{"source":"training-checkpoint"}' | tee /tmp/onenexus-model.json
-
-export MODEL_ID="$(jq -r '.id' /tmp/onenexus-model.json)"
-
-nexusai ModelRegistry CreateModelVersionFromCheckpoint \
-  --model-id "$MODEL_ID" \
-  --name "${CHECKPOINT_NAME}-hf" \
-  --experiment-id "$EXPERIMENT_ID" \
-  --run-id "$RUN_ID" \
-  --checkpoint-name "$CHECKPOINT_NAME" \
-  --extras-json "{\"source_checkpoint\":\"$CHECKPOINT_NAME\"}" | tee /tmp/onenexus-model-version.json
-
-export MODEL_VERSION_ID="$(jq -r '.id' /tmp/onenexus-model-version.json)"
-
-nexusai ModelRegistry GetModelVersion \
-  --model-id "$MODEL_ID" \
-  --model-version-id "$MODEL_VERSION_ID"
-```
-
-### 9. Create an inference instance
-
-```bash
-nexusai Inference CreateInferenceInstance \
-  --name qwen3-0-6b-smoke-inference \
-  --model-id "$MODEL_ID" \
-  --model-version-id "$MODEL_VERSION_ID" \
-  --served-model-name qwen3-0.6b \
-  --flavor 1x1-mi355 \
-  --configuration-json '{}' | tee /tmp/onenexus-inference.json
-
-export INFERENCE_INSTANCE_ID="$(jq -r '.id' /tmp/onenexus-inference.json)"
-```
-
-### 10. Get endpoint, logs, and metrics
-
-```bash
-nexusai Inference GetInferenceInstance \
-  --inference-instance-id "$INFERENCE_INSTANCE_ID"
-
-nexusai Inference GetInferenceInstanceEndpoint \
-  --inference-instance-id "$INFERENCE_INSTANCE_ID" | tee /tmp/onenexus-inference-endpoint.json
-
-nexusai Inference GetInferenceInstanceLogs \
-  --inference-instance-id "$INFERENCE_INSTANCE_ID"
-
-nexusai Inference GetInferenceInstanceMetrics \
-  --inference-instance-id "$INFERENCE_INSTANCE_ID"
-```
-
-### 11. Call the OpenAI-compatible endpoint
-
-```bash
-export INFERENCE_ENDPOINT="$(jq -r '.endpoint' /tmp/onenexus-inference-endpoint.json)"
-
-curl -k --location "$INFERENCE_ENDPOINT/v1/chat/completions" \
+curl --location 'https://your-inference-domain/v1/chat/completions' \
   --header 'Content-Type: application/json' \
   --data '{
-    "model": "qwen3-0.6b",
-    "messages": [
-      {
-        "role": "user",
-        "content": "hello world"
-      }
-    ],
+    "model": "qwen3-private",
+    "messages": [{"role": "user", "content": "hello world"}],
     "temperature": 0.2,
     "max_tokens": 128
   }'
 ```
 
-### 12. Optional cleanup
+## CLI
 
-Use cleanup only when no active run or inference is using the resource.
+The CLI defaults to human-readable tables. Headers and identifiers use cyan,
+successful states use green, transitional states use yellow, and failures use
+red when stdout is a TTY. Color is disabled for pipes and when `NO_COLOR` or
+`--no-color` is set.
 
 ```bash
-nexusai Inference StopInferenceInstance \
-  --inference-instance-id "$INFERENCE_INSTANCE_ID"
-
-nexusai Inference DeleteInferenceInstance \
-  --inference-instance-id "$INFERENCE_INSTANCE_ID"
-
-nexusai Training DeleteRun \
-  --experiment-id "$EXPERIMENT_ID" \
-  --run-id "$RUN_ID"
+nexusai DataHub ListDatasets
+nexusai Training GetRun --experiment-id "$EXPERIMENT_ID" --run-id "$RUN_ID"
 ```
 
-## Notes
+Use JSON for automation:
 
-- The SDK defaults to RPC. Keep using PascalCase domains and commands for the
-  clean public interface.
-- Dataset/model S3 credentials are never returned by the MLOps API. The SDK
-  obtains temporary credentials through CAS at runtime.
-- `GetRunLogs`, `GetRunMetrics`, `GetInferenceInstanceLogs`, and
-  `GetInferenceInstanceMetrics` return monitoring URLs or payloads suitable for
-  frontend iframe integration.
+```bash
+nexusai --output json ModelRegistry ListModels --limit 20
+```
+
+Extract a scalar without `jq`:
+
+```bash
+DATASET_ID="$(nexusai --field id DataHub CreateDataset --name sample-data)"
+EXPERIMENT_ID="$(nexusai --field id Training CreateExperiment --name sample-exp)"
+RUN_ID="$(
+  nexusai --field resource_id Training CreateRun \
+    --experiment-id "$EXPERIMENT_ID" \
+    --name sample-run \
+    --dataset-id "$DATASET_ID" \
+    --training-type pretraining \
+    --flavor 2x2-mi355 \
+    --input-model-id Qwen/Qwen3-0.6B \
+    --hyperparameters-json '{}'
+)"
+```
+
+CLI errors are written to stderr with stable exit codes:
+
+| Exit | Meaning |
+| ---: | --- |
+| 2 | Invalid CLI usage |
+| 3 | Authentication or authorization failure |
+| 4 | Validation or conflict |
+| 5 | Resource not found |
+| 6 | Transient operation exhausted retries |
+| 70 | Unexpected failure |
+| 130 | Canceled by the user |
+
+Use `--debug` only when a traceback is needed for diagnosis.
+
+## Retry Policy
+
+Read-only RPC calls retry transient connection failures, timeouts, HTTP 408,
+429, and retryable 5xx responses with bounded exponential backoff and full
+jitter. `Retry-After` is honored within the configured delay limit.
+
+Mutating RPC calls are not retried unless the operation carries a stable
+idempotency key and the backend supports deduplication. Storage transfers retry
+at the object-transfer layer; the SDK does not restart an entire create/upload/
+finalize workflow after a later phase succeeds.
+
+Disable retries when the caller owns retry orchestration:
+
+```python
+client = OneNexusClient(
+    token=os.environ["NEXUSAI_TOKEN"],
+    retry_policy=RetryPolicy(enabled=False),
+)
+```
+
+Every API request includes `nexusai/<version>` in `User-Agent` and a generated
+`X-Request-ID`. The SDK does not add opt-out telemetry.
+
+## Errors
+
+Library calls raise `OneNexusAPIError` for API failures and `OneNexusError` for
+SDK and transport failures:
+
+```python
+from nexusai import OneNexusAPIError
+
+
+try:
+    client.data_hub.get_dataset("missing")
+except OneNexusAPIError as error:
+    print(error.status_code, error.code, error.message, error.request_id)
+```
+
+See [COMPATIBILITY.md](COMPATIBILITY.md), [MIGRATION.md](MIGRATION.md), and
+[CHANGELOG.md](CHANGELOG.md) for versioning and upgrade policy.

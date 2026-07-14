@@ -1,16 +1,19 @@
+import os
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
+from uuid import uuid4
 
-import boto3  # type: ignore[import-untyped]
+import boto3
 
-from .config import DEFAULT_REGION
+from ..config import DEFAULT_REGION
 
 
 @dataclass(frozen=True)
 class StorageTransferFile:
     local_path: str
     object_key: str
+    relative_path: str
     size_bytes: int
 
 
@@ -19,7 +22,10 @@ def upload_path(
     credential: dict[str, Any],
     region: str = DEFAULT_REGION,
 ) -> list[StorageTransferFile]:
-    source = Path(source_path).expanduser().resolve()
+    unresolved_source = Path(source_path).expanduser()
+    if unresolved_source.is_symlink():
+        raise ValueError("Upload source must not be a symbolic link")
+    source = unresolved_source.resolve()
     if not source.exists():
         raise FileNotFoundError(f"Source path not found: {source}")
 
@@ -61,14 +67,31 @@ def download_prefix(
             if not key or key == prefix or key.endswith("/"):
                 continue
             relative_path = _relative_key(key, prefix)
-            local_path = destination / relative_path
+            local_path = (destination / relative_path).resolve()
+            if not local_path.is_relative_to(destination):
+                raise ValueError(f"Unsafe object key returned by storage: {key!r}")
             local_path.parent.mkdir(parents=True, exist_ok=True)
-            s3.download_file(bucket, key, str(local_path))
+            temporary_path = local_path.with_name(
+                f".{local_path.name}.{uuid4().hex}.part"
+            )
+            try:
+                s3.download_file(bucket, key, str(temporary_path))
+                expected_size = int(item.get("Size", 0))
+                actual_size = temporary_path.stat().st_size
+                if actual_size != expected_size:
+                    raise OSError(
+                        f"Downloaded size mismatch for {key!r}: "
+                        f"expected {expected_size}, got {actual_size}"
+                    )
+                os.replace(temporary_path, local_path)
+            finally:
+                temporary_path.unlink(missing_ok=True)
             files.append(
                 StorageTransferFile(
                     local_path=str(local_path),
                     object_key=key,
-                    size_bytes=item.get("Size", 0),
+                    relative_path=relative_path,
+                    size_bytes=int(item.get("Size", 0)),
                 )
             )
     return files
@@ -103,12 +126,15 @@ def _upload_file(
     return StorageTransferFile(
         local_path=str(file_path),
         object_key=key,
+        relative_path=PurePosixPath(relative_path).as_posix(),
         size_bytes=file_path.stat().st_size,
     )
 
 
 def _iter_files(root: Path) -> Iterable[Path]:
     for item in sorted(root.rglob("*")):
+        if item.is_symlink():
+            raise ValueError(f"Upload tree contains a symbolic link: {item}")
         if item.is_file():
             yield item
 
@@ -119,6 +145,14 @@ def _normalize_prefix(prefix: str) -> str:
 
 def _relative_key(key: str, prefix: str) -> str:
     folder = f"{prefix}/" if prefix else ""
-    if folder and key.startswith(folder):
-        return key[len(folder) :]
-    return key
+    if folder and not key.startswith(folder):
+        raise ValueError(f"Object key {key!r} is outside prefix {prefix!r}")
+    relative = key[len(folder) :] if folder else key
+    path = PurePosixPath(relative)
+    if (
+        path.is_absolute()
+        or not relative
+        or any(part in {"", ".", ".."} for part in path.parts)
+    ):
+        raise ValueError(f"Unsafe object key returned by storage: {key!r}")
+    return path.as_posix()

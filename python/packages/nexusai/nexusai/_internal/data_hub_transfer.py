@@ -2,13 +2,16 @@ from collections.abc import Callable, Iterable
 from typing import Any, Optional
 
 from .cas_storage import create_runtime_s3_credential
-from .config import CAS_S3_ROLE_NAME, S3_ENDPOINT_URL
+from ..config import CAS_S3_ROLE_NAME, S3_ENDPOINT_URL
 from .http import APIClient
-from .results import DownloadResult, UploadResult
+from .results import (
+    InternalDownloadResult as DownloadResult,
+    InternalUploadResult as UploadResult,
+)
 from .storage import StorageTransferFile, download_prefix, upload_path
 
 
-class RpcDataHubClient:
+class DataHubTransferClient:
     def __init__(
         self,
         api: APIClient,
@@ -180,7 +183,7 @@ class RpcDataHubClient:
         name: str,
         source_path: str,
         extras_data: Optional[dict[str, Any]] = None,
-    ) -> UploadResult:
+    ) -> UploadResult[dict[str, Any]]:
         dataset = self.create_dataset(name=name, extras_data=extras_data)
         self.start_dataset_upload(dataset_id=dataset["id"])
         credential = self._create_dataset_runtime_credential(dataset_id=dataset["id"])
@@ -206,7 +209,7 @@ class RpcDataHubClient:
         self,
         dataset_id: str,
         source_path: str,
-    ) -> UploadResult:
+    ) -> UploadResult[dict[str, Any]]:
         self.get_dataset(dataset_id)
         self.start_dataset_upload(dataset_id=dataset_id)
         credential = self._create_dataset_runtime_credential(dataset_id=dataset_id)
@@ -228,7 +231,9 @@ class RpcDataHubClient:
             files=files,
         )
 
-    def _fail_dataset_upload_best_effort(self, dataset_id: str, error: Exception) -> None:
+    def _fail_dataset_upload_best_effort(
+        self, dataset_id: str, error: Exception
+    ) -> None:
         try:
             self.fail_dataset_upload(
                 dataset_id=dataset_id,
@@ -242,34 +247,25 @@ class RpcDataHubClient:
         self,
         dataset_id: str,
         destination_path: str,
-    ) -> DownloadResult:
+    ) -> DownloadResult[dict[str, Any]]:
         dataset = self.get_dataset(dataset_id)
         credential = self._create_dataset_runtime_credential(dataset_id=dataset_id)
         files = download_prefix(destination_path, credential)
         return DownloadResult(resource=dataset, files=files)
 
     def _create_dataset_runtime_credential(self, dataset_id: str) -> dict[str, Any]:
-        workspace = self._resolve_tenant_workspace()
+        target = self._api.post_dict(
+            "/protected/v1/DataHub/GetDatasetTransferTarget",
+            body={"dataset_id": dataset_id},
+        )
         return create_runtime_s3_credential(
             cas_client_factory=self._cas_client_factory,
             role_name=self._s3_role_name,
             endpoint_url=self._s3_endpoint_url,
-            bucket=workspace["datahub_bucket"],
-            prefix=str(dataset_id),
+            bucket=str(target["bucket"]),
+            prefix=str(target["prefix"]),
+            retry_policy=self._api.retry_policy,
         )
-
-    def _resolve_tenant_workspace(self) -> dict[str, Any]:
-        response = self._api.post(
-            "/v1/TenantWorkspace/ListTenantWorkspaces",
-            body={"page": 1, "limit": 1},
-        )
-        workspaces = _items(response)
-        if not workspaces:
-            raise ValueError("No tenant workspace is available for dataset storage")
-        workspace = workspaces[0]
-        if "datahub_bucket" not in workspace:
-            raise ValueError("Tenant workspace does not expose datahub_bucket")
-        return workspace
 
 
 def _manifest_from_uploaded_files(
@@ -294,18 +290,3 @@ def _relative_object_key(object_key: str, prefix: str) -> str:
     if folder and normalized_key.startswith(folder):
         return normalized_key[len(folder) :]
     return normalized_key
-
-
-def _items(response: Any) -> list[dict[str, Any]]:
-    if isinstance(response, list):
-        return response
-    if isinstance(response, dict):
-        data = response.get("items")
-        if isinstance(data, list):
-            return data
-        data = response.get("data")
-        if isinstance(data, dict):
-            items = data.get("items")
-            if isinstance(items, list):
-                return items
-    return []

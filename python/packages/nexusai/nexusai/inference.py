@@ -1,14 +1,23 @@
 from typing import Any, Optional
 
-from .http import APIClient
+from ._internal.http import APIClient
+from .models import (
+    InferenceActionResult,
+    InferenceEndpoint,
+    InferenceInstanceDetail,
+    InferenceInstanceSummary,
+    InferenceMonitoringResult,
+    Page,
+)
+from .wait import WaitPolicy, wait_for_status
 
 
 def _clean(body: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in body.items() if value is not None}
 
 
-class RpcInferenceClient:
-    def __init__(self, api: APIClient):
+class InferenceClient:
+    def __init__(self, api: APIClient) -> None:
         self._api = api
 
     def create_inference_instance(
@@ -20,9 +29,10 @@ class RpcInferenceClient:
         model_version_id: Optional[str] = None,
         configuration: Optional[dict[str, Any]] = None,
         extras_data: Optional[dict[str, Any]] = None,
-    ) -> dict[str, Any]:
-        return self._api.post_dict(
+    ) -> InferenceActionResult:
+        return self._api.post_model(
             "/v1/Inference/CreateInferenceInstance",
+            InferenceActionResult,
             body=_clean(
                 {
                     "name": name,
@@ -46,9 +56,10 @@ class RpcInferenceClient:
         status: Optional[str] = None,
         start_time: Optional[str] = None,
         end_time: Optional[str] = None,
-    ) -> list[dict[str, Any]]:
-        return self._api.post_list(
+    ) -> Page[InferenceInstanceSummary]:
+        return self._api.post_page(
             "/v1/Inference/ListInferenceInstances",
+            InferenceInstanceSummary,
             body=_clean(
                 {
                     "page": page,
@@ -63,10 +74,31 @@ class RpcInferenceClient:
             ),
         )
 
-    def get_inference_instance(self, inference_instance_id: str) -> dict[str, Any]:
-        return self._api.post_dict(
+    def get_inference_instance(
+        self,
+        inference_instance_id: str,
+    ) -> InferenceInstanceDetail:
+        return self._api.post_model(
             "/v1/Inference/GetInferenceInstance",
+            InferenceInstanceDetail,
             body={"inference_instance_id": inference_instance_id},
+        )
+
+    def wait_for_inference_instance(
+        self,
+        inference_instance_id: str,
+        *,
+        target_statuses: set[str] | frozenset[str] = frozenset(
+            {"RUNNING", "FAILED", "STOPPED", "FINALIZED"}
+        ),
+        policy: WaitPolicy | None = None,
+    ) -> InferenceInstanceDetail:
+        return wait_for_status(
+            lambda: self.get_inference_instance(inference_instance_id),
+            status_of=lambda instance: instance.status,
+            target_statuses=target_statuses,
+            policy=policy or WaitPolicy(),
+            description=f"inference instance {inference_instance_id}",
         )
 
     def update_inference_instance(
@@ -80,9 +112,10 @@ class RpcInferenceClient:
         flavor: Optional[str] = None,
         configuration: Optional[dict[str, Any]] = None,
         extras_data: Optional[dict[str, Any]] = None,
-    ) -> dict[str, Any]:
-        return self._api.post_dict(
+    ) -> InferenceActionResult:
+        return self._api.post_model(
             "/v1/Inference/UpdateInferenceInstance",
+            InferenceActionResult,
             body=_clean(
                 {
                     "inference_instance_id": inference_instance_id,
@@ -98,35 +131,33 @@ class RpcInferenceClient:
             ),
         )
 
-    def stop_inference_instance(self, inference_instance_id: str) -> dict[str, Any]:
-        return self._api.post_dict(
-            "/v1/Inference/StopInferenceInstance",
-            body={"inference_instance_id": inference_instance_id},
-        )
+    def stop_inference_instance(
+        self, inference_instance_id: str
+    ) -> InferenceActionResult:
+        return self._action("StopInferenceInstance", inference_instance_id)
 
-    def restart_inference_instance(self, inference_instance_id: str) -> dict[str, Any]:
-        return self._api.post_dict(
-            "/v1/Inference/RestartInferenceInstance",
-            body={"inference_instance_id": inference_instance_id},
-        )
+    def restart_inference_instance(
+        self, inference_instance_id: str
+    ) -> InferenceActionResult:
+        return self._action("RestartInferenceInstance", inference_instance_id)
 
-    def finalize_inference_instance(self, inference_instance_id: str) -> dict[str, Any]:
-        return self._api.post_dict(
-            "/v1/Inference/FinalizeInferenceInstance",
-            body={"inference_instance_id": inference_instance_id},
-        )
+    def finalize_inference_instance(
+        self, inference_instance_id: str
+    ) -> InferenceActionResult:
+        return self._action("FinalizeInferenceInstance", inference_instance_id)
 
-    def delete_inference_instance(self, inference_instance_id: str) -> dict[str, Any]:
-        return self._api.post_dict(
-            "/v1/Inference/DeleteInferenceInstance",
-            body={"inference_instance_id": inference_instance_id},
-        )
+    def delete_inference_instance(
+        self, inference_instance_id: str
+    ) -> InferenceActionResult:
+        return self._action("DeleteInferenceInstance", inference_instance_id)
 
     def get_inference_instance_endpoint(
-        self, inference_instance_id: str
-    ) -> dict[str, Any]:
-        return self._api.post_dict(
+        self,
+        inference_instance_id: str,
+    ) -> InferenceEndpoint:
+        return self._api.post_model(
             "/v1/Inference/GetInferenceInstanceEndpoint",
+            InferenceEndpoint,
             body={"inference_instance_id": inference_instance_id},
         )
 
@@ -135,16 +166,12 @@ class RpcInferenceClient:
         inference_instance_id: str,
         start_timestamp: Optional[str] = None,
         end_timestamp: Optional[str] = None,
-    ) -> dict[str, Any]:
-        return self._api.post_dict(
-            "/v1/Inference/GetInferenceInstanceLogs",
-            body=_clean(
-                {
-                    "inference_instance_id": inference_instance_id,
-                    "start_timestamp": start_timestamp,
-                    "end_timestamp": end_timestamp,
-                }
-            ),
+    ) -> InferenceMonitoringResult:
+        return self._monitoring(
+            "GetInferenceInstanceLogs",
+            inference_instance_id,
+            start_timestamp,
+            end_timestamp,
         )
 
     def get_inference_instance_metrics(
@@ -152,9 +179,33 @@ class RpcInferenceClient:
         inference_instance_id: str,
         start_timestamp: Optional[str] = None,
         end_timestamp: Optional[str] = None,
-    ) -> dict[str, Any]:
-        return self._api.post_dict(
-            "/v1/Inference/GetInferenceInstanceMetrics",
+    ) -> InferenceMonitoringResult:
+        return self._monitoring(
+            "GetInferenceInstanceMetrics",
+            inference_instance_id,
+            start_timestamp,
+            end_timestamp,
+        )
+
+    def _action(
+        self, operation: str, inference_instance_id: str
+    ) -> InferenceActionResult:
+        return self._api.post_model(
+            f"/v1/Inference/{operation}",
+            InferenceActionResult,
+            body={"inference_instance_id": inference_instance_id},
+        )
+
+    def _monitoring(
+        self,
+        operation: str,
+        inference_instance_id: str,
+        start_timestamp: Optional[str],
+        end_timestamp: Optional[str],
+    ) -> InferenceMonitoringResult:
+        return self._api.post_model(
+            f"/v1/Inference/{operation}",
+            InferenceMonitoringResult,
             body=_clean(
                 {
                     "inference_instance_id": inference_instance_id,

@@ -7,9 +7,9 @@ from types import SimpleNamespace
 import pytest
 from onenexus_sdk_core import AccessToken
 
+from nexusai._internal import workload_auth
 from nexusai.client import OneNexusClient
-from nexusai.http import APIClient
-from nexusai import workload_auth
+from nexusai._internal.http import APIClient
 
 
 class RotatingCredentials:

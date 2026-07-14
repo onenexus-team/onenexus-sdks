@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from nexusai.errors import OneNexusError
-from nexusai.http import APIClient
+from nexusai._internal.http import APIClient
 
 
 def test_post_dict_accepts_an_object_and_rejects_a_list(monkeypatch) -> None:

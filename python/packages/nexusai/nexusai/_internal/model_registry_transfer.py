@@ -2,9 +2,12 @@ from collections.abc import Callable, Iterable
 from typing import Any, Optional
 
 from .cas_storage import create_runtime_s3_credential
-from .config import CAS_S3_ROLE_NAME, DEFAULT_EXPIRES_IN, S3_ENDPOINT_URL
+from ..config import CAS_S3_ROLE_NAME, DEFAULT_EXPIRES_IN, S3_ENDPOINT_URL
 from .http import APIClient
-from .results import DownloadResult, UploadResult
+from .results import (
+    InternalDownloadResult as DownloadResult,
+    InternalUploadResult as UploadResult,
+)
 from .storage import StorageTransferFile, download_prefix, upload_path
 
 
@@ -12,7 +15,7 @@ def _clean(payload: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in payload.items() if value is not None}
 
 
-class RpcModelRegistryClient:
+class ModelRegistryTransferClient:
     def __init__(
         self,
         api: APIClient,
@@ -326,7 +329,7 @@ class RpcModelRegistryClient:
         version_extras_data: Optional[dict[str, Any]] = None,
         expires_in: int = DEFAULT_EXPIRES_IN,
         artifact_format: Optional[str] = None,
-    ) -> UploadResult:
+    ) -> UploadResult[dict[str, Any]]:
         model = self.get_or_create_model(
             name=model_name,
             extras_data=model_extras_data,
@@ -352,7 +355,7 @@ class RpcModelRegistryClient:
         version_extras_data: Optional[dict[str, Any]] = None,
         expires_in: int = DEFAULT_EXPIRES_IN,
         artifact_format: Optional[str] = None,
-    ) -> UploadResult:
+    ) -> UploadResult[dict[str, Any]]:
         model_version = self.create_model_version(
             model_id=model_id,
             name=version_name,
@@ -373,7 +376,7 @@ class RpcModelRegistryClient:
         source_path: str,
         expires_in: int = DEFAULT_EXPIRES_IN,
         artifact_format: Optional[str] = None,
-    ) -> UploadResult:
+    ) -> UploadResult[dict[str, Any]]:
         model_version = self.get_model_version(
             model_id=model_id,
             model_version_id=model_version_id,
@@ -394,7 +397,7 @@ class RpcModelRegistryClient:
         source_path: str,
         model_version: dict[str, Any],
         artifact_format: Optional[str] = None,
-    ) -> UploadResult:
+    ) -> UploadResult[dict[str, Any]]:
         self.start_model_version_upload(
             model_id=model_id,
             model_version_id=model_version_id,
@@ -438,9 +441,12 @@ class RpcModelRegistryClient:
         destination_path: str,
         model_version_id: Optional[str] = None,
         expires_in: int = DEFAULT_EXPIRES_IN,
-    ) -> DownloadResult:
+    ) -> DownloadResult[dict[str, Any]]:
         model = self.get_model(model_id)
-        version_id = model_version_id or model.get("latest_version_id")
+        latest_version = model.get("latest_version")
+        version_id = model_version_id or (
+            latest_version.get("id") if latest_version is not None else None
+        )
         if not version_id:
             raise ValueError(
                 "model_version_id is required when model has no latest version"
@@ -466,7 +472,7 @@ class RpcModelRegistryClient:
         model_version_id: str,
         destination_path: str,
         expires_in: int = DEFAULT_EXPIRES_IN,
-    ) -> DownloadResult:
+    ) -> DownloadResult[dict[str, Any]]:
         return self.download_model(
             model_id=model_id,
             model_version_id=model_version_id,
@@ -481,55 +487,21 @@ class RpcModelRegistryClient:
         model_version_id: str,
         model_version: dict[str, Any],
     ) -> dict[str, Any]:
-        workspace = self._resolve_tenant_workspace()
+        target = self._api.post_dict(
+            "/protected/v1/ModelRegistry/GetModelVersionTransferTarget",
+            body={
+                "model_id": model_id,
+                "model_version_id": model_version_id,
+            },
+        )
         return create_runtime_s3_credential(
             cas_client_factory=self._cas_client_factory,
             role_name=self._s3_role_name,
             endpoint_url=self._s3_endpoint_url,
-            bucket=workspace["model_registry_bucket"],
-            prefix=self._model_version_prefix(
-                model_id=model_id,
-                model_version_id=model_version_id,
-                model_version=model_version,
-            ),
+            bucket=str(target["bucket"]),
+            prefix=str(target["prefix"]),
+            retry_policy=self._api.retry_policy,
         )
-
-    def _resolve_tenant_workspace(self) -> dict[str, Any]:
-        response = self._api.post(
-            "/v1/TenantWorkspace/ListTenantWorkspaces",
-            body={"page": 1, "limit": 1},
-        )
-        workspaces = _items(response)
-        if not workspaces:
-            raise ValueError("No tenant workspace is available for model storage")
-        workspace = workspaces[0]
-        if "model_registry_bucket" not in workspace:
-            raise ValueError("Tenant workspace does not expose model_registry_bucket")
-        return workspace
-
-    @staticmethod
-    def _model_version_prefix(
-        *,
-        model_id: str,
-        model_version_id: str,
-        model_version: dict[str, Any],
-    ) -> str:
-        return (
-            model_version.get("storage_version_path")
-            or model_version.get("storage_prefix")
-            or f"{model_id}/{model_version_id}"
-        )
-
-
-def _items(response: Any) -> list[dict[str, Any]]:
-    if isinstance(response, list):
-        return response
-    if isinstance(response, dict):
-        for key in ("items", "data", "results", "tenant_workspaces"):
-            value = response.get(key)
-            if isinstance(value, list):
-                return value
-    return []
 
 
 def _manifest_from_uploaded_files(

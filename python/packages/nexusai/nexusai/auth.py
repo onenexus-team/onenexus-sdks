@@ -146,6 +146,8 @@ def token_profile(token: str) -> dict[str, Any]:
     payload = decode_jwt_payload(token) or {}
     expires_at = token_expires_at(token)
     return {
+        "claims_verified": False,
+        "claims_notice": "JWT claims are decoded locally and are not authorization proof.",
         "token_type": "jwt" if payload else "opaque",
         "issuer": payload.get("iss"),
         "subject": payload.get("sub"),

@@ -1,24 +1,22 @@
-from nexusai.rpc_tenant_workspace import RpcTenantWorkspaceClient
+from nexusai.tenant_workspace import TenantWorkspaceClient
 
 
 class FakeAPI:
     def __init__(self):
         self.calls = []
-        self.post_dict = self.post
-        self.post_list = self.post
 
-    def get(self, path, params=None):
-        self.calls.append(("GET", path, params))
-        return {"ok": True}
-
-    def post(self, path, body=None):
+    def post_model(self, path, _model, body=None):
         self.calls.append(("POST", path, body))
-        return {"ok": True}
+        return object()
+
+    def post_page(self, path, _model, body=None):
+        self.calls.append(("POST", path, body))
+        return object()
 
 
-def test_rpc_tenant_workspace_create_uses_pascal_case_endpoint():
+def test_tenant_workspace_create_uses_pascal_case_endpoint():
     api = FakeAPI()
-    client = RpcTenantWorkspaceClient(api)
+    client = TenantWorkspaceClient(api)
 
     client.create_tenant_workspace(
         name="tenant-a",
@@ -47,9 +45,9 @@ def test_rpc_tenant_workspace_create_uses_pascal_case_endpoint():
     ]
 
 
-def test_rpc_tenant_workspace_get_and_list_paths():
+def test_tenant_workspace_get_and_list_paths():
     api = FakeAPI()
-    client = RpcTenantWorkspaceClient(api)
+    client = TenantWorkspaceClient(api)
 
     client.get_tenant_workspace("workspace-1")
     client.list_tenant_workspaces(name="tenant", limit=20)

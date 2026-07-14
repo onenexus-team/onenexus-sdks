@@ -2,17 +2,20 @@ from collections.abc import Callable, Iterable
 from typing import Any, Optional
 
 from .cas_storage import create_runtime_s3_credential
-from .config import CAS_S3_ROLE_NAME, S3_ENDPOINT_URL
+from ..config import CAS_S3_ROLE_NAME, S3_ENDPOINT_URL
 from .http import APIClient
-from .results import UploadResult
-from .storage import StorageTransferFile, upload_path
+from .results import (
+    InternalDownloadResult as DownloadResult,
+    InternalUploadResult as UploadResult,
+)
+from .storage import StorageTransferFile, download_prefix, upload_path
 
 
 def _clean(body: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in body.items() if value is not None}
 
 
-class RpcTrainingClient:
+class TrainingTransferClient:
     def __init__(
         self,
         api: APIClient,
@@ -99,8 +102,6 @@ class RpcTrainingClient:
         num_checkpoint: int = 0,
         output_model_name: Optional[str] = None,
         output_model_version_name: Optional[str] = None,
-        checkpoint_path: Optional[str] = None,
-        tokenizer_path: Optional[str] = None,
         extras_data: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         return self._api.post_dict(
@@ -118,8 +119,6 @@ class RpcTrainingClient:
                     "num_checkpoint": num_checkpoint,
                     "output_model_name": output_model_name,
                     "output_model_version_name": output_model_version_name,
-                    "checkpoint_path": checkpoint_path,
-                    "tokenizer_path": tokenizer_path,
                     "extras_data": extras_data,
                 }
             ),
@@ -264,6 +263,39 @@ class RpcTrainingClient:
                 "run_id": run_id,
                 "checkpoint_id": checkpoint_id,
             },
+        )
+
+    def download_run_checkpoint(
+        self,
+        experiment_id: str,
+        run_id: str,
+        destination_path: str,
+        *,
+        checkpoint_id: Optional[str] = None,
+        checkpoint_name: Optional[str] = None,
+    ) -> DownloadResult[dict[str, Any]]:
+        if not checkpoint_id and not checkpoint_name:
+            raise ValueError("checkpoint_id or checkpoint_name is required")
+        target = self._api.post_dict(
+            "/protected/v1/Training/GetRunCheckpointTransferTarget",
+            body=_clean(
+                {
+                    "experiment_id": experiment_id,
+                    "run_id": run_id,
+                    "checkpoint_id": checkpoint_id,
+                    "checkpoint_name": checkpoint_name,
+                }
+            ),
+        )
+        resolved_id = str(target["resource_id"])
+        checkpoint = self.get_run_checkpoint(experiment_id, run_id, resolved_id)
+        credential = self._create_runtime_s3_credential(
+            bucket=str(target["bucket"]),
+            prefix=str(target["prefix"]),
+        )
+        return DownloadResult(
+            resource=checkpoint,
+            files=download_prefix(destination_path, credential),
         )
 
     def start_checkpoint_upload(
@@ -426,7 +458,7 @@ class RpcTrainingClient:
         idempotency_key: Optional[str] = None,
         storage_bucket: Optional[str] = None,
         storage_prefix: Optional[str] = None,
-    ) -> UploadResult:
+    ) -> UploadResult[dict[str, Any]]:
         checkpoint = self.start_checkpoint_upload(
             experiment_id=experiment_id,
             run_id=run_id,
@@ -442,15 +474,22 @@ class RpcTrainingClient:
             storage_bucket=storage_bucket,
             storage_prefix=storage_prefix,
         )
-        if checkpoint.get("should_upload") is False:
+        if checkpoint.get("status") == "FINALIZED":
             return UploadResult(resource=checkpoint, files=[])
 
-        resolved_bucket = storage_bucket or checkpoint.get("storage_bucket")
-        resolved_prefix = storage_prefix or checkpoint.get("storage_prefix")
+        target = self._api.post_dict(
+            "/protected/v1/Training/GetRunCheckpointTransferTarget",
+            body={
+                "experiment_id": experiment_id,
+                "run_id": run_id,
+                "checkpoint_name": checkpoint_name,
+                "checkpoint_id": checkpoint.get("resource_id"),
+            },
+        )
+        resolved_prefix = str(target["prefix"])
         credential = self._create_runtime_s3_credential(
-            bucket=resolved_bucket,
+            bucket=str(target["bucket"]),
             prefix=resolved_prefix,
-            workspace_bucket_field="checkpoint_bucket",
         )
         try:
             files = upload_path(source_path, credential)
@@ -458,7 +497,7 @@ class RpcTrainingClient:
                 experiment_id=experiment_id,
                 run_id=run_id,
                 checkpoint_name=checkpoint_name,
-                checkpoint_id=checkpoint.get("checkpoint_id"),
+                checkpoint_id=checkpoint.get("resource_id"),
                 execution_id=execution_id,
                 process_index=process_index,
                 process_name=process_name,
@@ -477,7 +516,7 @@ class RpcTrainingClient:
                 experiment_id=experiment_id,
                 run_id=run_id,
                 checkpoint_name=checkpoint_name,
-                checkpoint_id=checkpoint.get("checkpoint_id"),
+                checkpoint_id=checkpoint.get("resource_id"),
                 execution_id=execution_id,
                 process_index=process_index,
                 process_name=process_name,
@@ -558,6 +597,28 @@ class RpcTrainingClient:
         return self._api.post_optional_dict(
             "/v1/Training/GetRunTokenizer",
             body={"experiment_id": experiment_id, "run_id": run_id},
+        )
+
+    def download_run_tokenizer(
+        self,
+        experiment_id: str,
+        run_id: str,
+        destination_path: str,
+    ) -> DownloadResult[dict[str, Any]]:
+        tokenizer = self.get_run_tokenizer(experiment_id, run_id)
+        if tokenizer is None:
+            raise RuntimeError("Run tokenizer does not exist")
+        target = self._api.post_dict(
+            "/protected/v1/Training/GetRunTokenizerTransferTarget",
+            body={"experiment_id": experiment_id, "run_id": run_id},
+        )
+        credential = self._create_runtime_s3_credential(
+            bucket=str(target["bucket"]),
+            prefix=str(target["prefix"]),
+        )
+        return DownloadResult(
+            resource=tokenizer,
+            files=download_prefix(destination_path, credential),
         )
 
     def start_run_tokenizer_upload(
@@ -657,7 +718,7 @@ class RpcTrainingClient:
         attempt: Optional[int] = None,
         storage_bucket: Optional[str] = None,
         storage_prefix: Optional[str] = None,
-    ) -> UploadResult:
+    ) -> UploadResult[dict[str, Any]]:
         tokenizer = self.start_run_tokenizer_upload(
             experiment_id=experiment_id,
             run_id=run_id,
@@ -666,15 +727,17 @@ class RpcTrainingClient:
             storage_bucket=storage_bucket,
             storage_prefix=storage_prefix,
         )
-        if tokenizer.get("should_upload") is False:
+        if tokenizer.get("status") == "FINALIZED":
             return UploadResult(resource=tokenizer, files=[])
 
-        resolved_bucket = storage_bucket or tokenizer.get("storage_bucket")
-        resolved_prefix = storage_prefix or tokenizer.get("storage_prefix")
+        target = self._api.post_dict(
+            "/protected/v1/Training/GetRunTokenizerTransferTarget",
+            body={"experiment_id": experiment_id, "run_id": run_id},
+        )
+        resolved_prefix = str(target["prefix"])
         credential = self._create_runtime_s3_credential(
-            bucket=resolved_bucket,
+            bucket=str(target["bucket"]),
             prefix=resolved_prefix,
-            workspace_bucket_field="tokenizer_bucket",
         )
         try:
             files = upload_path(source_path, credential)
@@ -712,33 +775,19 @@ class RpcTrainingClient:
         *,
         bucket: Optional[str],
         prefix: Optional[str],
-        workspace_bucket_field: str,
     ) -> dict[str, Any]:
-        resolved_bucket = bucket
-        if not resolved_bucket:
-            workspace = self._resolve_tenant_workspace()
-            resolved_bucket = workspace.get(workspace_bucket_field)
-        if not resolved_bucket:
-            raise ValueError(f"Tenant workspace does not expose {workspace_bucket_field}")
+        if not bucket:
+            raise ValueError("transfer target bucket is required")
         if not prefix:
-            raise ValueError("storage prefix is required")
+            raise ValueError("transfer target prefix is required")
         return create_runtime_s3_credential(
             cas_client_factory=self._cas_client_factory,
             role_name=self._s3_role_name,
             endpoint_url=self._s3_endpoint_url,
-            bucket=resolved_bucket,
+            bucket=bucket,
             prefix=prefix,
+            retry_policy=self._api.retry_policy,
         )
-
-    def _resolve_tenant_workspace(self) -> dict[str, Any]:
-        response = self._api.post(
-            "/v1/TenantWorkspace/ListTenantWorkspaces",
-            body={"page": 1, "limit": 1},
-        )
-        workspaces = _items(response)
-        if not workspaces:
-            raise ValueError("No tenant workspace is available for training storage")
-        return workspaces[0]
 
     def _fail_checkpoint_upload_best_effort(
         self,
@@ -796,18 +845,3 @@ def _relative_object_key(object_key: str, prefix: str) -> str:
     if folder and normalized_key.startswith(folder):
         return normalized_key[len(folder) :]
     return normalized_key
-
-
-def _items(response: Any) -> list[dict[str, Any]]:
-    if isinstance(response, list):
-        return response
-    if isinstance(response, dict):
-        for key in ("items", "data", "results", "tenant_workspaces"):
-            value = response.get(key)
-            if isinstance(value, list):
-                return value
-            if isinstance(value, dict):
-                nested_items = value.get("items")
-                if isinstance(nested_items, list):
-                    return nested_items
-    return []

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import httpx
 from onenexus_cas_client import CasClient
@@ -17,8 +17,9 @@ from .config import CAS_BASE_URL
 def _access_token_from_token(token: str) -> AccessToken:
     # MLOps gateway already authenticates bearer tokens. For CAS calls the SDK
     # should forward the token and let CAS decide validity, matching backend
-    # runtime behavior.
-    expires_at = datetime.now(UTC) + timedelta(minutes=5)
+    # runtime behavior. A synthetic short expiry would make opaque credentials
+    # fail locally even while the upstream token is still valid.
+    expires_at = datetime.max.replace(tzinfo=UTC)
     return AccessToken(access_token=token, expires_at=expires_at)
 
 

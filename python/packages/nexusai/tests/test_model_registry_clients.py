@@ -1,4 +1,6 @@
-from nexusai.rpc_model_registry import RpcModelRegistryClient
+from nexusai import RetryPolicy
+from nexusai._internal import model_registry_transfer
+from nexusai._internal.model_registry_transfer import ModelRegistryTransferClient
 
 
 class AssumeS3RoleResponse:
@@ -30,6 +32,7 @@ class UploadedFile:
 class FakeAPI:
     def __init__(self):
         self.calls = []
+        self.retry_policy = RetryPolicy(enabled=False)
         self.post_dict = self.post
         self.post_list = self.post
 
@@ -41,8 +44,11 @@ class FakeAPI:
         self.calls.append(("POST", path, body))
         if path == "/v1/ModelRegistry/GetModelVersion":
             return {"id": body["model_version_id"], "status": "UPLOADING"}
-        if path == "/v1/TenantWorkspace/ListTenantWorkspaces":
-            return [{"model_registry_bucket": "model-bucket"}]
+        if path == "/protected/v1/ModelRegistry/GetModelVersionTransferTarget":
+            return {
+                "bucket": "model-bucket",
+                "prefix": "model-1/version-1",
+            }
         if path == "/v1/ModelRegistry/StartModelVersionUpload":
             return {"id": body["model_version_id"], "status": "UPLOADING"}
         if path == "/v1/ModelRegistry/FinalizeModelVersionUpload":
@@ -50,12 +56,10 @@ class FakeAPI:
         return {"ok": True}
 
 
-def test_rpc_model_version_upload_finalizes(monkeypatch):
-    from nexusai import rpc_model_registry as rpc_model_registry_module
-
+def test_model_version_upload_finalizes(monkeypatch):
     api = FakeAPI()
     cas = FakeCasClient()
-    client = RpcModelRegistryClient(
+    client = ModelRegistryTransferClient(
         api,
         cas_client_factory=lambda: cas,
         s3_endpoint_url="https://s3.test",
@@ -67,7 +71,7 @@ def test_rpc_model_version_upload_finalizes(monkeypatch):
         upload_calls.append((source_path, credential))
         return [UploadedFile("model-1/version-1/weight.bin", 128)]
 
-    monkeypatch.setattr(rpc_model_registry_module, "upload_path", fake_upload_path)
+    monkeypatch.setattr(model_registry_transfer, "upload_path", fake_upload_path)
 
     result = client.upload_to_model_version(
         model_id="model-1",
@@ -105,8 +109,8 @@ def test_rpc_model_version_upload_finalizes(monkeypatch):
         ),
         (
             "POST",
-            "/v1/TenantWorkspace/ListTenantWorkspaces",
-            {"page": 1, "limit": 1},
+            "/protected/v1/ModelRegistry/GetModelVersionTransferTarget",
+            {"model_id": "model-1", "model_version_id": "version-1"},
         ),
         (
             "POST",

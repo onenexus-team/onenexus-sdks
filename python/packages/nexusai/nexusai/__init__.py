@@ -1,11 +1,96 @@
+from ._version import __version__
 from .cas import create_cas_client
 from .client import NexusAIClient, OneNexusClient
+from .data_hub import DataHubClient
 from .errors import OneNexusAPIError, OneNexusError
+from .inference import InferenceClient
+from .model_registry import ModelRegistryClient
+from .models import (
+    ActionResult,
+    DatasetDetail,
+    DatasetSizeResult,
+    DatasetSummary,
+    ExperimentDetail,
+    ExperimentSummary,
+    FileItem,
+    Flavor,
+    InferenceConfiguration,
+    InferenceActionResult,
+    InferenceEndpoint,
+    InferenceInstanceDetail,
+    InferenceInstanceSummary,
+    InferenceMonitoringResult,
+    ModelDetail,
+    ModelSummary,
+    ModelVersionDetail,
+    ModelVersionSizeResult,
+    ModelVersionSummary,
+    MonitoringResult,
+    Page,
+    RunCheckpoint,
+    RunDetail,
+    RunMonitoringResult,
+    RunSummary,
+    RunTokenizer,
+    TenantWorkspaceDetail,
+    TenantWorkspaceSummary,
+    TrainingConfiguration,
+    UploadInstruction,
+)
+from .platform_catalog import PlatformCatalogClient
+from .results import DownloadResult, TransferFile, UploadResult
+from .retry import RetryPolicy
+from .tenant_workspace import TenantWorkspaceClient
+from .training import TrainingClient
+from .wait import WaitPolicy, WaitTimeoutError
 
 __all__ = [
     "OneNexusAPIError",
+    "ActionResult",
+    "DataHubClient",
+    "DatasetDetail",
+    "DatasetSizeResult",
+    "DatasetSummary",
+    "DownloadResult",
+    "ExperimentDetail",
+    "ExperimentSummary",
+    "FileItem",
+    "Flavor",
+    "InferenceClient",
+    "InferenceActionResult",
+    "InferenceConfiguration",
+    "InferenceEndpoint",
+    "InferenceInstanceDetail",
+    "InferenceInstanceSummary",
+    "InferenceMonitoringResult",
+    "ModelDetail",
+    "ModelRegistryClient",
+    "ModelSummary",
+    "ModelVersionDetail",
+    "ModelVersionSizeResult",
+    "ModelVersionSummary",
+    "MonitoringResult",
     "NexusAIClient",
     "OneNexusClient",
     "OneNexusError",
+    "Page",
+    "PlatformCatalogClient",
+    "RetryPolicy",
+    "RunCheckpoint",
+    "RunDetail",
+    "RunMonitoringResult",
+    "RunSummary",
+    "RunTokenizer",
+    "TenantWorkspaceClient",
+    "TenantWorkspaceDetail",
+    "TenantWorkspaceSummary",
+    "TrainingClient",
+    "TrainingConfiguration",
+    "TransferFile",
+    "UploadInstruction",
+    "UploadResult",
+    "WaitPolicy",
+    "WaitTimeoutError",
+    "__version__",
     "create_cas_client",
 ]

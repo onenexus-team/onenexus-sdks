@@ -1,0 +1,198 @@
+from __future__ import annotations
+
+import io
+import json
+from urllib.error import HTTPError, URLError
+
+import pytest
+
+import nexusai._internal.http as http_module
+from nexusai import RetryPolicy
+from nexusai.errors import OneNexusAPIError, OneNexusError
+from nexusai._internal.http import APIClient
+
+
+class Response:
+    status = 200
+
+    def __init__(
+        self,
+        payload: object,
+        *,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        self._payload = json.dumps(payload).encode()
+        self.headers = headers or {}
+
+    def __enter__(self) -> Response:
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return self._payload
+
+
+def http_error(status: int, *, retry_after: str | None = None) -> HTTPError:
+    headers = {"Retry-After": retry_after} if retry_after is not None else {}
+    return HTTPError(
+        "https://api.example.test",
+        status,
+        "temporary failure",
+        headers,
+        io.BytesIO(b'{"code":"TEMPORARY","message":"retry"}'),
+    )
+
+
+def client(*, max_attempts: int = 3) -> APIClient:
+    return APIClient(
+        token="token",
+        base_url="https://api.example.test",
+        retry_policy=RetryPolicy(
+            max_attempts=max_attempts,
+            max_elapsed_seconds=30,
+            base_delay_seconds=0,
+            max_delay_seconds=10,
+        ),
+    )
+
+
+def test_read_operation_retries_transient_http_error(monkeypatch) -> None:
+    attempts = [http_error(503), Response({"data": []})]
+
+    def send(*_args, **_kwargs):
+        response = attempts.pop(0)
+        if isinstance(response, HTTPError):
+            raise response
+        return response
+
+    monkeypatch.setattr(http_module, "urlopen", send)
+    monkeypatch.setattr(http_module.time, "sleep", lambda _delay: None)
+
+    assert client().post("/v1/DataHub/ListDatasets", {}) == []
+    assert attempts == []
+
+
+def test_mutation_without_idempotency_key_is_never_retried(monkeypatch) -> None:
+    calls = 0
+
+    def fail(*_args, **_kwargs):
+        nonlocal calls
+        calls += 1
+        raise http_error(503)
+
+    monkeypatch.setattr(http_module, "urlopen", fail)
+
+    with pytest.raises(OneNexusAPIError):
+        client().post("/v1/DataHub/CreateDataset", {"name": "dataset"})
+
+    assert calls == 1
+
+
+def test_mutation_with_stable_idempotency_key_can_retry(monkeypatch) -> None:
+    responses = [http_error(503), Response({"data": {"id": "dataset-1"}})]
+    requests = []
+
+    def send(request, **_kwargs):
+        requests.append(request)
+        response = responses.pop(0)
+        if isinstance(response, HTTPError):
+            raise response
+        return response
+
+    monkeypatch.setattr(http_module, "urlopen", send)
+    monkeypatch.setattr(http_module.time, "sleep", lambda _delay: None)
+
+    result = client().post(
+        "/v1/DataHub/StartDatasetUpload",
+        {"dataset_id": "dataset-1", "idempotency_key": "stable-key"},
+    )
+
+    assert result == {"id": "dataset-1"}
+    assert len(requests) == 2
+    assert requests[0].data == requests[1].data
+    assert requests[0].get_header("X-request-id") == requests[1].get_header(
+        "X-request-id"
+    )
+
+
+def test_retry_exhaustion_has_bounded_attempt_count(monkeypatch) -> None:
+    calls = 0
+
+    def fail(*_args, **_kwargs):
+        nonlocal calls
+        calls += 1
+        raise URLError("network unavailable")
+
+    monkeypatch.setattr(http_module, "urlopen", fail)
+    monkeypatch.setattr(http_module.time, "sleep", lambda _delay: None)
+
+    with pytest.raises(OneNexusError, match="Could not connect"):
+        client(max_attempts=3).post("/v1/DataHub/GetDataset", {"dataset_id": "d"})
+
+    assert calls == 3
+
+
+def test_retry_after_controls_delay(monkeypatch) -> None:
+    responses = [http_error(429, retry_after="2"), Response({"data": {}})]
+    delays: list[float] = []
+
+    def send(*_args, **_kwargs):
+        response = responses.pop(0)
+        if isinstance(response, HTTPError):
+            raise response
+        return response
+
+    monkeypatch.setattr(http_module, "urlopen", send)
+    monkeypatch.setattr(http_module.time, "sleep", delays.append)
+
+    client().post("/v1/DataHub/GetDataset", {"dataset_id": "d"})
+
+    assert delays == [2.0]
+
+
+def test_requests_include_sdk_version_and_request_id(monkeypatch) -> None:
+    requests = []
+
+    def send(request, **_kwargs):
+        requests.append(request)
+        return Response({"data": {}})
+
+    monkeypatch.setattr(http_module, "urlopen", send)
+
+    client().post("/v1/DataHub/GetDataset", {"dataset_id": "d"})
+
+    assert requests[0].get_header("User-agent").startswith("nexusai/")
+    assert requests[0].get_header("X-request-id")
+
+
+def test_response_and_error_request_ids_prefer_server_headers(monkeypatch) -> None:
+    responses = [
+        Response(
+            {"data": []},
+            headers={"X-Request-ID": "server-request-1"},
+        ),
+        HTTPError(
+            "https://api.example.test",
+            404,
+            "not found",
+            {"X-Trace-ID": "server-trace-2"},
+            io.BytesIO(b'{"code":"NOT_FOUND","message":"missing"}'),
+        ),
+    ]
+
+    def send(*_args, **_kwargs):
+        response = responses.pop(0)
+        if isinstance(response, HTTPError):
+            raise response
+        return response
+
+    monkeypatch.setattr(http_module, "urlopen", send)
+    api = client()
+
+    page = api.post_page("/v1/DataHub/ListDatasets", type("Item", (), {}))
+    assert page.request_id == "server-request-1"
+    with pytest.raises(OneNexusAPIError) as caught:
+        api.post("/v1/DataHub/GetDataset", {"dataset_id": "missing"})
+    assert caught.value.request_id == "server-trace-2"

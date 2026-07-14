@@ -4,21 +4,49 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nexusai"
-version = "0.0.3"
+dynamic = ["version"]
 description = "NexusAI MLOps SDK and CLI"
+readme = "README.md"
 requires-python = ">=3.11"
+authors = [{name = "OneNexus Team"}]
+maintainers = [{name = "OneNexus Team"}]
+license = "LicenseRef-Proprietary"
+keywords = ["ai", "mlops", "training", "inference", "onenexus"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
 dependencies = [
     "boto3>=1.34",
     "PyJWT[crypto]>=2.8",
-    "onenexus-sdk-core @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v0.0.2/onenexus_sdk_core-0.0.2-py3-none-any.whl",
-    "onenexus-cas-client @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v0.0.2/onenexus_cas_client-0.0.2-py3-none-any.whl",
+    "onenexus-sdk-core @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v0.0.2/onenexus_sdk_core-0.0.2-py3-none-any.whl#sha256=4d12ecef5bea8326f1a6506bbe5c01be9f021dd948ffed0548a9affb5d3a319a",
+    "onenexus-cas-client @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v0.0.2/onenexus_cas_client-0.0.2-py3-none-any.whl#sha256=c3ce161dc7ee6f76932444456f23ae4cc8622976c3ecdc35a539ff1666ad1655",
 ]
+
+[project.urls]
+Homepage = "https://github.com/onenexus-team/onenexus-sdks"
+Documentation = "https://github.com/onenexus-team/onenexus-sdks/tree/main/python/packages/nexusai"
+Issues = "https://github.com/onenexus-team/onenexus-sdks/issues"
+Security = "https://github.com/onenexus-team/onenexus-sdks/security"
+Support = "https://github.com/onenexus-team/onenexus-sdks/issues"
+Changelog = "https://github.com/onenexus-team/onenexus-sdks/blob/main/python/packages/nexusai/CHANGELOG.md"
 
 [project.scripts]
 nexusai = "nexusai.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["nexusai*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "nexusai._version.__version__"}
+
+[tool.setuptools.package-data]
+nexusai = ["py.typed"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

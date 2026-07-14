@@ -1,0 +1,154 @@
+name: NexusAI release
+
+on:
+  push:
+    tags:
+      - "nexusai-v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: NexusAI version to build (for example, 0.1.0)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: nexusai-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Test, build, and release NexusAI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pinned uv
+        run: python -m pip install --disable-pip-version-check uv==0.11.21
+
+      - name: Validate package and release versions
+        id: version
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          package_version="$(python - <<'PY'
+          from pathlib import Path
+          import re
+
+          source = Path("python/packages/nexusai/nexusai/_version.py").read_text()
+          match = re.search(r'^__version__\s*=\s*"([^"]+)"$', source, re.MULTILINE)
+          if match is None:
+              raise SystemExit("could not read NexusAI __version__")
+          print(match.group(1))
+          PY
+          )"
+
+          if [[ ! "$package_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([a-zA-Z0-9.+-]+)?$ ]]; then
+            echo "Invalid NexusAI package version: $package_version" >&2
+            exit 1
+          fi
+
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            expected_tag="nexusai-v${package_version}"
+            if [[ "$GITHUB_REF_NAME" != "$expected_tag" ]]; then
+              echo "Tag $GITHUB_REF_NAME must match $expected_tag" >&2
+              exit 1
+            fi
+          elif [[ "$DISPATCH_VERSION" != "$package_version" ]]; then
+            echo "Dispatch version $DISPATCH_VERSION must match package version $package_version" >&2
+            exit 1
+          fi
+
+          echo "version=$package_version" >> "$GITHUB_OUTPUT"
+          echo "tag=nexusai-v$package_version" >> "$GITHUB_OUTPUT"
+
+      - name: Sync NexusAI development environment
+        working-directory: python
+        run: uv sync --package nexusai --all-extras --frozen
+
+      - name: Run NexusAI tests
+        working-directory: python
+        run: uv run --package nexusai pytest -q packages/nexusai/tests
+
+      - name: Run NexusAI lint
+        working-directory: python
+        run: uv run --package nexusai ruff check packages/nexusai
+
+      - name: Run NexusAI strict type checking
+        working-directory: python
+        run: uv run --package nexusai mypy packages/nexusai/nexusai
+
+      - name: Build NexusAI wheel
+        working-directory: python
+        run: |
+          mkdir -p ../.artifacts/nexusai
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          uv build --package nexusai --wheel --out-dir ../.artifacts/nexusai
+          sha256sum ../.artifacts/nexusai/*.whl > ../.artifacts/nexusai/SHA256SUMS
+
+      - name: Verify clean wheel installation and public imports
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/nexusai-wheel-smoke"
+          "$RUNNER_TEMP/nexusai-wheel-smoke/bin/pip" install \
+            --disable-pip-version-check \
+            .artifacts/nexusai/*.whl
+          "$RUNNER_TEMP/nexusai-wheel-smoke/bin/pip" check
+          "$RUNNER_TEMP/nexusai-wheel-smoke/bin/python" - <<'PY'
+          import importlib.util
+
+          import nexusai
+          from nexusai import NexusAIClient, OneNexusClient, RetryPolicy
+
+          assert nexusai.__version__
+          assert NexusAIClient is OneNexusClient
+          assert RetryPolicy is not None
+          assert importlib.util.find_spec("nexusai.rpc_training") is None
+          assert importlib.util.find_spec("nexusai.storage") is None
+          PY
+          "$RUNNER_TEMP/nexusai-wheel-smoke/bin/nexusai" --help >/dev/null
+
+      - name: Upload reviewed workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexusai-${{ steps.version.outputs.version }}
+          path: |
+            .artifacts/nexusai/*.whl
+            .artifacts/nexusai/SHA256SUMS
+          if-no-files-found: error
+
+      - name: Attest wheel provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: .artifacts/nexusai/*.whl
+
+      - name: Create immutable NexusAI GitHub release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" \
+            .artifacts/nexusai/*.whl \
+            .artifacts/nexusai/SHA256SUMS \
+            --verify-tag \
+            --title "NexusAI $RELEASE_VERSION" \
+            --generate-notes

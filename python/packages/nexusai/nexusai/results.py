@@ -1,16 +1,23 @@
 from dataclasses import dataclass
-from typing import Any
-
-from .storage import StorageTransferFile
+from typing import Generic, TypeVar
 
 
-@dataclass(frozen=True)
-class UploadResult:
-    resource: dict[str, Any]
-    files: list[StorageTransferFile]
+ResourceT = TypeVar("ResourceT")
 
 
 @dataclass(frozen=True)
-class DownloadResult:
-    resource: dict[str, Any]
-    files: list[StorageTransferFile]
+class TransferFile:
+    path: str
+    size_bytes: int
+
+
+@dataclass(frozen=True)
+class UploadResult(Generic[ResourceT]):
+    resource: ResourceT
+    files: list[TransferFile]
+
+
+@dataclass(frozen=True)
+class DownloadResult(Generic[ResourceT]):
+    resource: ResourceT
+    files: list[TransferFile]

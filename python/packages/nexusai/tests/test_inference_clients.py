@@ -1,32 +1,22 @@
-from nexusai.rpc_inference import RpcInferenceClient
+from nexusai.inference import InferenceClient
 
 
 class FakeAPI:
     def __init__(self):
         self.calls = []
-        self.post_dict = self.post
-        self.post_list = self.post
 
-    def get(self, path, params=None):
-        self.calls.append(("GET", path, params))
-        return {"ok": True}
-
-    def post(self, path, body=None):
+    def post_model(self, path, _model, body=None):
         self.calls.append(("POST", path, body))
-        return {"ok": True}
+        return object()
 
-    def patch(self, path, body=None):
-        self.calls.append(("PATCH", path, body))
-        return {"ok": True}
-
-    def delete(self, path):
-        self.calls.append(("DELETE", path, None))
-        return {"ok": True}
+    def post_page(self, path, _model, body=None):
+        self.calls.append(("POST", path, body))
+        return object()
 
 
-def test_rpc_inference_create_instance_uses_id_based_pascal_case_endpoint():
+def test_inference_create_instance_uses_id_based_pascal_case_endpoint():
     api = FakeAPI()
-    client = RpcInferenceClient(api)
+    client = InferenceClient(api)
 
     client.create_inference_instance(
         name="qwen3-8b",
@@ -53,9 +43,9 @@ def test_rpc_inference_create_instance_uses_id_based_pascal_case_endpoint():
     ]
 
 
-def test_rpc_inference_lifecycle_and_observability_endpoints():
+def test_inference_lifecycle_and_observability_endpoints():
     api = FakeAPI()
-    client = RpcInferenceClient(api)
+    client = InferenceClient(api)
 
     client.stop_inference_instance("inf-1")
     client.restart_inference_instance("inf-1")
@@ -98,9 +88,9 @@ def test_rpc_inference_lifecycle_and_observability_endpoints():
     ]
 
 
-def test_rpc_inference_query_update_delete_and_endpoint_methods():
+def test_inference_query_update_delete_and_endpoint_methods():
     api = FakeAPI()
-    client = RpcInferenceClient(api)
+    client = InferenceClient(api)
 
     client.list_inference_instances(
         page=1,

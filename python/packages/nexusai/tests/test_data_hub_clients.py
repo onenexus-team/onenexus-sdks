@@ -1,5 +1,6 @@
-from nexusai import rpc_data_hub as rpc_data_hub_module
-from nexusai.rpc_data_hub import RpcDataHubClient
+from nexusai import RetryPolicy
+from nexusai._internal import data_hub_transfer
+from nexusai._internal.data_hub_transfer import DataHubTransferClient
 
 
 class AssumeS3RoleResponse:
@@ -31,6 +32,7 @@ class UploadedFile:
 class FakeAPI:
     def __init__(self):
         self.calls = []
+        self.retry_policy = RetryPolicy(enabled=False)
         self.post_dict = self.post
         self.post_list = self.post
 
@@ -46,16 +48,16 @@ class FakeAPI:
             return {"id": body["dataset_id"], "name": "dataset", "status": "FINALIZED"}
         if path == "/v1/DataHub/StartDatasetUpload":
             return {"id": "upload-session-1"}
-        if path == "/v1/TenantWorkspace/ListTenantWorkspaces":
-            return [{"datahub_bucket": "data-bucket"}]
+        if path == "/protected/v1/DataHub/GetDatasetTransferTarget":
+            return {"bucket": "data-bucket", "prefix": "dataset-1"}
         if path == "/v1/DataHub/FinalizeDatasetUpload":
             return {"id": "upload-session-1", "status": "FINALIZED"}
         return {"ok": True}
 
 
-def test_rpc_data_hub_upload_instruction_uses_pascal_case_endpoint():
+def test_data_hub_transport_upload_instruction_uses_pascal_case_endpoint():
     api = FakeAPI()
-    client = RpcDataHubClient(api)
+    client = DataHubTransferClient(api)
 
     client.upload_dataset_instruction("dataset-1")
 
@@ -68,10 +70,10 @@ def test_rpc_data_hub_upload_instruction_uses_pascal_case_endpoint():
     ]
 
 
-def test_rpc_dataset_upload_uses_runtime_cas_credential(monkeypatch):
+def test_dataset_upload_uses_runtime_cas_credential(monkeypatch):
     api = FakeAPI()
     cas = FakeCasClient()
-    client = RpcDataHubClient(
+    client = DataHubTransferClient(
         api,
         cas_client_factory=lambda: cas,
         s3_endpoint_url="https://s3.test",
@@ -83,7 +85,7 @@ def test_rpc_dataset_upload_uses_runtime_cas_credential(monkeypatch):
         upload_calls.append((source_path, credential))
         return [UploadedFile("dataset-1/train.jsonl", 10)]
 
-    monkeypatch.setattr(rpc_data_hub_module, "upload_path", fake_upload_path)
+    monkeypatch.setattr(data_hub_transfer, "upload_path", fake_upload_path)
 
     result = client.upload_dataset(name="dataset", source_path="/tmp/data")
 
@@ -127,8 +129,8 @@ def test_rpc_dataset_upload_uses_runtime_cas_credential(monkeypatch):
         ),
         (
             "POST",
-            "/v1/TenantWorkspace/ListTenantWorkspaces",
-            {"page": 1, "limit": 1},
+            "/protected/v1/DataHub/GetDatasetTransferTarget",
+            {"dataset_id": "dataset-1"},
         ),
         (
             "POST",
