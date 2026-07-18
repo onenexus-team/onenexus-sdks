@@ -59,16 +59,17 @@ python -m venv .venv
 
 ## Release wheels
 
-Python package versions are read from the repository-level `../VERSION` file.
-When `VERSION` changes on the `main` branch, the Python SDK Release workflow
-builds wheels for:
+Local Python package versions are read from the repository-level `../VERSION`
+file. Publishing a GitHub release with a tag such as `v0.0.6` triggers the SDK
+release workflow, which derives `0.0.6` from the tag and builds wheels for:
 
 - `onenexus-sdk-core`
 - `onenexus-cas-client`
 - `onenexus-boto3`
 
-The workflow uploads the wheels as a workflow artifact and attaches them to the
-GitHub release tagged `v<VERSION>`.
+The workflow runs in parallel with the TypeScript release job, caches uv package
+restores, uploads the wheels as a workflow artifact, and attaches them to the
+GitHub release that triggered the workflow.
 
 Consumers can install from the release asset URLs directly. For example, for
 version `0.0.1`:

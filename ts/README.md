@@ -53,12 +53,13 @@ local tarballs under `ts/.local-packages/`.
 
 ## Release packages
 
-TypeScript package versions are synchronized from the repository-level
-`../VERSION` file before packaging and publishing. When `VERSION` changes on the
-`main` branch, the SDK release workflow builds and tests the TypeScript packages,
-uploads the `.tgz` tarballs as a workflow artifact, attaches them to the GitHub
-release tagged `v<VERSION>`, and publishes the packages to GitHub Packages' npm
-registry.
+Local TypeScript package versions are synchronized from the repository-level
+`../VERSION` file before packaging. Publishing a GitHub release with a tag such
+as `v0.0.6` triggers the SDK release workflow, which derives `0.0.6` from the tag
+and uses it as every package version. The TypeScript job runs in parallel with
+the Python job, caches pnpm package restores, builds and tests the workspace,
+attaches the `.tgz` tarballs to the triggering release, and publishes the
+packages to GitHub Packages' npm registry.
 
 Consumers using GitHub Packages need an npm token that can read packages and a
 scope mapping for the OneNexus packages:
