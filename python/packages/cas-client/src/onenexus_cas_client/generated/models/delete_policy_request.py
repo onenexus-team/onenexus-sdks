@@ -6,10 +6,10 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class DeletePolicyRequest(Parsable):
-    # The expectedStateToken property
-    expected_state_token: Optional[str] = None
-    # The policyId property
-    policy_id: Optional[str] = None
+    # The expectedContentStateToken property
+    expected_content_state_token: Optional[str] = None
+    # The name property
+    name: Optional[str] = None
     # The requestId property
     request_id: Optional[str] = None
     
@@ -30,8 +30,8 @@ class DeletePolicyRequest(Parsable):
         Returns: dict[str, Callable[[ParseNode], None]]
         """
         fields: dict[str, Callable[[Any], None]] = {
-            "expectedStateToken": lambda n : setattr(self, 'expected_state_token', n.get_str_value()),
-            "policyId": lambda n : setattr(self, 'policy_id', n.get_str_value()),
+            "expectedContentStateToken": lambda n : setattr(self, 'expected_content_state_token', n.get_str_value()),
+            "name": lambda n : setattr(self, 'name', n.get_str_value()),
             "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
         }
         return fields
@@ -44,8 +44,8 @@ class DeletePolicyRequest(Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_str_value("expectedStateToken", self.expected_state_token)
-        writer.write_str_value("policyId", self.policy_id)
+        writer.write_str_value("expectedContentStateToken", self.expected_content_state_token)
+        writer.write_str_value("name", self.name)
         writer.write_str_value("requestId", self.request_id)
     
 

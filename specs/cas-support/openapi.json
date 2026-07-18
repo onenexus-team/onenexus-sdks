@@ -2,14 +2,9 @@
   "openapi": "3.1.1",
   "info": {
     "title": "OneNexus Central Auth Service — Support API",
-    "description": "Support-team JSON RPC operations under `/support-api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/connect/.well-known/openid-configuration`.",
+    "description": "Support-team JSON RPC operations under `/support-api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.",
     "version": "v1"
   },
-  "servers": [
-    {
-      "url": "https://cas.onenexus.local/"
-    }
-  ],
   "paths": {
     "/support-api/GetS3DefaultAccount": {
       "post": {
@@ -46,14 +41,19 @@
           "503": {
             "description": "Service Unavailable",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/support-api/ProvisionS3DefaultAccount": {
@@ -91,7 +91,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -101,14 +101,19 @@
           "503": {
             "description": "Service Unavailable",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/support-api/ListS3Accounts": {
@@ -146,14 +151,99 @@
           "503": {
             "description": "Service Unavailable",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/support-api/EvaluateAuthorization": {
+      "post": {
+        "tags": [
+          "SupportAuthorization"
+        ],
+        "operationId": "EvaluateAuthorization",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateAuthorizationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateAuthorizationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluateAuthorizationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/support-api/CreateTenant": {
@@ -191,9 +281,19 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -201,14 +301,19 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/support-api/DescribeTenant": {
@@ -246,7 +351,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
                 }
@@ -256,14 +361,19 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/support-api/ListTenants": {
@@ -301,14 +411,19 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/support-api/ListTenantUsers": {
@@ -346,7 +461,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
                 }
@@ -356,14 +471,19 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/support-api/AddTenantUser": {
@@ -401,9 +521,19 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -411,14 +541,19 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     }
   },
@@ -456,10 +591,227 @@
           }
         }
       },
+      "CedarDiagnosticEntity": {
+        "required": [
+          "uid",
+          "attributes",
+          "parents",
+          "tags"
+        ],
+        "type": "object",
+        "properties": {
+          "uid": {
+            "$ref": "#/components/schemas/CedarDiagnosticEntityUid"
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CedarDiagnosticValue"
+            }
+          },
+          "parents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CedarDiagnosticEntityUid"
+            }
+          },
+          "tags": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CedarDiagnosticValue"
+            }
+          }
+        }
+      },
+      "CedarDiagnosticEntityUid": {
+        "required": [
+          "type",
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "CedarDiagnosticValue": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticBooleanValue"
+          },
+          {
+            "$ref": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticLongValue"
+          },
+          {
+            "$ref": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticStringValue"
+          },
+          {
+            "$ref": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticEntityUidValue"
+          },
+          {
+            "$ref": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticSetValue"
+          },
+          {
+            "$ref": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticRecordValue"
+          },
+          {
+            "$ref": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticExtensionValue"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "boolean": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticBooleanValue",
+            "long": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticLongValue",
+            "string": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticStringValue",
+            "entity": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticEntityUidValue",
+            "set": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticSetValue",
+            "record": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticRecordValue",
+            "extension": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticExtensionValue"
+          }
+        }
+      },
+      "CedarDiagnosticValueCedarDiagnosticBooleanValue": {
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "boolean"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CedarDiagnosticValueCedarDiagnosticEntityUidValue": {
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "entity"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/CedarDiagnosticEntityUid"
+          }
+        }
+      },
+      "CedarDiagnosticValueCedarDiagnosticExtensionValue": {
+        "required": [
+          "function",
+          "value"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "extension"
+            ],
+            "type": "string"
+          },
+          "function": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "CedarDiagnosticValueCedarDiagnosticLongValue": {
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "long"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "CedarDiagnosticValueCedarDiagnosticRecordValue": {
+        "required": [
+          "fields"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "record"
+            ],
+            "type": "string"
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CedarDiagnosticValue"
+            }
+          }
+        }
+      },
+      "CedarDiagnosticValueCedarDiagnosticSetValue": {
+        "required": [
+          "elements"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "set"
+            ],
+            "type": "string"
+          },
+          "elements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CedarDiagnosticValue"
+            }
+          }
+        }
+      },
+      "CedarDiagnosticValueCedarDiagnosticStringValue": {
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "string"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
       "CreateTenantRequest": {
         "required": [
           "name",
           "displayName",
+          "initialAdminEmail",
+          "initialAdminDisplayName",
           "clientToken"
         ],
         "type": "object",
@@ -470,6 +822,16 @@
             "type": "string"
           },
           "displayName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "initialAdminEmail": {
+            "maxLength": 254,
+            "minLength": 3,
+            "type": "string"
+          },
+          "initialAdminDisplayName": {
             "maxLength": 200,
             "minLength": 1,
             "type": "string"
@@ -491,6 +853,20 @@
           "tenantId": {
             "type": "string",
             "format": "uuid"
+          },
+          "initialAdminInvitationUrl": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uri"
+          },
+          "initialAdminInvitationExpiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -541,6 +917,68 @@
       "EmptyS3Request": {
         "type": "object"
       },
+      "EvaluateAuthorizationRequest": {
+        "required": [
+          "requestId",
+          "principal",
+          "action",
+          "resource"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string"
+          },
+          "principal": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "type": "string"
+          },
+          "action": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "resource": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          },
+          "context": {
+            "$ref": "#/components/schemas/JsonElement"
+          }
+        }
+      },
+      "EvaluateAuthorizationResponse": {
+        "required": [
+          "allowed",
+          "reasonCode",
+          "authorizationGeneration",
+          "cedarEntities"
+        ],
+        "type": "object",
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "authorizationGeneration": {
+            "type": "string"
+          },
+          "cedarEntities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CedarDiagnosticEntity"
+            }
+          }
+        }
+      },
+      "JsonElement": { },
       "ListS3AccountsResponse": {
         "type": "object",
         "properties": {
@@ -674,6 +1112,10 @@
         }
       },
       "ProblemDetails": {
+        "required": [
+          "code",
+          "requestId"
+        ],
         "type": "object",
         "properties": {
           "type": {
@@ -708,6 +1150,14 @@
               "null",
               "string"
             ]
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable machine-readable CAS error code."
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Request correlation identifier."
           }
         }
       },
@@ -871,7 +1321,11 @@
         }
       },
       "TenantStatus": {
-        "type": "integer"
+        "enum": [
+          "Active",
+          "Suspended",
+          "Provisioning"
+        ]
       },
       "TenantSummary": {
         "required": [
@@ -914,6 +1368,7 @@
       "TenantUserSummary": {
         "required": [
           "userId",
+          "userUri",
           "email",
           "displayName",
           "emailConfirmed",
@@ -924,6 +1379,9 @@
           "userId": {
             "type": "string",
             "format": "uuid"
+          },
+          "userUri": {
+            "type": "string"
           },
           "email": {
             "type": "string"
@@ -943,6 +1401,7 @@
       "UserDto": {
         "required": [
           "userId",
+          "userUri",
           "tenantId",
           "email",
           "displayName",
@@ -954,6 +1413,9 @@
           "userId": {
             "type": "string",
             "format": "uuid"
+          },
+          "userUri": {
+            "type": "string"
           },
           "tenantId": {
             "type": "string",
@@ -975,6 +1437,10 @@
         }
       },
       "ValidationProblemDetails": {
+        "required": [
+          "code",
+          "requestId"
+        ],
         "type": "object",
         "properties": {
           "type": {
@@ -1018,14 +1484,33 @@
                 "type": "string"
               }
             }
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable machine-readable CAS error code."
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Request correlation identifier."
           }
         }
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "CAS-issued OAuth 2.0 bearer token with the onenexus-cas-api audience.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },
   "tags": [
     {
       "name": "CephS3"
+    },
+    {
+      "name": "SupportAuthorization"
     },
     {
       "name": "Tenant"

@@ -20,6 +20,8 @@ class UserDto(Parsable):
     tenant_id: Optional[UUID] = None
     # The userId property
     user_id: Optional[UUID] = None
+    # The userUri property
+    user_uri: Optional[str] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> UserDto:
@@ -44,6 +46,7 @@ class UserDto(Parsable):
             "emailConfirmed": lambda n : setattr(self, 'email_confirmed', n.get_bool_value()),
             "tenantId": lambda n : setattr(self, 'tenant_id', n.get_uuid_value()),
             "userId": lambda n : setattr(self, 'user_id', n.get_uuid_value()),
+            "userUri": lambda n : setattr(self, 'user_uri', n.get_str_value()),
         }
         return fields
     
@@ -61,5 +64,6 @@ class UserDto(Parsable):
         writer.write_bool_value("emailConfirmed", self.email_confirmed)
         writer.write_uuid_value("tenantId", self.tenant_id)
         writer.write_uuid_value("userId", self.user_id)
+        writer.write_str_value("userUri", self.user_uri)
     
 

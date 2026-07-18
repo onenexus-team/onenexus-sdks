@@ -37,9 +37,6 @@ class CasGeneratedClient(BaseRequestBuilder):
         register_default_deserializer(JsonParseNodeFactory)
         register_default_deserializer(TextParseNodeFactory)
         register_default_deserializer(FormParseNodeFactory)
-        if not self.request_adapter.base_url:
-            self.request_adapter.base_url = "https://cas.onenexus.local"
-        self.path_parameters["base_url"] = self.request_adapter.base_url
     
     @property
     def api(self) -> ApiRequestBuilder:

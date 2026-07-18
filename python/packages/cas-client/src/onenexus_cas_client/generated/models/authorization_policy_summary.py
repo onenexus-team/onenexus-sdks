@@ -4,24 +4,27 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from kiota_abstractions.serialization import Parsable, ParseNode, SerializationWriter
 from typing import Any, Optional, TYPE_CHECKING, Union
-from uuid import UUID
+
+if TYPE_CHECKING:
+    from .authorization_policy_kind import AuthorizationPolicyKind
+    from .authorization_policy_lifecycle_status import AuthorizationPolicyLifecycleStatus
 
 @dataclass
 class AuthorizationPolicySummary(Parsable):
+    # The contentStateToken property
+    content_state_token: Optional[str] = None
+    # The description property
+    description: Optional[str] = None
     # The documentHash property
     document_hash: Optional[str] = None
-    # The id property
-    id: Optional[UUID] = None
+    # The kind property
+    kind: Optional[AuthorizationPolicyKind] = None
     # The name property
     name: Optional[str] = None
-    # The policyId property
-    policy_id: Optional[str] = None
     # The publishedAtUtc property
     published_at_utc: Optional[datetime.datetime] = None
-    # The stateToken property
-    state_token: Optional[str] = None
     # The status property
-    status: Optional[int] = None
+    status: Optional[AuthorizationPolicyLifecycleStatus] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> AuthorizationPolicySummary:
@@ -39,14 +42,20 @@ class AuthorizationPolicySummary(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
+        from .authorization_policy_kind import AuthorizationPolicyKind
+        from .authorization_policy_lifecycle_status import AuthorizationPolicyLifecycleStatus
+
+        from .authorization_policy_kind import AuthorizationPolicyKind
+        from .authorization_policy_lifecycle_status import AuthorizationPolicyLifecycleStatus
+
         fields: dict[str, Callable[[Any], None]] = {
+            "contentStateToken": lambda n : setattr(self, 'content_state_token', n.get_str_value()),
+            "description": lambda n : setattr(self, 'description', n.get_str_value()),
             "documentHash": lambda n : setattr(self, 'document_hash', n.get_str_value()),
-            "id": lambda n : setattr(self, 'id', n.get_uuid_value()),
+            "kind": lambda n : setattr(self, 'kind', n.get_enum_value(AuthorizationPolicyKind)),
             "name": lambda n : setattr(self, 'name', n.get_str_value()),
-            "policyId": lambda n : setattr(self, 'policy_id', n.get_str_value()),
             "publishedAtUtc": lambda n : setattr(self, 'published_at_utc', n.get_datetime_value()),
-            "stateToken": lambda n : setattr(self, 'state_token', n.get_str_value()),
-            "status": lambda n : setattr(self, 'status', n.get_int_value()),
+            "status": lambda n : setattr(self, 'status', n.get_enum_value(AuthorizationPolicyLifecycleStatus)),
         }
         return fields
     
@@ -58,12 +67,12 @@ class AuthorizationPolicySummary(Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
+        writer.write_str_value("contentStateToken", self.content_state_token)
+        writer.write_str_value("description", self.description)
         writer.write_str_value("documentHash", self.document_hash)
-        writer.write_uuid_value("id", self.id)
+        writer.write_enum_value("kind", self.kind)
         writer.write_str_value("name", self.name)
-        writer.write_str_value("policyId", self.policy_id)
         writer.write_datetime_value("publishedAtUtc", self.published_at_utc)
-        writer.write_str_value("stateToken", self.state_token)
-        writer.write_int_value("status", self.status)
+        writer.write_enum_value("status", self.status)
     
 

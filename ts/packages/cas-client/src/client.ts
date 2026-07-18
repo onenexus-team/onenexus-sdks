@@ -5,27 +5,48 @@ import type {
     AcceptInvitationResponse,
     AddServiceClientKeyRequest,
     AddServiceClientKeyResponse,
+    AssignRoleRequest,
+    AssignRoleResponse,
     AssumeS3RoleRequest,
     AssumeS3RoleResponse,
+    AttachPolicyToRoleRequest,
+    AttachPolicyToRoleResponse,
+    AuthorizationRelationshipRemovedResponse,
+    CreateAuthorizationRoleRequest,
+    CreateAuthorizationRoleResponse,
     CreateServiceClientRequest,
     CreateServiceClientResponse,
     CreateUserRequest,
     CreateUserResponse,
+    DeleteAuthorizationRoleRequest,
+    DeleteAuthorizationRoleResponse,
     DeletePolicyRequest,
     DeletePolicyResponse,
-    EmptyS3Request,
+    DetachPolicyFromRoleRequest,
     GetPolicyRequest,
     GetPolicyResponse,
+    ListAuthorizationRolesRequest,
+    ListAuthorizationRolesResponse,
     ListPoliciesRequest,
     ListPoliciesResponse,
+    ListPolicyAttachmentsRequest,
+    ListPolicyAttachmentsResponse,
+    ListRoleAssignmentsRequest,
+    ListRoleAssignmentsResponse,
+    ListRolePoliciesRequest,
     ListS3RolesResponse,
     ListServiceClientsResponse,
+    ListTenantUsersResponse,
+    ListUsersRequest,
     PublishPolicyRequest,
     PublishPolicyResponse,
+    RemoveRoleAssignmentRequest,
     UpdatePolicyRequest,
     UpdatePolicyResponse,
 } from './generated/schemas/index.js';
+import { getAuthorizationAdministration } from './generated/authorization-administration/authorization-administration.js';
 import { getAuthorizationPolicy } from './generated/authorization-policy/authorization-policy.js';
+import { getAuthorizationRole } from './generated/authorization-role/authorization-role.js';
 import { getTenantServiceClient } from './generated/tenant-service-client/tenant-service-client.js';
 import { getTenantS3 } from './generated/tenant-s3/tenant-s3.js';
 import { getTenantUser } from './generated/tenant-user/tenant-user.js';
@@ -42,7 +63,7 @@ import type { PlatformMutatorOptions } from './mutator.js';
  * Retry settings (`retry.limit`, `retry.backoffLimitMs`) and credential refresh
  * leeway (`refreshLeewayMs`) are inherited from {@link ClientBaseConfig}.
  */
-export interface CasClientConfig extends ClientBaseConfig {}
+export type CasClientConfig = ClientBaseConfig;
 
 /**
  * Per-call options accepted by every {@link CasClient} method.
@@ -98,14 +119,20 @@ export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * ```
  */
 export class CasClient extends ClientBase {
+    private readonly authorizationAdministration: ReturnType<
+        typeof getAuthorizationAdministration
+    >;
     private readonly authorizationPolicy: ReturnType<typeof getAuthorizationPolicy>;
+    private readonly authorizationRole: ReturnType<typeof getAuthorizationRole>;
     private readonly tenantUser: ReturnType<typeof getTenantUser>;
     private readonly tenantS3: ReturnType<typeof getTenantS3>;
     private readonly tenantServiceClient: ReturnType<typeof getTenantServiceClient>;
 
     constructor(config: CasClientConfig) {
         super(config);
+        this.authorizationAdministration = getAuthorizationAdministration();
         this.authorizationPolicy = getAuthorizationPolicy();
+        this.authorizationRole = getAuthorizationRole();
         this.tenantUser = getTenantUser();
         this.tenantS3 = getTenantS3();
         this.tenantServiceClient = getTenantServiceClient();
@@ -117,6 +144,12 @@ export class CasClient extends ClientBase {
         req: CreateUserRequest,
         options?: CasRequestOptions,
     ): Promise<CreateUserResponse> => this.tenantUser.createUser(req, this.mutatorOptions(options));
+
+    listUsers = (
+        req: ListUsersRequest = {},
+        options?: CasRequestOptions,
+    ): Promise<ListTenantUsersResponse> =>
+        this.tenantUser.listUsers(req, this.mutatorOptions(options));
 
     acceptInvitation = (
         req: AcceptInvitationRequest,
@@ -172,6 +205,70 @@ export class CasClient extends ClientBase {
         options?: CasRequestOptions,
     ): Promise<AddServiceClientKeyResponse> =>
         this.tenantServiceClient.addServiceClientKey(req, this.mutatorOptions(options));
+
+    // -- Authorization roles -----------------------------------------------
+
+    createRole = (
+        req: CreateAuthorizationRoleRequest,
+        options?: CasRequestOptions,
+    ): Promise<CreateAuthorizationRoleResponse> =>
+        this.authorizationRole.createRole(req, this.mutatorOptions(options));
+
+    listRoles = (
+        req: ListAuthorizationRolesRequest = {},
+        options?: CasRequestOptions,
+    ): Promise<ListAuthorizationRolesResponse> =>
+        this.authorizationRole.listRoles(req, this.mutatorOptions(options));
+
+    deleteRole = (
+        req: DeleteAuthorizationRoleRequest,
+        options?: CasRequestOptions,
+    ): Promise<DeleteAuthorizationRoleResponse> =>
+        this.authorizationRole.deleteRole(req, this.mutatorOptions(options));
+
+    // -- Authorization relationships ---------------------------------------
+
+    assignRole = (
+        req: AssignRoleRequest,
+        options?: CasRequestOptions,
+    ): Promise<AssignRoleResponse> =>
+        this.authorizationAdministration.assignRole(req, this.mutatorOptions(options));
+
+    removeRoleAssignment = (
+        req: RemoveRoleAssignmentRequest,
+        options?: CasRequestOptions,
+    ): Promise<AuthorizationRelationshipRemovedResponse> =>
+        this.authorizationAdministration.removeRoleAssignment(req, this.mutatorOptions(options));
+
+    listRoleAssignments = (
+        req: ListRoleAssignmentsRequest = {},
+        options?: CasRequestOptions,
+    ): Promise<ListRoleAssignmentsResponse> =>
+        this.authorizationAdministration.listRoleAssignments(req, this.mutatorOptions(options));
+
+    attachPolicyToRole = (
+        req: AttachPolicyToRoleRequest,
+        options?: CasRequestOptions,
+    ): Promise<AttachPolicyToRoleResponse> =>
+        this.authorizationAdministration.attachPolicyToRole(req, this.mutatorOptions(options));
+
+    detachPolicyFromRole = (
+        req: DetachPolicyFromRoleRequest,
+        options?: CasRequestOptions,
+    ): Promise<AuthorizationRelationshipRemovedResponse> =>
+        this.authorizationAdministration.detachPolicyFromRole(req, this.mutatorOptions(options));
+
+    listPolicyAttachments = (
+        req: ListPolicyAttachmentsRequest,
+        options?: CasRequestOptions,
+    ): Promise<ListPolicyAttachmentsResponse> =>
+        this.authorizationAdministration.listPolicyAttachments(req, this.mutatorOptions(options));
+
+    listRolePolicies = (
+        req: ListRolePoliciesRequest,
+        options?: CasRequestOptions,
+    ): Promise<ListPolicyAttachmentsResponse> =>
+        this.authorizationAdministration.listRolePolicies(req, this.mutatorOptions(options));
 
     // -- Authorization policies --------------------------------------------
 

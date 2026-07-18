@@ -8,6 +8,8 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 class ListPoliciesRequest(Parsable):
     # The after property
     after: Optional[str] = None
+    # The before property
+    before: Optional[str] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> ListPoliciesRequest:
@@ -27,6 +29,7 @@ class ListPoliciesRequest(Parsable):
         """
         fields: dict[str, Callable[[Any], None]] = {
             "after": lambda n : setattr(self, 'after', n.get_str_value()),
+            "before": lambda n : setattr(self, 'before', n.get_str_value()),
         }
         return fields
     
@@ -39,5 +42,6 @@ class ListPoliciesRequest(Parsable):
         if writer is None:
             raise TypeError("writer cannot be null.")
         writer.write_str_value("after", self.after)
+        writer.write_str_value("before", self.before)
     
 

@@ -4,10 +4,15 @@ from dataclasses import dataclass, field
 from kiota_abstractions.serialization import Parsable, ParseNode, SerializationWriter
 from typing import Any, Optional, TYPE_CHECKING, Union
 
+if TYPE_CHECKING:
+    from .authorization_policy_kind import AuthorizationPolicyKind
+
 @dataclass
 class GetPolicyRequest(Parsable):
-    # The policyId property
-    policy_id: Optional[str] = None
+    # The kind property
+    kind: Optional[AuthorizationPolicyKind] = None
+    # The name property
+    name: Optional[str] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> GetPolicyRequest:
@@ -25,8 +30,13 @@ class GetPolicyRequest(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
+        from .authorization_policy_kind import AuthorizationPolicyKind
+
+        from .authorization_policy_kind import AuthorizationPolicyKind
+
         fields: dict[str, Callable[[Any], None]] = {
-            "policyId": lambda n : setattr(self, 'policy_id', n.get_str_value()),
+            "kind": lambda n : setattr(self, 'kind', n.get_enum_value(AuthorizationPolicyKind)),
+            "name": lambda n : setattr(self, 'name', n.get_str_value()),
         }
         return fields
     
@@ -38,6 +48,7 @@ class GetPolicyRequest(Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_str_value("policyId", self.policy_id)
+        writer.write_enum_value("kind", self.kind)
+        writer.write_str_value("name", self.name)
     
 
