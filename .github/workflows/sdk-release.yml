@@ -1,17 +1,17 @@
 name: SDK release
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - VERSION
-  workflow_dispatch:
+  release:
+    types:
+      - published
 
 permissions:
   contents: write
   packages: write
-  id-token: write
+
+concurrency:
+  group: sdk-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
 
 jobs:
   release-python-wheels:
@@ -19,109 +19,109 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - name: Check out release tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
-      - name: Read release version
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv with cache
+        uses: astral-sh/setup-uv@v8
+        with:
+          version: "0.11.21"
+          enable-cache: true
+          cache-dependency-glob: python/uv.lock
+
+      - name: Set package version from release tag
         id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         shell: bash
         run: |
-          version="$(tr -d '[:space:]' < VERSION)"
-          if [[ -z "$version" ]]; then
-            echo "VERSION must not be empty" >&2
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag must match v<major>.<minor>.<patch>; got: $RELEASE_TAG" >&2
             exit 1
           fi
-          if [[ ! "$version" =~ ^[0-9]+(\.[0-9]+)*([a-zA-Z0-9.+_-]+)?$ ]]; then
-            echo "VERSION does not look like a Python package version: $version" >&2
-            exit 1
-          fi
+
+          version="${RELEASE_TAG#v}"
+          printf '%s\n' "$version" > VERSION
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
-      - name: Bootstrap repository toolchain
-        shell: bash
-        run: |
-          source scripts/dev-env.sh
-          dotnet --version
-          uv --version
-
-      - name: Test Python packages
-        shell: bash
+      - name: Restore and test Python packages
         working-directory: python
         run: |
-          source ../scripts/dev-env.sh
-          uv sync --all-extras
+          uv sync --all-extras --frozen
           uv run pytest
 
       - name: Build Python wheels
-        shell: bash
-        run: |
-          source scripts/dev-env.sh
-          bash scripts/build-python-wheels.sh .artifacts/python-wheels
+        run: bash scripts/build-python-wheels.sh .artifacts/python-wheels
 
       - name: Upload workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: python-wheels-${{ steps.version.outputs.version }}
           path: .artifacts/python-wheels/*.whl
           if-no-files-found: error
 
-      - name: Create or update GitHub release
+      - name: Attach Python wheels to GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        shell: bash
-        run: |
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" .artifacts/python-wheels/*.whl --clobber
-          else
-            gh release create "$RELEASE_TAG" .artifacts/python-wheels/*.whl \
-              --title "OneNexus SDKs $RELEASE_VERSION" \
-              --notes "Python SDK wheels built from VERSION $RELEASE_VERSION."
-          fi
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" .artifacts/python-wheels/*.whl --clobber
 
   release-typescript-packages:
     name: Build and publish TypeScript packages
     runs-on: ubuntu-latest
-    needs: release-python-wheels
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - name: Check out release tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
-      - name: Read release version
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          package_json_file: ts/package.json
+          run_install: false
+
+      - name: Set up Node.js with pnpm cache
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: ts/pnpm-lock.yaml
+
+      - name: Set package version from release tag
         id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         shell: bash
         run: |
-          version="$(tr -d '[:space:]' < VERSION)"
-          if [[ -z "$version" ]]; then
-            echo "VERSION must not be empty" >&2
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag must match v<major>.<minor>.<patch>; got: $RELEASE_TAG" >&2
             exit 1
           fi
+
+          version="${RELEASE_TAG#v}"
+          printf '%s\n' "$version" > VERSION
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
-      - name: Bootstrap repository toolchain
-        shell: bash
-        run: |
-          source scripts/dev-env.sh
-          node --version
-          pnpm --version
+      - name: Restore TypeScript packages
+        run: pnpm --dir ts install --frozen-lockfile
 
-      - name: Build TypeScript packages
-        shell: bash
+      - name: Build and package TypeScript SDKs
         run: |
-          source scripts/dev-env.sh
-          node scripts/sync-ts-package-versions.mjs
-          cd ts
-          pnpm install --frozen-lockfile
-          pnpm package
-          mkdir -p ../.artifacts/typescript-packages
-          cp .local-packages/*.tgz ../.artifacts/typescript-packages/
+          pnpm --dir ts package
+          mkdir -p .artifacts/typescript-packages
+          cp ts/.local-packages/*.tgz .artifacts/typescript-packages/
 
       - name: Upload workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: typescript-packages-${{ steps.version.outputs.version }}
           path: .artifacts/typescript-packages/*.tgz
@@ -130,10 +130,10 @@ jobs:
       - name: Publish TypeScript packages to GitHub Packages
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
         shell: bash
+        working-directory: ts
         run: |
-          source scripts/dev-env.sh
-          cd ts
           npmrc="${RUNNER_TEMP:-$PWD}/onenexus-npmrc"
           cat > "$npmrc" <<EOF
           @onenexus-team:registry=https://npm.pkg.github.com
@@ -147,6 +147,11 @@ jobs:
             package_name="$(node -p "require('./${package_dir}/package.json').name")"
             package_version="$(node -p "require('./${package_dir}/package.json').version")"
 
+            if [[ "$package_version" != "$RELEASE_VERSION" ]]; then
+              echo "Expected ${package_name} version ${RELEASE_VERSION}, got ${package_version}" >&2
+              exit 1
+            fi
+
             if npm view "${package_name}@${package_version}" version --registry=https://npm.pkg.github.com >/dev/null 2>&1; then
               echo "${package_name}@${package_version} already exists in GitHub Packages; skipping publish."
               continue
@@ -158,7 +163,5 @@ jobs:
       - name: Attach TypeScript packages to GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
-        shell: bash
-        run: |
-          gh release upload "$RELEASE_TAG" .artifacts/typescript-packages/*.tgz --clobber
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" .artifacts/typescript-packages/*.tgz --clobber
