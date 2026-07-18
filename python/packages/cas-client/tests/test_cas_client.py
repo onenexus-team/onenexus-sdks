@@ -6,7 +6,17 @@ from datetime import UTC, datetime
 import httpx
 from onenexus_sdk_core import AccessToken, TokenGrantCredentials
 
-from onenexus_cas_client import CasClient
+from onenexus_cas_client import (
+    AssignRoleRequest,
+    AttachPolicyToRoleRequest,
+    CasClient,
+    CreateAuthorizationRoleRequest,
+    DeleteAuthorizationRoleRequest,
+    DetachPolicyFromRoleRequest,
+    ListPolicyAttachmentsRequest,
+    ListRolePoliciesRequest,
+    RemoveRoleAssignmentRequest,
+)
 from onenexus_cas_client.generated.models.assume_s3_role_request import AssumeS3RoleRequest
 from onenexus_cas_client.generated.models.create_user_request import CreateUserRequest
 
@@ -34,6 +44,7 @@ async def test_create_user_routes_through_kiota_adapter() -> None:
             json={
                 "user": {
                     "userId": "0193fabc-1234-7def-abcd-1234567890ab",
+                    "userUri": "onenexus:user/0193fabc-1234-7def-abcd-1234567890ab",
                     "tenantId": "0193fabc-1234-7def-abcd-1234567890ac",
                     "email": "a@b.c",
                     "displayName": "A B",
@@ -85,3 +96,42 @@ async def test_assume_s3_role_parses_kiota_response() -> None:
 
     assert result.access_key_id == "AKIA"
     assert result.session_token == "token"
+
+
+async def test_authorization_and_user_list_methods_route_through_kiota() -> None:
+    captured_paths: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_paths.append(request.url.path)
+        return httpx.Response(
+            200,
+            json={},
+            headers={"content-type": "application/json"},
+        )
+
+    async with _client(httpx.MockTransport(handler)) as cas:
+        await cas.list_users()
+        await cas.create_role(CreateAuthorizationRoleRequest())
+        await cas.list_roles()
+        await cas.delete_role(DeleteAuthorizationRoleRequest())
+        await cas.assign_role(AssignRoleRequest())
+        await cas.remove_role_assignment(RemoveRoleAssignmentRequest())
+        await cas.list_role_assignments()
+        await cas.attach_policy_to_role(AttachPolicyToRoleRequest())
+        await cas.detach_policy_from_role(DetachPolicyFromRoleRequest())
+        await cas.list_policy_attachments(ListPolicyAttachmentsRequest())
+        await cas.list_role_policies(ListRolePoliciesRequest())
+
+    assert captured_paths == [
+        "/api/ListUsers",
+        "/api/CreateRole",
+        "/api/ListRoles",
+        "/api/DeleteRole",
+        "/api/AssignRole",
+        "/api/RemoveRoleAssignment",
+        "/api/ListRoleAssignments",
+        "/api/AttachPolicyToRole",
+        "/api/DetachPolicyFromRole",
+        "/api/ListPolicyAttachments",
+        "/api/ListRolePolicies",
+    ]

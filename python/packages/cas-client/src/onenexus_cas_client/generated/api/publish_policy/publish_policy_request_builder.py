@@ -43,14 +43,13 @@ class PublishPolicyRequestBuilder(BaseRequestBuilder):
             body, request_configuration
         )
         from ...models.problem_details import ProblemDetails
-        from ...models.publish_policy_response import PublishPolicyResponse
 
         error_mapping: dict[str, type[ParsableFactory]] = {
-            "400": PublishPolicyResponse,
+            "400": ProblemDetails,
             "401": ProblemDetails,
-            "403": PublishPolicyResponse,
-            "409": PublishPolicyResponse,
-            "503": PublishPolicyResponse,
+            "403": ProblemDetails,
+            "409": ProblemDetails,
+            "503": ProblemDetails,
         }
         if not self.request_adapter:
             raise Exception("Http core is null") 

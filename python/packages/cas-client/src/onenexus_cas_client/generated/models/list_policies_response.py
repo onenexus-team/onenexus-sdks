@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 class ListPoliciesResponse(Parsable):
     # The after property
     after: Optional[str] = None
+    # The before property
+    before: Optional[str] = None
     # The items property
     items: Optional[list[AuthorizationPolicySummary]] = None
     
@@ -36,6 +38,7 @@ class ListPoliciesResponse(Parsable):
 
         fields: dict[str, Callable[[Any], None]] = {
             "after": lambda n : setattr(self, 'after', n.get_str_value()),
+            "before": lambda n : setattr(self, 'before', n.get_str_value()),
             "items": lambda n : setattr(self, 'items', n.get_collection_of_object_values(AuthorizationPolicySummary)),
         }
         return fields
@@ -49,6 +52,7 @@ class ListPoliciesResponse(Parsable):
         if writer is None:
             raise TypeError("writer cannot be null.")
         writer.write_str_value("after", self.after)
+        writer.write_str_value("before", self.before)
         writer.write_collection_of_object_values("items", self.items)
     
 

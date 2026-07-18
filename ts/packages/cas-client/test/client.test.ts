@@ -27,6 +27,7 @@ function staticCreds(label = 'static'): Credentials {
 const userResponse = (overrides?: { tenantId?: string; email?: string; displayName?: string }) => ({
     user: {
         userId: '0193fabc-1234-7def-abcd-1234567890ab',
+        userUri: 'onenexus:user/0193fabc-1234-7def-abcd-1234567890ab',
         tenantId: overrides?.tenantId ?? 'tn_acme',
         email: overrides?.email ?? 'a@b.c',
         displayName: overrides?.displayName ?? 'A B',
@@ -131,22 +132,23 @@ describe('CasClient', () => {
         it('binds authorization policy methods to their generated RPC operations', async () => {
             const observedBodies = new Map<string, unknown>();
             const summary = {
-                id: '0193fabc-1234-7def-abcd-1234567890ab',
-                policyId: 'policy-read-only',
-                name: 'Read-only',
-                status: 1,
+                kind: 'TenantManaged',
+                name: 'ReadOnly',
+                description: 'Read-only access',
+                status: 'Published',
                 documentHash: 'sha256:abc',
-                stateToken: 'state-1',
+                contentStateToken: 'state-1',
             };
 
             server.use(
                 http.post(`${BASE_URL}/api/PublishPolicy`, async ({ request }) => {
                     observedBodies.set('publish', await request.json());
                     return HttpResponse.json({
-                        disposition: 1,
+                        kind: 'TenantManaged',
+                        disposition: 'Published',
                         reasonCode: 'published',
                         diagnostics: [],
-                        stateToken: 'state-1',
+                        contentStateToken: 'state-1',
                     });
                 }),
                 http.post(`${BASE_URL}/api/ListPolicies`, async ({ request }) => {
@@ -159,78 +161,202 @@ describe('CasClient', () => {
                         policy: {
                             ...summary,
                             document: { Version: '2012-10-17' },
-                            roleIds: ['role-read-only'],
-                            createdBy: 'user-1',
-                            updatedBy: 'user-1',
+                            createdByUri: 'onenexus:user/user-1',
+                            updatedByUri: 'onenexus:user/user-1',
                         },
                     });
                 }),
                 http.post(`${BASE_URL}/api/UpdatePolicy`, async ({ request }) => {
                     observedBodies.set('update', await request.json());
                     return HttpResponse.json({
-                        disposition: 1,
+                        kind: 'TenantManaged',
+                        disposition: 'Published',
                         reasonCode: 'updated',
                         diagnostics: [],
-                        stateToken: 'state-2',
+                        contentStateToken: 'state-2',
                     });
                 }),
                 http.post(`${BASE_URL}/api/DeletePolicy`, async ({ request }) => {
                     observedBodies.set('delete', await request.json());
-                    return HttpResponse.json({ policyId: 'policy-read-only' });
+                    return HttpResponse.json({ name: 'ReadOnly' });
                 }),
             );
 
             const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
             const publishRequest = {
                 requestId: 'request-1',
-                policyId: 'policy-read-only',
-                name: 'Read-only',
+                name: 'ReadOnly',
+                description: 'Read-only access',
                 document: { Version: '2012-10-17' },
-                roleIds: ['role-read-only'],
             };
 
             const published = await cas.publishPolicy(publishRequest);
             const listed = await cas.listPolicies({ limit: 25, after: 'policy-previous' });
-            const fetched = await cas.getPolicy({ policyId: 'policy-read-only' });
+            const fetched = await cas.getPolicy({ kind: 'TenantManaged', name: 'ReadOnly' });
             const updated = await cas.updatePolicy({
                 ...publishRequest,
                 requestId: 'request-2',
-                expectedStateToken: 'state-1',
+                expectedContentStateToken: 'state-1',
             });
             const deleted = await cas.deletePolicy({
                 requestId: 'request-3',
-                policyId: 'policy-read-only',
-                expectedStateToken: 'state-2',
+                name: 'ReadOnly',
+                expectedContentStateToken: 'state-2',
             });
 
-            expect(published.stateToken).toBe('state-1');
+            expect(published.contentStateToken).toBe('state-1');
             expect(listed.items).toEqual([summary]);
-            expect(fetched.policy.roleIds).toEqual(['role-read-only']);
-            expect(updated.stateToken).toBe('state-2');
-            expect(deleted.policyId).toBe('policy-read-only');
+            expect(fetched.policy.createdByUri).toBe('onenexus:user/user-1');
+            expect(updated.contentStateToken).toBe('state-2');
+            expect(deleted.name).toBe('ReadOnly');
             expect(observedBodies).toEqual(
-                new Map([
+                new Map<string, unknown>([
                     ['publish', publishRequest],
                     ['list', { limit: 25, after: 'policy-previous' }],
-                    ['get', { policyId: 'policy-read-only' }],
+                    ['get', { kind: 'TenantManaged', name: 'ReadOnly' }],
                     [
                         'update',
                         {
                             ...publishRequest,
                             requestId: 'request-2',
-                            expectedStateToken: 'state-1',
+                            expectedContentStateToken: 'state-1',
                         },
                     ],
                     [
                         'delete',
                         {
                             requestId: 'request-3',
-                            policyId: 'policy-read-only',
-                            expectedStateToken: 'state-2',
+                            name: 'ReadOnly',
+                            expectedContentStateToken: 'state-2',
                         },
                     ],
                 ]),
             );
+        });
+
+        it('binds role, relationship, and user-list methods to generated RPC operations', async () => {
+            const roleUri = 'onenexus:role/Reader';
+            const assignee = { kind: 'User' as const, uri: 'onenexus:user/user-1' };
+            const policy = { kind: 'TenantManaged' as const, name: 'ReadOnly' };
+            const role = { roleUri, name: 'Reader' };
+            const assignment = {
+                assignmentId: 'assignment-1',
+                roleUri,
+                assignee,
+                stateToken: 'assignment-state-1',
+                assignedByUri: 'onenexus:user/admin-1',
+                assignedAtUtc: '2026-07-18T10:00:00Z',
+            };
+            const attachment = {
+                attachmentId: 'attachment-1',
+                policy,
+                roleUri,
+                stateToken: 'attachment-state-1',
+                attachedByUri: 'onenexus:user/admin-1',
+                attachedAtUtc: '2026-07-18T10:00:00Z',
+            };
+            const observedOperations: string[] = [];
+            const respond = (operation: string, body: object) => {
+                observedOperations.push(operation);
+                return HttpResponse.json(body);
+            };
+
+            server.use(
+                http.post(`${BASE_URL}/api/CreateRole`, () =>
+                    respond('CreateRole', { created: true, role }),
+                ),
+                http.post(`${BASE_URL}/api/ListRoles`, () =>
+                    respond('ListRoles', { items: [role] }),
+                ),
+                http.post(`${BASE_URL}/api/DeleteRole`, () =>
+                    respond('DeleteRole', { removed: true, roleUri }),
+                ),
+                http.post(`${BASE_URL}/api/AssignRole`, () =>
+                    respond('AssignRole', { created: true, assignment }),
+                ),
+                http.post(`${BASE_URL}/api/RemoveRoleAssignment`, () =>
+                    respond('RemoveRoleAssignment', { removed: true }),
+                ),
+                http.post(`${BASE_URL}/api/ListRoleAssignments`, () =>
+                    respond('ListRoleAssignments', { items: [assignment] }),
+                ),
+                http.post(`${BASE_URL}/api/AttachPolicyToRole`, () =>
+                    respond('AttachPolicyToRole', { created: true, attachment }),
+                ),
+                http.post(`${BASE_URL}/api/DetachPolicyFromRole`, () =>
+                    respond('DetachPolicyFromRole', { removed: true }),
+                ),
+                http.post(`${BASE_URL}/api/ListPolicyAttachments`, () =>
+                    respond('ListPolicyAttachments', { items: [attachment] }),
+                ),
+                http.post(`${BASE_URL}/api/ListRolePolicies`, () =>
+                    respond('ListRolePolicies', { items: [attachment] }),
+                ),
+                http.post(`${BASE_URL}/api/ListUsers`, () =>
+                    respond('ListUsers', {
+                        items: [
+                            {
+                                userId: '0193fabc-1234-7def-abcd-1234567890ab',
+                                userUri: 'onenexus:user/user-1',
+                                email: 'a@b.c',
+                                displayName: 'A B',
+                                emailConfirmed: true,
+                                createdAt: '2026-07-18T10:00:00Z',
+                            },
+                        ],
+                    }),
+                ),
+            );
+
+            const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            expect(
+                await cas.createRole({ requestId: 'request-1', name: 'Reader' }),
+            ).toMatchObject({ created: true, role });
+            expect((await cas.listRoles()).items).toEqual([role]);
+            expect(
+                await cas.deleteRole({ requestId: 'request-2', roleUri }),
+            ).toMatchObject({ removed: true, roleUri });
+            expect(
+                await cas.assignRole({ requestId: 'request-3', roleUri, assignee }),
+            ).toMatchObject({ created: true, assignment });
+            expect(
+                await cas.removeRoleAssignment({
+                    requestId: 'request-4',
+                    roleUri,
+                    assignee,
+                    expectedStateToken: 'assignment-state-1',
+                }),
+            ).toEqual({ removed: true });
+            expect((await cas.listRoleAssignments({ roleUri })).items).toEqual([assignment]);
+            expect(
+                await cas.attachPolicyToRole({ requestId: 'request-5', policy, roleUri }),
+            ).toMatchObject({ created: true, attachment });
+            expect(
+                await cas.detachPolicyFromRole({
+                    requestId: 'request-6',
+                    policy,
+                    roleUri,
+                    expectedStateToken: 'attachment-state-1',
+                }),
+            ).toEqual({ removed: true });
+            expect((await cas.listPolicyAttachments({ policy })).items).toEqual([attachment]);
+            expect((await cas.listRolePolicies({ roleUri })).items).toEqual([attachment]);
+            expect((await cas.listUsers({ limit: 10 })).items[0]?.userUri).toBe(
+                'onenexus:user/user-1',
+            );
+            expect(observedOperations).toEqual([
+                'CreateRole',
+                'ListRoles',
+                'DeleteRole',
+                'AssignRole',
+                'RemoveRoleAssignment',
+                'ListRoleAssignments',
+                'AttachPolicyToRole',
+                'DetachPolicyFromRole',
+                'ListPolicyAttachments',
+                'ListRolePolicies',
+                'ListUsers',
+            ]);
         });
     });
 
@@ -322,11 +448,10 @@ describe('CasClient', () => {
             const fresh: AccessToken = { ...stale, accessToken: 'at-fresh' };
             const cutoff = Date.now() + 60_000;
 
-            const credentials: Credentials = {
-                resolve: vi.fn((context: ClientContext) =>
-                    Promise.resolve(context.clock.serverNow() >= cutoff ? fresh : stale),
-                ),
-            };
+            const resolve = vi.fn((context: ClientContext) =>
+                Promise.resolve(context.clock.serverNow() >= cutoff ? fresh : stale),
+            );
+            const credentials: Credentials = { resolve };
 
             const observedAuth: string[] = [];
             let serverCallCount = 0;
@@ -360,7 +485,7 @@ describe('CasClient', () => {
 
             expect(result.user.email).toBe('a@b.c');
             expect(observedAuth).toEqual(['Bearer at-stale', 'Bearer at-fresh']);
-            expect(credentials.resolve).toHaveBeenCalledTimes(2);
+            expect(resolve).toHaveBeenCalledTimes(2);
         });
     });
 

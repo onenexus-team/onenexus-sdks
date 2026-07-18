@@ -8,6 +8,8 @@ import type {
     DescribeTenantRequest,
     DescribeTenantResponse,
     EmptyS3Request,
+    EvaluateAuthorizationRequest,
+    EvaluateAuthorizationResponse,
     ListS3AccountsResponse,
     ListTenantsRequest,
     ListTenantsResponse,
@@ -17,6 +19,7 @@ import type {
     S3DefaultAccountResponse,
 } from './generated/schemas/index.js';
 import { getCephS3 } from './generated/ceph-s3/ceph-s3.js';
+import { getSupportAuthorization } from './generated/support-authorization/support-authorization.js';
 import { getTenant } from './generated/tenant/tenant.js';
 import type { PlatformMutatorOptions } from './mutator.js';
 
@@ -37,7 +40,7 @@ const EMPTY_S3_REQUEST: EmptyS3Request = {};
  * Retry settings (`retry.limit`, `retry.backoffLimitMs`) and credential refresh
  * leeway (`refreshLeewayMs`) are inherited from {@link ClientBaseConfig}.
  */
-export interface CasSupportClientConfig extends ClientBaseConfig {}
+export type CasSupportClientConfig = ClientBaseConfig;
 
 /**
  * Per-call options accepted by every {@link CasSupportClient} method.
@@ -88,6 +91,8 @@ export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * const tenant = await support.createTenant({
  *     name: 'tn_acme',
  *     displayName: 'Acme Inc',
+ *     initialAdminEmail: 'admin@acme.com',
+ *     initialAdminDisplayName: 'Acme Admin',
  *     clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
  * });
  * ```
@@ -95,11 +100,13 @@ export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
 export class CasSupportClient extends ClientBase {
     private readonly tenant: ReturnType<typeof getTenant>;
     private readonly cephS3: ReturnType<typeof getCephS3>;
+    private readonly supportAuthorization: ReturnType<typeof getSupportAuthorization>;
 
     constructor(config: CasSupportClientConfig) {
         super(config);
         this.tenant = getTenant();
         this.cephS3 = getCephS3();
+        this.supportAuthorization = getSupportAuthorization();
     }
 
     // -- Tenant management ---------------------------------------------------
@@ -130,6 +137,14 @@ export class CasSupportClient extends ClientBase {
         req: AddTenantUserRequest,
         options?: CasSupportRequestOptions,
     ): Promise<CreateUserResponse> => this.tenant.addTenantUser(req, this.mutatorOptions(options));
+
+    // -- Authorization diagnostics -----------------------------------------
+
+    evaluateAuthorization = (
+        req: EvaluateAuthorizationRequest,
+        options?: CasSupportRequestOptions,
+    ): Promise<EvaluateAuthorizationResponse> =>
+        this.supportAuthorization.evaluateAuthorization(req, this.mutatorOptions(options));
 
     // -- Ceph S3 administration ---------------------------------------------
 

@@ -45,7 +45,9 @@ class AssumeS3RoleRequestBuilder(BaseRequestBuilder):
         from ...models.problem_details import ProblemDetails
 
         error_mapping: dict[str, type[ParsableFactory]] = {
+            "400": ProblemDetails,
             "401": ProblemDetails,
+            "403": ProblemDetails,
             "404": ProblemDetails,
             "503": ProblemDetails,
         }
