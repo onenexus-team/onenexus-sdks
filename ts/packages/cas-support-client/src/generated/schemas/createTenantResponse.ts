@@ -8,8 +8,4 @@
 
 export interface CreateTenantResponse {
   tenantId: string;
-  /** @nullable */
-  initialAdminInvitationUrl?: string | null;
-  /** @nullable */
-  initialAdminInvitationExpiresAt?: string | null;
 }

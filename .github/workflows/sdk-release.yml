@@ -36,7 +36,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: python/uv.lock
 
-      - name: Set package version from release tag
+      - name: Compute package version from release tag
         id: version
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
@@ -47,9 +47,7 @@ jobs:
             exit 1
           fi
 
-          version="${RELEASE_TAG#v}"
-          printf '%s\n' "$version" > VERSION
-          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
 
       - name: Restore and test Python packages
         working-directory: python
@@ -58,7 +56,7 @@ jobs:
           uv run pytest
 
       - name: Build Python wheels
-        run: bash scripts/build-python-wheels.sh .artifacts/python-wheels
+        run: bash scripts/build-python-wheels.sh --version "${{ steps.version.outputs.version }}" --out-dir .artifacts/python-wheels
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v7.0.1

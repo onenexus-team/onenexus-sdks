@@ -5,19 +5,9 @@
  * Support-team JSON RPC operations under `/support-api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.
  * OpenAPI spec version: v1
  */
+import type { TenantStatus } from './tenantStatus';
 
-export interface ProblemDetails {
-  /** Stable RFC 9457 problem type URI. */
-  type: string;
-  /** @nullable */
-  title?: string | null;
-  /**
-     * @nullable
-     * @pattern ^-?(?:0|[1-9]\d*)$
-     */
-  status?: number | string | null;
-  /** @nullable */
-  detail?: string | null;
-  /** @nullable */
-  instance?: string | null;
+export interface UnsuspendTenantResponse {
+  tenantId: string;
+  status: TenantStatus;
 }

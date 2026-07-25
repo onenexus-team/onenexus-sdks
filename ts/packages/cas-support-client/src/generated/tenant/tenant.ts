@@ -15,7 +15,13 @@ import type {
   ListTenantUsersRequest,
   ListTenantUsersResponse,
   ListTenantsRequest,
-  ListTenantsResponse
+  ListTenantsResponse,
+  ResendInvitationRequest,
+  ResendInvitationResponse,
+  SuspendTenantRequest,
+  SuspendTenantResponse,
+  UnsuspendTenantRequest,
+  UnsuspendTenantResponse
 } from '../schemas';
 
 import { platformMutator } from '../../mutator';
@@ -75,7 +81,37 @@ const createTenant = (
     },
       options);
     }
-  return {createTenant,describeTenant,listTenants,listTenantUsers,addTenantUser}};
+  const resendInvitation = (
+    resendInvitationRequest: ResendInvitationRequest,
+ options?: SecondParameter<typeof platformMutator<ResendInvitationResponse>>,) => {
+      return platformMutator<ResendInvitationResponse>(
+      {url: `/support-api/ResendInvitation`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resendInvitationRequest
+    },
+      options);
+    }
+  const suspendTenant = (
+    suspendTenantRequest: SuspendTenantRequest,
+ options?: SecondParameter<typeof platformMutator<SuspendTenantResponse>>,) => {
+      return platformMutator<SuspendTenantResponse>(
+      {url: `/support-api/SuspendTenant`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: suspendTenantRequest
+    },
+      options);
+    }
+  const unsuspendTenant = (
+    unsuspendTenantRequest: UnsuspendTenantRequest,
+ options?: SecondParameter<typeof platformMutator<UnsuspendTenantResponse>>,) => {
+      return platformMutator<UnsuspendTenantResponse>(
+      {url: `/support-api/UnsuspendTenant`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: unsuspendTenantRequest
+    },
+      options);
+    }
+  return {createTenant,describeTenant,listTenants,listTenantUsers,addTenantUser,resendInvitation,suspendTenant,unsuspendTenant}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -86,3 +122,6 @@ export type DescribeTenantResult = NonNullable<Awaited<ReturnType<ReturnType<typ
 export type ListTenantsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['listTenants']>>>
 export type ListTenantUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['listTenantUsers']>>>
 export type AddTenantUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['addTenantUser']>>>
+export type ResendInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['resendInvitation']>>>
+export type SuspendTenantResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['suspendTenant']>>>
+export type UnsuspendTenantResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['unsuspendTenant']>>>

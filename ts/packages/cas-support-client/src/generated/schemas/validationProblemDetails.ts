@@ -8,8 +8,8 @@
 import type { ValidationProblemDetailsErrors } from './validationProblemDetailsErrors';
 
 export interface ValidationProblemDetails {
-  /** @nullable */
-  type?: string | null;
+  /** Stable RFC 9457 problem type URI. */
+  type: string;
   /** @nullable */
   title?: string | null;
   /**
@@ -22,8 +22,4 @@ export interface ValidationProblemDetails {
   /** @nullable */
   instance?: string | null;
   errors?: ValidationProblemDetailsErrors;
-  /** Stable machine-readable CAS error code. */
-  code: string;
-  /** Request correlation identifier. */
-  requestId: string;
 }

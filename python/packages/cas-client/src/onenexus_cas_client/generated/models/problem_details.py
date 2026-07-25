@@ -7,17 +7,13 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class ProblemDetails(APIError, Parsable):
-    # Stable machine-readable CAS error code.
-    code: Optional[str] = None
     # The detail property
     detail: Optional[str] = None
     # The instance property
     instance: Optional[str] = None
-    # Request correlation identifier.
-    request_id: Optional[str] = None
     # The title property
     title: Optional[str] = None
-    # The type property
+    # Stable RFC 9457 problem type URI.
     type: Optional[str] = None
     
     @staticmethod
@@ -37,10 +33,8 @@ class ProblemDetails(APIError, Parsable):
         Returns: dict[str, Callable[[ParseNode], None]]
         """
         fields: dict[str, Callable[[Any], None]] = {
-            "code": lambda n : setattr(self, 'code', n.get_str_value()),
             "detail": lambda n : setattr(self, 'detail', n.get_str_value()),
             "instance": lambda n : setattr(self, 'instance', n.get_str_value()),
-            "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
             "title": lambda n : setattr(self, 'title', n.get_str_value()),
             "type": lambda n : setattr(self, 'type', n.get_str_value()),
         }
@@ -54,10 +48,8 @@ class ProblemDetails(APIError, Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_str_value("code", self.code)
         writer.write_str_value("detail", self.detail)
         writer.write_str_value("instance", self.instance)
-        writer.write_str_value("requestId", self.request_id)
         writer.write_str_value("title", self.title)
         writer.write_str_value("type", self.type)
     

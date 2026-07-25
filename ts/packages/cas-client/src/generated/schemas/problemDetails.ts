@@ -7,8 +7,8 @@
  */
 
 export interface ProblemDetails {
-  /** @nullable */
-  type?: string | null;
+  /** Stable RFC 9457 problem type URI. */
+  type: string;
   /** @nullable */
   title?: string | null;
   /**
@@ -20,8 +20,4 @@ export interface ProblemDetails {
   detail?: string | null;
   /** @nullable */
   instance?: string | null;
-  /** Stable machine-readable CAS error code. */
-  code: string;
-  /** Request correlation identifier. */
-  requestId: string;
 }

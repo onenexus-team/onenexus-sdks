@@ -122,6 +122,58 @@ describe('CasSupportClient', () => {
             expect(created.acceptInvitationUrl).toContain('token=abc');
         });
 
+        it('resendInvitation POSTs the user ID and returns invitation details', async () => {
+            let observedBody: unknown;
+            server.use(
+                http.post(`${BASE_URL}/support-api/ResendInvitation`, async ({ request }) => {
+                    observedBody = await request.json();
+                    return HttpResponse.json({
+                        userId: 'user-1',
+                        acceptInvitationExpiresAt: '2026-07-31T00:00:00Z',
+                        invitationSendCount: 2,
+                    });
+                }),
+            );
+
+            const support = new CasSupportClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            const result = await support.resendInvitation({ userId: 'user-1' });
+
+            expect(observedBody).toEqual({ userId: 'user-1' });
+            expect(result.invitationSendCount).toBe(2);
+        });
+
+        it('suspendTenant POSTs the tenant ID and returns its suspended status', async () => {
+            let observedBody: unknown;
+            server.use(
+                http.post(`${BASE_URL}/support-api/SuspendTenant`, async ({ request }) => {
+                    observedBody = await request.json();
+                    return HttpResponse.json({ tenantId: 'tenant-1', status: 'Suspended' });
+                }),
+            );
+
+            const support = new CasSupportClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            const result = await support.suspendTenant({ tenantId: 'tenant-1' });
+
+            expect(observedBody).toEqual({ tenantId: 'tenant-1' });
+            expect(result.status).toBe('Suspended');
+        });
+
+        it('unsuspendTenant POSTs the tenant ID and returns its active status', async () => {
+            let observedBody: unknown;
+            server.use(
+                http.post(`${BASE_URL}/support-api/UnsuspendTenant`, async ({ request }) => {
+                    observedBody = await request.json();
+                    return HttpResponse.json({ tenantId: 'tenant-1', status: 'Active' });
+                }),
+            );
+
+            const support = new CasSupportClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            const result = await support.unsuspendTenant({ tenantId: 'tenant-1' });
+
+            expect(observedBody).toEqual({ tenantId: 'tenant-1' });
+            expect(result.status).toBe('Active');
+        });
+
         it('binds authorization evaluation to the generated support operation', async () => {
             let observedBody: unknown;
             server.use(

@@ -31,7 +31,7 @@ uv sync --all-extras --group examples  # also install example-only deps such as 
 uv run pytest                 # run the test suite
 uv run mypy packages          # type-check (strict)
 uv run ruff check .           # lint
-bash ../scripts/build-python-wheels.sh  # build release wheels using ../VERSION
+bash ../scripts/build-python-wheels.sh --version 0.0.5  # build release wheels for a given version
 
 # regenerate the CAS client from the OpenAPI spec
 dotnet tool restore
@@ -59,9 +59,10 @@ python -m venv .venv
 
 ## Release wheels
 
-Local Python package versions are read from the repository-level `../VERSION`
-file. Publishing a GitHub release with a tag such as `v0.0.6` triggers the SDK
-release workflow, which derives `0.0.6` from the tag and builds wheels for:
+Local Python wheel builds pass the package version explicitly via
+`--version`. Publishing a GitHub release with a tag such as `v0.0.6`
+triggers the SDK release workflow, which derives `0.0.6` from the tag and
+builds wheels for:
 
 - `onenexus-sdk-core`
 - `onenexus-cas-client`

@@ -16,7 +16,13 @@ import type {
     ListTenantUsersRequest,
     ListTenantUsersResponse,
     ProvisionS3DefaultAccountResponse,
+    ResendInvitationRequest,
+    ResendInvitationResponse,
     S3DefaultAccountResponse,
+    SuspendTenantRequest,
+    SuspendTenantResponse,
+    UnsuspendTenantRequest,
+    UnsuspendTenantResponse,
 } from './generated/schemas/index.js';
 import { getCephS3 } from './generated/ceph-s3/ceph-s3.js';
 import { getSupportAuthorization } from './generated/support-authorization/support-authorization.js';
@@ -137,6 +143,23 @@ export class CasSupportClient extends ClientBase {
         req: AddTenantUserRequest,
         options?: CasSupportRequestOptions,
     ): Promise<CreateUserResponse> => this.tenant.addTenantUser(req, this.mutatorOptions(options));
+
+    resendInvitation = (
+        req: ResendInvitationRequest,
+        options?: CasSupportRequestOptions,
+    ): Promise<ResendInvitationResponse> =>
+        this.tenant.resendInvitation(req, this.mutatorOptions(options));
+
+    suspendTenant = (
+        req: SuspendTenantRequest,
+        options?: CasSupportRequestOptions,
+    ): Promise<SuspendTenantResponse> => this.tenant.suspendTenant(req, this.mutatorOptions(options));
+
+    unsuspendTenant = (
+        req: UnsuspendTenantRequest,
+        options?: CasSupportRequestOptions,
+    ): Promise<UnsuspendTenantResponse> =>
+        this.tenant.unsuspendTenant(req, this.mutatorOptions(options));
 
     // -- Authorization diagnostics -----------------------------------------
 

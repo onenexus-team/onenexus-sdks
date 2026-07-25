@@ -555,6 +555,236 @@
           }
         ]
       }
+    },
+    "/support-api/ResendInvitation": {
+      "post": {
+        "tags": [
+          "Tenant"
+        ],
+        "operationId": "ResendInvitation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendInvitationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendInvitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendInvitationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/support-api/SuspendTenant": {
+      "post": {
+        "tags": [
+          "Tenant"
+        ],
+        "operationId": "SuspendTenant",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendTenantRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendTenantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuspendTenantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/support-api/UnsuspendTenant": {
+      "post": {
+        "tags": [
+          "Tenant"
+        ],
+        "operationId": "UnsuspendTenant",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsuspendTenantRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsuspendTenantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsuspendTenantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -853,20 +1083,6 @@
           "tenantId": {
             "type": "string",
             "format": "uuid"
-          },
-          "initialAdminInvitationUrl": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uri"
-          },
-          "initialAdminInvitationExpiresAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
           }
         }
       },
@@ -1113,16 +1329,14 @@
       },
       "ProblemDetails": {
         "required": [
-          "code",
-          "requestId"
+          "type"
         ],
         "type": "object",
         "properties": {
           "type": {
-            "type": [
-              "null",
-              "string"
-            ]
+            "type": "string",
+            "description": "Stable RFC 9457 problem type URI.",
+            "format": "uri"
           },
           "title": {
             "type": [
@@ -1150,14 +1364,6 @@
               "null",
               "string"
             ]
-          },
-          "code": {
-            "type": "string",
-            "description": "Stable machine-readable CAS error code."
-          },
-          "requestId": {
-            "type": "string",
-            "description": "Request correlation identifier."
           }
         }
       },
@@ -1179,6 +1385,44 @@
                 "$ref": "#/components/schemas/S3RootUserDto"
               }
             ]
+          }
+        }
+      },
+      "ResendInvitationRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ResendInvitationResponse": {
+        "required": [
+          "userId",
+          "acceptInvitationExpiresAt",
+          "invitationSendCount"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptInvitationExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "invitationSendCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -1279,6 +1523,34 @@
             "items": {
               "$ref": "#/components/schemas/S3AccessKeyDto"
             }
+          }
+        }
+      },
+      "SuspendTenantRequest": {
+        "required": [
+          "tenantId"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "SuspendTenantResponse": {
+        "required": [
+          "tenantId",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TenantStatus"
           }
         }
       },
@@ -1398,6 +1670,34 @@
           }
         }
       },
+      "UnsuspendTenantRequest": {
+        "required": [
+          "tenantId"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "UnsuspendTenantResponse": {
+        "required": [
+          "tenantId",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TenantStatus"
+          }
+        }
+      },
       "UserDto": {
         "required": [
           "userId",
@@ -1438,16 +1738,14 @@
       },
       "ValidationProblemDetails": {
         "required": [
-          "code",
-          "requestId"
+          "type"
         ],
         "type": "object",
         "properties": {
           "type": {
-            "type": [
-              "null",
-              "string"
-            ]
+            "type": "string",
+            "description": "Stable RFC 9457 problem type URI.",
+            "format": "uri"
           },
           "title": {
             "type": [
@@ -1484,14 +1782,6 @@
                 "type": "string"
               }
             }
-          },
-          "code": {
-            "type": "string",
-            "description": "Stable machine-readable CAS error code."
-          },
-          "requestId": {
-            "type": "string",
-            "description": "Request correlation identifier."
           }
         }
       }
