@@ -43,6 +43,7 @@ output or `--field <path>` for a scalar. JSON mode never includes ANSI color.
 
 ## Retry behavior
 
-Read calls retry transient failures by default. Mutating calls only retry when
-protected by a stable idempotency key. Pass `RetryPolicy(enabled=False)` to
-retain caller-managed retries.
+Read calls retry transient failures by default. Mutating calls now receive an
+automatic `Idempotency-Key` header that remains stable across retries and is
+deduplicated by the MLOps API. Pass `RetryPolicy(enabled=False)` to retain
+caller-managed retries.

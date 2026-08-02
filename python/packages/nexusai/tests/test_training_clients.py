@@ -2,7 +2,7 @@ import inspect
 
 import pytest
 
-from nexusai import RetryPolicy
+from nexusai import ExistingRunOutputModel, NewRunOutputModel, RetryPolicy
 from nexusai._internal import training_transfer, workload as internal_workload
 from nexusai._internal.training_transfer import TrainingTransferClient
 from nexusai._internal.workload import InternalWorkloadClient
@@ -25,6 +25,9 @@ class FakeAPI:
     def post(self, path, body=None):
         self.calls.append(("POST", path, body))
         return {"ok": True}
+
+    def post_model(self, path, model, body=None):
+        return self.post(path, body=body)
 
     def patch(self, path, body=None):
         self.calls.append(("PATCH", path, body))
@@ -73,6 +76,89 @@ def test_public_create_run_signature_does_not_expose_storage_paths():
 
     assert "checkpoint_path" not in parameters
     assert "tokenizer_path" not in parameters
+    assert "output_model" in parameters
+    assert "output_model_name" not in parameters
+    assert "output_model_version_name" not in parameters
+
+
+@pytest.mark.parametrize(
+    ("output_model", "expected_payload"),
+    [
+        (
+            NewRunOutputModel("trained-qwen", "v1"),
+            {
+                "type": "new",
+                "model_name": "trained-qwen",
+                "model_version_name": "v1",
+            },
+        ),
+        (
+            ExistingRunOutputModel("model-1", "v2"),
+            {
+                "type": "existing",
+                "model_id": "model-1",
+                "model_version_name": "v2",
+            },
+        ),
+    ],
+)
+def test_training_create_run_serializes_output_model_intent(
+    output_model,
+    expected_payload,
+):
+    api = FakeAPI()
+    client = TrainingClient(api)
+
+    client.create_run(
+        experiment_id="exp-1",
+        name="run-1",
+        dataset_id="dataset-1",
+        training_type="pretraining",
+        flavor="1x1-mi355",
+        input_model_id="Qwen/Qwen3-8B",
+        hyperparameters={},
+        output_model=output_model,
+    )
+
+    assert api.calls[0][2]["output_model"] == expected_payload
+
+
+@pytest.mark.parametrize(
+    "output_model",
+    [
+        NewRunOutputModel("trained-qwen", "v1"),
+        ExistingRunOutputModel("model-1", "v2"),
+    ],
+)
+def test_internal_training_create_run_uses_same_output_model_contract(output_model):
+    api = FakeAPI()
+    client = TrainingTransferClient(api)
+
+    client.create_run(
+        experiment_id="exp-1",
+        name="run-1",
+        dataset_id="dataset-1",
+        training_type="pretraining",
+        flavor="1x1-mi355",
+        input_model_id="Qwen/Qwen3-8B",
+        hyperparameters={},
+        output_model=output_model,
+    )
+
+    assert api.calls[0][2]["output_model"] == output_model.to_dict()
+
+
+@pytest.mark.parametrize(
+    "output_model",
+    [
+        lambda: NewRunOutputModel(" ", "v1"),
+        lambda: NewRunOutputModel("model", " "),
+        lambda: ExistingRunOutputModel(" ", "v1"),
+    ],
+)
+def test_run_output_model_rejects_blank_identifiers(output_model):
+    with pytest.raises(ValueError):
+        output_model()
 
 
 def test_rpc_training_resume_run_can_select_checkpoint():

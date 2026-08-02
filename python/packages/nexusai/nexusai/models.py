@@ -236,6 +236,72 @@ class ExperimentDetail(ExperimentSummary):
     extras_data: Optional[dict[str, Any]] = None
 
 
+def _require_non_empty_name(value: str, field_name: str) -> str:
+    normalized = value.strip()
+    if not normalized:
+        raise ValueError(f"{field_name} must not be blank")
+    return normalized
+
+
+@dataclass(frozen=True)
+class NewRunOutputModel:
+    model_name: str
+    model_version_name: str
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "model_name",
+            _require_non_empty_name(self.model_name, "model_name"),
+        )
+        object.__setattr__(
+            self,
+            "model_version_name",
+            _require_non_empty_name(
+                self.model_version_name,
+                "model_version_name",
+            ),
+        )
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "type": "new",
+            "model_name": self.model_name,
+            "model_version_name": self.model_version_name,
+        }
+
+
+@dataclass(frozen=True)
+class ExistingRunOutputModel:
+    model_id: str
+    model_version_name: str
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "model_id",
+            _require_non_empty_name(self.model_id, "model_id"),
+        )
+        object.__setattr__(
+            self,
+            "model_version_name",
+            _require_non_empty_name(
+                self.model_version_name,
+                "model_version_name",
+            ),
+        )
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "type": "existing",
+            "model_id": self.model_id,
+            "model_version_name": self.model_version_name,
+        }
+
+
+RunOutputModel = NewRunOutputModel | ExistingRunOutputModel
+
+
 @dataclass(frozen=True)
 class RunSummary(APIModel):
     id: str

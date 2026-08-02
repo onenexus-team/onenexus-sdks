@@ -14,13 +14,14 @@ from .auth import (
     token_profile,
 )
 from .client import OneNexusClient
-from .config import PLATFORM_BASE_URL
+from .config import CAS_BASE_URL, PLATFORM_BASE_URL
+from .models import ExistingRunOutputModel, NewRunOutputModel, RunOutputModel
 
 
 def handle_login(args: argparse.Namespace) -> Any:
     token = args.token or prompt_token()
     api_url = args.url or args.base_url or PLATFORM_BASE_URL
-    cas_url = args.cas_url or load_cas_url()
+    cas_url = args.cas_url or CAS_BASE_URL
     save_login(token=token, api_url=api_url, cas_url=cas_url)
     profile = token_profile(token)
     return {"logged_in": True, "api_url": api_url, "cas_url": cas_url, **profile}
@@ -421,6 +422,7 @@ def handle_delete_experiment(client: OneNexusClient, args: argparse.Namespace) -
 
 
 def handle_create_run(client: OneNexusClient, args: argparse.Namespace) -> Any:
+    output_model = _create_run_output_model(args)
     return client.training.create_run(
         experiment_id=args.experiment_id,
         name=args.name,
@@ -431,9 +433,42 @@ def handle_create_run(client: OneNexusClient, args: argparse.Namespace) -> Any:
         input_model_version_id=args.input_model_version_id,
         hyperparameters=parse_json(args.hyperparameters_json) or {},
         num_checkpoint=args.num_checkpoint,
-        output_model_name=args.output_model_name,
-        output_model_version_name=args.output_model_version_name,
+        output_model=output_model,
         extras_data=parse_json(args.extras_json),
+    )
+
+
+def _create_run_output_model(args: argparse.Namespace) -> RunOutputModel | None:
+    output_type = args.output_model_type
+    model_name = args.output_model_name
+    model_id = args.output_model_id
+    version_name = args.output_model_version_name
+    if output_type is None:
+        if any((model_name, model_id, version_name)):
+            raise ValueError(
+                "--output-model-type is required when configuring an output model"
+            )
+        return None
+    if not version_name:
+        raise ValueError("--output-model-version-name is required")
+    if output_type == "new":
+        if not model_name or model_id:
+            raise ValueError(
+                "new output models require --output-model-name and do not accept "
+                "--output-model-id"
+            )
+        return NewRunOutputModel(
+            model_name=model_name,
+            model_version_name=version_name,
+        )
+    if not model_id or model_name:
+        raise ValueError(
+            "existing output models require --output-model-id and do not accept "
+            "--output-model-name"
+        )
+    return ExistingRunOutputModel(
+        model_id=model_id,
+        model_version_name=version_name,
     )
 
 

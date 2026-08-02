@@ -6,8 +6,8 @@ RPC operations on the wire while exposing idiomatic Python client methods.
 
 Default services:
 
-- Platform API: `https://ai-api-v2.onenexus-do.cloud`
-- CAS: `https://cas.onenexus-do.cloud`
+- Platform API: `https://ai-api-v2.ric1.onenexus-do.cloud`
+- CAS: `https://cas.ric1.onenexus-do.cloud`
 
 The SDK accepts one token and sends it to the Platform API. High-level transfer
 methods exchange that token through CAS for short-lived, resource-scoped S3
@@ -22,16 +22,16 @@ Kubernetes identifiers, upload sessions, leases, or execution records.
 
 ## Install
 
-Install the immutable wheel attached to the NexusAI GitHub release:
+Install the immutable wheel from the public SDK artifact bucket:
 
 ```bash
 python -m pip install \
-  "https://github.com/onenexus-team/onenexus-sdks/releases/download/nexusai-v0.1.0/nexusai-0.1.0-py3-none-any.whl"
+  "<wheel-url-from-platform-catalog>"
 ```
 
-Verify the wheel against `SHA256SUMS` from the same release before installing
-it in a production image. The MLOps upload instruction resolves the current
-reviewed release URL from Platform Catalog.
+Verify the wheel against the SHA256 stored in Platform Catalog before
+installing it in a production image. The MLOps upload instruction resolves the
+current reviewed release URL from Platform Catalog.
 
 For repository development, run this from the SDK repository root:
 
@@ -45,7 +45,7 @@ Interactive login stores the token and service URLs in the current user's
 configuration directory:
 
 ```bash
-nexusai login --url https://ai-api-v2.onenexus-do.cloud
+nexusai login --url https://ai-api-v2.ric1.onenexus-do.cloud
 ```
 
 For non-interactive use, pass a token explicitly:
@@ -277,10 +277,13 @@ Read-only RPC calls retry transient connection failures, timeouts, HTTP 408,
 429, and retryable 5xx responses with bounded exponential backoff and full
 jitter. `Retry-After` is honored within the configured delay limit.
 
-Mutating RPC calls are not retried unless the operation carries a stable
-idempotency key and the backend supports deduplication. Storage transfers retry
-at the object-transfer layer; the SDK does not restart an entire create/upload/
-finalize workflow after a later phase succeeds.
+For every mutating RPC call, the SDK generates an `Idempotency-Key` header and
+keeps it stable across transport retries. The backend scopes the key to the
+authenticated tenant, principal, and operation, so a lost response cannot
+create or finalize the same resource twice. A normal HTTP 409 is not retried;
+only the explicit `idempotency_in_progress` conflict may be retried. Storage
+transfers retry at the object-transfer layer; the SDK does not restart an
+entire create/upload/finalize workflow after a later phase succeeds.
 
 Disable retries when the caller owns retry orchestration:
 

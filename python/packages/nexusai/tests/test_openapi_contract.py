@@ -151,3 +151,13 @@ def test_create_run_openapi_does_not_expose_internal_storage_paths() -> None:
 
     assert "checkpoint_path" not in properties
     assert "tokenizer_path" not in properties
+    assert "output_model" in properties
+    assert "output_model_name" not in properties
+    assert "output_model_version_name" not in properties
+
+    output_schema = properties["output_model"]["anyOf"][0]
+    assert output_schema["discriminator"]["propertyName"] == "type"
+    assert {item["$ref"].rsplit("/", 1)[-1] for item in output_schema["oneOf"]} == {
+        "NewRunOutputModelRequest",
+        "ExistingRunOutputModelRequest",
+    }

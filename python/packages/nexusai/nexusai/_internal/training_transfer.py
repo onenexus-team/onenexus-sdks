@@ -9,6 +9,7 @@ from .results import (
     InternalUploadResult as UploadResult,
 )
 from .storage import StorageTransferFile, download_prefix, upload_path
+from ..models import RunOutputModel
 
 
 def _clean(body: dict[str, Any]) -> dict[str, Any]:
@@ -100,8 +101,7 @@ class TrainingTransferClient:
         hyperparameters: dict[str, Any],
         input_model_version_id: Optional[str] = None,
         num_checkpoint: int = 0,
-        output_model_name: Optional[str] = None,
-        output_model_version_name: Optional[str] = None,
+        output_model: Optional[RunOutputModel] = None,
         extras_data: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         return self._api.post_dict(
@@ -117,8 +117,9 @@ class TrainingTransferClient:
                     "input_model_version_id": input_model_version_id,
                     "hyperparameters": hyperparameters,
                     "num_checkpoint": num_checkpoint,
-                    "output_model_name": output_model_name,
-                    "output_model_version_name": output_model_version_name,
+                    "output_model": (
+                        output_model.to_dict() if output_model is not None else None
+                    ),
                     "extras_data": extras_data,
                 }
             ),

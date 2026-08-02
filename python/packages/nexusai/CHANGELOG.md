@@ -3,6 +3,15 @@
 All notable NexusAI changes are recorded here. The project follows semantic
 versioning and the compatibility policy in `COMPATIBILITY.md`.
 
+## 0.1.2
+
+- Fixed `nexusai login` to use the current default CAS URL unless `--cas-url`
+  is explicitly supplied.
+
+## 0.1.1
+
+- Changed the default Platform API and CAS URLs to the `ric1` environment.
+
 ## 0.1.0
 
 - Added typed public Summary, Detail, Action, Monitoring, Page, Upload, and
@@ -15,7 +24,8 @@ versioning and the compatibility policy in `COMPATIBILITY.md`.
   byte sizes.
 - Added table-first CLI output, JSON and scalar modes, stable error tables, and
   documented exit codes.
-- Added bounded retry policy with idempotency-aware mutation behavior.
+- Added bounded retry policy with automatic stable idempotency headers for
+  mutation retries.
 - Added training and inference waiters.
 - Added atomic, size-verified downloads and upload symlink/path protections.
 - Preserved response pagination and request metadata.

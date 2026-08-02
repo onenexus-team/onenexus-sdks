@@ -12,11 +12,11 @@ def add_auth_commands(
     login.add_argument("--token", help="Token to save. Prompts if omitted.")
     login.add_argument(
         "--url",
-        help="Platform URL to save. Defaults to https://ai-api-v2.onenexus-do.cloud.",
+        help="Platform URL to save. Defaults to https://ai-api-v2.ric1.onenexus-do.cloud.",
     )
     login.add_argument(
         "--cas-url",
-        help="CAS URL to save. Defaults to https://cas.onenexus-do.cloud.",
+        help="CAS URL to save. Defaults to https://cas.ric1.onenexus-do.cloud.",
     )
     login.set_defaults(auth_command=True, handler=handlers.handle_login)
 
@@ -317,7 +317,9 @@ def add_training_commands(
     command.add_argument("--input-model-version-id")
     command.add_argument("--hyperparameters-json", default="{}")
     command.add_argument("--num-checkpoint", type=int, default=0)
+    command.add_argument("--output-model-type", choices=("new", "existing"))
     command.add_argument("--output-model-name")
+    command.add_argument("--output-model-id")
     command.add_argument("--output-model-version-name")
     command.add_argument("--extras-json")
     command.set_defaults(handler=handlers.handle_create_run)

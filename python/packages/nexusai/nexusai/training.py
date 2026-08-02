@@ -14,6 +14,7 @@ from .models import (
     Page,
     RunCheckpoint,
     RunDetail,
+    RunOutputModel,
     RunSummary,
     RunTokenizer,
 )
@@ -118,8 +119,7 @@ class TrainingClient:
         hyperparameters: dict[str, Any],
         input_model_version_id: Optional[str] = None,
         num_checkpoint: int = 0,
-        output_model_name: Optional[str] = None,
-        output_model_version_name: Optional[str] = None,
+        output_model: Optional[RunOutputModel] = None,
         extras_data: Optional[dict[str, Any]] = None,
     ) -> ActionResult:
         return self._api.post_model(
@@ -136,8 +136,9 @@ class TrainingClient:
                     "input_model_version_id": input_model_version_id,
                     "hyperparameters": hyperparameters,
                     "num_checkpoint": num_checkpoint,
-                    "output_model_name": output_model_name,
-                    "output_model_version_name": output_model_version_name,
+                    "output_model": (
+                        output_model.to_dict() if output_model is not None else None
+                    ),
                     "extras_data": extras_data,
                 }
             ),

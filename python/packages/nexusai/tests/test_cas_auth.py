@@ -14,7 +14,7 @@ from nexusai.cas import create_cas_client_with_credentials, credentials_from_tok
 from nexusai.client import OneNexusClient
 from nexusai.cli import build_parser
 from nexusai.cli_handlers import handle_login
-from nexusai.config import PLATFORM_BASE_URL
+from nexusai.config import CAS_BASE_URL, PLATFORM_BASE_URL
 from nexusai._internal.http import APIClient
 
 
@@ -283,6 +283,23 @@ class CasAuthTest(unittest.TestCase):
         self.assertEqual(result["api_url"], PLATFORM_BASE_URL)
         save_login.assert_called_once()
         self.assertEqual(save_login.call_args.kwargs["api_url"], PLATFORM_BASE_URL)
+
+    def test_login_defaults_to_current_cas_url_not_saved_legacy_url(self):
+        token = fake_jwt({"exp": 1_893_456_000})
+        args = Namespace(token=token, url=None, base_url=None, cas_url=None)
+
+        with (
+            patch(
+                "nexusai.cli_handlers.load_cas_url",
+                return_value="https://cas.onenexus-do.cloud",
+            ),
+            patch("nexusai.cli_handlers.save_login") as save_login,
+        ):
+            result = handle_login(args)
+
+        self.assertEqual(result["cas_url"], CAS_BASE_URL)
+        save_login.assert_called_once()
+        self.assertEqual(save_login.call_args.kwargs["cas_url"], CAS_BASE_URL)
 
     def test_public_modules_drop_rpc_transport_prefix(self):
         for module_name in (

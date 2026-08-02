@@ -167,7 +167,18 @@ class APIClient:
             data = json.dumps(body).encode("utf-8")
             headers["Content-Type"] = "application/json"
 
-        retryable_operation = self._is_retryable_operation(method, path, body)
+        operation_is_read_only = self._is_read_only_operation(method, path)
+        idempotency_key = None
+        if not operation_is_read_only:
+            supplied_key = body.get("idempotency_key") if body else None
+            if self._is_public_rpc_path(path) or supplied_key:
+                idempotency_key = str(supplied_key or uuid4())
+                headers["Idempotency-Key"] = idempotency_key
+
+        retryable_operation = self._is_retryable_operation(
+            operation_is_read_only=operation_is_read_only,
+            idempotency_key=idempotency_key,
+        )
         attempt = 1
         started_at = time.monotonic()
         while True:
@@ -195,6 +206,9 @@ class APIClient:
                     attempt,
                     started_at,
                     status_code=error.code,
+                    idempotency_in_progress=self._is_idempotency_in_progress(
+                        error
+                    ),
                 ):
                     raise self._api_error(
                         error,
@@ -307,18 +321,27 @@ class APIClient:
                 return str(value)
         return fallback
 
-    def _is_retryable_operation(
-        self,
+    @staticmethod
+    def _is_read_only_operation(
         method: str,
         path: str,
-        body: Optional[dict[str, Any]],
+    ) -> bool:
+        operation = path.rstrip("/").rsplit("/", maxsplit=1)[-1]
+        return method.upper() == "GET" or operation.startswith(("Get", "List"))
+
+    @staticmethod
+    def _is_public_rpc_path(path: str) -> bool:
+        return path.startswith("/v1/")
+
+    def _is_retryable_operation(
+        self,
+        *,
+        operation_is_read_only: bool,
+        idempotency_key: Optional[str],
     ) -> bool:
         if not self.retry_policy.enabled:
             return False
-        operation = path.rstrip("/").rsplit("/", maxsplit=1)[-1]
-        if method.upper() == "GET" or operation.startswith(("Get", "List")):
-            return True
-        return bool(body and body.get("idempotency_key"))
+        return operation_is_read_only or bool(idempotency_key)
 
     def _should_retry(
         self,
@@ -327,12 +350,27 @@ class APIClient:
         started_at: float,
         *,
         status_code: Optional[int] = None,
+        idempotency_in_progress: bool = False,
     ) -> bool:
         if not operation_is_retryable or attempt >= self.retry_policy.max_attempts:
             return False
         if time.monotonic() - started_at >= self.retry_policy.max_elapsed_seconds:
             return False
-        return status_code is None or status_code in {408, 429} or status_code >= 500
+        return (
+            status_code is None
+            or status_code in {408, 429}
+            or status_code >= 500
+            or idempotency_in_progress
+        )
+
+    @staticmethod
+    def _is_idempotency_in_progress(error: HTTPError) -> bool:
+        if error.code != 409 or error.headers is None:
+            return False
+        return (
+            error.headers.get("X-Idempotency-Status")
+            == "idempotency_in_progress"
+        )
 
     def _retry_delay(
         self,

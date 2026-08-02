@@ -262,6 +262,33 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "ExistingRunOutputModelRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "model_id": {
+            "format": "uuid",
+            "title": "Model Id",
+            "type": "string"
+          },
+          "model_version_name": {
+            "minLength": 1,
+            "title": "Model Version Name",
+            "type": "string"
+          },
+          "type": {
+            "const": "existing",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model_version_name",
+          "type",
+          "model_id"
+        ],
+        "title": "ExistingRunOutputModelRequest",
+        "type": "object"
+      },
       "ExperimentDetailResponse": {
         "properties": {
           "created_at": {
@@ -1392,6 +1419,33 @@
           "updated_at"
         ],
         "title": "ModelVersionSummaryResponse",
+        "type": "object"
+      },
+      "NewRunOutputModelRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "model_name": {
+            "minLength": 1,
+            "title": "Model Name",
+            "type": "string"
+          },
+          "model_version_name": {
+            "minLength": 1,
+            "title": "Model Version Name",
+            "type": "string"
+          },
+          "type": {
+            "const": "new",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model_version_name",
+          "type",
+          "model_name"
+        ],
+        "title": "NewRunOutputModelRequest",
         "type": "object"
       },
       "Response_DatasetActionResponse_": {
@@ -3590,6 +3644,7 @@
         "type": "object"
       },
       "RpcCreateRunRequest": {
+        "additionalProperties": false,
         "properties": {
           "dataset_id": {
             "format": "uuid",
@@ -3648,27 +3703,30 @@
             "title": "Num Checkpoint",
             "type": "integer"
           },
-          "output_model_name": {
+          "output_model": {
             "anyOf": [
               {
-                "type": "string"
+                "discriminator": {
+                  "mapping": {
+                    "existing": "#/components/schemas/ExistingRunOutputModelRequest",
+                    "new": "#/components/schemas/NewRunOutputModelRequest"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/NewRunOutputModelRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ExistingRunOutputModelRequest"
+                  }
+                ]
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Output Model Name"
-          },
-          "output_model_version_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Output Model Version Name"
+            "title": "Output Model"
           },
           "training_type": {
             "title": "Training Type",

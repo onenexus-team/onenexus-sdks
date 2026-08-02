@@ -5,7 +5,11 @@ from pathlib import Path
 from typing import Any
 
 import jwt
-from onenexus_sdk_core import Credentials, PrivateKeyJwtCredentials
+from onenexus_sdk_core import (
+    Credentials,
+    PrivateKeyJwtCredentials,
+    WorkloadIdentityFileCredentials,
+)
 
 from ..client import OneNexusClient
 from ..config import (
@@ -57,6 +61,44 @@ def create_workload_client(
     )
 
 
+def create_workload_identity_file_credentials(
+    *,
+    issuer: str,
+    token_path: str,
+    client_id: str = "onenexus-platform-workload",
+) -> Credentials:
+    return WorkloadIdentityFileCredentials(
+        issuer=issuer.rstrip("/"),
+        token_path=token_path,
+        client_id=client_id,
+    )
+
+
+def create_workload_identity_client(
+    *,
+    token_path: str,
+    client_id: str = "onenexus-platform-workload",
+    base_url: str = PLATFORM_API_BASE_URL,
+    cas_url: str = CAS_BASE_URL,
+    s3_endpoint_url: str = S3_ENDPOINT_URL,
+    s3_role_name: str = CAS_S3_ROLE_NAME,
+    timeout: float = 60.0,
+) -> OneNexusClient:
+    credentials = create_workload_identity_file_credentials(
+        issuer=cas_url,
+        token_path=token_path,
+        client_id=client_id,
+    )
+    return OneNexusClient._from_credentials(
+        credentials,
+        base_url=base_url,
+        cas_url=cas_url,
+        s3_endpoint_url=s3_endpoint_url,
+        s3_role_name=s3_role_name,
+        timeout=timeout,
+    )
+
+
 def _load_private_jwk(private_jwk_path: str) -> dict[str, Any]:
     try:
         value = json.loads(Path(private_jwk_path).read_text(encoding="utf-8"))
@@ -70,4 +112,6 @@ def _load_private_jwk(private_jwk_path: str) -> dict[str, Any]:
 __all__ = [
     "create_private_key_jwt_credentials",
     "create_workload_client",
+    "create_workload_identity_client",
+    "create_workload_identity_file_credentials",
 ]

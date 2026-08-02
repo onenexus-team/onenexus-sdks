@@ -147,3 +147,74 @@ def test_create_workload_client_wires_refreshable_credentials(monkeypatch) -> No
         "s3_role_name": "S3Role",
         "timeout": 23,
     }
+
+
+def test_create_workload_identity_file_credentials_uses_projected_token(
+    monkeypatch,
+) -> None:
+    constructed = object()
+    captured = {}
+
+    def fake_credentials(**kwargs):
+        captured.update(kwargs)
+        return constructed
+
+    monkeypatch.setattr(
+        workload_auth,
+        "WorkloadIdentityFileCredentials",
+        fake_credentials,
+    )
+
+    result = workload_auth.create_workload_identity_file_credentials(
+        issuer="https://cas.example.test/",
+        token_path="/var/run/secrets/onenexus/token",
+    )
+
+    assert result is constructed
+    assert captured == {
+        "issuer": "https://cas.example.test",
+        "token_path": "/var/run/secrets/onenexus/token",
+        "client_id": "onenexus-platform-workload",
+    }
+
+
+def test_create_workload_identity_client_wires_file_credentials(monkeypatch) -> None:
+    credentials = RotatingCredentials()
+    expected_client = object()
+    captured = {}
+
+    monkeypatch.setattr(
+        workload_auth,
+        "create_workload_identity_file_credentials",
+        lambda **_kwargs: credentials,
+    )
+
+    def fake_from_credentials(cls, resolved_credentials, **kwargs):
+        captured["credentials"] = resolved_credentials
+        captured.update(kwargs)
+        return expected_client
+
+    monkeypatch.setattr(
+        OneNexusClient,
+        "_from_credentials",
+        classmethod(fake_from_credentials),
+    )
+
+    result = workload_auth.create_workload_identity_client(
+        token_path="/var/run/secrets/onenexus/token",
+        base_url="https://api.example.test",
+        cas_url="https://cas.example.test",
+        s3_endpoint_url="https://s3.example.test",
+        s3_role_name="S3Role",
+        timeout=23,
+    )
+
+    assert result is expected_client
+    assert captured == {
+        "credentials": credentials,
+        "base_url": "https://api.example.test",
+        "cas_url": "https://cas.example.test",
+        "s3_endpoint_url": "https://s3.example.test",
+        "s3_role_name": "S3Role",
+        "timeout": 23,
+    }

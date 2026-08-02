@@ -24,8 +24,8 @@ classifiers = [
 dependencies = [
     "boto3>=1.34",
     "PyJWT[crypto]>=2.8",
-    "onenexus-sdk-core @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v0.0.2/onenexus_sdk_core-0.0.2-py3-none-any.whl#sha256=4d12ecef5bea8326f1a6506bbe5c01be9f021dd948ffed0548a9affb5d3a319a",
-    "onenexus-cas-client @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v0.0.2/onenexus_cas_client-0.0.2-py3-none-any.whl#sha256=c3ce161dc7ee6f76932444456f23ae4cc8622976c3ecdc35a539ff1666ad1655",
+    "onenexus-sdk-core @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v0.0.8/onenexus_sdk_core-0.0.8-py3-none-any.whl#sha256=0bd2e8c7ff5d1319ed4062bcc824828aeb56440ed5603cdd4433b7532ff090cf",
+    "onenexus-cas-client @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v0.0.8/onenexus_cas_client-0.0.8-py3-none-any.whl#sha256=0629868f45b7c8b6cb34f7e90402776dc8d14db54500086f494147d35653d2bb",
 ]
 
 [project.urls]
