@@ -642,8 +642,6 @@ def test_internal_workload_checkpoint_validator_runs_before_finalize(
                     "bucket": "checkpoint-bucket",
                     "prefix": "run-1/step-10",
                 }
-            if path.endswith("FailCheckpointUpload"):
-                return {"checkpoint_id": "checkpoint-1", "status": "FAILED"}
             raise AssertionError(f"unexpected endpoint: {path}")
 
     api = UploadAPI()
@@ -683,7 +681,6 @@ def test_internal_workload_checkpoint_validator_runs_before_finalize(
     assert [call[1] for call in api.calls] == [
         "/workload/v1/Training/StartCheckpointUpload",
         "/protected/v1/Training/GetRunCheckpointTransferTarget",
-        "/workload/v1/Training/FailCheckpointUpload",
     ]
 
 

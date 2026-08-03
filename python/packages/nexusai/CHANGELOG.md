@@ -3,6 +3,11 @@
 All notable NexusAI changes are recorded here. The project follows semantic
 versioning and the compatibility policy in `COMPATIBILITY.md`.
 
+## 0.1.4
+
+- Keep checkpoint uploads retryable when a post-transfer source validation
+  detects an async checkpoint write still in progress.
+
 ## 0.1.2
 
 - Fixed `nexusai login` to use the current default CAS URL unless `--cas-url`

@@ -441,8 +441,21 @@ class TrainingWorkloadClient:
         finalize_body["storage_prefix"] = str(target["prefix"])
         try:
             files = upload_path(source_path, credential)
-            if validate_uploaded_files is not None:
-                validate_uploaded_files(files)
+        except Exception as error:
+            try:
+                self.fail_checkpoint_upload(
+                    **finalize_body,
+                    failure_reason=type(error).__name__,
+                    failure_message=str(error),
+                )
+            except Exception:
+                pass
+            raise
+
+        if validate_uploaded_files is not None:
+            validate_uploaded_files(files)
+
+        try:
             finalized = self.finalize_checkpoint_upload(
                 **finalize_body,
                 manifest=_manifest_from_uploaded_files(files, credential["prefix"]),
