@@ -47,6 +47,7 @@ describe('CasSupportClient', () => {
                     observedBody = await request.json();
                     return HttpResponse.json({
                         tenantId: 'tn_acme',
+                        tenantSlug: 'tn_acme',
                     });
                 }),
             );
@@ -56,20 +57,21 @@ describe('CasSupportClient', () => {
                 credentials: staticCreds('happy'),
             });
             const result = await support.createTenant({
-                name: 'tn_acme',
+                tenantSlug: 'tn_acme',
                 displayName: 'Acme Inc',
-                initialAdminEmail: 'admin@acme.test',
-                initialAdminDisplayName: 'Acme Admin',
+                rootEmail: 'admin@acme.test',
+                rootDisplayName: 'Acme Admin',
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             expect(result.tenantId).toBe('tn_acme');
+            expect(result.tenantSlug).toBe('tn_acme');
             expect(observedAuth).toBe('Bearer at-happy');
             expect(observedBody).toEqual({
-                name: 'tn_acme',
+                tenantSlug: 'tn_acme',
                 displayName: 'Acme Inc',
-                initialAdminEmail: 'admin@acme.test',
-                initialAdminDisplayName: 'Acme Admin',
+                rootEmail: 'admin@acme.test',
+                rootDisplayName: 'Acme Admin',
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
         });
@@ -80,7 +82,7 @@ describe('CasSupportClient', () => {
                     HttpResponse.json({
                         data: {
                             tenantId: '0193fabc-1234-7def-abcd-1234567890ab',
-                            name: 'tn_acme',
+                            tenantSlug: 'tn_acme',
                             displayName: 'Acme Inc',
                             status: 1,
                             userCount: 3,
@@ -113,7 +115,7 @@ describe('CasSupportClient', () => {
             expect(tenant.data.userCount).toBe(3);
 
             const created = await support.addTenantUser({
-                name: 'a',
+                tenantId: '0193fabc-1234-7def-abcd-1234567890ac',
                 email: 'a@b.c',
                 displayName: 'A B',
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
@@ -281,10 +283,10 @@ describe('CasSupportClient', () => {
             });
 
             const promise = support.createTenant({
-                name: 'tn_acme',
+                tenantSlug: 'tn_acme',
                 displayName: 'Acme',
-                initialAdminEmail: 'admin@acme.test',
-                initialAdminDisplayName: 'Acme Admin',
+                rootEmail: 'admin@acme.test',
+                rootDisplayName: 'Acme Admin',
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
@@ -305,7 +307,7 @@ describe('CasSupportClient', () => {
                             code: 'invalid_argument',
                             status: 400,
                             detail: 'See errors for per-field details.',
-                            errors: { name: ['Required.'], displayName: ['Required.'] },
+                            errors: { tenantSlug: ['Required.'], displayName: ['Required.'] },
                         },
                         { status: 400, headers: { 'content-type': 'application/problem+json' } },
                     ),
@@ -319,10 +321,10 @@ describe('CasSupportClient', () => {
             });
 
             const promise = support.createTenant({
-                name: '',
+                tenantSlug: '',
                 displayName: '',
-                initialAdminEmail: '',
-                initialAdminDisplayName: '',
+                rootEmail: '',
+                rootDisplayName: '',
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
@@ -330,7 +332,7 @@ describe('CasSupportClient', () => {
             await promise.catch((error: unknown) => {
                 const e = error as InvalidArgumentError;
                 expect(e.fieldErrors).toEqual({
-                    name: ['Required.'],
+                    tenantSlug: ['Required.'],
                     displayName: ['Required.'],
                 });
             });
@@ -373,16 +375,17 @@ describe('CasSupportClient', () => {
                     }
                     return HttpResponse.json({
                         tenantId: 'tn_acme',
+                        tenantSlug: 'tn_acme',
                     });
                 }),
             );
 
             const support = new CasSupportClient({ baseUrl: BASE_URL, credentials });
             const result = await support.createTenant({
-                name: 'tn_acme',
+                tenantSlug: 'tn_acme',
                 displayName: 'Acme',
-                initialAdminEmail: 'admin@acme.test',
-                initialAdminDisplayName: 'Acme Admin',
+                rootEmail: 'admin@acme.test',
+                rootDisplayName: 'Acme Admin',
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
@@ -401,6 +404,7 @@ describe('CasSupportClient', () => {
                     serverResolved = true;
                     return HttpResponse.json({
                         tenantId: 'tn_acme',
+                        tenantSlug: 'tn_acme',
                     });
                 }),
             );
@@ -412,10 +416,10 @@ describe('CasSupportClient', () => {
             await expect(
                 support.createTenant(
                     {
-                        name: 'tn_acme',
+                        tenantSlug: 'tn_acme',
                         displayName: 'Acme',
-                        initialAdminEmail: 'admin@acme.test',
-                        initialAdminDisplayName: 'Acme Admin',
+                        rootEmail: 'admin@acme.test',
+                        rootDisplayName: 'Acme Admin',
                         clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
                     },
                     { signal: controller.signal },
@@ -434,6 +438,7 @@ describe('CasSupportClient', () => {
                     observed.push(request.headers.get('authorization') ?? '');
                     return HttpResponse.json({
                         tenantId: 'tn_acme',
+                        tenantSlug: 'tn_acme',
                     });
                 }),
             );
@@ -451,17 +456,17 @@ describe('CasSupportClient', () => {
             // between them under race conditions.
             await Promise.all([
                 supportA.createTenant({
-                    name: 'tn_a',
+                    tenantSlug: 'tn_a',
                     displayName: 'A',
-                    initialAdminEmail: 'admin-a@acme.test',
-                    initialAdminDisplayName: 'Admin A',
+                    rootEmail: 'admin-a@acme.test',
+                    rootDisplayName: 'Admin A',
                     clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
                 }),
                 supportB.createTenant({
-                    name: 'tn_b',
+                    tenantSlug: 'tn_b',
                     displayName: 'B',
-                    initialAdminEmail: 'admin-b@acme.test',
-                    initialAdminDisplayName: 'Admin B',
+                    rootEmail: 'admin-b@acme.test',
+                    rootDisplayName: 'Admin B',
                     clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK3',
                 }),
             ]);
@@ -477,6 +482,7 @@ describe('CasSupportClient', () => {
                 http.post(`${BASE_URL}/support-api/CreateTenant`, () =>
                     HttpResponse.json({
                         tenantId: 'tn_x',
+                        tenantSlug: 'tn_x',
                     }),
                 ),
             );
@@ -485,10 +491,10 @@ describe('CasSupportClient', () => {
             const { createTenant } = support;
 
             const result = await createTenant({
-                name: 'tn_x',
+                tenantSlug: 'tn_x',
                 displayName: 'X',
-                initialAdminEmail: 'admin@x.test',
-                initialAdminDisplayName: 'Admin X',
+                rootEmail: 'admin@x.test',
+                rootDisplayName: 'Admin X',
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
             expect(result.tenantId).toBe('tn_x');

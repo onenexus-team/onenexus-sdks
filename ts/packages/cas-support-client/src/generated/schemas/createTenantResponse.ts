@@ -8,4 +8,5 @@
 
 export interface CreateTenantResponse {
   tenantId: string;
+  tenantSlug: string;
 }

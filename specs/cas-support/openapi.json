@@ -791,17 +791,16 @@
     "schemas": {
       "AddTenantUserRequest": {
         "required": [
-          "name",
+          "tenantId",
           "email",
           "displayName",
           "clientToken"
         ],
         "type": "object",
         "properties": {
-          "name": {
-            "maxLength": 54,
-            "minLength": 1,
-            "type": "string"
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
           },
           "email": {
             "maxLength": 254,
@@ -1038,15 +1037,15 @@
       },
       "CreateTenantRequest": {
         "required": [
-          "name",
+          "tenantSlug",
           "displayName",
-          "initialAdminEmail",
-          "initialAdminDisplayName",
+          "rootEmail",
+          "rootDisplayName",
           "clientToken"
         ],
         "type": "object",
         "properties": {
-          "name": {
+          "tenantSlug": {
             "maxLength": 54,
             "minLength": 1,
             "type": "string"
@@ -1056,12 +1055,12 @@
             "minLength": 1,
             "type": "string"
           },
-          "initialAdminEmail": {
+          "rootEmail": {
             "maxLength": 254,
             "minLength": 3,
             "type": "string"
           },
-          "initialAdminDisplayName": {
+          "rootDisplayName": {
             "maxLength": 200,
             "minLength": 1,
             "type": "string"
@@ -1076,13 +1075,17 @@
       },
       "CreateTenantResponse": {
         "required": [
-          "tenantId"
+          "tenantId",
+          "tenantSlug"
         ],
         "type": "object",
         "properties": {
           "tenantId": {
             "type": "string",
             "format": "uuid"
+          },
+          "tenantSlug": {
+            "type": "string"
           }
         }
       },
@@ -1557,7 +1560,7 @@
       "TenantData": {
         "required": [
           "tenantId",
-          "name",
+          "tenantSlug",
           "displayName",
           "status",
           "createdAt",
@@ -1569,7 +1572,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "name": {
+          "tenantSlug": {
             "type": "string"
           },
           "displayName": {
@@ -1596,13 +1599,14 @@
         "enum": [
           "Active",
           "Suspended",
-          "Provisioning"
+          "Provisioning",
+          "Deleted"
         ]
       },
       "TenantSummary": {
         "required": [
           "tenantId",
-          "name",
+          "tenantSlug",
           "displayName",
           "status",
           "createdAt",
@@ -1614,7 +1618,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "name": {
+          "tenantSlug": {
             "type": "string"
           },
           "displayName": {

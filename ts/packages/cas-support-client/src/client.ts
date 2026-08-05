@@ -95,10 +95,10 @@ export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * });
  *
  * const tenant = await support.createTenant({
- *     name: 'tn_acme',
+ *     tenantSlug: 'tn_acme',
  *     displayName: 'Acme Inc',
- *     initialAdminEmail: 'admin@acme.com',
- *     initialAdminDisplayName: 'Acme Admin',
+ *     rootEmail: 'admin@acme.com',
+ *     rootDisplayName: 'Acme Admin',
  *     clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
  * });
  * ```

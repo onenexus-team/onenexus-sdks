@@ -11,7 +11,7 @@ export interface CreateTenantRequest {
      * @minLength 1
      * @maxLength 54
      */
-  name: string;
+  tenantSlug: string;
   /**
      * @minLength 1
      * @maxLength 200
@@ -21,12 +21,12 @@ export interface CreateTenantRequest {
      * @minLength 3
      * @maxLength 254
      */
-  initialAdminEmail: string;
+  rootEmail: string;
   /**
      * @minLength 1
      * @maxLength 200
      */
-  initialAdminDisplayName: string;
+  rootDisplayName: string;
   /**
      * @minLength 16
      * @maxLength 128

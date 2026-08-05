@@ -9,7 +9,7 @@ import type { TenantStatus } from './tenantStatus';
 
 export interface TenantData {
   tenantId: string;
-  name: string;
+  tenantSlug: string;
   displayName: string;
   status: TenantStatus;
   createdAt: string;

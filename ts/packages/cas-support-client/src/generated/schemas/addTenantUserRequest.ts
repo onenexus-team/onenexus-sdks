@@ -7,11 +7,7 @@
  */
 
 export interface AddTenantUserRequest {
-  /**
-     * @minLength 1
-     * @maxLength 54
-     */
-  name: string;
+  tenantId: string;
   /**
      * @minLength 3
      * @maxLength 254

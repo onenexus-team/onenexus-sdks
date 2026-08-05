@@ -13,4 +13,5 @@ export const TenantStatus = {
   Active: 'Active',
   Suspended: 'Suspended',
   Provisioning: 'Provisioning',
+  Deleted: 'Deleted',
 } as const;
