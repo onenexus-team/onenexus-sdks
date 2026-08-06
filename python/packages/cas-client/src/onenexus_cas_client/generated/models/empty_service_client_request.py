@@ -6,6 +6,9 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class EmptyServiceClientRequest(Parsable):
+    """
+    Request body for `ListServiceClients`.
+    """
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> EmptyServiceClientRequest:
         """

@@ -40,8 +40,8 @@ from .client import (
     ListRolePoliciesRequest,
     ListS3RolesResponse,
     ListServiceClientsResponse,
-    ListTenantUsersResponse,
     ListUsersRequest,
+    ListUsersResponse,
     RemoveRoleAssignmentRequest,
 )
 
@@ -79,8 +79,8 @@ __all__ = [
     "ListRolePoliciesRequest",
     "ListS3RolesResponse",
     "ListServiceClientsResponse",
-    "ListTenantUsersResponse",
     "ListUsersRequest",
+    "ListUsersResponse",
 
     "RemoveRoleAssignmentRequest",
 

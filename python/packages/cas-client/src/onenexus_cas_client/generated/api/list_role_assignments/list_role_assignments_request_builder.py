@@ -33,7 +33,8 @@ class ListRoleAssignmentsRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: ListRoleAssignmentsRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ListRoleAssignmentsResponse]:
         """
-        param body: The request body
+        Provide exactly one of `roleUri` or `assignee`. Use thereturned `before` or `after` value unchanged to navigatepages; do not send both cursors in one request.
+        param body: Request body for `POST /api/ListRoleAssignments`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[ListRoleAssignmentsResponse]
         """
@@ -60,7 +61,8 @@ class ListRoleAssignmentsRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: ListRoleAssignmentsRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        Provide exactly one of `roleUri` or `assignee`. Use thereturned `before` or `after` value unchanged to navigatepages; do not send both cursors in one request.
+        param body: Request body for `POST /api/ListRoleAssignments`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

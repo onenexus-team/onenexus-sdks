@@ -9,13 +9,16 @@ if TYPE_CHECKING:
 
 @dataclass
 class DetachPolicyFromRoleRequest(Parsable):
-    # The expectedStateToken property
+    """
+    Request body for `POST /api/DetachPolicyFromRole`.
+    """
+    # Current attachment token returned by an attachment-list operation.
     expected_state_token: Optional[str] = None
-    # The policy property
+    # Policy to detach.
     policy: Optional[AuthorizationPolicyReference] = None
-    # The requestId property
+    # Caller-generated identifier for safely retrying this removal.
     request_id: Optional[str] = None
-    # The roleUri property
+    # URI of the role that currently receives the policy.
     role_uri: Optional[str] = None
     
     @staticmethod

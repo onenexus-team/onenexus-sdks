@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "OneNexus Central Auth Service — Support API",
-    "description": "Support-team JSON RPC operations under `/support-api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.",
+    "description": "Support-team JSON RPC operations under `/support-api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration.",
     "version": "v1"
   },
   "paths": {
@@ -11,6 +11,7 @@
         "tags": [
           "CephS3"
         ],
+        "summary": "Describe the first-party default S3 account and whether it has been\nprovisioned yet.",
         "operationId": "GetS3DefaultAccount",
         "requestBody": {
           "content": {
@@ -29,7 +30,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Default-account configuration plus the live account\n    (or `null` if not provisioned).",
             "content": {
               "application/json": {
                 "schema": {
@@ -39,7 +40,7 @@
             }
           },
           "503": {
-            "description": "Service Unavailable",
+            "description": "RGW/Dashboard unreachable.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -61,6 +62,7 @@
         "tags": [
           "CephS3"
         ],
+        "summary": "Provision the first-party default S3 account and its account-root user.\nIdempotent on the account: if it already exists the existing account is\nreturned and the root user is not (re)created.",
         "operationId": "ProvisionS3DefaultAccount",
         "requestBody": {
           "content": {
@@ -79,7 +81,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Account provisioned (or already present). The root\n    user's secret key is present only when freshly created — persist it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -89,7 +91,7 @@
             }
           },
           "409": {
-            "description": "Conflict",
+            "description": "A conflicting RGW resource already exists.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -99,7 +101,7 @@
             }
           },
           "503": {
-            "description": "Service Unavailable",
+            "description": "RGW/Dashboard unreachable.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -121,6 +123,7 @@
         "tags": [
           "CephS3"
         ],
+        "summary": "List every RGW account known to the cluster.",
         "operationId": "ListS3Accounts",
         "requestBody": {
           "content": {
@@ -139,7 +142,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Accounts.",
             "content": {
               "application/json": {
                 "schema": {
@@ -149,7 +152,7 @@
             }
           },
           "503": {
-            "description": "Service Unavailable",
+            "description": "RGW/Dashboard unreachable.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -171,6 +174,7 @@
         "tags": [
           "SupportAuthorization"
         ],
+        "summary": "Evaluates one principal/action/resource tuple exactly as the owning\nservice's PEP would, without performing the operation itself.",
         "operationId": "EvaluateAuthorization",
         "requestBody": {
           "content": {
@@ -251,8 +255,10 @@
         "tags": [
           "Tenant"
         ],
+        "summary": "Create a new tenant.",
         "operationId": "CreateTenant",
         "requestBody": {
+          "description": "Cancellation token.",
           "content": {
             "application/json": {
               "schema": {
@@ -269,7 +275,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Tenant created. Body is a CreateTenantResponse\n    snapshot of the new row.",
             "content": {
               "application/json": {
                 "schema": {
@@ -279,7 +285,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Validation failure\n    (`type=https://onenexus.cloud/errors/invalid-argument`). Per-field detail in\n    `errors`.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -299,7 +305,7 @@
             }
           },
           "409": {
-            "description": "Conflict",
+            "description": "The slug is already taken\n    (`type=https://onenexus.cloud/errors/already-exists`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -321,8 +327,10 @@
         "tags": [
           "Tenant"
         ],
+        "summary": "Look up a tenant by Guid PK.",
         "operationId": "DescribeTenant",
         "requestBody": {
+          "description": "Cancellation token.",
           "content": {
             "application/json": {
               "schema": {
@@ -339,7 +347,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Tenant found. Body is a DescribeTenantResponse\n    including the live user count.",
             "content": {
               "application/json": {
                 "schema": {
@@ -349,7 +357,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Validation failure (`type=https://onenexus.cloud/errors/invalid-argument`) —\n    typically an empty `tenantId`.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -359,7 +367,7 @@
             }
           },
           "404": {
-            "description": "Not Found",
+            "description": "No tenant with that Guid\n    (`type=https://onenexus.cloud/errors/not-found`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -381,8 +389,11 @@
         "tags": [
           "Tenant"
         ],
+        "summary": "Page across all tenants known to CAS. Platform-admin / support\nsurface — there is no tenant scoping, this returns rows for every\ntenant the caller is authorized to see.",
+        "description": "    Ordering + pagination. Bidirectional cursor pagination on\nthe Tenant.Id UUID v7 PK. Forward (after) and\nbackward (before) directions both resolve to an index\nrange scan on the PK b-tree with no OFFSET cost. Items are\nalways returned in tenantId ascending order regardless of\ndirection — backward pages are reversed server-side. Because the\nPK is UUID v7 (time-ordered), this is also a chronological listing\nfor free.\n    Authorization (Phase 5). Restricted to platform_admin /\nplatform_support. Until Phase 5 lands, every authenticated\ncaller passes — the class-level [Authorize] attribute provides\nthe floor.",
         "operationId": "ListTenants",
         "requestBody": {
+          "description": "Cancellation token.",
           "content": {
             "application/json": {
               "schema": {
@@ -399,7 +410,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Page of tenant snapshots. Body is a\n    ListTenantsResponse; `nextCursor` is null on\n    the last page.",
             "content": {
               "application/json": {
                 "schema": {
@@ -409,7 +420,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Validation failure\n    (`type=https://onenexus.cloud/errors/invalid-argument`) — typically a `PageSize` outside\n    1..200, or a malformed / tampered `PageToken`.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -431,8 +442,11 @@
         "tags": [
           "Tenant"
         ],
+        "summary": "Page across the users belonging to a specific tenant. Platform-admin /\nsupport surface — the target tenant is identified by Guid in the\nrequest body, not inferred from the caller's principal.",
+        "description": "    Ordering + pagination. Same shape as Task&lt;IActionResult&gt; TenantController.ListTenants(ListTenantsRequest request, CancellationToken cancellationToken)\nbut on the Users table, filtered to a single tenant. The\nWHERE TenantId = ? AND Id &gt; ? predicate rides the leading\ncolumn of the composite IX_Users_TenantId_NormalizedEmail\nindex for the tenant filter and the PK for the cursor bound.\n    Tenant status is NOT a precondition. Listing the users of a\nsuspended or soft-deleted tenant is a legitimate operator use case\n(audit, cleanup, recovery). Only a missing tenant returns 404; a\ntenant that exists but is non-active still serves its user list.\n    Authorization (Phase 5). Restricted to platform_admin /\nplatform_support. Until Phase 5 lands, every authenticated\ncaller passes — the class-level [Authorize] attribute provides\nthe floor.",
         "operationId": "ListTenantUsers",
         "requestBody": {
+          "description": "Cancellation token.",
           "content": {
             "application/json": {
               "schema": {
@@ -449,7 +463,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Page of user snapshots. Body is a\n    ListTenantUsersResponse; `before`/`after`\n    are null at the corresponding ends of the result set.",
             "content": {
               "application/json": {
                 "schema": {
@@ -459,7 +473,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Validation failure (`type=https://onenexus.cloud/errors/invalid-argument`) —\n    typically a malformed cursor, both cursors supplied at once, an empty\n    `tenantId`, or a `limit` outside 1..200.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -469,7 +483,7 @@
             }
           },
           "404": {
-            "description": "Not Found",
+            "description": "No tenant with that Guid\n    (`type=https://onenexus.cloud/errors/not-found`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -491,8 +505,11 @@
         "tags": [
           "Tenant"
         ],
+        "summary": "Add a roleless user to an existing active tenant. Role grants are\nseparate authorization-administration operations.",
+        "description": "    Authorization. The caller must be an active human\nTenantAdmin of the reserved platform tenant. This is the\nimplemented operator gate until a distinct platform_admin\nauthorization contract exists.\n    Differs from TenantUserController.CreateUser in that\nthe target tenant comes from the request body, not the caller's\nprincipal. The downstream invitation logic is identical and runs\nthrough IInvitationService.",
         "operationId": "AddTenantUser",
         "requestBody": {
+          "description": "Cancellation token.",
           "content": {
             "application/json": {
               "schema": {
@@ -509,7 +526,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "User created; invitation queued. Body is\n    CreateUserResponse.",
             "content": {
               "application/json": {
                 "schema": {
@@ -519,7 +536,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Validation failure (`type=https://onenexus.cloud/errors/invalid-argument`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -539,7 +556,7 @@
             }
           },
           "409": {
-            "description": "Conflict",
+            "description": "The target tenant doesn't exist or is not\n    active (`type=https://onenexus.cloud/errors/failed-precondition`), or a user with that email\n    already exists in the tenant (`type=https://onenexus.cloud/errors/already-exists`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -561,8 +578,10 @@
         "tags": [
           "Tenant"
         ],
+        "summary": "Re-sends the invitation email for an existing pending user.",
         "operationId": "ResendInvitation",
         "requestBody": {
+          "description": "Cancellation token.",
           "content": {
             "application/json": {
               "schema": {
@@ -641,6 +660,7 @@
         "tags": [
           "Tenant"
         ],
+        "summary": "Suspends a tenant, preventing normal sign-in and onboarding traffic.",
         "operationId": "SuspendTenant",
         "requestBody": {
           "content": {
@@ -711,6 +731,7 @@
         "tags": [
           "Tenant"
         ],
+        "summary": "Re-activates a suspended tenant.",
         "operationId": "UnsuspendTenant",
         "requestBody": {
           "content": {
@@ -800,25 +821,30 @@
         "properties": {
           "tenantId": {
             "type": "string",
+            "description": "Guid PK of the tenant the user is being added to.",
             "format": "uuid"
           },
           "email": {
             "maxLength": 254,
             "minLength": 3,
-            "type": "string"
+            "type": "string",
+            "description": "Email address. Must be a syntactically valid RFC 5322-ish address.\nUniqueness is enforced per-tenant via the\n`(TenantId, NormalizedEmail)` composite index, not globally."
           },
           "displayName": {
             "maxLength": 200,
             "minLength": 1,
-            "type": "string"
+            "type": "string",
+            "description": "Display name shown in UIs. 1–200 chars."
           },
           "clientToken": {
             "maxLength": 128,
             "minLength": 16,
             "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string"
+            "type": "string",
+            "description": "Caller-generated request correlation key. It follows the same shape\nrules as string CreateTenantRequest.ClientToken. A replay cache\nfor ordinary user invitations is a follow-up; the database's\nper-tenant normalized-email constraint remains the duplicate guard."
           }
-        }
+        },
+        "description": "Request body for `POST /support-api/AddTenantUser`."
       },
       "CedarDiagnosticEntity": {
         "required": [
@@ -830,27 +856,32 @@
         "type": "object",
         "properties": {
           "uid": {
+            "description": "The entity's Cedar UID.",
             "$ref": "#/components/schemas/CedarDiagnosticEntityUid"
           },
           "attributes": {
             "type": "object",
             "additionalProperties": {
               "$ref": "#/components/schemas/CedarDiagnosticValue"
-            }
+            },
+            "description": "Entity attributes keyed by their Cedar attribute name."
           },
           "parents": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CedarDiagnosticEntityUid"
-            }
+            },
+            "description": "The entity's direct parent UIDs."
           },
           "tags": {
             "type": "object",
             "additionalProperties": {
               "$ref": "#/components/schemas/CedarDiagnosticValue"
-            }
+            },
+            "description": "Native Cedar tags keyed by tag name."
           }
-        }
+        },
+        "description": "One entity supplied to Cedar for a privileged support authorization\nevaluation. The list is the dynamic entity slice CAS passes to Cedar: the\nevaluated principal, resource, and every relationship entity needed by the\ndecision. Cedar derives static action entities from its packaged schema,\nso they are not repeated here."
       },
       "CedarDiagnosticEntityUid": {
         "required": [
@@ -860,12 +891,15 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "string"
+            "type": "string",
+            "description": "The Cedar entity type, such as `CAS::Role`."
           },
           "id": {
-            "type": "string"
+            "type": "string",
+            "description": "The entity identifier within string CedarDiagnosticEntityUid.Type."
           }
-        }
+        },
+        "description": "A Cedar entity identifier, represented as its type and ID parts."
       },
       "CedarDiagnosticValue": {
         "required": [
@@ -895,6 +929,7 @@
             "$ref": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticExtensionValue"
           }
         ],
+        "description": "A Cedar value in the diagnostic entity graph. The `kind` discriminator\nselects the concrete shape: `boolean`, `long`, `string`,\n`entity`, `set`, `record`, or `extension`.",
         "discriminator": {
           "propertyName": "kind",
           "mapping": {
@@ -920,9 +955,11 @@
             "type": "string"
           },
           "value": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "The Boolean value."
           }
-        }
+        },
+        "description": "A Cedar Boolean diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticEntityUidValue": {
         "required": [
@@ -936,9 +973,11 @@
             "type": "string"
           },
           "value": {
+            "description": "The referenced entity UID.",
             "$ref": "#/components/schemas/CedarDiagnosticEntityUid"
           }
-        }
+        },
+        "description": "A Cedar entity-reference diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticExtensionValue": {
         "required": [
@@ -953,12 +992,15 @@
             "type": "string"
           },
           "function": {
-            "type": "string"
+            "type": "string",
+            "description": "The Cedar extension function, such as `ip` or `datetime`."
           },
           "value": {
-            "type": "string"
+            "type": "string",
+            "description": "The extension value's canonical Cedar text representation."
           }
-        }
+        },
+        "description": "A Cedar extension diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticLongValue": {
         "required": [
@@ -977,9 +1019,11 @@
               "integer",
               "string"
             ],
+            "description": "The integer value.",
             "format": "int64"
           }
-        }
+        },
+        "description": "A Cedar signed 64-bit integer diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticRecordValue": {
         "required": [
@@ -996,9 +1040,11 @@
             "type": "object",
             "additionalProperties": {
               "$ref": "#/components/schemas/CedarDiagnosticValue"
-            }
+            },
+            "description": "Record fields keyed by their Cedar field name."
           }
-        }
+        },
+        "description": "A Cedar record diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticSetValue": {
         "required": [
@@ -1015,9 +1061,11 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CedarDiagnosticValue"
-            }
+            },
+            "description": "The set elements."
           }
-        }
+        },
+        "description": "A Cedar set diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticStringValue": {
         "required": [
@@ -1031,9 +1079,11 @@
             "type": "string"
           },
           "value": {
-            "type": "string"
+            "type": "string",
+            "description": "The string value."
           }
-        }
+        },
+        "description": "A Cedar string diagnostic value."
       },
       "CreateTenantRequest": {
         "required": [
@@ -1048,30 +1098,36 @@
           "tenantSlug": {
             "maxLength": 54,
             "minLength": 1,
-            "type": "string"
+            "type": "string",
+            "description": "Globally unique, immutable slug that members use to locate the tenant\nwhen they sign in (for example, `acme`)."
           },
           "displayName": {
             "maxLength": 200,
             "minLength": 1,
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable display name (e.g. `\"Acme Corporation, Inc.\"`).\n1–200 chars. Not used for auth decisions; shown in admin UIs only."
           },
           "rootEmail": {
             "maxLength": 254,
             "minLength": 3,
-            "type": "string"
+            "type": "string",
+            "description": "Email address of the tenant's root user. Tenant creation sends this\nuser an activation invitation and grants the predefined\n`TenantAdmin` role before activating the tenant."
           },
           "rootDisplayName": {
             "maxLength": 200,
             "minLength": 1,
-            "type": "string"
+            "type": "string",
+            "description": "Display name of the tenant's root user."
           },
           "clientToken": {
             "maxLength": 128,
             "minLength": 16,
             "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string"
+            "type": "string",
+            "description": "Idempotency key bound to a hash of this complete onboarding request.\nA retry with the same token and content resumes unfinished stages;\nchanging the content or tenant behind a token is rejected."
           }
-        }
+        },
+        "description": "Request body for `POST /support-api/CreateTenant`."
       },
       "CreateTenantResponse": {
         "required": [
@@ -1082,12 +1138,15 @@
         "properties": {
           "tenantId": {
             "type": "string",
+            "description": "The tenant's UUID v7 primary key.",
             "format": "uuid"
           },
           "tenantSlug": {
-            "type": "string"
+            "type": "string",
+            "description": "The tenant's human-entered login slug."
           }
-        }
+        },
+        "description": "Wire shape for a tenant returned by `CreateTenant`."
       },
       "CreateUserResponse": {
         "required": [
@@ -1098,17 +1157,21 @@
         "type": "object",
         "properties": {
           "user": {
-            "$ref": "#/components/schemas/UserDto"
+            "description": "The freshly-created user.",
+            "$ref": "#/components/schemas/User"
           },
           "acceptInvitationUrl": {
             "type": "string",
+            "description": "Fully-qualified URL the invitee clicks to land on the portal's\naccept-invitation page.",
             "format": "uri"
           },
           "acceptInvitationExpiresAt": {
             "type": "string",
+            "description": "UTC instant after which Uri CreateUserResponse.AcceptInvitationUrl's token\nstops being honoured. Nominally `createdAt + 72 h`.",
             "format": "date-time"
           }
-        }
+        },
+        "description": "Response body for `POST /api/CreateUser`."
       },
       "DescribeTenantRequest": {
         "required": [
@@ -1118,9 +1181,11 @@
         "properties": {
           "tenantId": {
             "type": "string",
+            "description": "ID of the tenant to look up.",
             "format": "uuid"
           }
-        }
+        },
+        "description": "Request body for `POST /support-api/DescribeTenant`."
       },
       "DescribeTenantResponse": {
         "required": [
@@ -1129,12 +1194,15 @@
         "type": "object",
         "properties": {
           "data": {
+            "description": "The tenant data.",
             "$ref": "#/components/schemas/TenantData"
           }
-        }
+        },
+        "description": "Wire shape for `DescribeTenant`. Identical to\nCreateTenantResponse; kept as a separate type for OpenAPI\nclarity (each operation documents its own response model)."
       },
       "EmptyS3Request": {
-        "type": "object"
+        "type": "object",
+        "description": "Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`."
       },
       "EvaluateAuthorizationRequest": {
         "required": [
@@ -1167,9 +1235,11 @@
             "type": "string"
           },
           "context": {
+            "description": "Flat JSON object of request-context facts. Values use their natural JSON\nscalar representation; the packaged service catalogue supplies the\nauthoritative Cedar type.",
             "$ref": "#/components/schemas/JsonElement"
           }
-        }
+        },
+        "description": "Request body for `POST /support-api/EvaluateAuthorization`."
       },
       "EvaluateAuthorizationResponse": {
         "required": [
@@ -1193,9 +1263,11 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CedarDiagnosticEntity"
-            }
+            },
+            "description": "The complete per-request entity list CAS supplied to Cedar. Compiled\npolicy text and policy-storage metadata are deliberately not included\nin this privileged diagnostic response."
           }
-        }
+        },
+        "description": "Support authorization-evaluation response."
       },
       "JsonElement": { },
       "ListS3AccountsResponse": {
@@ -1204,10 +1276,12 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/S3AccountDto"
-            }
+              "$ref": "#/components/schemas/S3Account"
+            },
+            "description": "All RGW accounts known to the cluster."
           }
-        }
+        },
+        "description": "Response for `ListS3Accounts`."
       },
       "ListTenantsRequest": {
         "type": "object",
@@ -1220,6 +1294,7 @@
               "integer",
               "string"
             ],
+            "description": "Maximum number of items returned in the page. Defaults to\nint ListTenantsRequest.DefaultLimit when omitted from the request body.\nMust be between 1 and int ListTenantsRequest.MaxLimit inclusive.",
             "format": "int32"
           },
           "after": {
@@ -1228,7 +1303,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Cursor for forward pagination. When set, returns items strictly\nafter this cursor (i.e. with a larger Guid). Pass the\nstring? ListTenantsResponse.After value from the previous\nresponse to advance one page. Omit on the first call."
           },
           "before": {
             "maxLength": 36,
@@ -1236,9 +1312,11 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Cursor for backward pagination. When set, returns items strictly\nbefore this cursor (i.e. with a smaller Guid). Pass the\nstring? ListTenantsResponse.Before value from the previous\nresponse to move one page earlier."
           }
-        }
+        },
+        "description": "Request body for `POST /support-api/ListTenants`."
       },
       "ListTenantsResponse": {
         "required": [
@@ -1250,21 +1328,25 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TenantSummary"
-            }
+            },
+            "description": "Tenant snapshots for the current page, always ordered by\nGuid TenantSummary.TenantId ascending. Because the PK is\nUUID v7 — a time-ordered identifier — this is the natural\ncreation-order listing, with no separate `created_at` index\nneeded."
           },
           "before": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Cursor for the previous page. `null` when no earlier items\nexist."
           },
           "after": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Cursor for the next page. `null` when no later items exist."
           }
-        }
+        },
+        "description": "Response body for `POST /support-api/ListTenants`."
       },
       "ListTenantUsersRequest": {
         "required": [
@@ -1274,6 +1356,7 @@
         "properties": {
           "tenantId": {
             "type": "string",
+            "description": "Guid PK of the tenant whose users to list. Obtained from a prior\n`ListTenants` / `DescribeTenant` response.",
             "format": "uuid"
           },
           "limit": {
@@ -1284,6 +1367,7 @@
               "integer",
               "string"
             ],
+            "description": "Maximum number of items returned in the page. Defaults to\nint ListTenantUsersRequest.DefaultLimit when omitted from the request body.\nMust be between 1 and int ListTenantUsersRequest.MaxLimit inclusive.",
             "format": "int32"
           },
           "after": {
@@ -1292,7 +1376,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Cursor for forward pagination. When set, returns users strictly\nafter this cursor (i.e. with a larger Guid). Pass the\nstring? ListTenantUsersResponse.After value from the previous\nresponse to advance one page. Omit on the first call."
           },
           "before": {
             "maxLength": 36,
@@ -1300,9 +1385,11 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Cursor for backward pagination. When set, returns users strictly\nbefore this cursor (i.e. with a smaller Guid). Mutually exclusive\nwith string? ListTenantUsersRequest.After."
           }
-        }
+        },
+        "description": "Request body for `POST /support-api/ListTenantUsers`."
       },
       "ListTenantUsersResponse": {
         "required": [
@@ -1314,21 +1401,25 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TenantUserSummary"
-            }
+            },
+            "description": "User snapshots for the current page, always ordered by\nGuid TenantUserSummary.UserId ascending. Because the PK is\nUUID v7 (time-ordered), this is the natural invitation-order\nlisting."
           },
           "before": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Cursor for the previous page. `null` when no earlier items\nexist."
           },
           "after": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Cursor for the next page. `null` when no later items exist."
           }
-        }
+        },
+        "description": "Response body for `POST /support-api/ListTenantUsers`."
       },
       "ProblemDetails": {
         "required": [
@@ -1345,7 +1436,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Short, human-readable error title."
           },
           "status": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1354,21 +1446,25 @@
               "integer",
               "string"
             ],
+            "description": "HTTP status code for this error.",
             "format": "int32"
           },
           "detail": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Human-readable explanation of this occurrence."
           },
           "instance": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "URI that identifies this error occurrence, when supplied."
           }
-        }
+        },
+        "description": "Error response in RFC 9457 Problem Details format."
       },
       "ProvisionS3DefaultAccountResponse": {
         "required": [
@@ -1377,7 +1473,8 @@
         "type": "object",
         "properties": {
           "account": {
-            "$ref": "#/components/schemas/S3AccountDto"
+            "description": "The provisioned (or pre-existing) default account.",
+            "$ref": "#/components/schemas/S3Account"
           },
           "rootUser": {
             "oneOf": [
@@ -1385,11 +1482,13 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/S3RootUserDto"
+                "description": "The newly minted account-root user with its keys, or `null` when the\naccount already existed and the root user was not (re)created.",
+                "$ref": "#/components/schemas/S3RootUser"
               }
             ]
           }
-        }
+        },
+        "description": "Response for `ProvisionS3DefaultAccount`."
       },
       "ResendInvitationRequest": {
         "required": [
@@ -1399,9 +1498,11 @@
         "properties": {
           "userId": {
             "type": "string",
+            "description": "Guid primary key of the pending user whose invitation should be resent.",
             "format": "uuid"
           }
-        }
+        },
+        "description": "Request body for `POST /support-api/ResendInvitation`."
       },
       "ResendInvitationResponse": {
         "required": [
@@ -1413,10 +1514,12 @@
         "properties": {
           "userId": {
             "type": "string",
+            "description": "The target user id.",
             "format": "uuid"
           },
           "acceptInvitationExpiresAt": {
             "type": "string",
+            "description": "UTC instant when the new accept-invitation link (delivered via email to the invitee) expires.",
             "format": "date-time"
           },
           "invitationSendCount": {
@@ -1425,61 +1528,72 @@
               "integer",
               "string"
             ],
+            "description": "Total number of successful invitation sends recorded for this user.",
             "format": "int32"
           }
-        }
+        },
+        "description": "Response body for `POST /support-api/ResendInvitation`."
       },
-      "S3AccessKeyDto": {
+      "S3AccessKey": {
         "required": [
           "accessKeyId"
         ],
         "type": "object",
         "properties": {
           "accessKeyId": {
-            "type": "string"
+            "type": "string",
+            "description": "Access key id."
           },
           "secretAccessKey": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Secret access key. Shown once, at creation time."
           },
           "userName": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "The owning RGW user id."
           }
-        }
+        },
+        "description": "An S3 access key. string? S3AccessKey.SecretAccessKey is only present on the\nresponse that first created the key — persist it immediately."
       },
-      "S3AccountDto": {
+      "S3Account": {
         "required": [
           "id"
         ],
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "description": "Account id (`RGW` + 17 digits)."
           },
           "name": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Account name."
           },
           "tenant": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Optional RGW tenant the account belongs to."
           },
           "email": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Contact email."
           }
-        }
+        },
+        "description": "A Ceph RGW account snapshot."
       },
       "S3DefaultAccountResponse": {
         "required": [
@@ -1489,16 +1603,19 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Configured default account name."
           },
           "email": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Configured default account email, if any."
           },
           "rootUserId": {
-            "type": "string"
+            "type": "string",
+            "description": "Configured root user id for the default account."
           },
           "account": {
             "oneOf": [
@@ -1506,28 +1623,33 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/S3AccountDto"
+                "description": "The live account, or `null` when it has not been provisioned yet.",
+                "$ref": "#/components/schemas/S3Account"
               }
             ]
           }
-        }
+        },
+        "description": "Response for `GetS3DefaultAccount`."
       },
-      "S3RootUserDto": {
+      "S3RootUser": {
         "required": [
           "userId"
         ],
         "type": "object",
         "properties": {
           "userId": {
-            "type": "string"
+            "type": "string",
+            "description": "RGW user id."
           },
           "keys": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/S3AccessKeyDto"
-            }
+              "$ref": "#/components/schemas/S3AccessKey"
+            },
+            "description": "Generated keys (secret shown once)."
           }
-        }
+        },
+        "description": "An account-root user and its freshly minted keys."
       },
       "SuspendTenantRequest": {
         "required": [
@@ -1537,9 +1659,11 @@
         "properties": {
           "tenantId": {
             "type": "string",
+            "description": "Guid primary key of the tenant to suspend.",
             "format": "uuid"
           }
-        }
+        },
+        "description": "Request body for `POST /support-api/SuspendTenant`."
       },
       "SuspendTenantResponse": {
         "required": [
@@ -1550,12 +1674,15 @@
         "properties": {
           "tenantId": {
             "type": "string",
+            "description": "The tenant id.",
             "format": "uuid"
           },
           "status": {
+            "description": "The current status after the operation.",
             "$ref": "#/components/schemas/TenantStatus"
           }
-        }
+        },
+        "description": "Response body for `POST /support-api/SuspendTenant`."
       },
       "TenantData": {
         "required": [
@@ -1570,19 +1697,24 @@
         "properties": {
           "tenantId": {
             "type": "string",
+            "description": "The tenant's ID.",
             "format": "uuid"
           },
           "tenantSlug": {
-            "type": "string"
+            "type": "string",
+            "description": "The tenant's globally unique login slug."
           },
           "displayName": {
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable display name set at creation time."
           },
           "status": {
+            "description": "Lifecycle status.",
             "$ref": "#/components/schemas/TenantStatus"
           },
           "createdAt": {
             "type": "string",
+            "description": "UTC instant when the tenant row was created.",
             "format": "date-time"
           },
           "userCount": {
@@ -1591,6 +1723,7 @@
               "integer",
               "string"
             ],
+            "description": "Live count of OneNexusUser rows belonging to this\ntenant at read time. Not cached.",
             "format": "int32"
           }
         }
@@ -1601,7 +1734,8 @@
           "Suspended",
           "Provisioning",
           "Deleted"
-        ]
+        ],
+        "description": "Lifecycle state of a Tenant."
       },
       "TenantSummary": {
         "required": [
@@ -1616,19 +1750,24 @@
         "properties": {
           "tenantId": {
             "type": "string",
+            "description": "The tenant's UUID v7 primary key.",
             "format": "uuid"
           },
           "tenantSlug": {
-            "type": "string"
+            "type": "string",
+            "description": "The tenant's globally unique login slug."
           },
           "displayName": {
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable display name set at creation time."
           },
           "status": {
+            "description": "Lifecycle status.",
             "$ref": "#/components/schemas/TenantStatus"
           },
           "createdAt": {
             "type": "string",
+            "description": "UTC instant when the tenant row was created.",
             "format": "date-time"
           },
           "userCount": {
@@ -1637,9 +1776,11 @@
               "integer",
               "string"
             ],
+            "description": "Live count of OneNexusUser rows belonging to this\ntenant at read time. Not cached.",
             "format": "int32"
           }
-        }
+        },
+        "description": "Tenant snapshot returned as a list item by `ListTenants`."
       },
       "TenantUserSummary": {
         "required": [
@@ -1647,6 +1788,7 @@
           "userUri",
           "email",
           "displayName",
+          "kind",
           "emailConfirmed",
           "createdAt"
         ],
@@ -1654,25 +1796,36 @@
         "properties": {
           "userId": {
             "type": "string",
+            "description": "The user's UUID v7 primary key.",
             "format": "uuid"
           },
           "userUri": {
-            "type": "string"
+            "type": "string",
+            "description": "Canonical principal URI used by role-assignment APIs."
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "description": "The user's email (verbatim, not normalised)."
           },
           "displayName": {
-            "type": "string"
+            "type": "string",
+            "description": "Display name shown in UIs."
+          },
+          "kind": {
+            "description": "Whether this is the tenant root user or an ordinary member.",
+            "$ref": "#/components/schemas/UserKind"
           },
           "emailConfirmed": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether the user has accepted the invitation and verified their\ninbox. `false` for users still in the pending-invite state."
           },
           "createdAt": {
             "type": "string",
+            "description": "UTC instant when the user row was created.",
             "format": "date-time"
           }
-        }
+        },
+        "description": "User snapshot returned as a list item by `ListTenantUsers`."
       },
       "UnsuspendTenantRequest": {
         "required": [
@@ -1682,9 +1835,11 @@
         "properties": {
           "tenantId": {
             "type": "string",
+            "description": "Guid primary key of the tenant to unsuspend.",
             "format": "uuid"
           }
-        }
+        },
+        "description": "Request body for `POST /support-api/UnsuspendTenant`."
       },
       "UnsuspendTenantResponse": {
         "required": [
@@ -1695,14 +1850,17 @@
         "properties": {
           "tenantId": {
             "type": "string",
+            "description": "The tenant id.",
             "format": "uuid"
           },
           "status": {
+            "description": "The current status after the operation.",
             "$ref": "#/components/schemas/TenantStatus"
           }
-        }
+        },
+        "description": "Response body for `POST /support-api/UnsuspendTenant`."
       },
-      "UserDto": {
+      "User": {
         "required": [
           "userId",
           "userUri",
@@ -1716,29 +1874,44 @@
         "properties": {
           "userId": {
             "type": "string",
+            "description": "UUID v7 primary key.",
             "format": "uuid"
           },
           "userUri": {
-            "type": "string"
+            "type": "string",
+            "description": "Canonical principal URI used when assigning authorization roles to\nthis user."
           },
           "tenantId": {
             "type": "string",
+            "description": "Owning tenant's UUID v7 primary key.",
             "format": "uuid"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "description": "The user's email (verbatim, not normalised)."
           },
           "displayName": {
-            "type": "string"
+            "type": "string",
+            "description": "Display name shown in UIs."
           },
           "emailConfirmed": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether the user has accepted the invitation and verified their inbox.\n`false` until `AcceptInvitation` succeeds."
           },
           "createdAt": {
             "type": "string",
+            "description": "UTC instant when the row was created.",
             "format": "date-time"
           }
-        }
+        },
+        "description": "Wire shape for a user returned by the `CreateUser` family of RPCs."
+      },
+      "UserKind": {
+        "enum": [
+          "RootUser",
+          "Member"
+        ],
+        "description": "Distinguishes a tenant's single root user from its ordinary members.\nImmutable once a OneNexusUser row is created."
       },
       "ValidationProblemDetails": {
         "required": [
@@ -1755,7 +1928,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Short, human-readable error title."
           },
           "status": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1764,19 +1938,22 @@
               "integer",
               "string"
             ],
+            "description": "HTTP status code for this error.",
             "format": "int32"
           },
           "detail": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Human-readable explanation of this occurrence."
           },
           "instance": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "URI that identifies this error occurrence, when supplied."
           },
           "errors": {
             "type": "object",
@@ -1785,15 +1962,17 @@
               "items": {
                 "type": "string"
               }
-            }
+            },
+            "description": "Validation messages keyed by the invalid request field."
           }
-        }
+        },
+        "description": "Validation error response. Inspect errors for field-specific messages."
       }
     },
     "securitySchemes": {
       "Bearer": {
         "type": "http",
-        "description": "CAS-issued OAuth 2.0 bearer token with the onenexus-cas-api audience.",
+        "description": "CAS-issued OAuth 2.0 bearer token.",
         "scheme": "bearer",
         "bearerFormat": "JWT"
       }

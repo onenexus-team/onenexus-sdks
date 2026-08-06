@@ -7,24 +7,33 @@
  */
 import type { JsonElement } from './jsonElement';
 
+/**
+ * Request body for `POST /api/PublishPolicy`.
+ */
 export interface PublishPolicyRequest {
   /**
+     * Caller-generated identifier used to correlate the publication request.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$
      */
   requestId: string;
   /**
+     * Immutable machine-readable policy name, unique inside the caller's tenant.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[A-Za-z][A-Za-z0-9]{0,127}$
      */
   name: string;
   /**
+     * Optional human-readable explanation of the policy. CAS stores an
+  omitted description as an empty string so policy read responses remain
+  structurally stable.
      * @minLength 0
      * @maxLength 200
      * @nullable
      */
   description?: string | null;
+  /** AWS-inspired OneNexus policy document. */
   document: JsonElement;
 }

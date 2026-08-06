@@ -6,11 +6,14 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class ListRolePoliciesRequest(Parsable):
-    # The after property
+    """
+    Request body for `POST /api/ListRolePolicies`.
+    """
+    # Cursor returned by a previous response for the following page.
     after: Optional[str] = None
-    # The before property
+    # Cursor returned by a previous response for the preceding page.
     before: Optional[str] = None
-    # The roleUri property
+    # Role whose direct policy attachments to return.
     role_uri: Optional[str] = None
     
     @staticmethod

@@ -9,16 +9,31 @@ import type { AuthorizationPolicyKind } from './authorizationPolicyKind';
 import type { AuthorizationPolicyLifecycleStatus } from './authorizationPolicyLifecycleStatus';
 import type { JsonElement } from './jsonElement';
 
-export interface AuthorizationPolicyDto {
+/**
+ * Complete customer-visible authorization policy content.
+ */
+export interface AuthorizationPolicy {
+  /** The catalogue that owns this policy. */
   kind: AuthorizationPolicyKind;
+  /** Immutable machine-readable policy name. */
   name: string;
+  /** Human-readable policy description. */
   description: string;
+  /** Current policy lifecycle state. */
   status: AuthorizationPolicyLifecycleStatus;
+  /** Validated customer-authored policy document. */
   document: JsonElement;
+  /** Optimistic concurrency token for policy content changes. */
   contentStateToken: string;
+  /** SHA-256 hash of the canonically normalized policy document. */
   documentHash: string;
+  /** Canonical principal URI that originally created the policy. */
   createdByUri: string;
+  /** Canonical principal URI that most recently updated the policy. */
   updatedByUri: string;
-  /** @nullable */
+  /**
+     * UTC instant of the latest successful publication, when present.
+     * @nullable
+     */
   publishedAtUtc?: string | null;
 }

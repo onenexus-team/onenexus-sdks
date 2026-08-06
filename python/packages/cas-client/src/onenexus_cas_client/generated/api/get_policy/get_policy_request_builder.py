@@ -33,7 +33,8 @@ class GetPolicyRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: GetPolicyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[GetPolicyResponse]:
         """
-        param body: The request body
+        Use this before editing a policy to obtain its current`contentStateToken`. Attachments are managed separately with thepolicy-to-role APIs.
+        param body: Request body for `POST /api/GetPolicy`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[GetPolicyResponse]
         """
@@ -59,7 +60,8 @@ class GetPolicyRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: GetPolicyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        Use this before editing a policy to obtain its current`contentStateToken`. Attachments are managed separately with thepolicy-to-role APIs.
+        param body: Request body for `POST /api/GetPolicy`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

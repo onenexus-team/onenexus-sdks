@@ -7,13 +7,16 @@ from uuid import UUID
 
 @dataclass
 class AcceptInvitationResponse(Parsable):
-    # The email property
+    """
+    Response body for `POST /api/AcceptInvitation`.
+    """
+    # Email address that was just confirmed.
     email: Optional[str] = None
-    # The loginUrl property
+    # Suggested next URL for the portal to navigate to — the login form,with the tenant slug pre-filled so the user only has to type theemail + password.
     login_url: Optional[str] = None
-    # The tenantId property
+    # Owning tenant's UUID v7 primary key.
     tenant_id: Optional[UUID] = None
-    # The userId property
+    # UUID of the newly-activated user.
     user_id: Optional[UUID] = None
     
     @staticmethod

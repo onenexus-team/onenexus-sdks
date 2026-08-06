@@ -6,11 +6,14 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class CreateUserRequest(Parsable):
-    # The clientToken property
+    """
+    Request body for `POST /api/CreateUser`.
+    """
+    # Caller-generated request correlation key. It follows the same shaperules as string CreateTenantRequest.ClientToken. A replaycache for ordinary user invitations is a follow-up; the database'sper-tenant normalized-email constraint remains the duplicate guard.
     client_token: Optional[str] = None
-    # The displayName property
+    # Display name shown in UIs. 1–200 chars.
     display_name: Optional[str] = None
-    # The email property
+    # Email address. Must be a syntactically valid RFC 5322-ish address.Uniqueness is enforced per-tenant via the`(TenantId, NormalizedEmail)` composite index, not globally.
     email: Optional[str] = None
     
     @staticmethod

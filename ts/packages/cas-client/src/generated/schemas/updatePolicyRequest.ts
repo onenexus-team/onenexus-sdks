@@ -7,27 +7,36 @@
  */
 import type { JsonElement } from './jsonElement';
 
+/**
+ * Request body for `POST /api/UpdatePolicy`.
+ */
 export interface UpdatePolicyRequest {
   /**
+     * Caller-generated identifier used only to correlate the update request.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$
      */
   requestId: string;
   /**
+     * Immutable policy name within the caller's tenant.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[A-Za-z][A-Za-z0-9]{0,127}$
      */
   name: string;
   /**
+     * Optional replacement human-readable policy description. CAS stores an
+  omitted description as an empty string.
      * @minLength 0
      * @maxLength 200
      * @nullable
      */
   description?: string | null;
+  /** Replacement AWS-inspired OneNexus policy document. */
   document: JsonElement;
   /**
+     * Content token returned by the latest get, list, publish, or update response.
      * @minLength 1
      * @maxLength 128
      */

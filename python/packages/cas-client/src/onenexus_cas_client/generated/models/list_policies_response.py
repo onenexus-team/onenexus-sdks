@@ -9,11 +9,14 @@ if TYPE_CHECKING:
 
 @dataclass
 class ListPoliciesResponse(Parsable):
-    # The after property
+    """
+    Response body for `POST /api/ListPolicies`.
+    """
+    # Cursor for a following page, or `null` at the end.
     after: Optional[str] = None
-    # The before property
+    # Cursor for a preceding page, or `null` at the beginning.
     before: Optional[str] = None
-    # The items property
+    # Policies ordered by kind, immutable name, and internal identifier.
     items: Optional[list[AuthorizationPolicySummary]] = None
     
     @staticmethod

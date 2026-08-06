@@ -6,6 +6,10 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Response body for a successful `POST /api/DeletePolicy`.
+ */
 export interface DeletePolicyResponse {
+  /** Immutable name of the deleted policy. */
   name: string;
 }

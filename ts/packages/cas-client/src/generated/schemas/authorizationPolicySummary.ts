@@ -8,13 +8,25 @@
 import type { AuthorizationPolicyKind } from './authorizationPolicyKind';
 import type { AuthorizationPolicyLifecycleStatus } from './authorizationPolicyLifecycleStatus';
 
+/**
+ * Tenant-scoped authorization policy summary.
+ */
 export interface AuthorizationPolicySummary {
+  /** The catalogue that owns this policy. */
   kind: AuthorizationPolicyKind;
+  /** Immutable machine-readable policy name. */
   name: string;
+  /** Human-readable policy description. */
   description: string;
+  /** Current policy lifecycle state. */
   status: AuthorizationPolicyLifecycleStatus;
+  /** SHA-256 hash of the canonically normalized policy document. */
   documentHash: string;
+  /** Optimistic concurrency token for policy content changes. */
   contentStateToken: string;
-  /** @nullable */
+  /**
+     * UTC instant of the latest successful publication, when present.
+     * @nullable
+     */
   publishedAtUtc?: string | null;
 }

@@ -7,13 +7,16 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class AssumeS3RoleResponse(Parsable):
-    # The accessKeyId property
+    """
+    Temporary S3 credentials returned by `AssumeS3Role`. CAS assumed therole on the caller's behalf; the caller uses these directly against S3.
+    """
+    # Temporary access key id.
     access_key_id: Optional[str] = None
-    # The expiration property
+    # UTC expiry of the temporary credentials.
     expiration: Optional[datetime.datetime] = None
-    # The secretAccessKey property
+    # Temporary secret access key.
     secret_access_key: Optional[str] = None
-    # The sessionToken property
+    # Session token to send with every signed S3 request.
     session_token: Optional[str] = None
     
     @staticmethod

@@ -10,15 +10,18 @@ if TYPE_CHECKING:
 
 @dataclass
 class UpdatePolicyResponse(Parsable):
-    # The contentStateToken property
+    """
+    Result of validating and atomically updating policy content.
+    """
+    # New content concurrency token after a successful update.
     content_state_token: Optional[str] = None
-    # The diagnostics property
+    # Sanitized compilation or Cedar validation findings.
     diagnostics: Optional[list[str]] = None
-    # The disposition property
+    # Publication pipeline outcome.
     disposition: Optional[AuthorizationPolicyPublicationDisposition] = None
-    # The kind property
+    # The catalogue that owns the updated policy.
     kind: Optional[AuthorizationPolicyKind] = None
-    # The reasonCode property
+    # Stable machine-readable reason for the outcome.
     reason_code: Optional[str] = None
     
     @staticmethod

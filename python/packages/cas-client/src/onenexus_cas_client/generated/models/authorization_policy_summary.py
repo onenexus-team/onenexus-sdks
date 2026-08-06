@@ -11,19 +11,22 @@ if TYPE_CHECKING:
 
 @dataclass
 class AuthorizationPolicySummary(Parsable):
-    # The contentStateToken property
+    """
+    Tenant-scoped authorization policy summary.
+    """
+    # Optimistic concurrency token for policy content changes.
     content_state_token: Optional[str] = None
-    # The description property
+    # Human-readable policy description.
     description: Optional[str] = None
-    # The documentHash property
+    # SHA-256 hash of the canonically normalized policy document.
     document_hash: Optional[str] = None
-    # The kind property
+    # The catalogue that owns this policy.
     kind: Optional[AuthorizationPolicyKind] = None
-    # The name property
+    # Immutable machine-readable policy name.
     name: Optional[str] = None
-    # The publishedAtUtc property
+    # UTC instant of the latest successful publication, when present.
     published_at_utc: Optional[datetime.datetime] = None
-    # The status property
+    # Current policy lifecycle state.
     status: Optional[AuthorizationPolicyLifecycleStatus] = None
     
     @staticmethod

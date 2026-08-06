@@ -33,7 +33,8 @@ class UpdatePolicyRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: UpdatePolicyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[UpdatePolicyResponse]:
         """
-        param body: The request body
+        Send the `contentStateToken` returned by the latest read orsuccessful write. CAS rejects stale updates rather than overwriting aconcurrent change. Platform-managed policies cannot be edited here.
+        param body: Request body for `POST /api/UpdatePolicy`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[UpdatePolicyResponse]
         """
@@ -59,7 +60,8 @@ class UpdatePolicyRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: UpdatePolicyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        Send the `contentStateToken` returned by the latest read orsuccessful write. CAS rejects stale updates rather than overwriting aconcurrent change. Platform-managed policies cannot be edited here.
+        param body: Request body for `POST /api/UpdatePolicy`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

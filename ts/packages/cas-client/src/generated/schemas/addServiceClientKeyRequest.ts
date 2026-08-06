@@ -6,9 +6,14 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `AddServiceClientKey`.
+ */
 export interface AddServiceClientKeyRequest {
+  /** OpenIddict application id. */
   serviceClientId: string;
   /**
+     * Additional public JWK JSON generated in the browser.
      * @minLength 1
      * @maxLength 8192
      */

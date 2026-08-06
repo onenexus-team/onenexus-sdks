@@ -33,7 +33,8 @@ class DeleteRoleRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: DeleteAuthorizationRoleRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[DeleteAuthorizationRoleResponse]:
         """
-        param body: The request body
+        Remove every direct user, service-client, workload, and policyrelationship first. CAS does not cascade deletion, which prevents arole from disappearing unexpectedly from an access configuration.
+        param body: Request body for `POST /api/DeleteRole`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[DeleteAuthorizationRoleResponse]
         """
@@ -60,7 +61,8 @@ class DeleteRoleRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: DeleteAuthorizationRoleRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        Remove every direct user, service-client, workload, and policyrelationship first. CAS does not cascade deletion, which prevents arole from disappearing unexpectedly from an access configuration.
+        param body: Request body for `POST /api/DeleteRole`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

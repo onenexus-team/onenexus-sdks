@@ -33,7 +33,8 @@ class AddServiceClientKeyRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: AddServiceClientKeyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[AddServiceClientKeyResponse]:
         """
-        param body: The request body
+        Use this to rotate a client key without interrupting the old key. CASaccepts at most three public keys per service client; retain theprivate key outside CAS.
+        param body: Request body for `AddServiceClientKey`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[AddServiceClientKeyResponse]
         """
@@ -58,7 +59,8 @@ class AddServiceClientKeyRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: AddServiceClientKeyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        Use this to rotate a client key without interrupting the old key. CASaccepts at most three public keys per service client; retain theprivate key outside CAS.
+        param body: Request body for `AddServiceClientKey`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

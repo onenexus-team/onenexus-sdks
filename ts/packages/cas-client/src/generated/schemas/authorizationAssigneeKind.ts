@@ -6,6 +6,9 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * The supported kinds of principal that can receive a role.
+ */
 export type AuthorizationAssigneeKind = typeof AuthorizationAssigneeKind[keyof typeof AuthorizationAssigneeKind];
 
 

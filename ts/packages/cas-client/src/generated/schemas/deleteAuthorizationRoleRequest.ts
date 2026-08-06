@@ -6,14 +6,19 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `POST /api/DeleteRole`.
+ */
 export interface DeleteAuthorizationRoleRequest {
   /**
+     * Caller-generated identifier used only to correlate the deletion request.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$
      */
   requestId: string;
   /**
+     * Canonical URI of the tenant role to delete.
      * @minLength 1
      * @maxLength 2048
      */

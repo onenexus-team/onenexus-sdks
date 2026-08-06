@@ -7,13 +7,16 @@ from uuid import UUID
 
 @dataclass
 class AcceptInvitationRequest(Parsable):
-    # The clientToken property
+    """
+    Request body for `POST /api/AcceptInvitation`.
+    """
+    # Caller-generated request correlation key. Invitation-token consumptionand the resulting password/security-stamp update provide replay safety.
     client_token: Optional[str] = None
-    # The password property
+    # Initial password chosen by the user. Subject to the Identitypassword-complexity rules configured inIdentityServiceCollectionExtensions.
     password: Optional[str] = None
-    # The token property
+    # Invite token from the URL's `token` query parameter. Bound tothe user's ASP.NET Identity SecurityStamp at generate-time; verifiedvia `UserManager.VerifyUserTokenAsync`.
     token: Optional[str] = None
-    # The userId property
+    # UUID of the invitee. Read from the invite URL's    `userId` query parameter by the portal.
     user_id: Optional[UUID] = None
     
     @staticmethod

@@ -6,7 +6,10 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class DeletePolicyResponse(Parsable):
-    # The name property
+    """
+    Response body for a successful `POST /api/DeletePolicy`.
+    """
+    # Immutable name of the deleted policy.
     name: Optional[str] = None
     
     @staticmethod

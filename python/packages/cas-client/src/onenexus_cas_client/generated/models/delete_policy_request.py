@@ -6,11 +6,14 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class DeletePolicyRequest(Parsable):
-    # The expectedContentStateToken property
+    """
+    Request body for `POST /api/DeletePolicy`.
+    """
+    # Content token returned by the latest get, list, publish, or update response.
     expected_content_state_token: Optional[str] = None
-    # The name property
+    # Immutable policy name within the caller's tenant.
     name: Optional[str] = None
-    # The requestId property
+    # Caller-generated identifier used only to correlate the deletion request.
     request_id: Optional[str] = None
     
     @staticmethod

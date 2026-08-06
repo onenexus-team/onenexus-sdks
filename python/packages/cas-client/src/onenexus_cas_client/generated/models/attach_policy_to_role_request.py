@@ -9,11 +9,14 @@ if TYPE_CHECKING:
 
 @dataclass
 class AttachPolicyToRoleRequest(Parsable):
-    # The policy property
+    """
+    Request body for `POST /api/AttachPolicyToRole`.
+    """
+    # Policy to attach.
     policy: Optional[AuthorizationPolicyReference] = None
-    # The requestId property
+    # Caller-generated identifier for safely retrying this attachment.
     request_id: Optional[str] = None
-    # The roleUri property
+    # URI of the role that will receive the policy.
     role_uri: Optional[str] = None
     
     @staticmethod

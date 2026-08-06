@@ -6,6 +6,9 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Outcome of a policy publish or update request.
+ */
 export type AuthorizationPolicyPublicationDisposition = typeof AuthorizationPolicyPublicationDisposition[keyof typeof AuthorizationPolicyPublicationDisposition];
 
 

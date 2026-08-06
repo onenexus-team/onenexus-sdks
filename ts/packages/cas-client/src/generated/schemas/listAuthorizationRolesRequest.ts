@@ -6,8 +6,12 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `POST /api/ListRoles`.
+ */
 export interface ListAuthorizationRolesRequest {
   /**
+     * Maximum number of roles to return, from 1 through 200.
      * @minimum 1
      * @maximum 200
      * @pattern ^-?(?:0|[1-9]\d*)$

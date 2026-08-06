@@ -5,19 +5,25 @@
  * Customer-facing JSON RPC operations under `/api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.
  * OpenAPI spec version: v1
  */
-import type { AuthorizationAssigneeDto } from './authorizationAssigneeDto';
+import type { AuthorizationAssignee } from './authorizationAssignee';
 
+/**
+ * Request body for `POST /api/AssignRole`.
+ */
 export interface AssignRoleRequest {
   /**
+     * Caller-generated identifier for safely retrying this assignment.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$
      */
   requestId: string;
   /**
+     * URI of the role to assign.
      * @minLength 1
      * @maxLength 2048
      */
   roleUri: string;
-  assignee: AuthorizationAssigneeDto;
+  /** User or service client that will receive the role. */
+  assignee: AuthorizationAssignee;
 }

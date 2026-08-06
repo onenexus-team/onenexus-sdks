@@ -10,13 +10,16 @@ if TYPE_CHECKING:
 
 @dataclass
 class ValidationProblemDetails(APIError, Parsable):
-    # The detail property
+    """
+    Validation error response. Inspect errors for field-specific messages.
+    """
+    # Human-readable explanation of this occurrence.
     detail: Optional[str] = None
-    # The errors property
+    # Validation messages keyed by the invalid request field.
     errors: Optional[ValidationProblemDetails_errors] = None
-    # The instance property
+    # URI that identifies this error occurrence, when supplied.
     instance: Optional[str] = None
-    # The title property
+    # Short, human-readable error title.
     title: Optional[str] = None
     # Stable RFC 9457 problem type URI.
     type: Optional[str] = None

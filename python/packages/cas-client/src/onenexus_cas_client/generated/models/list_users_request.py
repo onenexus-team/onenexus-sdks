@@ -6,9 +6,12 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class ListUsersRequest(Parsable):
-    # The after property
+    """
+    Request body for `POST /api/ListUsers`.
+    """
+    # Forward cursor returned by the preceding response. Mutually exclusivewith string? ListUsersRequest.Before.
     after: Optional[str] = None
-    # The before property
+    # Backward cursor returned by the preceding response. Mutually exclusivewith string? ListUsersRequest.After.
     before: Optional[str] = None
     
     @staticmethod

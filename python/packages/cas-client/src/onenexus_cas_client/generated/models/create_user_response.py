@@ -6,16 +6,19 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .user_dto import UserDto
+    from .user import User
 
 @dataclass
 class CreateUserResponse(Parsable):
-    # The acceptInvitationExpiresAt property
+    """
+    Response body for `POST /api/CreateUser`.
+    """
+    # UTC instant after which Uri CreateUserResponse.AcceptInvitationUrl's tokenstops being honoured. Nominally `createdAt + 72 h`.
     accept_invitation_expires_at: Optional[datetime.datetime] = None
-    # The acceptInvitationUrl property
+    # Fully-qualified URL the invitee clicks to land on the portal'saccept-invitation page.
     accept_invitation_url: Optional[str] = None
-    # The user property
-    user: Optional[UserDto] = None
+    # The freshly-created user.
+    user: Optional[User] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> CreateUserResponse:
@@ -33,14 +36,14 @@ class CreateUserResponse(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .user_dto import UserDto
+        from .user import User
 
-        from .user_dto import UserDto
+        from .user import User
 
         fields: dict[str, Callable[[Any], None]] = {
             "acceptInvitationExpiresAt": lambda n : setattr(self, 'accept_invitation_expires_at', n.get_datetime_value()),
             "acceptInvitationUrl": lambda n : setattr(self, 'accept_invitation_url', n.get_str_value()),
-            "user": lambda n : setattr(self, 'user', n.get_object_value(UserDto)),
+            "user": lambda n : setattr(self, 'user', n.get_object_value(User)),
         }
         return fields
     

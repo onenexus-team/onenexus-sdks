@@ -33,7 +33,8 @@ class ListS3RolesRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: EmptyS3Request, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ListS3RolesResponse]:
         """
-        param body: The request body
+        CAS derives the tenant from the access token; this request cannot listanother tenant's S3 roles. Each result includes the role's trust andinline permission policies for display in tenant administration tools.
+        param body: Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[ListS3RolesResponse]
         """
@@ -57,7 +58,8 @@ class ListS3RolesRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: EmptyS3Request, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        CAS derives the tenant from the access token; this request cannot listanother tenant's S3 roles. Each result includes the role's trust andinline permission policies for display in tenant administration tools.
+        param body: Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

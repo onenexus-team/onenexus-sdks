@@ -5,8 +5,12 @@
  * Customer-facing JSON RPC operations under `/api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.
  * OpenAPI spec version: v1
  */
-import type { AuthorizationRoleDto } from './authorizationRoleDto';
+import type { AuthorizationRole } from './authorizationRole';
 
+/**
+ * Response body for `POST /api/ListRoles`.
+ */
 export interface ListAuthorizationRolesResponse {
-  items: AuthorizationRoleDto[];
+  /** Roles in the caller's tenant, ordered by name. */
+  items: AuthorizationRole[];
 }

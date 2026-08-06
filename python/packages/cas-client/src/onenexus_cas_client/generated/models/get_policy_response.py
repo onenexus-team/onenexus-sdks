@@ -5,12 +5,15 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .authorization_policy_dto import AuthorizationPolicyDto
+    from .authorization_policy import AuthorizationPolicy
 
 @dataclass
 class GetPolicyResponse(Parsable):
-    # The policy property
-    policy: Optional[AuthorizationPolicyDto] = None
+    """
+    Response body for `POST /api/GetPolicy`.
+    """
+    # The requested policy content.
+    policy: Optional[AuthorizationPolicy] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> GetPolicyResponse:
@@ -28,12 +31,12 @@ class GetPolicyResponse(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .authorization_policy_dto import AuthorizationPolicyDto
+        from .authorization_policy import AuthorizationPolicy
 
-        from .authorization_policy_dto import AuthorizationPolicyDto
+        from .authorization_policy import AuthorizationPolicy
 
         fields: dict[str, Callable[[Any], None]] = {
-            "policy": lambda n : setattr(self, 'policy', n.get_object_value(AuthorizationPolicyDto)),
+            "policy": lambda n : setattr(self, 'policy', n.get_object_value(AuthorizationPolicy)),
         }
         return fields
     

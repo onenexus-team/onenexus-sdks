@@ -21,6 +21,11 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
   export const getTenantServiceClient = () => {
+/**
+ * CAS derives the tenant from the access token. The response includes
+client identifiers and registered public keys, never private keys.
+ * @summary List OAuth service clients owned by the caller's tenant.
+ */
 const listServiceClients = (
     emptyServiceClientRequest: EmptyServiceClientRequest,
  options?: SecondParameter<typeof platformMutator<ListServiceClientsResponse>>,) => {
@@ -31,7 +36,14 @@ const listServiceClients = (
     },
       options);
     }
-  const createServiceClient = (
+  /**
+ * Generate the key pair in your application or browser and submit only
+the public JWK. CAS returns the `clientId` needed at the token
+endpoint; it never receives or stores the corresponding private key.
+ * @summary Create a tenant-owned service client with its first browser-generated
+public assertion key.
+ */
+const createServiceClient = (
     createServiceClientRequest: CreateServiceClientRequest,
  options?: SecondParameter<typeof platformMutator<CreateServiceClientResponse>>,) => {
       return platformMutator<CreateServiceClientResponse>(
@@ -41,7 +53,13 @@ const listServiceClients = (
     },
       options);
     }
-  const addServiceClientKey = (
+  /**
+ * Use this to rotate a client key without interrupting the old key. CAS
+accepts at most three public keys per service client; retain the
+private key outside CAS.
+ * @summary Add an additional public assertion key to a service client.
+ */
+const addServiceClientKey = (
     addServiceClientKeyRequest: AddServiceClientKeyRequest,
  options?: SecondParameter<typeof platformMutator<AddServiceClientKeyResponse>>,) => {
       return platformMutator<AddServiceClientKeyResponse>(

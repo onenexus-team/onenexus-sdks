@@ -7,9 +7,12 @@ from uuid import UUID
 
 @dataclass
 class AddServiceClientKeyRequest(Parsable):
-    # The publicJwk property
+    """
+    Request body for `AddServiceClientKey`.
+    """
+    # Additional public JWK JSON generated in the browser.
     public_jwk: Optional[str] = None
-    # The serviceClientId property
+    # OpenIddict application id.
     service_client_id: Optional[UUID] = None
     
     @staticmethod

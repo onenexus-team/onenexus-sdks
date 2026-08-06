@@ -33,7 +33,8 @@ class AssumeS3RoleRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: AssumeS3RoleRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[AssumeS3RoleResponse]:
         """
-        param body: The request body
+        CAS authorizes the requested role before issuing credentials. Use thereturned access key, secret, and session token for S3 requests until`expiration`; never persist or share the temporary secret.
+        param body: Request body for `AssumeS3Role`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[AssumeS3RoleResponse]
         """
@@ -59,7 +60,8 @@ class AssumeS3RoleRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: AssumeS3RoleRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        CAS authorizes the requested role before issuing credentials. Use thereturned access key, secret, and session token for S3 requests until`expiration`; never persist or share the temporary secret.
+        param body: Request body for `AssumeS3Role`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

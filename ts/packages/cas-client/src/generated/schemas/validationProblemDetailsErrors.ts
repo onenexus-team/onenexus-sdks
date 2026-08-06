@@ -6,4 +6,7 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Validation messages keyed by the invalid request field.
+ */
 export type ValidationProblemDetailsErrors = {[key: string]: string[]};

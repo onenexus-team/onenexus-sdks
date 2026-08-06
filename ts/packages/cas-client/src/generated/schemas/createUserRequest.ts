@@ -6,18 +6,29 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `POST /api/CreateUser`.
+ */
 export interface CreateUserRequest {
   /**
+     * Email address. Must be a syntactically valid RFC 5322-ish address.
+  Uniqueness is enforced per-tenant via the
+  `(TenantId, NormalizedEmail)` composite index, not globally.
      * @minLength 3
      * @maxLength 254
      */
   email: string;
   /**
+     * Display name shown in UIs. 1–200 chars.
      * @minLength 1
      * @maxLength 200
      */
   displayName: string;
   /**
+     * Caller-generated request correlation key. It follows the same shape
+  rules as string CreateTenantRequest.ClientToken. A replay
+  cache for ordinary user invitations is a follow-up; the database's
+  per-tenant normalized-email constraint remains the duplicate guard.
      * @minLength 16
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$

@@ -10,8 +10,8 @@ import type {
   AcceptInvitationResponse,
   CreateUserRequest,
   CreateUserResponse,
-  ListTenantUsersResponse,
-  ListUsersRequest
+  ListUsersRequest,
+  ListUsersResponse
 } from '../schemas';
 
 import { platformMutator } from '../../mutator';
@@ -21,6 +21,14 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
   export const getTenantUser = () => {
+/**
+ * CAS derives the tenant from the caller's access token. The user stays
+pending until they redeem the invitation and set a password. Treat the
+returned invitation URL as a credential and share it only with the
+intended invitee.
+ * @summary Admin invites a user into their own tenant and triggers the invite
+email.
+ */
 const createUser = (
     createUserRequest: CreateUserRequest,
  options?: SecondParameter<typeof platformMutator<CreateUserResponse>>,) => {
@@ -31,17 +39,29 @@ const createUser = (
     },
       options);
     }
-  const listUsers = (
+  /**
+ * CAS always lists the caller's tenant; do not send a tenant identifier.
+Results include root and member users. Send one returned cursor at a
+time to move backward or forward through the list.
+ * @summary Lists users in the authenticated caller's own tenant.
+ */
+const listUsers = (
     listUsersRequest: ListUsersRequest,
- options?: SecondParameter<typeof platformMutator<ListTenantUsersResponse>>,) => {
-      return platformMutator<ListTenantUsersResponse>(
+ options?: SecondParameter<typeof platformMutator<ListUsersResponse>>,) => {
+      return platformMutator<ListUsersResponse>(
       {url: `/api/ListUsers`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: listUsersRequest
     },
       options);
     }
-  const acceptInvitation = (
+  /**
+ * This endpoint does not require an access token. It accepts the
+invitation details delivered by email, and an invitation can be used
+only once. On success, follow `loginUrl` to sign in.
+ * @summary Redeems an invitation, sets a password, and activates the account.
+ */
+const acceptInvitation = (
     acceptInvitationRequest: AcceptInvitationRequest,
  options?: SecondParameter<typeof platformMutator<AcceptInvitationResponse>>,) => {
       return platformMutator<AcceptInvitationResponse>(

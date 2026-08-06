@@ -7,9 +7,14 @@
  */
 import type { AuthorizationAssigneeKind } from './authorizationAssigneeKind';
 
-export interface AuthorizationAssigneeDto {
+/**
+ * A canonical role assignee supplied to an administration API.
+ */
+export interface AuthorizationAssignee {
+  /** The strict kind of principal represented by string AuthorizationAssignee.Uri. */
   kind: AuthorizationAssigneeKind;
   /**
+     * The complete canonical OneNexus URI.
      * @minLength 1
      * @maxLength 2048
      */

@@ -9,11 +9,14 @@ if TYPE_CHECKING:
 
 @dataclass
 class ListPolicyAttachmentsRequest(Parsable):
-    # The after property
+    """
+    Request body for `POST /api/ListPolicyAttachments`.
+    """
+    # Cursor returned by a previous response for the following page.
     after: Optional[str] = None
-    # The before property
+    # Cursor returned by a previous response for the preceding page.
     before: Optional[str] = None
-    # The policy property
+    # Policy whose direct role attachments to return.
     policy: Optional[AuthorizationPolicyReference] = None
     
     @staticmethod

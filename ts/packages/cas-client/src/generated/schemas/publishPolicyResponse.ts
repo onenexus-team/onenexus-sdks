@@ -8,11 +8,21 @@
 import type { AuthorizationPolicyKind } from './authorizationPolicyKind';
 import type { AuthorizationPolicyPublicationDisposition } from './authorizationPolicyPublicationDisposition';
 
+/**
+ * Result of policy validation and atomic publication.
+ */
 export interface PublishPolicyResponse {
+  /** The catalogue that owns the newly published policy. */
   kind?: AuthorizationPolicyKind;
+  /** Publication outcome. */
   disposition: AuthorizationPolicyPublicationDisposition;
+  /** Stable machine-readable result reason. */
   reasonCode: string;
+  /** Sanitized compilation or Cedar validation findings. */
   diagnostics: string[];
-  /** @nullable */
+  /**
+     * Optimistic concurrency token for subsequent policy content changes.
+     * @nullable
+     */
   contentStateToken: string | null;
 }

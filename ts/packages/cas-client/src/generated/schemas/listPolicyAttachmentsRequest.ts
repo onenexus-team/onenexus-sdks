@@ -7,21 +7,28 @@
  */
 import type { AuthorizationPolicyReference } from './authorizationPolicyReference';
 
+/**
+ * Request body for `POST /api/ListPolicyAttachments`.
+ */
 export interface ListPolicyAttachmentsRequest {
+  /** Policy whose direct role attachments to return. */
   policy: AuthorizationPolicyReference;
   /**
+     * Maximum number of attachments to return, from 1 through 200.
      * @minimum 1
      * @maximum 200
      * @pattern ^-?(?:0|[1-9]\d*)$
      */
   limit?: number | string;
   /**
+     * Cursor returned by a previous response for the preceding page.
      * @minLength 0
      * @maxLength 512
      * @nullable
      */
   before?: string | null;
   /**
+     * Cursor returned by a previous response for the following page.
      * @minLength 0
      * @maxLength 512
      * @nullable

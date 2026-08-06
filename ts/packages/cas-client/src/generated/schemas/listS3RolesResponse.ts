@@ -5,8 +5,12 @@
  * Customer-facing JSON RPC operations under `/api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.
  * OpenAPI spec version: v1
  */
-import type { S3RoleDto } from './s3RoleDto';
+import type { S3Role } from './s3Role';
 
+/**
+ * Response for `ListS3Roles` (the calling tenant's roles).
+ */
 export interface ListS3RolesResponse {
-  items?: S3RoleDto[];
+  /** The IAM roles in the calling tenant's S3 account. */
+  items?: S3Role[];
 }

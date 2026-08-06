@@ -33,7 +33,8 @@ class CreateRoleRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: CreateAuthorizationRoleRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[CreateAuthorizationRoleResponse]:
         """
-        param body: The request body
+        Role names are case-sensitive ASCII letters and digits. The role isscoped to the caller's tenant; creating an existing role with the samename succeeds and returns `created: false`.
+        param body: Request body for `POST /api/CreateRole`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[CreateAuthorizationRoleResponse]
         """
@@ -59,7 +60,8 @@ class CreateRoleRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: CreateAuthorizationRoleRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        Role names are case-sensitive ASCII letters and digits. The role isscoped to the caller's tenant; creating an existing role with the samename succeeds and returns `created: false`.
+        param body: Request body for `POST /api/CreateRole`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

@@ -6,9 +6,12 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class DeleteAuthorizationRoleRequest(Parsable):
-    # The requestId property
+    """
+    Request body for `POST /api/DeleteRole`.
+    """
+    # Caller-generated identifier used only to correlate the deletion request.
     request_id: Optional[str] = None
-    # The roleUri property
+    # Canonical URI of the tenant role to delete.
     role_uri: Optional[str] = None
     
     @staticmethod

@@ -5,14 +5,17 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .authorization_role_dto import AuthorizationRoleDto
+    from .authorization_role import AuthorizationRole
 
 @dataclass
 class CreateAuthorizationRoleResponse(Parsable):
-    # The created property
+    """
+    Response body for `POST /api/CreateRole`.
+    """
+    # `true` when this call created the role; otherwise it already existed.
     created: Optional[bool] = None
-    # The role property
-    role: Optional[AuthorizationRoleDto] = None
+    # The created or existing role.
+    role: Optional[AuthorizationRole] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> CreateAuthorizationRoleResponse:
@@ -30,13 +33,13 @@ class CreateAuthorizationRoleResponse(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .authorization_role_dto import AuthorizationRoleDto
+        from .authorization_role import AuthorizationRole
 
-        from .authorization_role_dto import AuthorizationRoleDto
+        from .authorization_role import AuthorizationRole
 
         fields: dict[str, Callable[[Any], None]] = {
             "created": lambda n : setattr(self, 'created', n.get_bool_value()),
-            "role": lambda n : setattr(self, 'role', n.get_object_value(AuthorizationRoleDto)),
+            "role": lambda n : setattr(self, 'role', n.get_object_value(AuthorizationRole)),
         }
         return fields
     

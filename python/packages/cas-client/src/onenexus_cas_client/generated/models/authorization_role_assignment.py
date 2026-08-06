@@ -7,47 +7,50 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from uuid import UUID
 
 if TYPE_CHECKING:
-    from .authorization_assignee_dto import AuthorizationAssigneeDto
+    from .authorization_assignee import AuthorizationAssignee
 
 @dataclass
-class AuthorizationRoleAssignmentDto(Parsable):
-    # The assignedAtUtc property
+class AuthorizationRoleAssignment(Parsable):
+    """
+    One direct role assignment returned by CAS.
+    """
+    # When the assignment was created, in UTC.
     assigned_at_utc: Optional[datetime.datetime] = None
-    # The assignedByUri property
+    # URI of the principal that made the assignment.
     assigned_by_uri: Optional[str] = None
-    # The assignee property
-    assignee: Optional[AuthorizationAssigneeDto] = None
-    # The assignmentId property
+    # User or service client that receives the role.
+    assignee: Optional[AuthorizationAssignee] = None
+    # Stable identifier of this direct role assignment.
     assignment_id: Optional[UUID] = None
-    # The roleUri property
+    # URI of the assigned role.
     role_uri: Optional[str] = None
-    # The stateToken property
+    # Concurrency token required to remove this assignment.
     state_token: Optional[str] = None
     
     @staticmethod
-    def create_from_discriminator_value(parse_node: ParseNode) -> AuthorizationRoleAssignmentDto:
+    def create_from_discriminator_value(parse_node: ParseNode) -> AuthorizationRoleAssignment:
         """
         Creates a new instance of the appropriate class based on discriminator value
         param parse_node: The parse node to use to read the discriminator value and create the object
-        Returns: AuthorizationRoleAssignmentDto
+        Returns: AuthorizationRoleAssignment
         """
         if parse_node is None:
             raise TypeError("parse_node cannot be null.")
-        return AuthorizationRoleAssignmentDto()
+        return AuthorizationRoleAssignment()
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
         """
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .authorization_assignee_dto import AuthorizationAssigneeDto
+        from .authorization_assignee import AuthorizationAssignee
 
-        from .authorization_assignee_dto import AuthorizationAssigneeDto
+        from .authorization_assignee import AuthorizationAssignee
 
         fields: dict[str, Callable[[Any], None]] = {
             "assignedAtUtc": lambda n : setattr(self, 'assigned_at_utc', n.get_datetime_value()),
             "assignedByUri": lambda n : setattr(self, 'assigned_by_uri', n.get_str_value()),
-            "assignee": lambda n : setattr(self, 'assignee', n.get_object_value(AuthorizationAssigneeDto)),
+            "assignee": lambda n : setattr(self, 'assignee', n.get_object_value(AuthorizationAssignee)),
             "assignmentId": lambda n : setattr(self, 'assignment_id', n.get_uuid_value()),
             "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
             "stateToken": lambda n : setattr(self, 'state_token', n.get_str_value()),

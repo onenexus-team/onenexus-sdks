@@ -117,44 +117,113 @@ export class CasSupportClient extends ClientBase {
 
     // -- Tenant management ---------------------------------------------------
 
+    /**
+     * Create a new tenant.
+     *
+     * @see POST /support-api/CreateTenant
+     */
     createTenant = (
         req: CreateTenantRequest,
         options?: CasSupportRequestOptions,
     ): Promise<CreateTenantResponse> => this.tenant.createTenant(req, this.mutatorOptions(options));
 
+    /**
+     * Look up a tenant by Guid PK.
+     *
+     * @see POST /support-api/DescribeTenant
+     */
     describeTenant = (
         req: DescribeTenantRequest,
         options?: CasSupportRequestOptions,
     ): Promise<DescribeTenantResponse> =>
         this.tenant.describeTenant(req, this.mutatorOptions(options));
 
+    /**
+     * Page across all tenants known to CAS. Platform-admin / support surface — there is no tenant
+     * scoping, this returns rows for every tenant the caller is authorized to see.
+     *
+     * Ordering + pagination. Bidirectional cursor pagination on the Tenant.Id UUID v7 PK. Forward
+     * (after) and backward (before) directions both resolve to an index range scan on the PK b-tree
+     * with no OFFSET cost. Items are always returned in tenantId ascending order regardless of
+     * direction — backward pages are reversed server-side. Because the PK is UUID v7 (time-ordered),
+     * this is also a chronological listing for free. Authorization (Phase 5). Restricted to
+     * platform_admin / platform_support. Until Phase 5 lands, every authenticated caller passes — the
+     * class-level [Authorize] attribute provides the floor.
+     *
+     * @see POST /support-api/ListTenants
+     */
     listTenants = (
         req: ListTenantsRequest,
         options?: CasSupportRequestOptions,
     ): Promise<ListTenantsResponse> => this.tenant.listTenants(req, this.mutatorOptions(options));
 
+    /**
+     * Page across the users belonging to a specific tenant. Platform-admin / support surface — the
+     * target tenant is identified by Guid in the request body, not inferred from the caller's
+     * principal.
+     *
+     * Ordering + pagination. Same shape as Task&lt;IActionResult&gt;
+     * TenantController.ListTenants(ListTenantsRequest request, CancellationToken cancellationToken)
+     * but on the Users table, filtered to a single tenant. The WHERE TenantId = ? AND Id &gt; ?
+     * predicate rides the leading column of the composite IX_Users_TenantId_NormalizedEmail index for
+     * the tenant filter and the PK for the cursor bound. Tenant status is NOT a precondition. Listing
+     * the users of a suspended or soft-deleted tenant is a legitimate operator use case (audit,
+     * cleanup, recovery). Only a missing tenant returns 404; a tenant that exists but is non-active
+     * still serves its user list. Authorization (Phase 5). Restricted to platform_admin /
+     * platform_support. Until Phase 5 lands, every authenticated caller passes — the class-level
+     * [Authorize] attribute provides the floor.
+     *
+     * @see POST /support-api/ListTenantUsers
+     */
     listTenantUsers = (
         req: ListTenantUsersRequest,
         options?: CasSupportRequestOptions,
     ): Promise<ListTenantUsersResponse> =>
         this.tenant.listTenantUsers(req, this.mutatorOptions(options));
 
+    /**
+     * Add a roleless user to an existing active tenant. Role grants are separate authorization-
+     * administration operations.
+     *
+     * Authorization. The caller must be an active human TenantAdmin of the reserved platform tenant.
+     * This is the implemented operator gate until a distinct platform_admin authorization contract
+     * exists. Differs from TenantUserController.CreateUser in that the target tenant comes from the
+     * request body, not the caller's principal. The downstream invitation logic is identical and runs
+     * through IInvitationService.
+     *
+     * @see POST /support-api/AddTenantUser
+     */
     addTenantUser = (
         req: AddTenantUserRequest,
         options?: CasSupportRequestOptions,
     ): Promise<CreateUserResponse> => this.tenant.addTenantUser(req, this.mutatorOptions(options));
 
+    /**
+     * Re-sends the invitation email for an existing pending user.
+     *
+     * @see POST /support-api/ResendInvitation
+     */
     resendInvitation = (
         req: ResendInvitationRequest,
         options?: CasSupportRequestOptions,
     ): Promise<ResendInvitationResponse> =>
         this.tenant.resendInvitation(req, this.mutatorOptions(options));
 
+    /**
+     * Suspends a tenant, preventing normal sign-in and onboarding traffic.
+     *
+     * @see POST /support-api/SuspendTenant
+     */
     suspendTenant = (
         req: SuspendTenantRequest,
         options?: CasSupportRequestOptions,
     ): Promise<SuspendTenantResponse> => this.tenant.suspendTenant(req, this.mutatorOptions(options));
 
+    /**
+     * Re-activates a suspended tenant.
+     *
+     * @see POST /support-api/UnsuspendTenant
+     */
     unsuspendTenant = (
         req: UnsuspendTenantRequest,
         options?: CasSupportRequestOptions,
@@ -163,6 +232,12 @@ export class CasSupportClient extends ClientBase {
 
     // -- Authorization diagnostics -----------------------------------------
 
+    /**
+     * Evaluates one principal/action/resource tuple exactly as the owning service's PEP would, without
+     * performing the operation itself.
+     *
+     * @see POST /support-api/EvaluateAuthorization
+     */
     evaluateAuthorization = (
         req: EvaluateAuthorizationRequest,
         options?: CasSupportRequestOptions,
@@ -171,14 +246,31 @@ export class CasSupportClient extends ClientBase {
 
     // -- Ceph S3 administration ---------------------------------------------
 
+    /**
+     * Describe the first-party default S3 account and whether it has been provisioned yet.
+     *
+     * @see POST /support-api/GetS3DefaultAccount
+     */
     getS3DefaultAccount = (options?: CasSupportRequestOptions): Promise<S3DefaultAccountResponse> =>
         this.cephS3.getS3DefaultAccount(EMPTY_S3_REQUEST, this.mutatorOptions(options));
 
+    /**
+     * Provision the first-party default S3 account and its account-root user. Idempotent on the
+     * account: if it already exists the existing account is returned and the root user is not
+     * (re)created.
+     *
+     * @see POST /support-api/ProvisionS3DefaultAccount
+     */
     provisionS3DefaultAccount = (
         options?: CasSupportRequestOptions,
     ): Promise<ProvisionS3DefaultAccountResponse> =>
         this.cephS3.provisionS3DefaultAccount(EMPTY_S3_REQUEST, this.mutatorOptions(options));
 
+    /**
+     * List every RGW account known to the cluster.
+     *
+     * @see POST /support-api/ListS3Accounts
+     */
     listS3Accounts = (options?: CasSupportRequestOptions): Promise<ListS3AccountsResponse> =>
         this.cephS3.listS3Accounts(EMPTY_S3_REQUEST, this.mutatorOptions(options));
 }

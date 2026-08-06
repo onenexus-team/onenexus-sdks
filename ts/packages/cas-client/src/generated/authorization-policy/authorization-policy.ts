@@ -25,6 +25,12 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
   export const getAuthorizationPolicy = () => {
+/**
+ * Creates a policy in the caller's tenant after validating its document.
+A rejected response includes safe diagnostics and creates no usable
+policy. Reuse the same `requestId` when retrying a timed-out call.
+ * @summary Validates and publishes new tenant-managed policy content.
+ */
 const publishPolicy = (
     publishPolicyRequest: PublishPolicyRequest,
  options?: SecondParameter<typeof platformMutator<PublishPolicyResponse>>,) => {
@@ -35,7 +41,13 @@ const publishPolicy = (
     },
       options);
     }
-  const listPolicies = (
+  /**
+ * Returns the tenant's own policies and platform-managed policies that
+are available to that tenant. Send at most one returned cursor in the
+next request to move backward or forward through the result set.
+ * @summary Lists one page of policies visible to the caller's tenant.
+ */
+const listPolicies = (
     listPoliciesRequest: ListPoliciesRequest,
  options?: SecondParameter<typeof platformMutator<ListPoliciesResponse>>,) => {
       return platformMutator<ListPoliciesResponse>(
@@ -45,7 +57,13 @@ const publishPolicy = (
     },
       options);
     }
-  const getPolicy = (
+  /**
+ * Use this before editing a policy to obtain its current
+`contentStateToken`. Attachments are managed separately with the
+policy-to-role APIs.
+ * @summary Gets one policy's content without its role attachments.
+ */
+const getPolicy = (
     getPolicyRequest: GetPolicyRequest,
  options?: SecondParameter<typeof platformMutator<GetPolicyResponse>>,) => {
       return platformMutator<GetPolicyResponse>(
@@ -55,7 +73,13 @@ const publishPolicy = (
     },
       options);
     }
-  const updatePolicy = (
+  /**
+ * Send the `contentStateToken` returned by the latest read or
+successful write. CAS rejects stale updates rather than overwriting a
+concurrent change. Platform-managed policies cannot be edited here.
+ * @summary Updates only the content of an existing tenant-managed policy.
+ */
+const updatePolicy = (
     updatePolicyRequest: UpdatePolicyRequest,
  options?: SecondParameter<typeof platformMutator<UpdatePolicyResponse>>,) => {
       return platformMutator<UpdatePolicyResponse>(
@@ -65,7 +89,13 @@ const publishPolicy = (
     },
       options);
     }
-  const deletePolicy = (
+  /**
+ * Remove every direct role attachment before deleting a policy. Send its
+current `contentStateToken` so CAS can reject a delete based on an
+out-of-date view. Platform-managed policies cannot be deleted here.
+ * @summary Deletes one unattached tenant-managed policy.
+ */
+const deletePolicy = (
     deletePolicyRequest: DeletePolicyRequest,
  options?: SecondParameter<typeof platformMutator<DeletePolicyResponse>>,) => {
       return platformMutator<DeletePolicyResponse>(

@@ -5,13 +5,16 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .authorization_role_assignment_dto import AuthorizationRoleAssignmentDto
+    from .authorization_role_assignment import AuthorizationRoleAssignment
 
 @dataclass
 class AssignRoleResponse(Parsable):
-    # The assignment property
-    assignment: Optional[AuthorizationRoleAssignmentDto] = None
-    # The created property
+    """
+    Response body for `POST /api/AssignRole`.
+    """
+    # The created or existing direct assignment.
+    assignment: Optional[AuthorizationRoleAssignment] = None
+    # `true` when this call created the assignment; otherwise it already existed.
     created: Optional[bool] = None
     
     @staticmethod
@@ -30,12 +33,12 @@ class AssignRoleResponse(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .authorization_role_assignment_dto import AuthorizationRoleAssignmentDto
+        from .authorization_role_assignment import AuthorizationRoleAssignment
 
-        from .authorization_role_assignment_dto import AuthorizationRoleAssignmentDto
+        from .authorization_role_assignment import AuthorizationRoleAssignment
 
         fields: dict[str, Callable[[Any], None]] = {
-            "assignment": lambda n : setattr(self, 'assignment', n.get_object_value(AuthorizationRoleAssignmentDto)),
+            "assignment": lambda n : setattr(self, 'assignment', n.get_object_value(AuthorizationRoleAssignment)),
             "created": lambda n : setattr(self, 'created', n.get_bool_value()),
         }
         return fields

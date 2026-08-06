@@ -6,9 +6,12 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class DeleteAuthorizationRoleResponse(Parsable):
-    # The removed property
+    """
+    Response body for a successful `POST /api/DeleteRole`.
+    """
+    # Whether CAS removed the role.
     removed: Optional[bool] = None
-    # The roleUri property
+    # Canonical URI of the role that was deleted.
     role_uri: Optional[str] = None
     
     @staticmethod

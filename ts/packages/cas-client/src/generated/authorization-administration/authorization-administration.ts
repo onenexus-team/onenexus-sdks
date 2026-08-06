@@ -27,6 +27,12 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
   export const getAuthorizationAdministration = () => {
+/**
+ * The assignee and role must belong to the caller's tenant. Repeating the
+same request does not create a second assignment; inspect
+`created` to tell whether CAS created it on this call.
+ * @summary Idempotently assigns one role to a user or service client.
+ */
 const assignRole = (
     assignRoleRequest: AssignRoleRequest,
  options?: SecondParameter<typeof platformMutator<AssignRoleResponse>>,) => {
@@ -37,7 +43,13 @@ const assignRole = (
     },
       options);
     }
-  const removeRoleAssignment = (
+  /**
+ * First obtain the assignment with `ListRoleAssignments`, then send
+its `stateToken`. CAS rejects a stale token so an administrator
+cannot remove a relationship that changed after it was displayed.
+ * @summary Removes one direct role assignment using its current state token.
+ */
+const removeRoleAssignment = (
     removeRoleAssignmentRequest: RemoveRoleAssignmentRequest,
  options?: SecondParameter<typeof platformMutator<AuthorizationRelationshipRemovedResponse>>,) => {
       return platformMutator<AuthorizationRelationshipRemovedResponse>(
@@ -47,7 +59,13 @@ const assignRole = (
     },
       options);
     }
-  const listRoleAssignments = (
+  /**
+ * Provide exactly one of `roleUri` or `assignee`. Use the
+returned `before` or `after` value unchanged to navigate
+pages; do not send both cursors in one request.
+ * @summary Lists direct assignments by exactly one role or assignee filter.
+ */
+const listRoleAssignments = (
     listRoleAssignmentsRequest: ListRoleAssignmentsRequest,
  options?: SecondParameter<typeof platformMutator<ListRoleAssignmentsResponse>>,) => {
       return platformMutator<ListRoleAssignmentsResponse>(
@@ -57,7 +75,13 @@ const assignRole = (
     },
       options);
     }
-  const attachPolicyToRole = (
+  /**
+ * A direct attachment makes the policy available whenever the role is
+evaluated. Repeating the same request preserves the existing
+relationship and returns `created: false`.
+ * @summary Compiles and idempotently attaches one tenant- or platform-managed policy to a role.
+ */
+const attachPolicyToRole = (
     attachPolicyToRoleRequest: AttachPolicyToRoleRequest,
  options?: SecondParameter<typeof platformMutator<AttachPolicyToRoleResponse>>,) => {
       return platformMutator<AttachPolicyToRoleResponse>(
@@ -67,7 +91,13 @@ const assignRole = (
     },
       options);
     }
-  const detachPolicyFromRole = (
+  /**
+ * Get the attachment first with `ListPolicyAttachments` or
+`ListRolePolicies`, then provide its `stateToken`. This
+protects against deleting a relationship that changed concurrently.
+ * @summary Detaches one policy from one role using the relationship state token.
+ */
+const detachPolicyFromRole = (
     detachPolicyFromRoleRequest: DetachPolicyFromRoleRequest,
  options?: SecondParameter<typeof platformMutator<AuthorizationRelationshipRemovedResponse>>,) => {
       return platformMutator<AuthorizationRelationshipRemovedResponse>(
@@ -77,7 +107,13 @@ const assignRole = (
     },
       options);
     }
-  const listPolicyAttachments = (
+  /**
+ * The response contains the direct policy-to-role relationships, not the
+users or service clients that inherit access through those roles. Use
+the returned cursors for paging.
+ * @summary Lists roles to which one policy is directly attached.
+ */
+const listPolicyAttachments = (
     listPolicyAttachmentsRequest: ListPolicyAttachmentsRequest,
  options?: SecondParameter<typeof platformMutator<ListPolicyAttachmentsResponse>>,) => {
       return platformMutator<ListPolicyAttachmentsResponse>(
@@ -87,7 +123,12 @@ const assignRole = (
     },
       options);
     }
-  const listRolePolicies = (
+  /**
+ * This returns only direct attachments. A policy inherited by another
+mechanism is not included. Use the returned cursors for paging.
+ * @summary Lists tenant- and platform-managed policies directly attached to one role.
+ */
+const listRolePolicies = (
     listRolePoliciesRequest: ListRolePoliciesRequest,
  options?: SecondParameter<typeof platformMutator<ListPolicyAttachmentsResponse>>,) => {
       return platformMutator<ListPolicyAttachmentsResponse>(

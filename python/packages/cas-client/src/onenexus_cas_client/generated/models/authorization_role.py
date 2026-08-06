@@ -4,42 +4,35 @@ from dataclasses import dataclass, field
 from kiota_abstractions.serialization import Parsable, ParseNode, SerializationWriter
 from typing import Any, Optional, TYPE_CHECKING, Union
 
-if TYPE_CHECKING:
-    from .tenant_user_summary import TenantUserSummary
-
 @dataclass
-class ListTenantUsersResponse(Parsable):
-    # The after property
-    after: Optional[str] = None
-    # The before property
-    before: Optional[str] = None
-    # The items property
-    items: Optional[list[TenantUserSummary]] = None
+class AuthorizationRole(Parsable):
+    """
+    The created or existing role.
+    """
+    # Case-sensitive name chosen for this role.
+    name: Optional[str] = None
+    # Stable URI to use when assigning this role or attaching a policy.
+    role_uri: Optional[str] = None
     
     @staticmethod
-    def create_from_discriminator_value(parse_node: ParseNode) -> ListTenantUsersResponse:
+    def create_from_discriminator_value(parse_node: ParseNode) -> AuthorizationRole:
         """
         Creates a new instance of the appropriate class based on discriminator value
         param parse_node: The parse node to use to read the discriminator value and create the object
-        Returns: ListTenantUsersResponse
+        Returns: AuthorizationRole
         """
         if parse_node is None:
             raise TypeError("parse_node cannot be null.")
-        return ListTenantUsersResponse()
+        return AuthorizationRole()
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
         """
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .tenant_user_summary import TenantUserSummary
-
-        from .tenant_user_summary import TenantUserSummary
-
         fields: dict[str, Callable[[Any], None]] = {
-            "after": lambda n : setattr(self, 'after', n.get_str_value()),
-            "before": lambda n : setattr(self, 'before', n.get_str_value()),
-            "items": lambda n : setattr(self, 'items', n.get_collection_of_object_values(TenantUserSummary)),
+            "name": lambda n : setattr(self, 'name', n.get_str_value()),
+            "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
         }
         return fields
     
@@ -51,8 +44,7 @@ class ListTenantUsersResponse(Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_str_value("after", self.after)
-        writer.write_str_value("before", self.before)
-        writer.write_collection_of_object_values("items", self.items)
+        writer.write_str_value("name", self.name)
+        writer.write_str_value("roleUri", self.role_uri)
     
 

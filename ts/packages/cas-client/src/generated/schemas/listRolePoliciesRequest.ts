@@ -6,25 +6,32 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `POST /api/ListRolePolicies`.
+ */
 export interface ListRolePoliciesRequest {
   /**
+     * Role whose direct policy attachments to return.
      * @minLength 1
      * @maxLength 2048
      */
   roleUri: string;
   /**
+     * Maximum number of attachments to return, from 1 through 200.
      * @minimum 1
      * @maximum 200
      * @pattern ^-?(?:0|[1-9]\d*)$
      */
   limit?: number | string;
   /**
+     * Cursor returned by a previous response for the preceding page.
      * @minLength 0
      * @maxLength 512
      * @nullable
      */
   before?: string | null;
   /**
+     * Cursor returned by a previous response for the following page.
      * @minLength 0
      * @maxLength 512
      * @nullable

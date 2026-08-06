@@ -33,7 +33,8 @@ class RemoveRoleAssignmentRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: RemoveRoleAssignmentRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[AuthorizationRelationshipRemovedResponse]:
         """
-        param body: The request body
+        First obtain the assignment with `ListRoleAssignments`, then sendits `stateToken`. CAS rejects a stale token so an administratorcannot remove a relationship that changed after it was displayed.
+        param body: Request body for `POST /api/RemoveRoleAssignment`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[AuthorizationRelationshipRemovedResponse]
         """
@@ -60,7 +61,8 @@ class RemoveRoleAssignmentRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: RemoveRoleAssignmentRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        First obtain the assignment with `ListRoleAssignments`, then sendits `stateToken`. CAS rejects a stale token so an administratorcannot remove a relationship that changed after it was displayed.
+        param body: Request body for `POST /api/RemoveRoleAssignment`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

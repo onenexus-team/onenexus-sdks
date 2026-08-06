@@ -6,9 +6,12 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class CreateAuthorizationRoleRequest(Parsable):
-    # The name property
+    """
+    Request body for `POST /api/CreateRole`.
+    """
+    # Case-sensitive role name; use ASCII letters and digits only.
     name: Optional[str] = None
-    # The requestId property
+    # Caller-generated identifier for safely retrying this create request.
     request_id: Optional[str] = None
     
     @staticmethod

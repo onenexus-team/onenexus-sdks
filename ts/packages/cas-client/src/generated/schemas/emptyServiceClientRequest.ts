@@ -6,4 +6,7 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `ListServiceClients`.
+ */
 export interface EmptyServiceClientRequest { [key: string]: unknown }

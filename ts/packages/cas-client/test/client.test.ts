@@ -300,6 +300,7 @@ describe('CasClient', () => {
                                 userUri: 'onenexus:user/user-1',
                                 email: 'a@b.c',
                                 displayName: 'A B',
+                                kind: 'Member',
                                 emailConfirmed: true,
                                 createdAt: '2026-07-18T10:00:00Z',
                             },

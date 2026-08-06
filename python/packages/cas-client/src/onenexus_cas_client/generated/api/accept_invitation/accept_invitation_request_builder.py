@@ -34,7 +34,8 @@ class AcceptInvitationRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: AcceptInvitationRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[AcceptInvitationResponse]:
         """
-        param body: The request body
+        This endpoint does not require an access token. It accepts theinvitation details delivered by email, and an invitation can be usedonly once. On success, follow `loginUrl` to sign in.
+        param body: Request body for `POST /api/AcceptInvitation`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[AcceptInvitationResponse]
         """
@@ -58,7 +59,8 @@ class AcceptInvitationRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: AcceptInvitationRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        This endpoint does not require an access token. It accepts theinvitation details delivered by email, and an invitation can be usedonly once. On success, follow `loginUrl` to sign in.
+        param body: Request body for `POST /api/AcceptInvitation`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

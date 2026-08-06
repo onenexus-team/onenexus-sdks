@@ -6,11 +6,14 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class PublishPolicyRequest(Parsable):
-    # The description property
+    """
+    Request body for `POST /api/PublishPolicy`.
+    """
+    # Optional human-readable explanation of the policy. CAS stores anomitted description as an empty string so policy read responses remainstructurally stable.
     description: Optional[str] = None
-    # The name property
+    # Immutable machine-readable policy name, unique inside the caller's tenant.
     name: Optional[str] = None
-    # The requestId property
+    # Caller-generated identifier used to correlate the publication request.
     request_id: Optional[str] = None
     
     @staticmethod

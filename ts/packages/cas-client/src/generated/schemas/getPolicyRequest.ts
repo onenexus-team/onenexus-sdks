@@ -7,9 +7,14 @@
  */
 import type { AuthorizationPolicyKind } from './authorizationPolicyKind';
 
+/**
+ * Request body for `POST /api/GetPolicy`.
+ */
 export interface GetPolicyRequest {
+  /** The catalogue that owns the requested policy. */
   kind: AuthorizationPolicyKind;
   /**
+     * Immutable machine-readable policy name.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[A-Za-z][A-Za-z0-9]{0,127}$

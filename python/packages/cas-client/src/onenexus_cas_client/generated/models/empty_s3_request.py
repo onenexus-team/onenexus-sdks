@@ -6,6 +6,9 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class EmptyS3Request(Parsable):
+    """
+    Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`.
+    """
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> EmptyS3Request:
         """

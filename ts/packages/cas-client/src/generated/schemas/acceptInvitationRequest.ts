@@ -6,19 +6,32 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `POST /api/AcceptInvitation`.
+ */
 export interface AcceptInvitationRequest {
+  /** UUID of the invitee. Read from the invite URL's
+      `userId` query parameter by the portal. */
   userId: string;
   /**
+     * Invite token from the URL's `token` query parameter. Bound to
+  the user's ASP.NET Identity SecurityStamp at generate-time; verified
+  via `UserManager.VerifyUserTokenAsync`.
      * @minLength 1
      * @maxLength 2048
      */
   token: string;
   /**
+     * Initial password chosen by the user. Subject to the Identity
+  password-complexity rules configured in
+  IdentityServiceCollectionExtensions.
      * @minLength 8
      * @maxLength 128
      */
   password: string;
   /**
+     * Caller-generated request correlation key. Invitation-token consumption
+  and the resulting password/security-stamp update provide replay safety.
      * @minLength 16
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$

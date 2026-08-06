@@ -5,13 +5,16 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .authorization_policy_attachment_dto import AuthorizationPolicyAttachmentDto
+    from .authorization_policy_attachment import AuthorizationPolicyAttachment
 
 @dataclass
 class AttachPolicyToRoleResponse(Parsable):
-    # The attachment property
-    attachment: Optional[AuthorizationPolicyAttachmentDto] = None
-    # The created property
+    """
+    Response body for `POST /api/AttachPolicyToRole`.
+    """
+    # The created or existing direct attachment.
+    attachment: Optional[AuthorizationPolicyAttachment] = None
+    # `true` when this call created the attachment; otherwise it already existed.
     created: Optional[bool] = None
     
     @staticmethod
@@ -30,12 +33,12 @@ class AttachPolicyToRoleResponse(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .authorization_policy_attachment_dto import AuthorizationPolicyAttachmentDto
+        from .authorization_policy_attachment import AuthorizationPolicyAttachment
 
-        from .authorization_policy_attachment_dto import AuthorizationPolicyAttachmentDto
+        from .authorization_policy_attachment import AuthorizationPolicyAttachment
 
         fields: dict[str, Callable[[Any], None]] = {
-            "attachment": lambda n : setattr(self, 'attachment', n.get_object_value(AuthorizationPolicyAttachmentDto)),
+            "attachment": lambda n : setattr(self, 'attachment', n.get_object_value(AuthorizationPolicyAttachment)),
             "created": lambda n : setattr(self, 'created', n.get_bool_value()),
         }
         return fields

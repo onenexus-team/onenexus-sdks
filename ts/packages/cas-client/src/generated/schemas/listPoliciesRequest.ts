@@ -6,20 +6,26 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `POST /api/ListPolicies`.
+ */
 export interface ListPoliciesRequest {
   /**
+     * Maximum page size, from 1 through int ListPoliciesRequest.MaxLimit.
      * @minimum 1
      * @maximum 200
      * @pattern ^-?(?:0|[1-9]\d*)$
      */
   limit?: number | string;
   /**
+     * Backward-pagination cursor. Mutually exclusive with string? ListPoliciesRequest.After.
      * @minLength 0
      * @maxLength 512
      * @nullable
      */
   before?: string | null;
   /**
+     * Forward-pagination cursor. Mutually exclusive with string? ListPoliciesRequest.Before.
      * @minLength 0
      * @maxLength 512
      * @nullable

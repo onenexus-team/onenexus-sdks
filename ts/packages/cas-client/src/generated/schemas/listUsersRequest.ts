@@ -6,20 +6,28 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `POST /api/ListUsers`.
+ */
 export interface ListUsersRequest {
   /**
+     * Maximum number of items returned by this page.
      * @minimum 1
      * @maximum 200
      * @pattern ^-?(?:0|[1-9]\d*)$
      */
   limit?: number | string;
   /**
+     * Forward cursor returned by the preceding response. Mutually exclusive
+  with string? ListUsersRequest.Before.
      * @minLength 0
      * @maxLength 36
      * @nullable
      */
   after?: string | null;
   /**
+     * Backward cursor returned by the preceding response. Mutually exclusive
+  with string? ListUsersRequest.After.
      * @minLength 0
      * @maxLength 36
      * @nullable

@@ -5,12 +5,15 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .authorization_role_dto import AuthorizationRoleDto
+    from .authorization_role import AuthorizationRole
 
 @dataclass
 class ListAuthorizationRolesResponse(Parsable):
-    # The items property
-    items: Optional[list[AuthorizationRoleDto]] = None
+    """
+    Response body for `POST /api/ListRoles`.
+    """
+    # Roles in the caller's tenant, ordered by name.
+    items: Optional[list[AuthorizationRole]] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> ListAuthorizationRolesResponse:
@@ -28,12 +31,12 @@ class ListAuthorizationRolesResponse(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .authorization_role_dto import AuthorizationRoleDto
+        from .authorization_role import AuthorizationRole
 
-        from .authorization_role_dto import AuthorizationRoleDto
+        from .authorization_role import AuthorizationRole
 
         fields: dict[str, Callable[[Any], None]] = {
-            "items": lambda n : setattr(self, 'items', n.get_collection_of_object_values(AuthorizationRoleDto)),
+            "items": lambda n : setattr(self, 'items', n.get_collection_of_object_values(AuthorizationRole)),
         }
         return fields
     

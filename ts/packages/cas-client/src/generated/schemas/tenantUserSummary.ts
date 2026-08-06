@@ -5,12 +5,25 @@
  * Customer-facing JSON RPC operations under `/api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.
  * OpenAPI spec version: v1
  */
+import type { UserKind } from './userKind';
 
+/**
+ * User snapshot returned as a list item by `ListTenantUsers`.
+ */
 export interface TenantUserSummary {
+  /** The user's UUID v7 primary key. */
   userId: string;
+  /** Canonical principal URI used by role-assignment APIs. */
   userUri: string;
+  /** The user's email (verbatim, not normalised). */
   email: string;
+  /** Display name shown in UIs. */
   displayName: string;
+  /** Whether this is the tenant root user or an ordinary member. */
+  kind: UserKind;
+  /** Whether the user has accepted the invitation and verified their
+  inbox. `false` for users still in the pending-invite state. */
   emailConfirmed: boolean;
+  /** UTC instant when the user row was created. */
   createdAt: string;
 }

@@ -33,7 +33,8 @@ class AttachPolicyToRoleRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: AttachPolicyToRoleRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[AttachPolicyToRoleResponse]:
         """
-        param body: The request body
+        A direct attachment makes the policy available whenever the role isevaluated. Repeating the same request preserves the existingrelationship and returns `created: false`.
+        param body: Request body for `POST /api/AttachPolicyToRole`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[AttachPolicyToRoleResponse]
         """
@@ -60,7 +61,8 @@ class AttachPolicyToRoleRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: AttachPolicyToRoleRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        A direct attachment makes the policy available whenever the role isevaluated. Repeating the same request preserves the existingrelationship and returns `created: false`.
+        param body: Request body for `POST /api/AttachPolicyToRole`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

@@ -6,6 +6,10 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Response body for a successful token-checked relationship removal.
+ */
 export interface AuthorizationRelationshipRemovedResponse {
+  /** Always `true` when CAS removed the requested relationship. */
   removed?: boolean;
 }

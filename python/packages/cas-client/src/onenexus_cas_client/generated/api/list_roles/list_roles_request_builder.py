@@ -32,7 +32,8 @@ class ListRolesRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: ListAuthorizationRolesRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ListAuthorizationRolesResponse]:
         """
-        param body: The request body
+        Results are ordered by role name. The returned `roleUri` is thestable identifier to use when assigning roles or attaching policies.
+        param body: Request body for `POST /api/ListRoles`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[ListAuthorizationRolesResponse]
         """
@@ -49,7 +50,8 @@ class ListRolesRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: ListAuthorizationRolesRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        Results are ordered by role name. The returned `roleUri` is thestable identifier to use when assigning roles or attaching policies.
+        param body: Request body for `POST /api/ListRoles`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

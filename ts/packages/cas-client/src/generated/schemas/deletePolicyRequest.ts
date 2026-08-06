@@ -6,20 +6,26 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `POST /api/DeletePolicy`.
+ */
 export interface DeletePolicyRequest {
   /**
+     * Caller-generated identifier used only to correlate the deletion request.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$
      */
   requestId: string;
   /**
+     * Immutable policy name within the caller's tenant.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[A-Za-z][A-Za-z0-9]{0,127}$
      */
   name: string;
   /**
+     * Content token returned by the latest get, list, publish, or update response.
      * @minLength 1
      * @maxLength 128
      */

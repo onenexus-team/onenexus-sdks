@@ -6,6 +6,9 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class ListAuthorizationRolesRequest(Parsable):
+    """
+    Request body for `POST /api/ListRoles`.
+    """
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> ListAuthorizationRolesRequest:
         """

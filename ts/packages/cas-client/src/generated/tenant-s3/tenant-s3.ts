@@ -19,6 +19,12 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
   export const getTenantS3 = () => {
+/**
+ * CAS derives the tenant from the access token; this request cannot list
+another tenant's S3 roles. Each result includes the role's trust and
+inline permission policies for display in tenant administration tools.
+ * @summary List the S3 IAM roles provisioned in the caller's tenant account.
+ */
 const listS3Roles = (
     emptyS3Request: EmptyS3Request,
  options?: SecondParameter<typeof platformMutator<ListS3RolesResponse>>,) => {
@@ -29,7 +35,13 @@ const listS3Roles = (
     },
       options);
     }
-  const assumeS3Role = (
+  /**
+ * CAS authorizes the requested role before issuing credentials. Use the
+returned access key, secret, and session token for S3 requests until
+`expiration`; never persist or share the temporary secret.
+ * @summary Assume an S3 role in the caller's tenant account and return temporary credentials.
+ */
+const assumeS3Role = (
     assumeS3RoleRequest: AssumeS3RoleRequest,
  options?: SecondParameter<typeof platformMutator<AssumeS3RoleResponse>>,) => {
       return platformMutator<AssumeS3RoleResponse>(

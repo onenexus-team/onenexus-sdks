@@ -10,15 +10,18 @@ if TYPE_CHECKING:
 
 @dataclass
 class PublishPolicyResponse(Parsable):
-    # The contentStateToken property
+    """
+    Result of policy validation and atomic publication.
+    """
+    # Optimistic concurrency token for subsequent policy content changes.
     content_state_token: Optional[str] = None
-    # The diagnostics property
+    # Sanitized compilation or Cedar validation findings.
     diagnostics: Optional[list[str]] = None
-    # The disposition property
+    # Publication outcome.
     disposition: Optional[AuthorizationPolicyPublicationDisposition] = None
-    # The kind property
+    # The catalogue that owns the newly published policy.
     kind: Optional[AuthorizationPolicyKind] = None
-    # The reasonCode property
+    # Stable machine-readable result reason.
     reason_code: Optional[str] = None
     
     @staticmethod

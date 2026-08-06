@@ -33,7 +33,8 @@ class ListServiceClientsRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: EmptyServiceClientRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ListServiceClientsResponse]:
         """
-        param body: The request body
+        CAS derives the tenant from the access token. The response includesclient identifiers and registered public keys, never private keys.
+        param body: Request body for `ListServiceClients`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[ListServiceClientsResponse]
         """
@@ -55,7 +56,8 @@ class ListServiceClientsRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: EmptyServiceClientRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        CAS derives the tenant from the access token. The response includesclient identifiers and registered public keys, never private keys.
+        param body: Request body for `ListServiceClients`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

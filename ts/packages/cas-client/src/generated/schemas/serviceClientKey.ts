@@ -6,12 +6,24 @@
  * OpenAPI spec version: v1
  */
 
-export interface ServiceClientKeyDto {
+/**
+ * A public key registered on a service client.
+ */
+export interface ServiceClientKey {
+  /** JWK key id used by `private_key_jwt` assertions. */
   kid: string;
+  /** JWK key type (`EC` or `RSA`). */
   kty: string;
-  /** @nullable */
+  /**
+     * JWA algorithm hint, when present (for example `ES256`).
+     * @nullable
+     */
   alg?: string | null;
-  /** @nullable */
+  /**
+     * Curve name for EC keys.
+     * @nullable
+     */
   crv?: string | null;
+  /** The public JWK JSON persisted on the OpenIddict application. */
   publicJwk: string;
 }

@@ -5,16 +5,16 @@ from kiota_abstractions.serialization import ComposedTypeWrapper, Parsable, Pars
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .authorization_assignee_dto import AuthorizationAssigneeDto
+    from .authorization_assignee import AuthorizationAssignee
     from .list_role_assignments_request_assignee_member1 import ListRoleAssignmentsRequest_assigneeMember1
 
 @dataclass
 class ListRoleAssignmentsRequest_assignee(ComposedTypeWrapper, Parsable):
     """
-    Composed type wrapper for classes AuthorizationAssigneeDto, ListRoleAssignmentsRequest_assigneeMember1
+    Composed type wrapper for classes AuthorizationAssignee, ListRoleAssignmentsRequest_assigneeMember1
     """
-    # Composed type representation for type AuthorizationAssigneeDto
-    authorization_assignee_dto: Optional[AuthorizationAssigneeDto] = None
+    # Composed type representation for type AuthorizationAssignee
+    authorization_assignee: Optional[AuthorizationAssignee] = None
     # Composed type representation for type ListRoleAssignmentsRequest_assigneeMember1
     list_role_assignments_request_assignee_member1: Optional[ListRoleAssignmentsRequest_assigneeMember1] = None
     
@@ -33,10 +33,10 @@ class ListRoleAssignmentsRequest_assignee(ComposedTypeWrapper, Parsable):
         except AttributeError:
             mapping_value = None
         result = ListRoleAssignmentsRequest_assignee()
-        if mapping_value and mapping_value.casefold() == "AuthorizationAssigneeDto".casefold():
-            from .authorization_assignee_dto import AuthorizationAssigneeDto
+        if mapping_value and mapping_value.casefold() == "AuthorizationAssignee".casefold():
+            from .authorization_assignee import AuthorizationAssignee
 
-            result.authorization_assignee_dto = AuthorizationAssigneeDto()
+            result.authorization_assignee = AuthorizationAssignee()
         return result
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
@@ -44,11 +44,11 @@ class ListRoleAssignmentsRequest_assignee(ComposedTypeWrapper, Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .authorization_assignee_dto import AuthorizationAssigneeDto
+        from .authorization_assignee import AuthorizationAssignee
         from .list_role_assignments_request_assignee_member1 import ListRoleAssignmentsRequest_assigneeMember1
 
-        if self.authorization_assignee_dto:
-            return self.authorization_assignee_dto.get_field_deserializers()
+        if self.authorization_assignee:
+            return self.authorization_assignee.get_field_deserializers()
         if self.list_role_assignments_request_assignee_member1:
             return self.list_role_assignments_request_assignee_member1.get_field_deserializers()
         return {}
@@ -61,8 +61,8 @@ class ListRoleAssignmentsRequest_assignee(ComposedTypeWrapper, Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        if self.authorization_assignee_dto:
-            writer.write_object_value(None, self.authorization_assignee_dto)
+        if self.authorization_assignee:
+            writer.write_object_value(None, self.authorization_assignee)
         elif self.list_role_assignments_request_assignee_member1:
             writer.write_object_value(None, self.list_role_assignments_request_assignee_member1)
     

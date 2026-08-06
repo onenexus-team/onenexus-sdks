@@ -33,7 +33,8 @@ class ListPoliciesRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: ListPoliciesRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ListPoliciesResponse]:
         """
-        param body: The request body
+        Returns the tenant's own policies and platform-managed policies thatare available to that tenant. Send at most one returned cursor in thenext request to move backward or forward through the result set.
+        param body: Request body for `POST /api/ListPolicies`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[ListPoliciesResponse]
         """
@@ -58,7 +59,8 @@ class ListPoliciesRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: ListPoliciesRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        Returns the tenant's own policies and platform-managed policies thatare available to that tenant. Send at most one returned cursor in thenext request to move backward or forward through the result set.
+        param body: Request body for `POST /api/ListPolicies`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

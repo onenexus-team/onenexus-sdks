@@ -5,15 +5,18 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .authorization_assignee_dto import AuthorizationAssigneeDto
+    from .authorization_assignee import AuthorizationAssignee
 
 @dataclass
 class AssignRoleRequest(Parsable):
-    # The assignee property
-    assignee: Optional[AuthorizationAssigneeDto] = None
-    # The requestId property
+    """
+    Request body for `POST /api/AssignRole`.
+    """
+    # User or service client that will receive the role.
+    assignee: Optional[AuthorizationAssignee] = None
+    # Caller-generated identifier for safely retrying this assignment.
     request_id: Optional[str] = None
-    # The roleUri property
+    # URI of the role to assign.
     role_uri: Optional[str] = None
     
     @staticmethod
@@ -32,12 +35,12 @@ class AssignRoleRequest(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .authorization_assignee_dto import AuthorizationAssigneeDto
+        from .authorization_assignee import AuthorizationAssignee
 
-        from .authorization_assignee_dto import AuthorizationAssigneeDto
+        from .authorization_assignee import AuthorizationAssignee
 
         fields: dict[str, Callable[[Any], None]] = {
-            "assignee": lambda n : setattr(self, 'assignee', n.get_object_value(AuthorizationAssigneeDto)),
+            "assignee": lambda n : setattr(self, 'assignee', n.get_object_value(AuthorizationAssignee)),
             "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
             "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
         }

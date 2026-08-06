@@ -6,4 +6,7 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`.
+ */
 export interface EmptyS3Request { [key: string]: unknown }

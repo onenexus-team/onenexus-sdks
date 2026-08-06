@@ -7,10 +7,20 @@
  */
 import type { TenantUserSummary } from './tenantUserSummary';
 
-export interface ListTenantUsersResponse {
+/**
+ * Response body for `POST /api/ListUsers`.
+ */
+export interface ListUsersResponse {
+  /** Users in the caller's tenant, ordered by user id. */
   items: TenantUserSummary[];
-  /** @nullable */
+  /**
+     * Cursor for the previous page, if one exists.
+     * @nullable
+     */
   before?: string | null;
-  /** @nullable */
+  /**
+     * Cursor for the next page, if one exists.
+     * @nullable
+     */
   after?: string | null;
 }

@@ -6,9 +6,12 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class CreateServiceClientRequest(Parsable):
-    # The displayName property
+    """
+    Request body for `CreateServiceClient`.
+    """
+    # Human-readable name for the service client.
     display_name: Optional[str] = None
-    # The publicJwk property
+    # Public JWK JSON generated in the browser. Private key fields are rejected.
     public_jwk: Optional[str] = None
     
     @staticmethod

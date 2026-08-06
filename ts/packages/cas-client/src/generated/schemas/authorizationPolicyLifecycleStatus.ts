@@ -6,6 +6,9 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Lifecycle state of a customer authorization policy.
+ */
 export type AuthorizationPolicyLifecycleStatus = typeof AuthorizationPolicyLifecycleStatus[keyof typeof AuthorizationPolicyLifecycleStatus];
 
 

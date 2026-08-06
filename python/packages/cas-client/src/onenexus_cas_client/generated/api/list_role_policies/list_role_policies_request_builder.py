@@ -33,7 +33,8 @@ class ListRolePoliciesRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: ListRolePoliciesRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ListPolicyAttachmentsResponse]:
         """
-        param body: The request body
+        This returns only direct attachments. A policy inherited by anothermechanism is not included. Use the returned cursors for paging.
+        param body: Request body for `POST /api/ListRolePolicies`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[ListPolicyAttachmentsResponse]
         """
@@ -60,7 +61,8 @@ class ListRolePoliciesRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: ListRolePoliciesRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        This returns only direct attachments. A policy inherited by anothermechanism is not included. Use the returned cursors for paging.
+        param body: Request body for `POST /api/ListRolePolicies`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

@@ -9,9 +9,12 @@ if TYPE_CHECKING:
 
 @dataclass
 class GetPolicyRequest(Parsable):
-    # The kind property
+    """
+    Request body for `POST /api/GetPolicy`.
+    """
+    # The catalogue that owns the requested policy.
     kind: Optional[AuthorizationPolicyKind] = None
-    # The name property
+    # Immutable machine-readable policy name.
     name: Optional[str] = None
     
     @staticmethod

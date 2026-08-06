@@ -6,7 +6,10 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class AuthorizationRelationshipRemovedResponse(Parsable):
-    # The removed property
+    """
+    Response body for a successful token-checked relationship removal.
+    """
+    # Always `true` when CAS removed the requested relationship.
     removed: Optional[bool] = None
     
     @staticmethod

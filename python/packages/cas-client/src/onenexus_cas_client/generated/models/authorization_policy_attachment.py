@@ -10,30 +10,33 @@ if TYPE_CHECKING:
     from .authorization_policy_reference import AuthorizationPolicyReference
 
 @dataclass
-class AuthorizationPolicyAttachmentDto(Parsable):
-    # The attachedAtUtc property
+class AuthorizationPolicyAttachment(Parsable):
+    """
+    The created or existing direct attachment.
+    """
+    # When the attachment was created, in UTC.
     attached_at_utc: Optional[datetime.datetime] = None
-    # The attachedByUri property
+    # URI of the principal that made the attachment.
     attached_by_uri: Optional[str] = None
-    # The attachmentId property
+    # Stable identifier of this direct policy-to-role attachment.
     attachment_id: Optional[UUID] = None
-    # The policy property
+    # Policy attached to the role.
     policy: Optional[AuthorizationPolicyReference] = None
-    # The roleUri property
+    # URI of the role that receives the policy.
     role_uri: Optional[str] = None
-    # The stateToken property
+    # Concurrency token required to remove this attachment.
     state_token: Optional[str] = None
     
     @staticmethod
-    def create_from_discriminator_value(parse_node: ParseNode) -> AuthorizationPolicyAttachmentDto:
+    def create_from_discriminator_value(parse_node: ParseNode) -> AuthorizationPolicyAttachment:
         """
         Creates a new instance of the appropriate class based on discriminator value
         param parse_node: The parse node to use to read the discriminator value and create the object
-        Returns: AuthorizationPolicyAttachmentDto
+        Returns: AuthorizationPolicyAttachment
         """
         if parse_node is None:
             raise TypeError("parse_node cannot be null.")
-        return AuthorizationPolicyAttachmentDto()
+        return AuthorizationPolicyAttachment()
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
         """

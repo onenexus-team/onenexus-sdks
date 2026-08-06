@@ -6,6 +6,9 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class ValidationProblemDetails_errors(Parsable):
+    """
+    Validation messages keyed by the invalid request field.
+    """
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> ValidationProblemDetails_errors:
         """

@@ -7,7 +7,11 @@
  */
 import type { AuthorizationPolicyKind } from './authorizationPolicyKind';
 
+/**
+ * A stable reference to a policy available to the caller's tenant.
+ */
 export interface AuthorizationPolicyReference {
   kind: AuthorizationPolicyKind;
+  /** Immutable policy name. */
   name: string;
 }

@@ -6,14 +6,19 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `POST /api/CreateRole`.
+ */
 export interface CreateAuthorizationRoleRequest {
   /**
+     * Caller-generated identifier for safely retrying this create request.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$
      */
   requestId: string;
   /**
+     * Case-sensitive role name; use ASCII letters and digits only.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[A-Za-z0-9]+$

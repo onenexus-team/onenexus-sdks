@@ -6,9 +6,17 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Temporary S3 credentials returned by `AssumeS3Role`. CAS assumed the
+role on the caller's behalf; the caller uses these directly against S3.
+ */
 export interface AssumeS3RoleResponse {
+  /** Temporary access key id. */
   accessKeyId: string;
+  /** Temporary secret access key. */
   secretAccessKey: string;
+  /** Session token to send with every signed S3 request. */
   sessionToken: string;
+  /** UTC expiry of the temporary credentials. */
   expiration: string;
 }

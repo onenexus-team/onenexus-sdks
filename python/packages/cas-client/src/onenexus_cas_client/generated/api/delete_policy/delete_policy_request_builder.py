@@ -33,7 +33,8 @@ class DeletePolicyRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: DeletePolicyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[DeletePolicyResponse]:
         """
-        param body: The request body
+        Remove every direct role attachment before deleting a policy. Send itscurrent `contentStateToken` so CAS can reject a delete based on anout-of-date view. Platform-managed policies cannot be deleted here.
+        param body: Request body for `POST /api/DeletePolicy`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[DeletePolicyResponse]
         """
@@ -60,7 +61,8 @@ class DeletePolicyRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: DeletePolicyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        Remove every direct role attachment before deleting a policy. Send itscurrent `contentStateToken` so CAS can reject a delete based on anout-of-date view. Platform-managed policies cannot be deleted here.
+        param body: Request body for `POST /api/DeletePolicy`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

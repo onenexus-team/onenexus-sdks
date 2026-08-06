@@ -14,8 +14,8 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from warnings import warn
 
 if TYPE_CHECKING:
-    from ...models.list_tenant_users_response import ListTenantUsersResponse
     from ...models.list_users_request import ListUsersRequest
+    from ...models.list_users_response import ListUsersResponse
     from ...models.problem_details import ProblemDetails
     from ...models.validation_problem_details import ValidationProblemDetails
 
@@ -32,11 +32,12 @@ class ListUsersRequestBuilder(BaseRequestBuilder):
         """
         super().__init__(request_adapter, "{+baseurl}/api/ListUsers", path_parameters)
     
-    async def post(self,body: ListUsersRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ListTenantUsersResponse]:
+    async def post(self,body: ListUsersRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ListUsersResponse]:
         """
-        param body: The request body
+        CAS always lists the caller's tenant; do not send a tenant identifier.Results include root and member users. Send one returned cursor at atime to move backward or forward through the list.
+        param body: Request body for `POST /api/ListUsers`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
-        Returns: Optional[ListTenantUsersResponse]
+        Returns: Optional[ListUsersResponse]
         """
         if body is None:
             raise TypeError("body cannot be null.")
@@ -54,13 +55,14 @@ class ListUsersRequestBuilder(BaseRequestBuilder):
         }
         if not self.request_adapter:
             raise Exception("Http core is null") 
-        from ...models.list_tenant_users_response import ListTenantUsersResponse
+        from ...models.list_users_response import ListUsersResponse
 
-        return await self.request_adapter.send_async(request_info, ListTenantUsersResponse, error_mapping)
+        return await self.request_adapter.send_async(request_info, ListUsersResponse, error_mapping)
     
     def to_post_request_information(self,body: ListUsersRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        CAS always lists the caller's tenant; do not send a tenant identifier.Results include root and member users. Send one returned cursor at atime to move backward or forward through the list.
+        param body: Request body for `POST /api/ListUsers`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

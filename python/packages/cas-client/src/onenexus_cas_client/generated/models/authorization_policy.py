@@ -10,36 +10,39 @@ if TYPE_CHECKING:
     from .authorization_policy_lifecycle_status import AuthorizationPolicyLifecycleStatus
 
 @dataclass
-class AuthorizationPolicyDto(Parsable):
-    # The contentStateToken property
+class AuthorizationPolicy(Parsable):
+    """
+    The requested policy content.
+    """
+    # Optimistic concurrency token for policy content changes.
     content_state_token: Optional[str] = None
-    # The createdByUri property
+    # Canonical principal URI that originally created the policy.
     created_by_uri: Optional[str] = None
-    # The description property
+    # Human-readable policy description.
     description: Optional[str] = None
-    # The documentHash property
+    # SHA-256 hash of the canonically normalized policy document.
     document_hash: Optional[str] = None
-    # The kind property
+    # The catalogue that owns this policy.
     kind: Optional[AuthorizationPolicyKind] = None
-    # The name property
+    # Immutable machine-readable policy name.
     name: Optional[str] = None
-    # The publishedAtUtc property
+    # UTC instant of the latest successful publication, when present.
     published_at_utc: Optional[datetime.datetime] = None
-    # The status property
+    # Current policy lifecycle state.
     status: Optional[AuthorizationPolicyLifecycleStatus] = None
-    # The updatedByUri property
+    # Canonical principal URI that most recently updated the policy.
     updated_by_uri: Optional[str] = None
     
     @staticmethod
-    def create_from_discriminator_value(parse_node: ParseNode) -> AuthorizationPolicyDto:
+    def create_from_discriminator_value(parse_node: ParseNode) -> AuthorizationPolicy:
         """
         Creates a new instance of the appropriate class based on discriminator value
         param parse_node: The parse node to use to read the discriminator value and create the object
-        Returns: AuthorizationPolicyDto
+        Returns: AuthorizationPolicy
         """
         if parse_node is None:
             raise TypeError("parse_node cannot be null.")
-        return AuthorizationPolicyDto()
+        return AuthorizationPolicy()
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
         """

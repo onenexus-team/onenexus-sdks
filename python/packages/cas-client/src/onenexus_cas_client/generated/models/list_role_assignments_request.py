@@ -9,13 +9,16 @@ if TYPE_CHECKING:
 
 @dataclass
 class ListRoleAssignmentsRequest(Parsable):
-    # The after property
+    """
+    Request body for `POST /api/ListRoleAssignments`.
+    """
+    # Cursor returned by a previous response for the following page.
     after: Optional[str] = None
     # The assignee property
     assignee: Optional[ListRoleAssignmentsRequest_assignee] = None
-    # The before property
+    # Cursor returned by a previous response for the preceding page.
     before: Optional[str] = None
-    # The roleUri property
+    # Role URI to filter by. Supply this or AuthorizationAssignee? ListRoleAssignmentsRequest.Assignee, but not both.
     role_uri: Optional[str] = None
     
     @staticmethod

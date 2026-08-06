@@ -6,9 +6,12 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class ListPoliciesRequest(Parsable):
-    # The after property
+    """
+    Request body for `POST /api/ListPolicies`.
+    """
+    # Forward-pagination cursor. Mutually exclusive with string? ListPoliciesRequest.Before.
     after: Optional[str] = None
-    # The before property
+    # Backward-pagination cursor. Mutually exclusive with string? ListPoliciesRequest.After.
     before: Optional[str] = None
     
     @staticmethod

@@ -6,13 +6,16 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class UpdatePolicyRequest(Parsable):
-    # The description property
+    """
+    Request body for `POST /api/UpdatePolicy`.
+    """
+    # Optional replacement human-readable policy description. CAS stores anomitted description as an empty string.
     description: Optional[str] = None
-    # The expectedContentStateToken property
+    # Content token returned by the latest get, list, publish, or update response.
     expected_content_state_token: Optional[str] = None
-    # The name property
+    # Immutable policy name within the caller's tenant.
     name: Optional[str] = None
-    # The requestId property
+    # Caller-generated identifier used only to correlate the update request.
     request_id: Optional[str] = None
     
     @staticmethod

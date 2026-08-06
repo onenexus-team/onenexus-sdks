@@ -6,13 +6,18 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `CreateServiceClient`.
+ */
 export interface CreateServiceClientRequest {
   /**
+     * Human-readable name for the service client.
      * @minLength 1
      * @maxLength 128
      */
   displayName: string;
   /**
+     * Public JWK JSON generated in the browser. Private key fields are rejected.
      * @minLength 1
      * @maxLength 8192
      */

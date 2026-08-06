@@ -6,44 +6,50 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from uuid import UUID
 
 if TYPE_CHECKING:
-    from .service_client_key_dto import ServiceClientKeyDto
+    from .service_client_key import ServiceClientKey
 
 @dataclass
-class ServiceClientDto(Parsable):
-    # The clientId property
+class ServiceClient(Parsable):
+    """
+    The updated service client.
+    """
+    # OAuth `client_id` used at `/connect/token`.
     client_id: Optional[str] = None
-    # The displayName property
+    # Human-readable client name.
     display_name: Optional[str] = None
-    # The id property
+    # OpenIddict application id.
     id: Optional[UUID] = None
-    # The keys property
-    keys: Optional[list[ServiceClientKeyDto]] = None
+    # Registered public assertion keys.
+    keys: Optional[list[ServiceClientKey]] = None
+    # Canonical `ServiceClient` principal URI used for role assignments.
+    uri: Optional[str] = None
     
     @staticmethod
-    def create_from_discriminator_value(parse_node: ParseNode) -> ServiceClientDto:
+    def create_from_discriminator_value(parse_node: ParseNode) -> ServiceClient:
         """
         Creates a new instance of the appropriate class based on discriminator value
         param parse_node: The parse node to use to read the discriminator value and create the object
-        Returns: ServiceClientDto
+        Returns: ServiceClient
         """
         if parse_node is None:
             raise TypeError("parse_node cannot be null.")
-        return ServiceClientDto()
+        return ServiceClient()
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
         """
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .service_client_key_dto import ServiceClientKeyDto
+        from .service_client_key import ServiceClientKey
 
-        from .service_client_key_dto import ServiceClientKeyDto
+        from .service_client_key import ServiceClientKey
 
         fields: dict[str, Callable[[Any], None]] = {
             "clientId": lambda n : setattr(self, 'client_id', n.get_str_value()),
             "displayName": lambda n : setattr(self, 'display_name', n.get_str_value()),
             "id": lambda n : setattr(self, 'id', n.get_uuid_value()),
-            "keys": lambda n : setattr(self, 'keys', n.get_collection_of_object_values(ServiceClientKeyDto)),
+            "keys": lambda n : setattr(self, 'keys', n.get_collection_of_object_values(ServiceClientKey)),
+            "uri": lambda n : setattr(self, 'uri', n.get_str_value()),
         }
         return fields
     
@@ -59,5 +65,6 @@ class ServiceClientDto(Parsable):
         writer.write_str_value("displayName", self.display_name)
         writer.write_uuid_value("id", self.id)
         writer.write_collection_of_object_values("keys", self.keys)
+        writer.write_str_value("uri", self.uri)
     
 

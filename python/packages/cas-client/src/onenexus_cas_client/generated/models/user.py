@@ -7,32 +7,35 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from uuid import UUID
 
 @dataclass
-class UserDto(Parsable):
-    # The createdAt property
+class User(Parsable):
+    """
+    The freshly-created user.
+    """
+    # UTC instant when the row was created.
     created_at: Optional[datetime.datetime] = None
-    # The displayName property
+    # Display name shown in UIs.
     display_name: Optional[str] = None
-    # The email property
+    # The user's email (verbatim, not normalised).
     email: Optional[str] = None
-    # The emailConfirmed property
+    # Whether the user has accepted the invitation and verified their inbox.`false` until `AcceptInvitation` succeeds.
     email_confirmed: Optional[bool] = None
-    # The tenantId property
+    # Owning tenant's UUID v7 primary key.
     tenant_id: Optional[UUID] = None
-    # The userId property
+    # UUID v7 primary key.
     user_id: Optional[UUID] = None
-    # The userUri property
+    # Canonical principal URI used when assigning authorization roles tothis user.
     user_uri: Optional[str] = None
     
     @staticmethod
-    def create_from_discriminator_value(parse_node: ParseNode) -> UserDto:
+    def create_from_discriminator_value(parse_node: ParseNode) -> User:
         """
         Creates a new instance of the appropriate class based on discriminator value
         param parse_node: The parse node to use to read the discriminator value and create the object
-        Returns: UserDto
+        Returns: User
         """
         if parse_node is None:
             raise TypeError("parse_node cannot be null.")
-        return UserDto()
+        return User()
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
         """

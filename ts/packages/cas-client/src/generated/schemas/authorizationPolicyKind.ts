@@ -6,6 +6,9 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Whether the policy is tenant-managed or platform-managed.
+ */
 export type AuthorizationPolicyKind = typeof AuthorizationPolicyKind[keyof typeof AuthorizationPolicyKind];
 
 

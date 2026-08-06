@@ -5,12 +5,15 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .service_client_dto import ServiceClientDto
+    from .service_client import ServiceClient
 
 @dataclass
 class AddServiceClientKeyResponse(Parsable):
-    # The serviceClient property
-    service_client: Optional[ServiceClientDto] = None
+    """
+    Response for `AddServiceClientKey`.
+    """
+    # The updated service client.
+    service_client: Optional[ServiceClient] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> AddServiceClientKeyResponse:
@@ -28,12 +31,12 @@ class AddServiceClientKeyResponse(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .service_client_dto import ServiceClientDto
+        from .service_client import ServiceClient
 
-        from .service_client_dto import ServiceClientDto
+        from .service_client import ServiceClient
 
         fields: dict[str, Callable[[Any], None]] = {
-            "serviceClient": lambda n : setattr(self, 'service_client', n.get_object_value(ServiceClientDto)),
+            "serviceClient": lambda n : setattr(self, 'service_client', n.get_object_value(ServiceClient)),
         }
         return fields
     

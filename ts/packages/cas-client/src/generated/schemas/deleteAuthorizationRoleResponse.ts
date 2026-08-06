@@ -6,7 +6,12 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Response body for a successful `POST /api/DeleteRole`.
+ */
 export interface DeleteAuthorizationRoleResponse {
+  /** Whether CAS removed the role. */
   removed: boolean;
+  /** Canonical URI of the role that was deleted. */
   roleUri: string;
 }

@@ -7,15 +7,21 @@
  */
 import type { AuthorizationPolicyReference } from './authorizationPolicyReference';
 
+/**
+ * Request body for `POST /api/AttachPolicyToRole`.
+ */
 export interface AttachPolicyToRoleRequest {
   /**
+     * Caller-generated identifier for safely retrying this attachment.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$
      */
   requestId: string;
+  /** Policy to attach. */
   policy: AuthorizationPolicyReference;
   /**
+     * URI of the role that will receive the policy.
      * @minLength 1
      * @maxLength 2048
      */

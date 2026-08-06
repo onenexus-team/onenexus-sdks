@@ -7,10 +7,20 @@
  */
 import type { AuthorizationPolicySummary } from './authorizationPolicySummary';
 
+/**
+ * Response body for `POST /api/ListPolicies`.
+ */
 export interface ListPoliciesResponse {
+  /** Policies ordered by kind, immutable name, and internal identifier. */
   items: AuthorizationPolicySummary[];
-  /** @nullable */
+  /**
+     * Cursor for a preceding page, or `null` at the beginning.
+     * @nullable
+     */
   before?: string | null;
-  /** @nullable */
+  /**
+     * Cursor for a following page, or `null` at the end.
+     * @nullable
+     */
   after?: string | null;
 }

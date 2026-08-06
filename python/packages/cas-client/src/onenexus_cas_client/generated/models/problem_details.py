@@ -7,11 +7,14 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class ProblemDetails(APIError, Parsable):
-    # The detail property
+    """
+    Error response in RFC 9457 Problem Details format.
+    """
+    # Human-readable explanation of this occurrence.
     detail: Optional[str] = None
-    # The instance property
+    # URI that identifies this error occurrence, when supplied.
     instance: Optional[str] = None
-    # The title property
+    # Short, human-readable error title.
     title: Optional[str] = None
     # Stable RFC 9457 problem type URI.
     type: Optional[str] = None

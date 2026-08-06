@@ -21,6 +21,14 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
   export const getAuthorizationRole = () => {
+/**
+ * Remove every direct user, service-client, workload, and policy
+relationship first. CAS does not cascade deletion, which prevents a
+role from disappearing unexpectedly from an access configuration.
+ * @summary Deletes one unreferenced tenant authorization role. Direct grants,
+workload bindings, and policy attachments must be removed explicitly
+before deletion; CAS never cascades those relationships.
+ */
 const deleteRole = (
     deleteAuthorizationRoleRequest: DeleteAuthorizationRoleRequest,
  options?: SecondParameter<typeof platformMutator<DeleteAuthorizationRoleResponse>>,) => {
@@ -31,7 +39,13 @@ const deleteRole = (
     },
       options);
     }
-  const createRole = (
+  /**
+ * Role names are case-sensitive ASCII letters and digits. The role is
+scoped to the caller's tenant; creating an existing role with the same
+name succeeds and returns `created: false`.
+ * @summary Idempotently creates one tenant authorization role.
+ */
+const createRole = (
     createAuthorizationRoleRequest: CreateAuthorizationRoleRequest,
  options?: SecondParameter<typeof platformMutator<CreateAuthorizationRoleResponse>>,) => {
       return platformMutator<CreateAuthorizationRoleResponse>(
@@ -41,7 +55,12 @@ const deleteRole = (
     },
       options);
     }
-  const listRoles = (
+  /**
+ * Results are ordered by role name. The returned `roleUri` is the
+stable identifier to use when assigning roles or attaching policies.
+ * @summary Lists authorization roles in the caller's tenant.
+ */
+const listRoles = (
     listAuthorizationRolesRequest: ListAuthorizationRolesRequest,
  options?: SecondParameter<typeof platformMutator<ListAuthorizationRolesResponse>>,) => {
       return platformMutator<ListAuthorizationRolesResponse>(

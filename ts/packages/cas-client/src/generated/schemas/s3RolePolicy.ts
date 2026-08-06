@@ -6,12 +6,12 @@
  * OpenAPI spec version: v1
  */
 
-export interface UserDto {
-  userId: string;
-  userUri: string;
-  tenantId: string;
-  email: string;
-  displayName: string;
-  emailConfirmed: boolean;
-  createdAt: string;
+/**
+ * An inline IAM policy attached to a role.
+ */
+export interface S3RolePolicy {
+  /** Policy name. */
+  name: string;
+  /** Policy document JSON. */
+  document: string;
 }

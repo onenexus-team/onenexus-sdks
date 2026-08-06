@@ -5,12 +5,22 @@
  * Customer-facing JSON RPC operations under `/api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.
  * OpenAPI spec version: v1
  */
-import type { AuthorizationPolicyAttachmentDto } from './authorizationPolicyAttachmentDto';
+import type { AuthorizationPolicyAttachment } from './authorizationPolicyAttachment';
 
+/**
+ * Response body for policy-attachment list operations.
+ */
 export interface ListPolicyAttachmentsResponse {
-  items: AuthorizationPolicyAttachmentDto[];
-  /** @nullable */
+  /** Direct policy-to-role attachments matching the selected filter. */
+  items: AuthorizationPolicyAttachment[];
+  /**
+     * Cursor for the preceding page, when one exists.
+     * @nullable
+     */
   before?: string | null;
-  /** @nullable */
+  /**
+     * Cursor for the following page, when one exists.
+     * @nullable
+     */
   after?: string | null;
 }

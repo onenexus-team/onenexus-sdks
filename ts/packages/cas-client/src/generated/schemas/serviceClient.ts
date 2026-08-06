@@ -5,11 +5,20 @@
  * Customer-facing JSON RPC operations under `/api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.
  * OpenAPI spec version: v1
  */
-import type { ServiceClientKeyDto } from './serviceClientKeyDto';
+import type { ServiceClientKey } from './serviceClientKey';
 
-export interface ServiceClientDto {
+/**
+ * A tenant-owned OAuth service client.
+ */
+export interface ServiceClient {
+  /** OpenIddict application id. */
   id: string;
+  /** Canonical `ServiceClient` principal URI used for role assignments. */
+  uri: string;
+  /** OAuth `client_id` used at `/connect/token`. */
   clientId: string;
+  /** Human-readable client name. */
   displayName: string;
-  keys?: ServiceClientKeyDto[];
+  /** Registered public assertion keys. */
+  keys?: ServiceClientKey[];
 }

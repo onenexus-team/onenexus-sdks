@@ -5,16 +5,19 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .authorization_role_assignment_dto import AuthorizationRoleAssignmentDto
+    from .authorization_role_assignment import AuthorizationRoleAssignment
 
 @dataclass
 class ListRoleAssignmentsResponse(Parsable):
-    # The after property
+    """
+    Response body for `POST /api/ListRoleAssignments`.
+    """
+    # Cursor for the following page, when one exists.
     after: Optional[str] = None
-    # The before property
+    # Cursor for the preceding page, when one exists.
     before: Optional[str] = None
-    # The items property
-    items: Optional[list[AuthorizationRoleAssignmentDto]] = None
+    # Direct role assignments matching the selected filter.
+    items: Optional[list[AuthorizationRoleAssignment]] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> ListRoleAssignmentsResponse:
@@ -32,14 +35,14 @@ class ListRoleAssignmentsResponse(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .authorization_role_assignment_dto import AuthorizationRoleAssignmentDto
+        from .authorization_role_assignment import AuthorizationRoleAssignment
 
-        from .authorization_role_assignment_dto import AuthorizationRoleAssignmentDto
+        from .authorization_role_assignment import AuthorizationRoleAssignment
 
         fields: dict[str, Callable[[Any], None]] = {
             "after": lambda n : setattr(self, 'after', n.get_str_value()),
             "before": lambda n : setattr(self, 'before', n.get_str_value()),
-            "items": lambda n : setattr(self, 'items', n.get_collection_of_object_values(AuthorizationRoleAssignmentDto)),
+            "items": lambda n : setattr(self, 'items', n.get_collection_of_object_values(AuthorizationRoleAssignment)),
         }
         return fields
     

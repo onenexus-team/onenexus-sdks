@@ -6,8 +6,12 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Request body for `AssumeS3Role`.
+ */
 export interface AssumeS3RoleRequest {
   /**
+     * The name of the role to assume in the caller's tenant account.
      * @minLength 1
      * @maxLength 128
      */

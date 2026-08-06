@@ -33,7 +33,8 @@ class CreateServiceClientRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: CreateServiceClientRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[CreateServiceClientResponse]:
         """
-        param body: The request body
+        Generate the key pair in your application or browser and submit onlythe public JWK. CAS returns the `clientId` needed at the tokenendpoint; it never receives or stores the corresponding private key.
+        param body: Request body for `CreateServiceClient`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[CreateServiceClientResponse]
         """
@@ -56,7 +57,8 @@ class CreateServiceClientRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: CreateServiceClientRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        param body: The request body
+        Generate the key pair in your application or browser and submit onlythe public JWK. CAS returns the `clientId` needed at the tokenendpoint; it never receives or stores the corresponding private key.
+        param body: Request body for `CreateServiceClient`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """

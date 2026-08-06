@@ -6,7 +6,10 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class AssumeS3RoleRequest(Parsable):
-    # The roleName property
+    """
+    Request body for `AssumeS3Role`.
+    """
+    # The name of the role to assume in the caller's tenant account.
     role_name: Optional[str] = None
     
     @staticmethod

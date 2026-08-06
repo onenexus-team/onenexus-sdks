@@ -6,9 +6,18 @@
  * OpenAPI spec version: v1
  */
 
+/**
+ * Response body for `POST /api/AcceptInvitation`.
+ */
 export interface AcceptInvitationResponse {
+  /** UUID of the newly-activated user. */
   userId: string;
+  /** Owning tenant's UUID v7 primary key. */
   tenantId: string;
+  /** Email address that was just confirmed. */
   email: string;
+  /** Suggested next URL for the portal to navigate to — the login form,
+  with the tenant slug pre-filled so the user only has to type the
+  email + password. */
   loginUrl: string;
 }

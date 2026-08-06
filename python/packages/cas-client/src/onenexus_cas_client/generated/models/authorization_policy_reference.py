@@ -9,9 +9,12 @@ if TYPE_CHECKING:
 
 @dataclass
 class AuthorizationPolicyReference(Parsable):
-    # The kind property
+    """
+    Policy attached to the role.
+    """
+    # Whether the policy is tenant-managed or platform-managed.
     kind: Optional[AuthorizationPolicyKind] = None
-    # The name property
+    # Immutable policy name.
     name: Optional[str] = None
     
     @staticmethod

@@ -7,19 +7,33 @@
  */
 import type { ValidationProblemDetailsErrors } from './validationProblemDetailsErrors';
 
+/**
+ * Validation error response. Inspect errors for field-specific messages.
+ */
 export interface ValidationProblemDetails {
   /** Stable RFC 9457 problem type URI. */
   type: string;
-  /** @nullable */
+  /**
+     * Short, human-readable error title.
+     * @nullable
+     */
   title?: string | null;
   /**
+     * HTTP status code for this error.
      * @nullable
      * @pattern ^-?(?:0|[1-9]\d*)$
      */
   status?: number | string | null;
-  /** @nullable */
+  /**
+     * Human-readable explanation of this occurrence.
+     * @nullable
+     */
   detail?: string | null;
-  /** @nullable */
+  /**
+     * URI that identifies this error occurrence, when supplied.
+     * @nullable
+     */
   instance?: string | null;
+  /** Validation messages keyed by the invalid request field. */
   errors?: ValidationProblemDetailsErrors;
 }

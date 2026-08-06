@@ -6,7 +6,14 @@
  * OpenAPI spec version: v1
  */
 
-export interface AuthorizationRoleDto {
-  roleUri: string;
-  name: string;
-}
+/**
+ * Distinguishes a tenant's single root user from its ordinary members.
+Immutable once a OneNexusUser row is created.
+ */
+export type UserKind = typeof UserKind[keyof typeof UserKind];
+
+
+export const UserKind = {
+  RootUser: 'RootUser',
+  Member: 'Member',
+} as const;

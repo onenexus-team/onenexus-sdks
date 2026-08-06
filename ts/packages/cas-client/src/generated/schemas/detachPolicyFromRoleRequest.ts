@@ -7,20 +7,27 @@
  */
 import type { AuthorizationPolicyReference } from './authorizationPolicyReference';
 
+/**
+ * Request body for `POST /api/DetachPolicyFromRole`.
+ */
 export interface DetachPolicyFromRoleRequest {
   /**
+     * Caller-generated identifier for safely retrying this removal.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$
      */
   requestId: string;
+  /** Policy to detach. */
   policy: AuthorizationPolicyReference;
   /**
+     * URI of the role that currently receives the policy.
      * @minLength 1
      * @maxLength 2048
      */
   roleUri: string;
   /**
+     * Current attachment token returned by an attachment-list operation.
      * @minLength 1
      * @maxLength 200
      */

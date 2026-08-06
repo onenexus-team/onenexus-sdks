@@ -5,12 +5,15 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .s3_role_dto import S3RoleDto
+    from .s3_role import S3Role
 
 @dataclass
 class ListS3RolesResponse(Parsable):
-    # The items property
-    items: Optional[list[S3RoleDto]] = None
+    """
+    Response for `ListS3Roles` (the calling tenant's roles).
+    """
+    # The IAM roles in the calling tenant's S3 account.
+    items: Optional[list[S3Role]] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> ListS3RolesResponse:
@@ -28,12 +31,12 @@ class ListS3RolesResponse(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .s3_role_dto import S3RoleDto
+        from .s3_role import S3Role
 
-        from .s3_role_dto import S3RoleDto
+        from .s3_role import S3Role
 
         fields: dict[str, Callable[[Any], None]] = {
-            "items": lambda n : setattr(self, 'items', n.get_collection_of_object_values(S3RoleDto)),
+            "items": lambda n : setattr(self, 'items', n.get_collection_of_object_values(S3Role)),
         }
         return fields
     
