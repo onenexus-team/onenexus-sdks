@@ -13,10 +13,4 @@ import type { User } from './user';
 export interface CreateUserResponse {
   /** The freshly-created user. */
   user: User;
-  /** Fully-qualified URL the invitee clicks to land on the portal's
-  accept-invitation page. */
-  acceptInvitationUrl: string;
-  /** UTC instant after which Uri CreateUserResponse.AcceptInvitationUrl's token
-  stops being honoured. Nominally `createdAt + 72 h`. */
-  acceptInvitationExpiresAt: string;
 }

@@ -51,8 +51,6 @@ async def test_create_user_routes_through_kiota_adapter() -> None:
                     "emailConfirmed": False,
                     "createdAt": "2026-05-13T10:00:00Z",
                 },
-                "acceptInvitationUrl": "https://portal.acme.com/accept?token=abc",
-                "acceptInvitationExpiresAt": "2026-05-20T10:00:00Z",
             },
             headers={"content-type": "application/json"},
         )

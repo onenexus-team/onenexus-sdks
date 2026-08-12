@@ -146,9 +146,10 @@ export class CasSupportClient extends ClientBase {
      * (after) and backward (before) directions both resolve to an index range scan on the PK b-tree
      * with no OFFSET cost. Items are always returned in tenantId ascending order regardless of
      * direction — backward pages are reversed server-side. Because the PK is UUID v7 (time-ordered),
-     * this is also a chronological listing for free. Authorization (Phase 5). Restricted to
-     * platform_admin / platform_support. Until Phase 5 lands, every authenticated caller passes — the
-     * class-level [Authorize] attribute provides the floor.
+     * this is also a chronological listing for free. Authorization. The class-level PlatformSupport
+     * policy requires an active administrator of the reserved OneNexus platform tenant. CAS resolves
+     * this from the current authorization store, so a token does not retain access after an
+     * administrator role is removed.
      *
      * @see POST /support-api/ListTenants
      */
@@ -169,9 +170,10 @@ export class CasSupportClient extends ClientBase {
      * the tenant filter and the PK for the cursor bound. Tenant status is NOT a precondition. Listing
      * the users of a suspended or soft-deleted tenant is a legitimate operator use case (audit,
      * cleanup, recovery). Only a missing tenant returns 404; a tenant that exists but is non-active
-     * still serves its user list. Authorization (Phase 5). Restricted to platform_admin /
-     * platform_support. Until Phase 5 lands, every authenticated caller passes — the class-level
-     * [Authorize] attribute provides the floor.
+     * still serves its user list. Authorization. The class-level PlatformSupport policy requires an
+     * active administrator of the reserved OneNexus platform tenant. CAS resolves this from the
+     * current authorization store, so a token does not retain access after an administrator role is
+     * removed.
      *
      * @see POST /support-api/ListTenantUsers
      */

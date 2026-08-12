@@ -23,9 +23,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
   export const getTenantUser = () => {
 /**
  * CAS derives the tenant from the caller's access token. The user stays
-pending until they redeem the invitation and set a password. Treat the
-returned invitation URL as a credential and share it only with the
-intended invitee.
+pending until they redeem the emailed invitation and set a password.
  * @summary Admin invites a user into their own tenant and triggers the invite
 email.
  */

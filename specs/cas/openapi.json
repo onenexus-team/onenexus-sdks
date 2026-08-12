@@ -1782,7 +1782,7 @@
           "TenantUser"
         ],
         "summary": "Admin invites a user into their own tenant and triggers the invite\nemail.",
-        "description": "CAS derives the tenant from the caller's access token. The user stays\npending until they redeem the invitation and set a password. Treat the\nreturned invitation URL as a credential and share it only with the\nintended invitee.",
+        "description": "CAS derives the tenant from the caller's access token. The user stays\npending until they redeem the emailed invitation and set a password.",
         "operationId": "CreateUser",
         "requestBody": {
           "description": "Cancellation token.",
@@ -2641,25 +2641,13 @@
       },
       "CreateUserResponse": {
         "required": [
-          "user",
-          "acceptInvitationUrl",
-          "acceptInvitationExpiresAt"
+          "user"
         ],
         "type": "object",
         "properties": {
           "user": {
             "description": "The freshly-created user.",
             "$ref": "#/components/schemas/User"
-          },
-          "acceptInvitationUrl": {
-            "type": "string",
-            "description": "Fully-qualified URL the invitee clicks to land on the portal's\naccept-invitation page.",
-            "format": "uri"
-          },
-          "acceptInvitationExpiresAt": {
-            "type": "string",
-            "description": "UTC instant after which Uri CreateUserResponse.AcceptInvitationUrl's token\nstops being honoured. Nominally `createdAt + 72 h`.",
-            "format": "date-time"
           }
         },
         "description": "Response body for `POST /api/CreateUser`."

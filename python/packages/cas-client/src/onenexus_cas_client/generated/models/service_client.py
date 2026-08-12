@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 @dataclass
 class ServiceClient(Parsable):
     """
-    The updated service client.
+    The created service client.
     """
     # OAuth `client_id` used at `/connect/token`.
     client_id: Optional[str] = None

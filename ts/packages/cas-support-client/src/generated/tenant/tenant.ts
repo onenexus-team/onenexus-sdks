@@ -66,10 +66,10 @@ always returned in tenantId ascending order regardless of
 direction — backward pages are reversed server-side. Because the
 PK is UUID v7 (time-ordered), this is also a chronological listing
 for free.
-    Authorization (Phase 5). Restricted to platform_admin /
-platform_support. Until Phase 5 lands, every authenticated
-caller passes — the class-level [Authorize] attribute provides
-the floor.
+    Authorization. The class-level PlatformSupport policy
+requires an active administrator of the reserved OneNexus platform
+tenant. CAS resolves this from the current authorization store, so a
+token does not retain access after an administrator role is removed.
  * @summary Page across all tenants known to CAS. Platform-admin / support
 surface — there is no tenant scoping, this returns rows for every
 tenant the caller is authorized to see.
@@ -94,10 +94,10 @@ index for the tenant filter and the PK for the cursor bound.
 suspended or soft-deleted tenant is a legitimate operator use case
 (audit, cleanup, recovery). Only a missing tenant returns 404; a
 tenant that exists but is non-active still serves its user list.
-    Authorization (Phase 5). Restricted to platform_admin /
-platform_support. Until Phase 5 lands, every authenticated
-caller passes — the class-level [Authorize] attribute provides
-the floor.
+    Authorization. The class-level PlatformSupport policy
+requires an active administrator of the reserved OneNexus platform
+tenant. CAS resolves this from the current authorization store, so a
+token does not retain access after an administrator role is removed.
  * @summary Page across the users belonging to a specific tenant. Platform-admin /
 support surface — the target tenant is identified by Guid in the
 request body, not inferred from the caller's principal.

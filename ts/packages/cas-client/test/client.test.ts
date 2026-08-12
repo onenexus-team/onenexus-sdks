@@ -34,8 +34,6 @@ const userResponse = (overrides?: { tenantId?: string; email?: string; displayNa
         emailConfirmed: false,
         createdAt: '2026-05-13T10:00:00Z',
     },
-    acceptInvitationUrl: 'https://portal.acme.com/user/accept?token=abc',
-    acceptInvitationExpiresAt: '2026-05-20T10:00:00Z',
 });
 
 const server = setupServer();

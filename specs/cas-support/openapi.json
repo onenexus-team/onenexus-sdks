@@ -29,6 +29,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Default-account configuration plus the live account\n    (or `null` if not provisioned).",
             "content": {
@@ -80,6 +90,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Account provisioned (or already present). The root\n    user's secret key is present only when freshly created — persist it.",
             "content": {
@@ -141,6 +161,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Accounts.",
             "content": {
@@ -192,6 +222,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
@@ -214,16 +254,6 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -274,6 +304,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Tenant created. Body is a CreateTenantResponse\n    snapshot of the new row.",
             "content": {
@@ -290,16 +330,6 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -346,6 +376,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Tenant found. Body is a DescribeTenantResponse\n    including the live user count.",
             "content": {
@@ -390,7 +430,7 @@
           "Tenant"
         ],
         "summary": "Page across all tenants known to CAS. Platform-admin / support\nsurface — there is no tenant scoping, this returns rows for every\ntenant the caller is authorized to see.",
-        "description": "    Ordering + pagination. Bidirectional cursor pagination on\nthe Tenant.Id UUID v7 PK. Forward (after) and\nbackward (before) directions both resolve to an index\nrange scan on the PK b-tree with no OFFSET cost. Items are\nalways returned in tenantId ascending order regardless of\ndirection — backward pages are reversed server-side. Because the\nPK is UUID v7 (time-ordered), this is also a chronological listing\nfor free.\n    Authorization (Phase 5). Restricted to platform_admin /\nplatform_support. Until Phase 5 lands, every authenticated\ncaller passes — the class-level [Authorize] attribute provides\nthe floor.",
+        "description": "    Ordering + pagination. Bidirectional cursor pagination on\nthe Tenant.Id UUID v7 PK. Forward (after) and\nbackward (before) directions both resolve to an index\nrange scan on the PK b-tree with no OFFSET cost. Items are\nalways returned in tenantId ascending order regardless of\ndirection — backward pages are reversed server-side. Because the\nPK is UUID v7 (time-ordered), this is also a chronological listing\nfor free.\n    Authorization. The class-level PlatformSupport policy\nrequires an active administrator of the reserved OneNexus platform\ntenant. CAS resolves this from the current authorization store, so a\ntoken does not retain access after an administrator role is removed.",
         "operationId": "ListTenants",
         "requestBody": {
           "description": "Cancellation token.",
@@ -409,6 +449,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Page of tenant snapshots. Body is a\n    ListTenantsResponse; `nextCursor` is null on\n    the last page.",
             "content": {
@@ -443,7 +493,7 @@
           "Tenant"
         ],
         "summary": "Page across the users belonging to a specific tenant. Platform-admin /\nsupport surface — the target tenant is identified by Guid in the\nrequest body, not inferred from the caller's principal.",
-        "description": "    Ordering + pagination. Same shape as Task&lt;IActionResult&gt; TenantController.ListTenants(ListTenantsRequest request, CancellationToken cancellationToken)\nbut on the Users table, filtered to a single tenant. The\nWHERE TenantId = ? AND Id &gt; ? predicate rides the leading\ncolumn of the composite IX_Users_TenantId_NormalizedEmail\nindex for the tenant filter and the PK for the cursor bound.\n    Tenant status is NOT a precondition. Listing the users of a\nsuspended or soft-deleted tenant is a legitimate operator use case\n(audit, cleanup, recovery). Only a missing tenant returns 404; a\ntenant that exists but is non-active still serves its user list.\n    Authorization (Phase 5). Restricted to platform_admin /\nplatform_support. Until Phase 5 lands, every authenticated\ncaller passes — the class-level [Authorize] attribute provides\nthe floor.",
+        "description": "    Ordering + pagination. Same shape as Task&lt;IActionResult&gt; TenantController.ListTenants(ListTenantsRequest request, CancellationToken cancellationToken)\nbut on the Users table, filtered to a single tenant. The\nWHERE TenantId = ? AND Id &gt; ? predicate rides the leading\ncolumn of the composite IX_Users_TenantId_NormalizedEmail\nindex for the tenant filter and the PK for the cursor bound.\n    Tenant status is NOT a precondition. Listing the users of a\nsuspended or soft-deleted tenant is a legitimate operator use case\n(audit, cleanup, recovery). Only a missing tenant returns 404; a\ntenant that exists but is non-active still serves its user list.\n    Authorization. The class-level PlatformSupport policy\nrequires an active administrator of the reserved OneNexus platform\ntenant. CAS resolves this from the current authorization store, so a\ntoken does not retain access after an administrator role is removed.",
         "operationId": "ListTenantUsers",
         "requestBody": {
           "description": "Cancellation token.",
@@ -462,6 +512,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "Page of user snapshots. Body is a\n    ListTenantUsersResponse; `before`/`after`\n    are null at the corresponding ends of the result set.",
             "content": {
@@ -525,6 +585,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "User created; invitation queued. Body is\n    CreateUserResponse.",
             "content": {
@@ -541,16 +611,6 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -597,6 +657,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
@@ -613,16 +683,6 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -678,6 +738,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
@@ -694,16 +764,6 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -749,6 +809,16 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
@@ -765,16 +835,6 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1150,25 +1210,13 @@
       },
       "CreateUserResponse": {
         "required": [
-          "user",
-          "acceptInvitationUrl",
-          "acceptInvitationExpiresAt"
+          "user"
         ],
         "type": "object",
         "properties": {
           "user": {
             "description": "The freshly-created user.",
             "$ref": "#/components/schemas/User"
-          },
-          "acceptInvitationUrl": {
-            "type": "string",
-            "description": "Fully-qualified URL the invitee clicks to land on the portal's\naccept-invitation page.",
-            "format": "uri"
-          },
-          "acceptInvitationExpiresAt": {
-            "type": "string",
-            "description": "UTC instant after which Uri CreateUserResponse.AcceptInvitationUrl's token\nstops being honoured. Nominally `createdAt + 72 h`.",
-            "format": "date-time"
           }
         },
         "description": "Response body for `POST /api/CreateUser`."

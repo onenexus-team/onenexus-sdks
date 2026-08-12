@@ -144,8 +144,7 @@ export class CasClient extends ClientBase {
      * Admin invites a user into their own tenant and triggers the invite email.
      *
      * CAS derives the tenant from the caller's access token. The user stays pending until they redeem
-     * the invitation and set a password. Treat the returned invitation URL as a credential and share
-     * it only with the intended invitee.
+     * the emailed invitation and set a password.
      *
      * @see POST /api/CreateUser
      */

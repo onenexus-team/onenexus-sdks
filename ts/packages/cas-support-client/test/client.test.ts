@@ -101,8 +101,6 @@ describe('CasSupportClient', () => {
                             emailConfirmed: false,
                             createdAt: '2026-05-13T10:00:00Z',
                         },
-                        acceptInvitationUrl: 'https://portal.acme.com/user/accept?token=abc',
-                        acceptInvitationExpiresAt: '2026-05-20T10:00:00Z',
                     }),
                 ),
             );
@@ -121,7 +119,6 @@ describe('CasSupportClient', () => {
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
             expect(created.user.email).toBe('a@b.c');
-            expect(created.acceptInvitationUrl).toContain('token=abc');
         });
 
         it('resendInvitation POSTs the user ID and returns invitation details', async () => {
