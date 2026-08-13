@@ -10,8 +10,12 @@ import type {
   AddServiceClientKeyResponse,
   CreateServiceClientRequest,
   CreateServiceClientResponse,
+  DisableServiceClientRequest,
+  DisableServiceClientResponse,
   EmptyServiceClientRequest,
-  ListServiceClientsResponse
+  ListServiceClientsResponse,
+  RemoveServiceClientKeyRequest,
+  RemoveServiceClientKeyResponse
 } from '../schemas';
 
 import { platformMutator } from '../../mutator';
@@ -69,7 +73,37 @@ const addServiceClientKey = (
     },
       options);
     }
-  return {listServiceClients,createServiceClient,addServiceClientKey}};
+  /**
+ * The final key cannot be removed. Disable the service client when its
+only key is compromised.
+ * @summary Revokes one public assertion key from a service client.
+ */
+const removeServiceClientKey = (
+    removeServiceClientKeyRequest: RemoveServiceClientKeyRequest,
+ options?: SecondParameter<typeof platformMutator<RemoveServiceClientKeyResponse>>,) => {
+      return platformMutator<RemoveServiceClientKeyResponse>(
+      {url: `/api/RemoveServiceClientKey`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: removeServiceClientKeyRequest
+    },
+      options);
+    }
+  /**
+ * The operation is idempotent. Already-issued short-lived access tokens
+retain their normal expiry; disabling prevents subsequent token issuance.
+ * @summary Disables a service client so it cannot obtain new access tokens.
+ */
+const disableServiceClient = (
+    disableServiceClientRequest: DisableServiceClientRequest,
+ options?: SecondParameter<typeof platformMutator<DisableServiceClientResponse>>,) => {
+      return platformMutator<DisableServiceClientResponse>(
+      {url: `/api/DisableServiceClient`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: disableServiceClientRequest
+    },
+      options);
+    }
+  return {listServiceClients,createServiceClient,addServiceClientKey,removeServiceClientKey,disableServiceClient}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -78,3 +112,5 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 export type ListServiceClientsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantServiceClient>['listServiceClients']>>>
 export type CreateServiceClientResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantServiceClient>['createServiceClient']>>>
 export type AddServiceClientKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantServiceClient>['addServiceClientKey']>>>
+export type RemoveServiceClientKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantServiceClient>['removeServiceClientKey']>>>
+export type DisableServiceClientResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantServiceClient>['disableServiceClient']>>>

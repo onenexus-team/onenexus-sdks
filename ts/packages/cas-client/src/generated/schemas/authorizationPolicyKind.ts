@@ -7,7 +7,7 @@
  */
 
 /**
- * Whether the policy is tenant-managed or platform-managed.
+ * Identifies which policy catalogue owns a policy definition.
  */
 export type AuthorizationPolicyKind = typeof AuthorizationPolicyKind[keyof typeof AuthorizationPolicyKind];
 

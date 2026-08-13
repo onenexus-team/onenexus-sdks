@@ -12,5 +12,5 @@ import type { S3Role } from './s3Role';
  */
 export interface ListS3RolesResponse {
   /** The IAM roles in the calling tenant's S3 account. */
-  items?: S3Role[];
+  items: S3Role[];
 }

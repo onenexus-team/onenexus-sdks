@@ -29,12 +29,4 @@ export interface AcceptInvitationRequest {
      * @maxLength 128
      */
   password: string;
-  /**
-     * Caller-generated request correlation key. Invitation-token consumption
-  and the resulting password/security-stamp update provide replay safety.
-     * @minLength 16
-     * @maxLength 128
-     * @pattern ^[a-zA-Z0-9_.-]+$
-     */
-  clientToken: string;
 }

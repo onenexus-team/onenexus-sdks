@@ -11,7 +11,13 @@ import type { AuthorizationPolicyKind } from './authorizationPolicyKind';
  * A stable reference to a policy available to the caller's tenant.
  */
 export interface AuthorizationPolicyReference {
+  /** Whether the policy is tenant-managed or platform-managed. */
   kind: AuthorizationPolicyKind;
-  /** Immutable policy name. */
+  /**
+     * Immutable policy name.
+     * @minLength 1
+     * @maxLength 128
+     * @pattern ^[A-Za-z][A-Za-z0-9]{0,127}$
+     */
   name: string;
 }

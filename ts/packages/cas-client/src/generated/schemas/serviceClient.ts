@@ -5,6 +5,7 @@
  * Customer-facing JSON RPC operations under `/api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.
  * OpenAPI spec version: v1
  */
+import type { OidcApplicationLifecycleState } from './oidcApplicationLifecycleState';
 import type { ServiceClientKey } from './serviceClientKey';
 
 /**
@@ -20,5 +21,7 @@ export interface ServiceClient {
   /** Human-readable client name. */
   displayName: string;
   /** Registered public assertion keys. */
-  keys?: ServiceClientKey[];
+  keys: ServiceClientKey[];
+  /** Whether the client can obtain new access tokens. */
+  lifecycleState: OidcApplicationLifecycleState;
 }

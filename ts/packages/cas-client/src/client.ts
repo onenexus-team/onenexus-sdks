@@ -20,6 +20,8 @@ import type {
     CreateUserResponse,
     DeleteAuthorizationRoleRequest,
     DeleteAuthorizationRoleResponse,
+    DisableServiceClientRequest,
+    DisableServiceClientResponse,
     DeletePolicyRequest,
     DeletePolicyResponse,
     DetachPolicyFromRoleRequest,
@@ -41,6 +43,9 @@ import type {
     PublishPolicyRequest,
     PublishPolicyResponse,
     RemoveRoleAssignmentRequest,
+    RemoveServiceClientKeyRequest,
+    RemoveServiceClientKeyResponse,
+    ResendUserInvitationRequest,
     UpdatePolicyRequest,
     UpdatePolicyResponse,
 } from './generated/schemas/index.js';
@@ -114,7 +119,7 @@ export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  *     tenantId: 'tn_acme',
  *     email: 'a@b.c',
  *     displayName: 'A B',
- *     clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+ *     requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
  * });
  * ```
  */
@@ -251,6 +256,47 @@ export class CasClient extends ClientBase {
         options?: CasRequestOptions,
     ): Promise<AddServiceClientKeyResponse> =>
         this.tenantServiceClient.addServiceClientKey(req, this.mutatorOptions(options));
+
+    /**
+     * Revokes one public assertion key from a service client.
+     *
+     * The final key cannot be removed. Disable the service client when its only key is compromised.
+     *
+     * @see POST /api/RemoveServiceClientKey
+     */
+    removeServiceClientKey = (
+        req: RemoveServiceClientKeyRequest,
+        options?: CasRequestOptions,
+    ): Promise<RemoveServiceClientKeyResponse> =>
+        this.tenantServiceClient.removeServiceClientKey(req, this.mutatorOptions(options));
+
+    /**
+     * Disables a service client so it cannot obtain new access tokens.
+     *
+     * The operation is idempotent. Already-issued short-lived access tokens retain their normal
+     * expiry; disabling prevents subsequent token issuance.
+     *
+     * @see POST /api/DisableServiceClient
+     */
+    disableServiceClient = (
+        req: DisableServiceClientRequest,
+        options?: CasRequestOptions,
+    ): Promise<DisableServiceClientResponse> =>
+        this.tenantServiceClient.disableServiceClient(req, this.mutatorOptions(options));
+
+    /**
+     * Re-sends an invitation to a pending member in the caller's tenant.
+     *
+     * CAS derives the tenant from the authenticated caller. Tenant roots and users in other tenants
+     * cannot be targeted through this operation.
+     *
+     * @see POST /api/ResendUserInvitation
+     */
+    resendUserInvitation = (
+        req: ResendUserInvitationRequest,
+        options?: CasRequestOptions,
+    ): Promise<void> =>
+        this.tenantUser.resendUserInvitation(req, this.mutatorOptions(options)).then(() => undefined);
 
     // -- Authorization roles -----------------------------------------------
 

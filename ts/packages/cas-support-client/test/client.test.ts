@@ -116,7 +116,6 @@ describe('CasSupportClient', () => {
                 tenantId: '0193fabc-1234-7def-abcd-1234567890ac',
                 email: 'a@b.c',
                 displayName: 'A B',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
             expect(created.user.email).toBe('a@b.c');
         });

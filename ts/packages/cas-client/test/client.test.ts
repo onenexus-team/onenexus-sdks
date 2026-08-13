@@ -65,7 +65,7 @@ describe('CasClient', () => {
             const result = await cas.createUser({
                 email: 'a@b.c',
                 displayName: 'A B',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             expect(result.user.email).toBe('a@b.c');
@@ -73,7 +73,7 @@ describe('CasClient', () => {
             expect(observedBody).toEqual({
                 email: 'a@b.c',
                 displayName: 'A B',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
         });
 
@@ -98,9 +98,55 @@ describe('CasClient', () => {
                 cas.createUser({
                     email: 'a@b.c',
                     displayName: 'A B',
-                    clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                    requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
                 }),
             ).rejects.toThrow(/stale/i);
+        });
+
+        it('wraps service-client key management and invitation resend operations', async () => {
+            const observedBodies = new Map<string, unknown>();
+            const serviceClient = {
+                id: 'client-1',
+                uri: 'onenexus:service-client/client-1',
+                clientId: 'client-id-1',
+                displayName: 'Automation',
+                keys: [],
+                lifecycleState: 'Active',
+            };
+
+            server.use(
+                http.post(`${BASE_URL}/api/RemoveServiceClientKey`, async ({ request }) => {
+                    observedBodies.set('removeKey', await request.json());
+                    return HttpResponse.json({ serviceClient });
+                }),
+                http.post(`${BASE_URL}/api/DisableServiceClient`, async ({ request }) => {
+                    observedBodies.set('disable', await request.json());
+                    return HttpResponse.json({ serviceClient: { ...serviceClient, lifecycleState: 'Disabled' } });
+                }),
+                http.post(`${BASE_URL}/api/ResendUserInvitation`, async ({ request }) => {
+                    observedBodies.set('resendInvitation', await request.json());
+                    return new HttpResponse(null, { status: 204 });
+                }),
+            );
+
+            const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            await expect(
+                cas.removeServiceClientKey({ serviceClientId: 'client-1', kid: 'key-1' }),
+            ).resolves.toMatchObject({ serviceClient });
+            await expect(cas.disableServiceClient({ serviceClientId: 'client-1' })).resolves.toMatchObject({
+                serviceClient: { lifecycleState: 'Disabled' },
+            });
+            await expect(
+                cas.resendUserInvitation({ userId: '0193fabc-1234-7def-abcd-1234567890ab' }),
+            ).resolves.toBeUndefined();
+
+            expect(observedBodies).toEqual(
+                new Map<string, unknown>([
+                    ['removeKey', { serviceClientId: 'client-1', kid: 'key-1' }],
+                    ['disable', { serviceClientId: 'client-1' }],
+                    ['resendInvitation', { userId: '0193fabc-1234-7def-abcd-1234567890ab' }],
+                ]),
+            );
         });
 
         it('acceptInvitation binds through the same transport', async () => {
@@ -387,7 +433,7 @@ describe('CasClient', () => {
             const promise = cas.createUser({
                 email: 'a@b.c',
                 displayName: 'A B',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             await expect(promise).rejects.toBeInstanceOf(AlreadyExistsError);
@@ -423,7 +469,7 @@ describe('CasClient', () => {
             const promise = cas.createUser({
                 email: '',
                 displayName: '',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             await expect(promise).rejects.toBeInstanceOf(InvalidArgumentError);
@@ -479,7 +525,7 @@ describe('CasClient', () => {
             const result = await cas.createUser({
                 email: 'a@b.c',
                 displayName: 'A B',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             expect(result.user.email).toBe('a@b.c');
@@ -508,7 +554,7 @@ describe('CasClient', () => {
                     {
                         email: 'a@b.c',
                         displayName: 'A B',
-                        clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                        requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
                     },
                     { signal: controller.signal },
                 ),
@@ -537,12 +583,12 @@ describe('CasClient', () => {
                 casA.createUser({
                     email: 'a@a.c',
                     displayName: 'A',
-                    clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                    requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
                 }),
                 casB.createUser({
                     email: 'b@b.c',
                     displayName: 'B',
-                    clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK3',
+                    requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK3',
                 }),
             ]);
 
@@ -565,7 +611,7 @@ describe('CasClient', () => {
             const result = await createUser({
                 email: 'x@x.c',
                 displayName: 'X',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
+                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
             expect(result.user.email).toBe('x@x.c');
         });

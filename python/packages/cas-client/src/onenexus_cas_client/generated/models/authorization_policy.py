@@ -8,6 +8,7 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from .authorization_policy_kind import AuthorizationPolicyKind
     from .authorization_policy_lifecycle_status import AuthorizationPolicyLifecycleStatus
+    from .json_element import JsonElement
 
 @dataclass
 class AuthorizationPolicy(Parsable):
@@ -20,6 +21,8 @@ class AuthorizationPolicy(Parsable):
     created_by_uri: Optional[str] = None
     # Human-readable policy description.
     description: Optional[str] = None
+    # Validated policy object containing exactly the required,case-sensitive `Effect` (`Allow` or `Deny`),`Action`, and `ResourceScope` fields plus optional`Condition`. `Action` and `ResourceScope` containnormalized non-empty string arrays; `Condition` groups conditionkeys by operator.
+    document: Optional[JsonElement] = None
     # SHA-256 hash of the canonically normalized policy document.
     document_hash: Optional[str] = None
     # The catalogue that owns this policy.
@@ -51,14 +54,17 @@ class AuthorizationPolicy(Parsable):
         """
         from .authorization_policy_kind import AuthorizationPolicyKind
         from .authorization_policy_lifecycle_status import AuthorizationPolicyLifecycleStatus
+        from .json_element import JsonElement
 
         from .authorization_policy_kind import AuthorizationPolicyKind
         from .authorization_policy_lifecycle_status import AuthorizationPolicyLifecycleStatus
+        from .json_element import JsonElement
 
         fields: dict[str, Callable[[Any], None]] = {
             "contentStateToken": lambda n : setattr(self, 'content_state_token', n.get_str_value()),
             "createdByUri": lambda n : setattr(self, 'created_by_uri', n.get_str_value()),
             "description": lambda n : setattr(self, 'description', n.get_str_value()),
+            "document": lambda n : setattr(self, 'document', n.get_object_value(JsonElement)),
             "documentHash": lambda n : setattr(self, 'document_hash', n.get_str_value()),
             "kind": lambda n : setattr(self, 'kind', n.get_enum_value(AuthorizationPolicyKind)),
             "name": lambda n : setattr(self, 'name', n.get_str_value()),
@@ -79,6 +85,7 @@ class AuthorizationPolicy(Parsable):
         writer.write_str_value("contentStateToken", self.content_state_token)
         writer.write_str_value("createdByUri", self.created_by_uri)
         writer.write_str_value("description", self.description)
+        writer.write_object_value("document", self.document)
         writer.write_str_value("documentHash", self.document_hash)
         writer.write_enum_value("kind", self.kind)
         writer.write_str_value("name", self.name)

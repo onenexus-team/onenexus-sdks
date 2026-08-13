@@ -16,7 +16,6 @@ from warnings import warn
 if TYPE_CHECKING:
     from ...models.accept_invitation_request import AcceptInvitationRequest
     from ...models.accept_invitation_response import AcceptInvitationResponse
-    from ...models.problem_details import ProblemDetails
     from ...models.validation_problem_details import ValidationProblemDetails
 
 class AcceptInvitationRequestBuilder(BaseRequestBuilder):
@@ -44,12 +43,10 @@ class AcceptInvitationRequestBuilder(BaseRequestBuilder):
         request_info = self.to_post_request_information(
             body, request_configuration
         )
-        from ...models.problem_details import ProblemDetails
         from ...models.validation_problem_details import ValidationProblemDetails
 
         error_mapping: dict[str, type[ParsableFactory]] = {
             "400": ValidationProblemDetails,
-            "409": ProblemDetails,
         }
         if not self.request_adapter:
             raise Exception("Http core is null") 

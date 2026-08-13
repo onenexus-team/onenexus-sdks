@@ -4,6 +4,9 @@ from dataclasses import dataclass, field
 from kiota_abstractions.serialization import Parsable, ParseNode, SerializationWriter
 from typing import Any, Optional, TYPE_CHECKING, Union
 
+if TYPE_CHECKING:
+    from .json_element import JsonElement
+
 @dataclass
 class PublishPolicyRequest(Parsable):
     """
@@ -11,6 +14,8 @@ class PublishPolicyRequest(Parsable):
     """
     # Optional human-readable explanation of the policy. CAS stores anomitted description as an empty string so policy read responses remainstructurally stable.
     description: Optional[str] = None
+    # AWS-inspired policy object containing exactly the required,case-sensitive `Effect` (`Allow` or `Deny`),`Action`, and `ResourceScope` fields plus optional`Condition`. `Action` and `ResourceScope` accept anon-empty string or an array of at most 64 non-empty strings;`Condition` groups condition keys by operator.
+    document: Optional[JsonElement] = None
     # Immutable machine-readable policy name, unique inside the caller's tenant.
     name: Optional[str] = None
     # Caller-generated identifier used to correlate the publication request.
@@ -32,8 +37,13 @@ class PublishPolicyRequest(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
+        from .json_element import JsonElement
+
+        from .json_element import JsonElement
+
         fields: dict[str, Callable[[Any], None]] = {
             "description": lambda n : setattr(self, 'description', n.get_str_value()),
+            "document": lambda n : setattr(self, 'document', n.get_object_value(JsonElement)),
             "name": lambda n : setattr(self, 'name', n.get_str_value()),
             "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
         }
@@ -48,6 +58,7 @@ class PublishPolicyRequest(Parsable):
         if writer is None:
             raise TypeError("writer cannot be null.")
         writer.write_str_value("description", self.description)
+        writer.write_object_value("document", self.document)
         writer.write_str_value("name", self.name)
         writer.write_str_value("requestId", self.request_id)
     

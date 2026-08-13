@@ -10,8 +10,6 @@ class AcceptInvitationRequest(Parsable):
     """
     Request body for `POST /api/AcceptInvitation`.
     """
-    # Caller-generated request correlation key. Invitation-token consumptionand the resulting password/security-stamp update provide replay safety.
-    client_token: Optional[str] = None
     # Initial password chosen by the user. Subject to the Identitypassword-complexity rules configured inIdentityServiceCollectionExtensions.
     password: Optional[str] = None
     # Invite token from the URL's `token` query parameter. Bound tothe user's ASP.NET Identity SecurityStamp at generate-time; verifiedvia `UserManager.VerifyUserTokenAsync`.
@@ -36,7 +34,6 @@ class AcceptInvitationRequest(Parsable):
         Returns: dict[str, Callable[[ParseNode], None]]
         """
         fields: dict[str, Callable[[Any], None]] = {
-            "clientToken": lambda n : setattr(self, 'client_token', n.get_str_value()),
             "password": lambda n : setattr(self, 'password', n.get_str_value()),
             "token": lambda n : setattr(self, 'token', n.get_str_value()),
             "userId": lambda n : setattr(self, 'user_id', n.get_uuid_value()),
@@ -51,7 +48,6 @@ class AcceptInvitationRequest(Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_str_value("clientToken", self.client_token)
         writer.write_str_value("password", self.password)
         writer.write_str_value("token", self.token)
         writer.write_uuid_value("userId", self.user_id)

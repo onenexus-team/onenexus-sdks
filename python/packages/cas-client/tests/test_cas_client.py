@@ -16,9 +16,12 @@ from onenexus_cas_client import (
     ListPolicyAttachmentsRequest,
     ListRolePoliciesRequest,
     RemoveRoleAssignmentRequest,
+    RemoveServiceClientKeyRequest,
+    ResendUserInvitationRequest,
 )
 from onenexus_cas_client.generated.models.assume_s3_role_request import AssumeS3RoleRequest
 from onenexus_cas_client.generated.models.create_user_request import CreateUserRequest
+from onenexus_cas_client.generated.models.disable_service_client_request import DisableServiceClientRequest
 
 
 def _credentials() -> TokenGrantCredentials:
@@ -60,7 +63,7 @@ async def test_create_user_routes_through_kiota_adapter() -> None:
             CreateUserRequest(
                 email="a@b.c",
                 display_name="A B",
-                client_token="01HV8XR4D0YPRNNK8YY8VJ3QK2",
+                request_id="01HV8XR4D0YPRNNK8YY8VJ3QK2",
             )
         )
 
@@ -69,7 +72,7 @@ async def test_create_user_routes_through_kiota_adapter() -> None:
     assert captured["body"] == {
         "email": "a@b.c",
         "displayName": "A B",
-        "clientToken": "01HV8XR4D0YPRNNK8YY8VJ3QK2",
+        "requestId": "01HV8XR4D0YPRNNK8YY8VJ3QK2",
     }
     assert result.user is not None
     assert result.user.email == "a@b.c"
@@ -132,4 +135,29 @@ async def test_authorization_and_user_list_methods_route_through_kiota() -> None
         "/api/DetachPolicyFromRole",
         "/api/ListPolicyAttachments",
         "/api/ListRolePolicies",
+    ]
+
+
+async def test_service_client_key_management_and_invitation_resend_route_through_kiota() -> None:
+    captured: list[tuple[str, dict[str, object]]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append((request.url.path, json.loads(request.content)))
+        if request.url.path == "/api/ResendUserInvitation":
+            return httpx.Response(204)
+        return httpx.Response(200, json={"serviceClient": {}}, headers={"content-type": "application/json"})
+
+    async with _client(httpx.MockTransport(handler)) as cas:
+        await cas.remove_service_client_key(
+            RemoveServiceClientKeyRequest(service_client_id="0193fabc-1234-7def-abcd-1234567890ab", kid="key-1")
+        )
+        await cas.disable_service_client(DisableServiceClientRequest(service_client_id="0193fabc-1234-7def-abcd-1234567890ab"))
+        await cas.resend_user_invitation(
+            ResendUserInvitationRequest(user_id="0193fabc-1234-7def-abcd-1234567890ac")
+        )
+
+    assert captured == [
+        ("/api/RemoveServiceClientKey", {"serviceClientId": "0193fabc-1234-7def-abcd-1234567890ab", "kid": "key-1"}),
+        ("/api/DisableServiceClient", {"serviceClientId": "0193fabc-1234-7def-abcd-1234567890ab"}),
+        ("/api/ResendUserInvitation", {"userId": "0193fabc-1234-7def-abcd-1234567890ac"}),
     ]

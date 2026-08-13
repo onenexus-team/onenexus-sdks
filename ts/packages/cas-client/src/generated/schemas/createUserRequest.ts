@@ -25,13 +25,12 @@ export interface CreateUserRequest {
      */
   displayName: string;
   /**
-     * Caller-generated request correlation key. It follows the same shape
-  rules as string CreateTenantRequest.ClientToken. A replay
-  cache for ordinary user invitations is a follow-up; the database's
-  per-tenant normalized-email constraint remains the duplicate guard.
+     * Caller-generated request identifier used for authorization correlation.
+  It is not an idempotency key; per-tenant email uniqueness remains the
+  duplicate guard for user invitations.
      * @minLength 16
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$
      */
-  clientToken: string;
+  requestId: string;
 }

@@ -12,5 +12,5 @@ import type { ServiceClient } from './serviceClient';
  */
 export interface ListServiceClientsResponse {
   /** Service clients owned by the caller's tenant. */
-  items?: ServiceClient[];
+  items: ServiceClient[];
 }

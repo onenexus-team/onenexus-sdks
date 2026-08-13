@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from .delete_policy.delete_policy_request_builder import DeletePolicyRequestBuilder
     from .delete_role.delete_role_request_builder import DeleteRoleRequestBuilder
     from .detach_policy_from_role.detach_policy_from_role_request_builder import DetachPolicyFromRoleRequestBuilder
+    from .disable_service_client.disable_service_client_request_builder import DisableServiceClientRequestBuilder
     from .get_policy.get_policy_request_builder import GetPolicyRequestBuilder
     from .list_policies.list_policies_request_builder import ListPoliciesRequestBuilder
     from .list_policy_attachments.list_policy_attachments_request_builder import ListPolicyAttachmentsRequestBuilder
@@ -28,6 +29,8 @@ if TYPE_CHECKING:
     from .list_users.list_users_request_builder import ListUsersRequestBuilder
     from .publish_policy.publish_policy_request_builder import PublishPolicyRequestBuilder
     from .remove_role_assignment.remove_role_assignment_request_builder import RemoveRoleAssignmentRequestBuilder
+    from .remove_service_client_key.remove_service_client_key_request_builder import RemoveServiceClientKeyRequestBuilder
+    from .resend_user_invitation.resend_user_invitation_request_builder import ResendUserInvitationRequestBuilder
     from .update_policy.update_policy_request_builder import UpdatePolicyRequestBuilder
 
 class ApiRequestBuilder(BaseRequestBuilder):
@@ -143,6 +146,15 @@ class ApiRequestBuilder(BaseRequestBuilder):
         return DetachPolicyFromRoleRequestBuilder(self.request_adapter, self.path_parameters)
     
     @property
+    def disable_service_client(self) -> DisableServiceClientRequestBuilder:
+        """
+        The DisableServiceClient property
+        """
+        from .disable_service_client.disable_service_client_request_builder import DisableServiceClientRequestBuilder
+
+        return DisableServiceClientRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
     def get_policy(self) -> GetPolicyRequestBuilder:
         """
         The GetPolicy property
@@ -240,6 +252,24 @@ class ApiRequestBuilder(BaseRequestBuilder):
         from .remove_role_assignment.remove_role_assignment_request_builder import RemoveRoleAssignmentRequestBuilder
 
         return RemoveRoleAssignmentRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def remove_service_client_key(self) -> RemoveServiceClientKeyRequestBuilder:
+        """
+        The RemoveServiceClientKey property
+        """
+        from .remove_service_client_key.remove_service_client_key_request_builder import RemoveServiceClientKeyRequestBuilder
+
+        return RemoveServiceClientKeyRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def resend_user_invitation(self) -> ResendUserInvitationRequestBuilder:
+        """
+        The ResendUserInvitation property
+        """
+        from .resend_user_invitation.resend_user_invitation_request_builder import ResendUserInvitationRequestBuilder
+
+        return ResendUserInvitationRequestBuilder(self.request_adapter, self.path_parameters)
     
     @property
     def update_policy(self) -> UpdatePolicyRequestBuilder:

@@ -47,6 +47,7 @@ class ListS3RolesRequestBuilder(BaseRequestBuilder):
 
         error_mapping: dict[str, type[ParsableFactory]] = {
             "401": ProblemDetails,
+            "403": ProblemDetails,
             "404": ProblemDetails,
             "503": ProblemDetails,
         }

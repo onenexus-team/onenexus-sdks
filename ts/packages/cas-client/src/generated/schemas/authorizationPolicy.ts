@@ -21,7 +21,12 @@ export interface AuthorizationPolicy {
   description: string;
   /** Current policy lifecycle state. */
   status: AuthorizationPolicyLifecycleStatus;
-  /** Validated customer-authored policy document. */
+  /** Validated policy object containing exactly the required,
+  case-sensitive `Effect` (`Allow` or `Deny`),
+  `Action`, and `ResourceScope` fields plus optional
+  `Condition`. `Action` and `ResourceScope` contain
+  normalized non-empty string arrays; `Condition` groups condition
+  keys by operator. */
   document: JsonElement;
   /** Optimistic concurrency token for policy content changes. */
   contentStateToken: string;

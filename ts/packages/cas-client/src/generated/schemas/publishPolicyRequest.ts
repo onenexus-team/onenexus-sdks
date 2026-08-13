@@ -34,6 +34,11 @@ export interface PublishPolicyRequest {
      * @nullable
      */
   description?: string | null;
-  /** AWS-inspired OneNexus policy document. */
+  /** AWS-inspired policy object containing exactly the required,
+  case-sensitive `Effect` (`Allow` or `Deny`),
+  `Action`, and `ResourceScope` fields plus optional
+  `Condition`. `Action` and `ResourceScope` accept a
+  non-empty string or an array of at most 64 non-empty strings;
+  `Condition` groups condition keys by operator. */
   document: JsonElement;
 }

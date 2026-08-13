@@ -9,12 +9,12 @@ class CreateUserRequest(Parsable):
     """
     Request body for `POST /api/CreateUser`.
     """
-    # Caller-generated request correlation key. It follows the same shaperules as string CreateTenantRequest.ClientToken. A replaycache for ordinary user invitations is a follow-up; the database'sper-tenant normalized-email constraint remains the duplicate guard.
-    client_token: Optional[str] = None
     # Display name shown in UIs. 1–200 chars.
     display_name: Optional[str] = None
     # Email address. Must be a syntactically valid RFC 5322-ish address.Uniqueness is enforced per-tenant via the`(TenantId, NormalizedEmail)` composite index, not globally.
     email: Optional[str] = None
+    # Caller-generated request identifier used for authorization correlation.It is not an idempotency key; per-tenant email uniqueness remains theduplicate guard for user invitations.
+    request_id: Optional[str] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> CreateUserRequest:
@@ -33,9 +33,9 @@ class CreateUserRequest(Parsable):
         Returns: dict[str, Callable[[ParseNode], None]]
         """
         fields: dict[str, Callable[[Any], None]] = {
-            "clientToken": lambda n : setattr(self, 'client_token', n.get_str_value()),
             "displayName": lambda n : setattr(self, 'display_name', n.get_str_value()),
             "email": lambda n : setattr(self, 'email', n.get_str_value()),
+            "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
         }
         return fields
     
@@ -47,8 +47,8 @@ class CreateUserRequest(Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_str_value("clientToken", self.client_token)
         writer.write_str_value("displayName", self.display_name)
         writer.write_str_value("email", self.email)
+        writer.write_str_value("requestId", self.request_id)
     
 

@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export interface JsonElement {}
+export interface JsonElement { [key: string]: unknown }

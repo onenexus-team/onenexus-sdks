@@ -11,7 +11,8 @@ import type {
   CreateUserRequest,
   CreateUserResponse,
   ListUsersRequest,
-  ListUsersResponse
+  ListUsersResponse,
+  ResendUserInvitationRequest
 } from '../schemas';
 
 import { platformMutator } from '../../mutator';
@@ -34,6 +35,21 @@ const createUser = (
       {url: `/api/CreateUser`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createUserRequest
+    },
+      options);
+    }
+  /**
+ * CAS derives the tenant from the authenticated caller. Tenant roots and
+users in other tenants cannot be targeted through this operation.
+ * @summary Re-sends an invitation to a pending member in the caller's tenant.
+ */
+const resendUserInvitation = (
+    resendUserInvitationRequest: ResendUserInvitationRequest,
+ options?: SecondParameter<typeof platformMutator<unknown>>,) => {
+      return platformMutator<unknown>(
+      {url: `/api/ResendUserInvitation`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resendUserInvitationRequest
     },
       options);
     }
@@ -69,12 +85,13 @@ const acceptInvitation = (
     },
       options);
     }
-  return {createUser,listUsers,acceptInvitation}};
+  return {createUser,resendUserInvitation,listUsers,acceptInvitation}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
     type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 export type CreateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['createUser']>>>
+export type ResendUserInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['resendUserInvitation']>>>
 export type ListUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['listUsers']>>>
 export type AcceptInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['acceptInvitation']>>>

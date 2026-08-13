@@ -1460,6 +1460,16 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -1623,6 +1633,26 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1678,6 +1708,26 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1748,6 +1798,16 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -1760,6 +1820,210 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/RemoveServiceClientKey": {
+      "post": {
+        "tags": [
+          "TenantServiceClient"
+        ],
+        "summary": "Revokes one public assertion key from a service client.",
+        "description": "The final key cannot be removed. Disable the service client when its\nonly key is compromised.",
+        "operationId": "RemoveServiceClientKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveServiceClientKeyRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveServiceClientKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveServiceClientKeyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/DisableServiceClient": {
+      "post": {
+        "tags": [
+          "TenantServiceClient"
+        ],
+        "summary": "Disables a service client so it cannot obtain new access tokens.",
+        "description": "The operation is idempotent. Already-issued short-lived access tokens\nretain their normal expiry; disabling prevents subsequent token issuance.",
+        "operationId": "DisableServiceClient",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisableServiceClientRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisableServiceClientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisableServiceClientResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1785,7 +2049,7 @@
         "description": "CAS derives the tenant from the caller's access token. The user stays\npending until they redeem the emailed invitation and set a password.",
         "operationId": "CreateUser",
         "requestBody": {
-          "description": "Cancellation token.",
+          "description": "Request body. Validated by `[ApiController]`.",
           "content": {
             "application/json": {
               "schema": {
@@ -1843,6 +2107,104 @@
           },
           "409": {
             "description": "A user with that email already exists in the\n    caller's tenant (`type=https://onenexus.cloud/errors/already-exists`) or the caller's tenant\n    is not active (`type=https://onenexus.cloud/errors/failed-precondition`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/ResendUserInvitation": {
+      "post": {
+        "tags": [
+          "TenantUser"
+        ],
+        "summary": "Re-sends an invitation to a pending member in the caller's tenant.",
+        "description": "CAS derives the tenant from the authenticated caller. Tenant roots and\nusers in other tenants cannot be targeted through this operation.",
+        "operationId": "ResendUserInvitation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendUserInvitationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendUserInvitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": { }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1960,7 +2322,7 @@
         "description": "This endpoint does not require an access token. It accepts the\ninvitation details delivered by email, and an invitation can be used\nonly once. On success, follow `loginUrl` to sign in.",
         "operationId": "AcceptInvitation",
         "requestBody": {
-          "description": "Cancellation token.",
+          "description": "Request body.",
           "content": {
             "application/json": {
               "schema": {
@@ -1995,16 +2357,6 @@
                 }
               }
             }
-          },
-          "409": {
-            "description": "Invitation has already been accepted (`type=https://onenexus.cloud/errors/failed-precondition`).",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
           }
         }
       }
@@ -2016,8 +2368,7 @@
         "required": [
           "userId",
           "token",
-          "password",
-          "clientToken"
+          "password"
         ],
         "type": "object",
         "properties": {
@@ -2037,15 +2388,9 @@
             "minLength": 8,
             "type": "string",
             "description": "Initial password chosen by the user. Subject to the Identity\npassword-complexity rules configured in\nIdentityServiceCollectionExtensions."
-          },
-          "clientToken": {
-            "maxLength": 128,
-            "minLength": 16,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated request correlation key. Invitation-token consumption\nand the resulting password/security-stamp update provide replay safety."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/AcceptInvitation`."
       },
       "AcceptInvitationResponse": {
@@ -2076,6 +2421,7 @@
             "description": "Suggested next URL for the portal to navigate to — the login form,\nwith the tenant slug pre-filled so the user only has to type the\nemail + password."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/AcceptInvitation`."
       },
       "AddServiceClientKeyRequest": {
@@ -2097,6 +2443,7 @@
             "description": "Additional public JWK JSON generated in the browser."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `AddServiceClientKey`."
       },
       "AddServiceClientKeyResponse": {
@@ -2110,6 +2457,7 @@
             "$ref": "#/components/schemas/ServiceClient"
           }
         },
+        "additionalProperties": false,
         "description": "Response for `AddServiceClientKey`."
       },
       "AssignRoleRequest": {
@@ -2138,6 +2486,7 @@
             "$ref": "#/components/schemas/AuthorizationAssignee"
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/AssignRole`."
       },
       "AssignRoleResponse": {
@@ -2156,6 +2505,7 @@
             "$ref": "#/components/schemas/AuthorizationRoleAssignment"
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/AssignRole`."
       },
       "AssumeS3RoleRequest": {
@@ -2171,6 +2521,7 @@
             "description": "The name of the role to assume in the caller's tenant account."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `AssumeS3Role`."
       },
       "AssumeS3RoleResponse": {
@@ -2200,6 +2551,7 @@
             "format": "date-time"
           }
         },
+        "additionalProperties": false,
         "description": "Temporary S3 credentials returned by `AssumeS3Role`. CAS assumed the\nrole on the caller's behalf; the caller uses these directly against S3."
       },
       "AttachPolicyToRoleRequest": {
@@ -2228,6 +2580,7 @@
             "description": "URI of the role that will receive the policy."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/AttachPolicyToRole`."
       },
       "AttachPolicyToRoleResponse": {
@@ -2246,6 +2599,7 @@
             "$ref": "#/components/schemas/AuthorizationPolicyAttachment"
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/AttachPolicyToRole`."
       },
       "AuthorizationAssignee": {
@@ -2266,6 +2620,7 @@
             "description": "The complete canonical OneNexus URI."
           }
         },
+        "additionalProperties": false,
         "description": "A canonical role assignee supplied to an administration API."
       },
       "AuthorizationAssigneeKind": {
@@ -2307,7 +2662,7 @@
             "$ref": "#/components/schemas/AuthorizationPolicyLifecycleStatus"
           },
           "document": {
-            "description": "Validated customer-authored policy document.",
+            "description": "Validated policy object containing exactly the required,\ncase-sensitive `Effect` (`Allow` or `Deny`),\n`Action`, and `ResourceScope` fields plus optional\n`Condition`. `Action` and `ResourceScope` contain\nnormalized non-empty string arrays; `Condition` groups condition\nkeys by operator.",
             "$ref": "#/components/schemas/JsonElement"
           },
           "contentStateToken": {
@@ -2335,6 +2690,7 @@
             "format": "date-time"
           }
         },
+        "additionalProperties": false,
         "description": "Complete customer-visible authorization policy content."
       },
       "AuthorizationPolicyAttachment": {
@@ -2375,6 +2731,7 @@
             "format": "date-time"
           }
         },
+        "additionalProperties": false,
         "description": "One policy-to-role attachment returned by CAS."
       },
       "AuthorizationPolicyKind": {
@@ -2382,7 +2739,7 @@
           "TenantManaged",
           "PlatformManaged"
         ],
-        "description": "Whether the policy is tenant-managed or platform-managed."
+        "description": "Identifies which policy catalogue owns a policy definition."
       },
       "AuthorizationPolicyLifecycleStatus": {
         "enum": [
@@ -2409,9 +2766,13 @@
         "type": "object",
         "properties": {
           "kind": {
+            "description": "Whether the policy is tenant-managed or platform-managed.",
             "$ref": "#/components/schemas/AuthorizationPolicyKind"
           },
           "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9]{0,127}$",
             "type": "string",
             "description": "Immutable policy name."
           }
@@ -2462,6 +2823,7 @@
             "format": "date-time"
           }
         },
+        "additionalProperties": false,
         "description": "Tenant-scoped authorization policy summary."
       },
       "AuthorizationRelationshipRemovedResponse": {
@@ -2472,6 +2834,7 @@
             "description": "Always `true` when CAS removed the requested relationship."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for a successful token-checked relationship removal."
       },
       "AuthorizationRole": {
@@ -2490,6 +2853,7 @@
             "description": "Case-sensitive name chosen for this role."
           }
         },
+        "additionalProperties": false,
         "description": "One tenant authorization role returned by CAS."
       },
       "AuthorizationRoleAssignment": {
@@ -2530,6 +2894,7 @@
             "format": "date-time"
           }
         },
+        "additionalProperties": false,
         "description": "One direct role assignment returned by CAS."
       },
       "CreateAuthorizationRoleRequest": {
@@ -2554,6 +2919,7 @@
             "description": "Case-sensitive role name; use ASCII letters and digits only."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/CreateRole`."
       },
       "CreateAuthorizationRoleResponse": {
@@ -2572,6 +2938,7 @@
             "$ref": "#/components/schemas/AuthorizationRole"
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/CreateRole`."
       },
       "CreateServiceClientRequest": {
@@ -2594,6 +2961,7 @@
             "description": "Public JWK JSON generated in the browser. Private key fields are rejected."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `CreateServiceClient`."
       },
       "CreateServiceClientResponse": {
@@ -2607,13 +2975,14 @@
             "$ref": "#/components/schemas/ServiceClient"
           }
         },
+        "additionalProperties": false,
         "description": "Response for `CreateServiceClient`."
       },
       "CreateUserRequest": {
         "required": [
           "email",
           "displayName",
-          "clientToken"
+          "requestId"
         ],
         "type": "object",
         "properties": {
@@ -2621,7 +2990,8 @@
             "maxLength": 254,
             "minLength": 3,
             "type": "string",
-            "description": "Email address. Must be a syntactically valid RFC 5322-ish address.\nUniqueness is enforced per-tenant via the\n`(TenantId, NormalizedEmail)` composite index, not globally."
+            "description": "Email address. Must be a syntactically valid RFC 5322-ish address.\nUniqueness is enforced per-tenant via the\n`(TenantId, NormalizedEmail)` composite index, not globally.",
+            "format": "email"
           },
           "displayName": {
             "maxLength": 200,
@@ -2629,14 +2999,15 @@
             "type": "string",
             "description": "Display name shown in UIs. 1–200 chars."
           },
-          "clientToken": {
+          "requestId": {
             "maxLength": 128,
             "minLength": 16,
             "pattern": "^[a-zA-Z0-9_.-]+$",
             "type": "string",
-            "description": "Caller-generated request correlation key. It follows the same shape\nrules as string CreateTenantRequest.ClientToken. A replay\ncache for ordinary user invitations is a follow-up; the database's\nper-tenant normalized-email constraint remains the duplicate guard."
+            "description": "Caller-generated request identifier used for authorization correlation.\nIt is not an idempotency key; per-tenant email uniqueness remains the\nduplicate guard for user invitations."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/CreateUser`."
       },
       "CreateUserResponse": {
@@ -2650,6 +3021,7 @@
             "$ref": "#/components/schemas/User"
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/CreateUser`."
       },
       "DeleteAuthorizationRoleRequest": {
@@ -2673,6 +3045,7 @@
             "description": "Canonical URI of the tenant role to delete."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/DeleteRole`."
       },
       "DeleteAuthorizationRoleResponse": {
@@ -2691,6 +3064,7 @@
             "description": "Canonical URI of the role that was deleted."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for a successful `POST /api/DeleteRole`."
       },
       "DeletePolicyRequest": {
@@ -2722,6 +3096,7 @@
             "description": "Content token returned by the latest get, list, publish, or update response."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/DeletePolicy`."
       },
       "DeletePolicyResponse": {
@@ -2735,6 +3110,7 @@
             "description": "Immutable name of the deleted policy."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for a successful `POST /api/DeletePolicy`."
       },
       "DetachPolicyFromRoleRequest": {
@@ -2770,14 +3146,46 @@
             "description": "Current attachment token returned by an attachment-list operation."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/DetachPolicyFromRole`."
+      },
+      "DisableServiceClientRequest": {
+        "required": [
+          "serviceClientId"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceClientId": {
+            "type": "string",
+            "description": "OpenIddict application id.",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `DisableServiceClient`."
+      },
+      "DisableServiceClientResponse": {
+        "required": [
+          "serviceClient"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceClient": {
+            "description": "The disabled service client.",
+            "$ref": "#/components/schemas/ServiceClient"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response for `DisableServiceClient`."
       },
       "EmptyS3Request": {
         "type": "object",
+        "additionalProperties": false,
         "description": "Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`."
       },
       "EmptyServiceClientRequest": {
         "type": "object",
+        "additionalProperties": false,
         "description": "Request body for `ListServiceClients`."
       },
       "GetPolicyRequest": {
@@ -2799,6 +3207,7 @@
             "description": "Immutable machine-readable policy name."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/GetPolicy`."
       },
       "GetPolicyResponse": {
@@ -2812,9 +3221,12 @@
             "$ref": "#/components/schemas/AuthorizationPolicy"
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/GetPolicy`."
       },
-      "JsonElement": { },
+      "JsonElement": {
+        "type": "object"
+      },
       "ListAuthorizationRolesRequest": {
         "type": "object",
         "properties": {
@@ -2830,6 +3242,7 @@
             "format": "int32"
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/ListRoles`."
       },
       "ListAuthorizationRolesResponse": {
@@ -2846,6 +3259,7 @@
             "description": "Roles in the caller's tenant, ordered by name."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/ListRoles`."
       },
       "ListPoliciesRequest": {
@@ -2881,6 +3295,7 @@
             "description": "Forward-pagination cursor. Mutually exclusive with string? ListPoliciesRequest.Before."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/ListPolicies`."
       },
       "ListPoliciesResponse": {
@@ -2911,6 +3326,7 @@
             "description": "Cursor for a following page, or `null` at the end."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/ListPolicies`."
       },
       "ListPolicyAttachmentsRequest": {
@@ -2953,6 +3369,7 @@
             "description": "Cursor returned by a previous response for the following page."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/ListPolicyAttachments`."
       },
       "ListPolicyAttachmentsResponse": {
@@ -2983,6 +3400,7 @@
             "description": "Cursor for the following page, when one exists."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for policy-attachment list operations."
       },
       "ListRoleAssignmentsRequest": {
@@ -3038,6 +3456,7 @@
             "description": "Cursor returned by a previous response for the following page."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/ListRoleAssignments`."
       },
       "ListRoleAssignmentsResponse": {
@@ -3068,6 +3487,7 @@
             "description": "Cursor for the following page, when one exists."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/ListRoleAssignments`."
       },
       "ListRolePoliciesRequest": {
@@ -3112,9 +3532,13 @@
             "description": "Cursor returned by a previous response for the following page."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/ListRolePolicies`."
       },
       "ListS3RolesResponse": {
+        "required": [
+          "items"
+        ],
         "type": "object",
         "properties": {
           "items": {
@@ -3125,9 +3549,13 @@
             "description": "The IAM roles in the calling tenant's S3 account."
           }
         },
+        "additionalProperties": false,
         "description": "Response for `ListS3Roles` (the calling tenant's roles)."
       },
       "ListServiceClientsResponse": {
+        "required": [
+          "items"
+        ],
         "type": "object",
         "properties": {
           "items": {
@@ -3138,6 +3566,7 @@
             "description": "Service clients owned by the caller's tenant."
           }
         },
+        "additionalProperties": false,
         "description": "Response for `ListServiceClients`."
       },
       "ListUsersRequest": {
@@ -3173,6 +3602,7 @@
             "description": "Backward cursor returned by the preceding response. Mutually exclusive\nwith string? ListUsersRequest.After."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/ListUsers`."
       },
       "ListUsersResponse": {
@@ -3203,7 +3633,16 @@
             "description": "Cursor for the next page, if one exists."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/ListUsers`."
+      },
+      "OidcApplicationLifecycleState": {
+        "enum": [
+          "Active",
+          "Disabled",
+          "Deleted"
+        ],
+        "description": "Authorization-visible lifecycle states of an OidcApplication."
       },
       "ProblemDetails": {
         "required": [
@@ -3282,10 +3721,11 @@
             "description": "Optional human-readable explanation of the policy. CAS stores an\nomitted description as an empty string so policy read responses remain\nstructurally stable."
           },
           "document": {
-            "description": "AWS-inspired OneNexus policy document.",
+            "description": "AWS-inspired policy object containing exactly the required,\ncase-sensitive `Effect` (`Allow` or `Deny`),\n`Action`, and `ResourceScope` fields plus optional\n`Condition`. `Action` and `ResourceScope` accept a\nnon-empty string or an array of at most 64 non-empty strings;\n`Condition` groups condition keys by operator.",
             "$ref": "#/components/schemas/JsonElement"
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/PublishPolicy`."
       },
       "PublishPolicyResponse": {
@@ -3324,6 +3764,7 @@
             "description": "Optimistic concurrency token for subsequent policy content changes."
           }
         },
+        "additionalProperties": false,
         "description": "Result of policy validation and atomic publication."
       },
       "RemoveRoleAssignmentRequest": {
@@ -3359,12 +3800,65 @@
             "description": "Current assignment token returned by `ListRoleAssignments`."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/RemoveRoleAssignment`."
+      },
+      "RemoveServiceClientKeyRequest": {
+        "required": [
+          "serviceClientId",
+          "kid"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceClientId": {
+            "type": "string",
+            "description": "OpenIddict application id.",
+            "format": "uuid"
+          },
+          "kid": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string",
+            "description": "Identifier of the public key to revoke."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `RemoveServiceClientKey`."
+      },
+      "RemoveServiceClientKeyResponse": {
+        "required": [
+          "serviceClient"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceClient": {
+            "description": "The updated service client.",
+            "$ref": "#/components/schemas/ServiceClient"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response for `RemoveServiceClientKey`."
+      },
+      "ResendUserInvitationRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Identifier of the pending tenant member.",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /api/ResendUserInvitation`."
       },
       "S3Role": {
         "required": [
           "name",
-          "arn"
+          "arn",
+          "permissionPolicies"
         ],
         "type": "object",
         "properties": {
@@ -3405,6 +3899,7 @@
             "description": "The role's inline permission policies."
           }
         },
+        "additionalProperties": false,
         "description": "An RGW IAM role in a tenant's account."
       },
       "S3RolePolicy": {
@@ -3423,6 +3918,7 @@
             "description": "Policy document JSON."
           }
         },
+        "additionalProperties": false,
         "description": "An inline IAM policy attached to a role."
       },
       "ServiceClient": {
@@ -3430,7 +3926,9 @@
           "id",
           "uri",
           "clientId",
-          "displayName"
+          "displayName",
+          "keys",
+          "lifecycleState"
         ],
         "type": "object",
         "properties": {
@@ -3457,8 +3955,13 @@
               "$ref": "#/components/schemas/ServiceClientKey"
             },
             "description": "Registered public assertion keys."
+          },
+          "lifecycleState": {
+            "description": "Whether the client can obtain new access tokens.",
+            "$ref": "#/components/schemas/OidcApplicationLifecycleState"
           }
         },
+        "additionalProperties": false,
         "description": "A tenant-owned OAuth service client."
       },
       "ServiceClientKey": {
@@ -3496,6 +3999,7 @@
             "description": "The public JWK JSON persisted on the OpenIddict application."
           }
         },
+        "additionalProperties": false,
         "description": "A public key registered on a service client."
       },
       "TenantUserSummary": {
@@ -3541,6 +4045,7 @@
             "format": "date-time"
           }
         },
+        "additionalProperties": false,
         "description": "User snapshot returned as a list item by `ListTenantUsers`."
       },
       "UpdatePolicyRequest": {
@@ -3576,7 +4081,7 @@
             "description": "Optional replacement human-readable policy description. CAS stores an\nomitted description as an empty string."
           },
           "document": {
-            "description": "Replacement AWS-inspired OneNexus policy document.",
+            "description": "Replacement policy object containing exactly the required,\ncase-sensitive `Effect` (`Allow` or `Deny`),\n`Action`, and `ResourceScope` fields plus optional\n`Condition`. `Action` and `ResourceScope` accept a\nnon-empty string or an array of at most 64 non-empty strings;\n`Condition` groups condition keys by operator.",
             "$ref": "#/components/schemas/JsonElement"
           },
           "expectedContentStateToken": {
@@ -3586,6 +4091,7 @@
             "description": "Content token returned by the latest get, list, publish, or update response."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /api/UpdatePolicy`."
       },
       "UpdatePolicyResponse": {
@@ -3624,6 +4130,7 @@
             "description": "New content concurrency token after a successful update."
           }
         },
+        "additionalProperties": false,
         "description": "Result of validating and atomically updating policy content."
       },
       "User": {
@@ -3670,6 +4177,7 @@
             "format": "date-time"
           }
         },
+        "additionalProperties": false,
         "description": "Wire shape for a user returned by the `CreateUser` family of RPCs."
       },
       "UserKind": {

@@ -31,5 +31,5 @@ export interface S3Role {
      */
   trustPolicy?: string | null;
   /** The role's inline permission policies. */
-  permissionPolicies?: S3RolePolicy[];
+  permissionPolicies: S3RolePolicy[];
 }

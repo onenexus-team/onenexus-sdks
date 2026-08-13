@@ -30,6 +30,8 @@ from .client import (
     CreateUserResponse,
     DeleteAuthorizationRoleRequest,
     DeleteAuthorizationRoleResponse,
+    DisableServiceClientRequest,
+    DisableServiceClientResponse,
     DetachPolicyFromRoleRequest,
     ListAuthorizationRolesRequest,
     ListAuthorizationRolesResponse,
@@ -43,6 +45,9 @@ from .client import (
     ListUsersRequest,
     ListUsersResponse,
     RemoveRoleAssignmentRequest,
+    RemoveServiceClientKeyRequest,
+    RemoveServiceClientKeyResponse,
+    ResendUserInvitationRequest,
 )
 
 __all__ = [
@@ -66,8 +71,10 @@ __all__ = [
     "CreateUserResponse",
     "DeleteAuthorizationRoleRequest",
     "DeleteAuthorizationRoleResponse",
+    "DisableServiceClientRequest",
+    "DisableServiceClientResponse",
 
-    "DetachPolicyFromRoleRequest",
+    "DetachPolicyFromRoleRequest", 
 
     "ListAuthorizationRolesRequest",
     "ListAuthorizationRolesResponse",
@@ -83,6 +90,9 @@ __all__ = [
     "ListUsersResponse",
 
     "RemoveRoleAssignmentRequest",
+    "RemoveServiceClientKeyRequest",
+    "RemoveServiceClientKeyResponse",
+    "ResendUserInvitationRequest",
 
     "generated",
 ]

@@ -6,12 +6,13 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from uuid import UUID
 
 if TYPE_CHECKING:
+    from .oidc_application_lifecycle_state import OidcApplicationLifecycleState
     from .service_client_key import ServiceClientKey
 
 @dataclass
 class ServiceClient(Parsable):
     """
-    The created service client.
+    The updated service client.
     """
     # OAuth `client_id` used at `/connect/token`.
     client_id: Optional[str] = None
@@ -21,6 +22,8 @@ class ServiceClient(Parsable):
     id: Optional[UUID] = None
     # Registered public assertion keys.
     keys: Optional[list[ServiceClientKey]] = None
+    # Whether the client can obtain new access tokens.
+    lifecycle_state: Optional[OidcApplicationLifecycleState] = None
     # Canonical `ServiceClient` principal URI used for role assignments.
     uri: Optional[str] = None
     
@@ -40,8 +43,10 @@ class ServiceClient(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
+        from .oidc_application_lifecycle_state import OidcApplicationLifecycleState
         from .service_client_key import ServiceClientKey
 
+        from .oidc_application_lifecycle_state import OidcApplicationLifecycleState
         from .service_client_key import ServiceClientKey
 
         fields: dict[str, Callable[[Any], None]] = {
@@ -49,6 +54,7 @@ class ServiceClient(Parsable):
             "displayName": lambda n : setattr(self, 'display_name', n.get_str_value()),
             "id": lambda n : setattr(self, 'id', n.get_uuid_value()),
             "keys": lambda n : setattr(self, 'keys', n.get_collection_of_object_values(ServiceClientKey)),
+            "lifecycleState": lambda n : setattr(self, 'lifecycle_state', n.get_enum_value(OidcApplicationLifecycleState)),
             "uri": lambda n : setattr(self, 'uri', n.get_str_value()),
         }
         return fields
@@ -65,6 +71,7 @@ class ServiceClient(Parsable):
         writer.write_str_value("displayName", self.display_name)
         writer.write_uuid_value("id", self.id)
         writer.write_collection_of_object_values("keys", self.keys)
+        writer.write_enum_value("lifecycleState", self.lifecycle_state)
         writer.write_str_value("uri", self.uri)
     
 

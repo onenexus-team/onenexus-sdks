@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "OneNexus Central Auth Service — Support API",
-    "description": "Support-team JSON RPC operations under `/support-api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration.",
+    "description": "Support-team JSON RPC operations under `/support-api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.",
     "version": "v1"
   },
   "paths": {
@@ -288,7 +288,7 @@
         "summary": "Create a new tenant.",
         "operationId": "CreateTenant",
         "requestBody": {
-          "description": "Cancellation token.",
+          "description": "Request body. Validated by\n    `[ApiController]` before this action runs.",
           "content": {
             "application/json": {
               "schema": {
@@ -360,7 +360,7 @@
         "summary": "Look up a tenant by Guid PK.",
         "operationId": "DescribeTenant",
         "requestBody": {
-          "description": "Cancellation token.",
+          "description": "Request body. Carries the tenant's Guid PK as `tenantId`.",
           "content": {
             "application/json": {
               "schema": {
@@ -433,7 +433,7 @@
         "description": "    Ordering + pagination. Bidirectional cursor pagination on\nthe Tenant.Id UUID v7 PK. Forward (after) and\nbackward (before) directions both resolve to an index\nrange scan on the PK b-tree with no OFFSET cost. Items are\nalways returned in tenantId ascending order regardless of\ndirection — backward pages are reversed server-side. Because the\nPK is UUID v7 (time-ordered), this is also a chronological listing\nfor free.\n    Authorization. The class-level PlatformSupport policy\nrequires an active administrator of the reserved OneNexus platform\ntenant. CAS resolves this from the current authorization store, so a\ntoken does not retain access after an administrator role is removed.",
         "operationId": "ListTenants",
         "requestBody": {
-          "description": "Cancellation token.",
+          "description": "Request body. Use `limit` with either\n    `before` or `after` for bidirectional cursor pagination.",
           "content": {
             "application/json": {
               "schema": {
@@ -460,7 +460,7 @@
             }
           },
           "200": {
-            "description": "Page of tenant snapshots. Body is a\n    ListTenantsResponse; `nextCursor` is null on\n    the last page.",
+            "description": "Page of tenant snapshots. Body is a\n    ListTenantsResponse; `after` is null on the last\n    page and `before` is null on the first page.",
             "content": {
               "application/json": {
                 "schema": {
@@ -470,7 +470,7 @@
             }
           },
           "400": {
-            "description": "Validation failure\n    (`type=https://onenexus.cloud/errors/invalid-argument`) — typically a `PageSize` outside\n    1..200, or a malformed / tampered `PageToken`.",
+            "description": "Validation failure\n    (`type=https://onenexus.cloud/errors/invalid-argument`) — typically\n    a `limit` outside 1..200, conflicting cursors, or a malformed\n    `before`/`after` cursor.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -496,7 +496,7 @@
         "description": "    Ordering + pagination. Same shape as Task&lt;IActionResult&gt; TenantController.ListTenants(ListTenantsRequest request, CancellationToken cancellationToken)\nbut on the Users table, filtered to a single tenant. The\nWHERE TenantId = ? AND Id &gt; ? predicate rides the leading\ncolumn of the composite IX_Users_TenantId_NormalizedEmail\nindex for the tenant filter and the PK for the cursor bound.\n    Tenant status is NOT a precondition. Listing the users of a\nsuspended or soft-deleted tenant is a legitimate operator use case\n(audit, cleanup, recovery). Only a missing tenant returns 404; a\ntenant that exists but is non-active still serves its user list.\n    Authorization. The class-level PlatformSupport policy\nrequires an active administrator of the reserved OneNexus platform\ntenant. CAS resolves this from the current authorization store, so a\ntoken does not retain access after an administrator role is removed.",
         "operationId": "ListTenantUsers",
         "requestBody": {
-          "description": "Cancellation token.",
+          "description": "Request body. Same cursor + limit conventions as\n    Task&lt;IActionResult&gt; TenantController.ListTenants(ListTenantsRequest request, CancellationToken cancellationToken), plus the tenant's Guid PK as `tenantId`.",
           "content": {
             "application/json": {
               "schema": {
@@ -569,7 +569,7 @@
         "description": "    Authorization. The caller must be an active human\nTenantAdmin of the reserved platform tenant. This is the\nimplemented operator gate until a distinct platform_admin\nauthorization contract exists.\n    Differs from TenantUserController.CreateUser in that\nthe target tenant comes from the request body, not the caller's\nprincipal. The downstream invitation logic is identical and runs\nthrough IInvitationService.",
         "operationId": "AddTenantUser",
         "requestBody": {
-          "description": "Cancellation token.",
+          "description": "Request body. Validated by\n    `[ApiController]` before this action runs.",
           "content": {
             "application/json": {
               "schema": {
@@ -641,7 +641,7 @@
         "summary": "Re-sends the invitation email for an existing pending user.",
         "operationId": "ResendInvitation",
         "requestBody": {
-          "description": "Cancellation token.",
+          "description": "Request body. Contains the target user id.",
           "content": {
             "application/json": {
               "schema": {
@@ -874,8 +874,7 @@
         "required": [
           "tenantId",
           "email",
-          "displayName",
-          "clientToken"
+          "displayName"
         ],
         "type": "object",
         "properties": {
@@ -888,22 +887,17 @@
             "maxLength": 254,
             "minLength": 3,
             "type": "string",
-            "description": "Email address. Must be a syntactically valid RFC 5322-ish address.\nUniqueness is enforced per-tenant via the\n`(TenantId, NormalizedEmail)` composite index, not globally."
+            "description": "Email address. Must be a syntactically valid RFC 5322-ish address.\nUniqueness is enforced per-tenant via the\n`(TenantId, NormalizedEmail)` composite index, not globally.",
+            "format": "email"
           },
           "displayName": {
             "maxLength": 200,
             "minLength": 1,
             "type": "string",
             "description": "Display name shown in UIs. 1–200 chars."
-          },
-          "clientToken": {
-            "maxLength": 128,
-            "minLength": 16,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated request correlation key. It follows the same shape\nrules as string CreateTenantRequest.ClientToken. A replay cache\nfor ordinary user invitations is a follow-up; the database's\nper-tenant normalized-email constraint remains the duplicate guard."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /support-api/AddTenantUser`."
       },
       "CedarDiagnosticEntity": {
@@ -941,6 +935,7 @@
             "description": "Native Cedar tags keyed by tag name."
           }
         },
+        "additionalProperties": false,
         "description": "One entity supplied to Cedar for a privileged support authorization\nevaluation. The list is the dynamic entity slice CAS passes to Cedar: the\nevaluated principal, resource, and every relationship entity needed by the\ndecision. Cedar derives static action entities from its packaged schema,\nso they are not repeated here."
       },
       "CedarDiagnosticEntityUid": {
@@ -959,6 +954,7 @@
             "description": "The entity identifier within string CedarDiagnosticEntityUid.Type."
           }
         },
+        "additionalProperties": false,
         "description": "A Cedar entity identifier, represented as its type and ID parts."
       },
       "CedarDiagnosticValue": {
@@ -989,6 +985,7 @@
             "$ref": "#/components/schemas/CedarDiagnosticValueCedarDiagnosticExtensionValue"
           }
         ],
+        "additionalProperties": false,
         "description": "A Cedar value in the diagnostic entity graph. The `kind` discriminator\nselects the concrete shape: `boolean`, `long`, `string`,\n`entity`, `set`, `record`, or `extension`.",
         "discriminator": {
           "propertyName": "kind",
@@ -1019,6 +1016,7 @@
             "description": "The Boolean value."
           }
         },
+        "additionalProperties": false,
         "description": "A Cedar Boolean diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticEntityUidValue": {
@@ -1037,6 +1035,7 @@
             "$ref": "#/components/schemas/CedarDiagnosticEntityUid"
           }
         },
+        "additionalProperties": false,
         "description": "A Cedar entity-reference diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticExtensionValue": {
@@ -1060,6 +1059,7 @@
             "description": "The extension value's canonical Cedar text representation."
           }
         },
+        "additionalProperties": false,
         "description": "A Cedar extension diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticLongValue": {
@@ -1083,6 +1083,7 @@
             "format": "int64"
           }
         },
+        "additionalProperties": false,
         "description": "A Cedar signed 64-bit integer diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticRecordValue": {
@@ -1104,6 +1105,7 @@
             "description": "Record fields keyed by their Cedar field name."
           }
         },
+        "additionalProperties": false,
         "description": "A Cedar record diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticSetValue": {
@@ -1125,6 +1127,7 @@
             "description": "The set elements."
           }
         },
+        "additionalProperties": false,
         "description": "A Cedar set diagnostic value."
       },
       "CedarDiagnosticValueCedarDiagnosticStringValue": {
@@ -1143,6 +1146,7 @@
             "description": "The string value."
           }
         },
+        "additionalProperties": false,
         "description": "A Cedar string diagnostic value."
       },
       "CreateTenantRequest": {
@@ -1158,6 +1162,7 @@
           "tenantSlug": {
             "maxLength": 54,
             "minLength": 1,
+            "pattern": "^(?!(?:onenexus(?:-|$)|platform$|system$|admin$))[a-z0-9][a-z0-9_-]{0,53}$",
             "type": "string",
             "description": "Globally unique, immutable slug that members use to locate the tenant\nwhen they sign in (for example, `acme`)."
           },
@@ -1171,7 +1176,8 @@
             "maxLength": 254,
             "minLength": 3,
             "type": "string",
-            "description": "Email address of the tenant's root user. Tenant creation sends this\nuser an activation invitation and grants the predefined\n`TenantAdmin` role before activating the tenant."
+            "description": "Email address of the tenant's root user. Tenant creation sends this\nuser an activation invitation and grants the predefined\n`TenantAdmin` role before activating the tenant.",
+            "format": "email"
           },
           "rootDisplayName": {
             "maxLength": 200,
@@ -1187,6 +1193,7 @@
             "description": "Idempotency key bound to a hash of this complete onboarding request.\nA retry with the same token and content resumes unfinished stages;\nchanging the content or tenant behind a token is rejected."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /support-api/CreateTenant`."
       },
       "CreateTenantResponse": {
@@ -1206,6 +1213,7 @@
             "description": "The tenant's human-entered login slug."
           }
         },
+        "additionalProperties": false,
         "description": "Wire shape for a tenant returned by `CreateTenant`."
       },
       "CreateUserResponse": {
@@ -1219,6 +1227,7 @@
             "$ref": "#/components/schemas/User"
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /api/CreateUser`."
       },
       "DescribeTenantRequest": {
@@ -1233,6 +1242,7 @@
             "format": "uuid"
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /support-api/DescribeTenant`."
       },
       "DescribeTenantResponse": {
@@ -1246,10 +1256,12 @@
             "$ref": "#/components/schemas/TenantData"
           }
         },
+        "additionalProperties": false,
         "description": "Wire shape for `DescribeTenant`. Identical to\nCreateTenantResponse; kept as a separate type for OpenAPI\nclarity (each operation documents its own response model)."
       },
       "EmptyS3Request": {
         "type": "object",
+        "additionalProperties": false,
         "description": "Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`."
       },
       "EvaluateAuthorizationRequest": {
@@ -1287,6 +1299,7 @@
             "$ref": "#/components/schemas/JsonElement"
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /support-api/EvaluateAuthorization`."
       },
       "EvaluateAuthorizationResponse": {
@@ -1315,10 +1328,14 @@
             "description": "The complete per-request entity list CAS supplied to Cedar. Compiled\npolicy text and policy-storage metadata are deliberately not included\nin this privileged diagnostic response."
           }
         },
+        "additionalProperties": false,
         "description": "Support authorization-evaluation response."
       },
       "JsonElement": { },
       "ListS3AccountsResponse": {
+        "required": [
+          "items"
+        ],
         "type": "object",
         "properties": {
           "items": {
@@ -1329,6 +1346,7 @@
             "description": "All RGW accounts known to the cluster."
           }
         },
+        "additionalProperties": false,
         "description": "Response for `ListS3Accounts`."
       },
       "ListTenantsRequest": {
@@ -1364,6 +1382,7 @@
             "description": "Cursor for backward pagination. When set, returns items strictly\nbefore this cursor (i.e. with a smaller Guid). Pass the\nstring? ListTenantsResponse.Before value from the previous\nresponse to move one page earlier."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /support-api/ListTenants`."
       },
       "ListTenantsResponse": {
@@ -1394,6 +1413,7 @@
             "description": "Cursor for the next page. `null` when no later items exist."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /support-api/ListTenants`."
       },
       "ListTenantUsersRequest": {
@@ -1437,6 +1457,7 @@
             "description": "Cursor for backward pagination. When set, returns users strictly\nbefore this cursor (i.e. with a smaller Guid). Mutually exclusive\nwith string? ListTenantUsersRequest.After."
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /support-api/ListTenantUsers`."
       },
       "ListTenantUsersResponse": {
@@ -1467,6 +1488,7 @@
             "description": "Cursor for the next page. `null` when no later items exist."
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /support-api/ListTenantUsers`."
       },
       "ProblemDetails": {
@@ -1536,6 +1558,7 @@
             ]
           }
         },
+        "additionalProperties": false,
         "description": "Response for `ProvisionS3DefaultAccount`."
       },
       "ResendInvitationRequest": {
@@ -1550,6 +1573,7 @@
             "format": "uuid"
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /support-api/ResendInvitation`."
       },
       "ResendInvitationResponse": {
@@ -1580,6 +1604,7 @@
             "format": "int32"
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /support-api/ResendInvitation`."
       },
       "S3AccessKey": {
@@ -1607,6 +1632,7 @@
             "description": "The owning RGW user id."
           }
         },
+        "additionalProperties": false,
         "description": "An S3 access key. string? S3AccessKey.SecretAccessKey is only present on the\nresponse that first created the key — persist it immediately."
       },
       "S3Account": {
@@ -1641,6 +1667,7 @@
             "description": "Contact email."
           }
         },
+        "additionalProperties": false,
         "description": "A Ceph RGW account snapshot."
       },
       "S3DefaultAccountResponse": {
@@ -1677,11 +1704,13 @@
             ]
           }
         },
+        "additionalProperties": false,
         "description": "Response for `GetS3DefaultAccount`."
       },
       "S3RootUser": {
         "required": [
-          "userId"
+          "userId",
+          "keys"
         ],
         "type": "object",
         "properties": {
@@ -1697,6 +1726,7 @@
             "description": "Generated keys (secret shown once)."
           }
         },
+        "additionalProperties": false,
         "description": "An account-root user and its freshly minted keys."
       },
       "SuspendTenantRequest": {
@@ -1711,6 +1741,7 @@
             "format": "uuid"
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /support-api/SuspendTenant`."
       },
       "SuspendTenantResponse": {
@@ -1730,6 +1761,7 @@
             "$ref": "#/components/schemas/TenantStatus"
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /support-api/SuspendTenant`."
       },
       "TenantData": {
@@ -1774,7 +1806,8 @@
             "description": "Live count of OneNexusUser rows belonging to this\ntenant at read time. Not cached.",
             "format": "int32"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "TenantStatus": {
         "enum": [
@@ -1828,6 +1861,7 @@
             "format": "int32"
           }
         },
+        "additionalProperties": false,
         "description": "Tenant snapshot returned as a list item by `ListTenants`."
       },
       "TenantUserSummary": {
@@ -1873,6 +1907,7 @@
             "format": "date-time"
           }
         },
+        "additionalProperties": false,
         "description": "User snapshot returned as a list item by `ListTenantUsers`."
       },
       "UnsuspendTenantRequest": {
@@ -1887,6 +1922,7 @@
             "format": "uuid"
           }
         },
+        "additionalProperties": false,
         "description": "Request body for `POST /support-api/UnsuspendTenant`."
       },
       "UnsuspendTenantResponse": {
@@ -1906,6 +1942,7 @@
             "$ref": "#/components/schemas/TenantStatus"
           }
         },
+        "additionalProperties": false,
         "description": "Response body for `POST /support-api/UnsuspendTenant`."
       },
       "User": {
@@ -1952,6 +1989,7 @@
             "format": "date-time"
           }
         },
+        "additionalProperties": false,
         "description": "Wire shape for a user returned by the `CreateUser` family of RPCs."
       },
       "UserKind": {

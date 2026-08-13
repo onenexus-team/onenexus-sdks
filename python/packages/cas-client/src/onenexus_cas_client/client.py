@@ -32,6 +32,8 @@ from .generated.models.create_user_request import CreateUserRequest
 from .generated.models.create_user_response import CreateUserResponse
 from .generated.models.delete_authorization_role_request import DeleteAuthorizationRoleRequest
 from .generated.models.delete_authorization_role_response import DeleteAuthorizationRoleResponse
+from .generated.models.disable_service_client_request import DisableServiceClientRequest
+from .generated.models.disable_service_client_response import DisableServiceClientResponse
 from .generated.models.detach_policy_from_role_request import DetachPolicyFromRoleRequest
 from .generated.models.empty_s3_request import EmptyS3Request
 from .generated.models.empty_service_client_request import EmptyServiceClientRequest
@@ -47,6 +49,9 @@ from .generated.models.list_service_clients_response import ListServiceClientsRe
 from .generated.models.list_users_request import ListUsersRequest
 from .generated.models.list_users_response import ListUsersResponse
 from .generated.models.remove_role_assignment_request import RemoveRoleAssignmentRequest
+from .generated.models.remove_service_client_key_request import RemoveServiceClientKeyRequest
+from .generated.models.remove_service_client_key_response import RemoveServiceClientKeyResponse
+from .generated.models.resend_user_invitation_request import ResendUserInvitationRequest
 
 
 class CasClient:
@@ -192,6 +197,48 @@ class CasClient:
         if response is None:
             raise RuntimeError("CAS AddServiceClientKey returned no response body")
         return response
+
+    async def remove_service_client_key(
+        self, request: RemoveServiceClientKeyRequest
+    ) -> RemoveServiceClientKeyResponse:
+        """
+        Revokes one public assertion key from a service client.
+
+        The final key cannot be removed. Disable the service client when its only key is compromised.
+
+        API operation: POST /api/RemoveServiceClientKey.
+        """
+        response = await self._client.api.remove_service_client_key.post(request)
+        if response is None:
+            raise RuntimeError("CAS RemoveServiceClientKey returned no response body")
+        return response
+
+    async def disable_service_client(
+        self, request: DisableServiceClientRequest
+    ) -> DisableServiceClientResponse:
+        """
+        Disables a service client so it cannot obtain new access tokens.
+
+        The operation is idempotent. Already-issued short-lived access tokens retain their normal
+        expiry; disabling prevents subsequent token issuance.
+
+        API operation: POST /api/DisableServiceClient.
+        """
+        response = await self._client.api.disable_service_client.post(request)
+        if response is None:
+            raise RuntimeError("CAS DisableServiceClient returned no response body")
+        return response
+
+    async def resend_user_invitation(self, request: ResendUserInvitationRequest) -> None:
+        """
+        Re-sends an invitation to a pending member in the caller's tenant.
+
+        CAS derives the tenant from the authenticated caller. Tenant roots and users in other tenants
+        cannot be targeted through this operation.
+
+        API operation: POST /api/ResendUserInvitation.
+        """
+        await self._client.api.resend_user_invitation.post(request)
 
     async def create_role(
         self, request: CreateAuthorizationRoleRequest
