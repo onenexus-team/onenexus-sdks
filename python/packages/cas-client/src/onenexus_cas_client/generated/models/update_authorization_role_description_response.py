@@ -4,38 +4,39 @@ from dataclasses import dataclass, field
 from kiota_abstractions.serialization import Parsable, ParseNode, SerializationWriter
 from typing import Any, Optional, TYPE_CHECKING, Union
 
+if TYPE_CHECKING:
+    from .authorization_role import AuthorizationRole
+
 @dataclass
-class AuthorizationRole(Parsable):
+class UpdateAuthorizationRoleDescriptionResponse(Parsable):
     """
-    One tenant authorization role returned by CAS.
+    Response body for `POST /api/UpdateRoleDescription`.
     """
-    # Optional human-readable description of this role.
-    description: Optional[str] = None
-    # Case-sensitive name chosen for this role.
-    name: Optional[str] = None
-    # Stable URI to use when assigning this role or attaching a policy.
-    role_uri: Optional[str] = None
+    # The role after its description has been updated.
+    role: Optional[AuthorizationRole] = None
     
     @staticmethod
-    def create_from_discriminator_value(parse_node: ParseNode) -> AuthorizationRole:
+    def create_from_discriminator_value(parse_node: ParseNode) -> UpdateAuthorizationRoleDescriptionResponse:
         """
         Creates a new instance of the appropriate class based on discriminator value
         param parse_node: The parse node to use to read the discriminator value and create the object
-        Returns: AuthorizationRole
+        Returns: UpdateAuthorizationRoleDescriptionResponse
         """
         if parse_node is None:
             raise TypeError("parse_node cannot be null.")
-        return AuthorizationRole()
+        return UpdateAuthorizationRoleDescriptionResponse()
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
         """
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
+        from .authorization_role import AuthorizationRole
+
+        from .authorization_role import AuthorizationRole
+
         fields: dict[str, Callable[[Any], None]] = {
-            "description": lambda n : setattr(self, 'description', n.get_str_value()),
-            "name": lambda n : setattr(self, 'name', n.get_str_value()),
-            "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
+            "role": lambda n : setattr(self, 'role', n.get_object_value(AuthorizationRole)),
         }
         return fields
     
@@ -47,8 +48,6 @@ class AuthorizationRole(Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_str_value("description", self.description)
-        writer.write_str_value("name", self.name)
-        writer.write_str_value("roleUri", self.role_uri)
+        writer.write_object_value("role", self.role)
     
 

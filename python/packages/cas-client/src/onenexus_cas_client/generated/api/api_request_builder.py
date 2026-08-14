@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from .remove_service_client_key.remove_service_client_key_request_builder import RemoveServiceClientKeyRequestBuilder
     from .resend_user_invitation.resend_user_invitation_request_builder import ResendUserInvitationRequestBuilder
     from .update_policy.update_policy_request_builder import UpdatePolicyRequestBuilder
+    from .update_role_description.update_role_description_request_builder import UpdateRoleDescriptionRequestBuilder
 
 class ApiRequestBuilder(BaseRequestBuilder):
     """
@@ -279,5 +280,14 @@ class ApiRequestBuilder(BaseRequestBuilder):
         from .update_policy.update_policy_request_builder import UpdatePolicyRequestBuilder
 
         return UpdatePolicyRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def update_role_description(self) -> UpdateRoleDescriptionRequestBuilder:
+        """
+        The UpdateRoleDescription property
+        """
+        from .update_role_description.update_role_description_request_builder import UpdateRoleDescriptionRequestBuilder
+
+        return UpdateRoleDescriptionRequestBuilder(self.request_adapter, self.path_parameters)
     
 

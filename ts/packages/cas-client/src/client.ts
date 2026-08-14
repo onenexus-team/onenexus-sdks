@@ -46,6 +46,8 @@ import type {
     RemoveServiceClientKeyRequest,
     RemoveServiceClientKeyResponse,
     ResendUserInvitationRequest,
+    UpdateAuthorizationRoleDescriptionRequest,
+    UpdateAuthorizationRoleDescriptionResponse,
     UpdatePolicyRequest,
     UpdatePolicyResponse,
 } from './generated/schemas/index.js';
@@ -313,6 +315,19 @@ export class CasClient extends ClientBase {
         options?: CasRequestOptions,
     ): Promise<CreateAuthorizationRoleResponse> =>
         this.authorizationRole.createRole(req, this.mutatorOptions(options));
+
+    /**
+     * Updates the optional human-readable description of one tenant role.
+     *
+     * Send `null` or omit `description` to clear it; role names and URIs remain immutable.
+     *
+     * @see POST /api/UpdateRoleDescription
+     */
+    updateRoleDescription = (
+        req: UpdateAuthorizationRoleDescriptionRequest,
+        options?: CasRequestOptions,
+    ): Promise<UpdateAuthorizationRoleDescriptionResponse> =>
+        this.authorizationRole.updateRoleDescription(req, this.mutatorOptions(options));
 
     /**
      * Lists authorization roles in the caller's tenant.

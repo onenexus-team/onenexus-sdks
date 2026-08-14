@@ -5,18 +5,12 @@
  * Customer-facing JSON RPC operations under `/api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.
  * OpenAPI spec version: v1
  */
+import type { AuthorizationRole } from './authorizationRole';
 
 /**
- * One tenant authorization role returned by CAS.
+ * Response body for `POST /api/UpdateRoleDescription`.
  */
-export interface AuthorizationRole {
-  /** Stable URI to use when assigning this role or attaching a policy. */
-  roleUri: string;
-  /** Case-sensitive name chosen for this role. */
-  name: string;
-  /**
-     * Optional human-readable description of this role.
-     * @nullable
-     */
-  description?: string | null;
+export interface UpdateAuthorizationRoleDescriptionResponse {
+  /** The role after its description has been updated. */
+  role: AuthorizationRole;
 }

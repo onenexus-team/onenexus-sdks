@@ -52,6 +52,12 @@ from .generated.models.remove_role_assignment_request import RemoveRoleAssignmen
 from .generated.models.remove_service_client_key_request import RemoveServiceClientKeyRequest
 from .generated.models.remove_service_client_key_response import RemoveServiceClientKeyResponse
 from .generated.models.resend_user_invitation_request import ResendUserInvitationRequest
+from .generated.models.update_authorization_role_description_request import (
+    UpdateAuthorizationRoleDescriptionRequest,
+)
+from .generated.models.update_authorization_role_description_response import (
+    UpdateAuthorizationRoleDescriptionResponse,
+)
 
 
 class CasClient:
@@ -254,6 +260,18 @@ class CasClient:
         response = await self._client.api.create_role.post(request)
         if response is None:
             raise RuntimeError("CAS CreateRole returned no response body")
+        return response
+
+    async def update_role_description(
+        self, request: UpdateAuthorizationRoleDescriptionRequest
+    ) -> UpdateAuthorizationRoleDescriptionResponse:
+        """Update a tenant role's optional human-readable description.
+
+        API operation: ``POST /api/UpdateRoleDescription``.
+        """
+        response = await self._client.api.update_role_description.post(request)
+        if response is None:
+            raise RuntimeError("CAS UpdateRoleDescription returned no response body")
         return response
 
     async def list_roles(

@@ -72,6 +72,8 @@ export * from './s3RolePolicy';
 export * from './serviceClient';
 export * from './serviceClientKey';
 export * from './tenantUserSummary';
+export * from './updateAuthorizationRoleDescriptionRequest';
+export * from './updateAuthorizationRoleDescriptionResponse';
 export * from './updatePolicyRequest';
 export * from './updatePolicyResponse';
 export * from './user';

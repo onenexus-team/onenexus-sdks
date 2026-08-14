@@ -18,12 +18,6 @@ export interface ProblemDetails {
      */
   title?: string | null;
   /**
-     * HTTP status code for this error.
-     * @nullable
-     * @pattern ^-?(?:0|[1-9]\d*)$
-     */
-  status?: number | string | null;
-  /**
      * Human-readable explanation of this occurrence.
      * @nullable
      */

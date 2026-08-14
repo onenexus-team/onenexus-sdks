@@ -11,7 +11,9 @@ import type {
   DeleteAuthorizationRoleRequest,
   DeleteAuthorizationRoleResponse,
   ListAuthorizationRolesRequest,
-  ListAuthorizationRolesResponse
+  ListAuthorizationRolesResponse,
+  UpdateAuthorizationRoleDescriptionRequest,
+  UpdateAuthorizationRoleDescriptionResponse
 } from '../schemas';
 
 import { platformMutator } from '../../mutator';
@@ -56,6 +58,22 @@ const createRole = (
       options);
     }
   /**
+ * Send a description of at most 200 characters. Omit it or send
+`null` to clear the current description. Role names and URIs are
+immutable.
+ * @summary Updates the optional human-readable description of one tenant role.
+ */
+const updateRoleDescription = (
+    updateAuthorizationRoleDescriptionRequest: UpdateAuthorizationRoleDescriptionRequest,
+ options?: SecondParameter<typeof platformMutator<UpdateAuthorizationRoleDescriptionResponse>>,) => {
+      return platformMutator<UpdateAuthorizationRoleDescriptionResponse>(
+      {url: `/api/UpdateRoleDescription`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: updateAuthorizationRoleDescriptionRequest
+    },
+      options);
+    }
+  /**
  * Results are ordered by role name. The returned `roleUri` is the
 stable identifier to use when assigning roles or attaching policies.
  * @summary Lists authorization roles in the caller's tenant.
@@ -70,7 +88,7 @@ const listRoles = (
     },
       options);
     }
-  return {deleteRole,createRole,listRoles}};
+  return {deleteRole,createRole,updateRoleDescription,listRoles}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -78,4 +96,5 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 
 export type DeleteRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuthorizationRole>['deleteRole']>>>
 export type CreateRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuthorizationRole>['createRole']>>>
+export type UpdateRoleDescriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuthorizationRole>['updateRoleDescription']>>>
 export type ListRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuthorizationRole>['listRoles']>>>

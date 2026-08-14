@@ -309,6 +309,10 @@ describe('CasClient', () => {
                 http.post(`${BASE_URL}/api/CreateRole`, () =>
                     respond('CreateRole', { created: true, role }),
                 ),
+                http.post(`${BASE_URL}/api/UpdateRoleDescription`, async ({ request }) => {
+                    observedOperations.push(`UpdateRoleDescription:${JSON.stringify(await request.json())}`);
+                    return HttpResponse.json({ role: { ...role, description: 'Read-only access' } });
+                }),
                 http.post(`${BASE_URL}/api/ListRoles`, () =>
                     respond('ListRoles', { items: [role] }),
                 ),
@@ -357,6 +361,13 @@ describe('CasClient', () => {
             expect(
                 await cas.createRole({ requestId: 'request-1', name: 'Reader' }),
             ).toMatchObject({ created: true, role });
+            expect(
+                await cas.updateRoleDescription({
+                    requestId: 'request-2',
+                    roleUri,
+                    description: 'Read-only access',
+                }),
+            ).toMatchObject({ role: { ...role, description: 'Read-only access' } });
             expect((await cas.listRoles()).items).toEqual([role]);
             expect(
                 await cas.deleteRole({ requestId: 'request-2', roleUri }),
@@ -391,6 +402,7 @@ describe('CasClient', () => {
             );
             expect(observedOperations).toEqual([
                 'CreateRole',
+                'UpdateRoleDescription:{"requestId":"request-2","roleUri":"onenexus:role/Reader","description":"Read-only access"}',
                 'ListRoles',
                 'DeleteRole',
                 'AssignRole',

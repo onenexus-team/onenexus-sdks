@@ -7,25 +7,24 @@
  */
 
 /**
- * Request body for `POST /api/CreateRole`.
+ * Request body for `POST /api/UpdateRoleDescription`.
  */
-export interface CreateAuthorizationRoleRequest {
+export interface UpdateAuthorizationRoleDescriptionRequest {
   /**
-     * Caller-generated identifier for safely retrying this create request.
+     * Caller-generated identifier used only to correlate the update request.
      * @minLength 1
      * @maxLength 128
      * @pattern ^[a-zA-Z0-9_.-]+$
      */
   requestId: string;
   /**
-     * Case-sensitive role name; use ASCII letters and digits only.
+     * Canonical URI of the tenant role to update.
      * @minLength 1
-     * @maxLength 128
-     * @pattern ^[A-Za-z0-9]+$
+     * @maxLength 2048
      */
-  name: string;
+  roleUri: string;
   /**
-     * Optional human-readable description of this role.
+     * New human-readable description; omit or send `null` to clear it.
      * @minLength 0
      * @maxLength 200
      * @nullable

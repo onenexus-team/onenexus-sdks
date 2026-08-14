@@ -1509,16 +1509,6 @@
             ],
             "description": "Short, human-readable error title."
           },
-          "status": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "description": "HTTP status code for this error.",
-            "format": "int32"
-          },
           "detail": {
             "type": [
               "null",
@@ -2016,16 +2006,6 @@
               "string"
             ],
             "description": "Short, human-readable error title."
-          },
-          "status": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "description": "HTTP status code for this error.",
-            "format": "int32"
           },
           "detail": {
             "type": [

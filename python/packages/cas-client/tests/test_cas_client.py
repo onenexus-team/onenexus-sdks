@@ -18,6 +18,7 @@ from onenexus_cas_client import (
     RemoveRoleAssignmentRequest,
     RemoveServiceClientKeyRequest,
     ResendUserInvitationRequest,
+    UpdateAuthorizationRoleDescriptionRequest,
 )
 from onenexus_cas_client.generated.models.assume_s3_role_request import AssumeS3RoleRequest
 from onenexus_cas_client.generated.models.create_user_request import CreateUserRequest
@@ -113,6 +114,13 @@ async def test_authorization_and_user_list_methods_route_through_kiota() -> None
     async with _client(httpx.MockTransport(handler)) as cas:
         await cas.list_users()
         await cas.create_role(CreateAuthorizationRoleRequest())
+        await cas.update_role_description(
+            UpdateAuthorizationRoleDescriptionRequest(
+                request_id="request-2",
+                role_uri="onenexus:role/Reader",
+                description="Read-only access",
+            )
+        )
         await cas.list_roles()
         await cas.delete_role(DeleteAuthorizationRoleRequest())
         await cas.assign_role(AssignRoleRequest())
@@ -126,6 +134,7 @@ async def test_authorization_and_user_list_methods_route_through_kiota() -> None
     assert captured_paths == [
         "/api/ListUsers",
         "/api/CreateRole",
+        "/api/UpdateRoleDescription",
         "/api/ListRoles",
         "/api/DeleteRole",
         "/api/AssignRole",

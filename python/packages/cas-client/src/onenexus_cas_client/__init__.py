@@ -48,6 +48,8 @@ from .client import (
     RemoveServiceClientKeyRequest,
     RemoveServiceClientKeyResponse,
     ResendUserInvitationRequest,
+    UpdateAuthorizationRoleDescriptionRequest,
+    UpdateAuthorizationRoleDescriptionResponse,
 )
 
 __all__ = [
@@ -93,6 +95,8 @@ __all__ = [
     "RemoveServiceClientKeyRequest",
     "RemoveServiceClientKeyResponse",
     "ResendUserInvitationRequest",
+    "UpdateAuthorizationRoleDescriptionRequest",
+    "UpdateAuthorizationRoleDescriptionResponse",
 
     "generated",
 ]

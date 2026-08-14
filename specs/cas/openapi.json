@@ -1374,6 +1374,98 @@
         ]
       }
     },
+    "/api/UpdateRoleDescription": {
+      "post": {
+        "tags": [
+          "AuthorizationRole"
+        ],
+        "summary": "Updates the optional human-readable description of one tenant role.",
+        "description": "Send a description of at most 200 characters. Omit it or send\n`null` to clear the current description. Role names and URIs are\nimmutable.",
+        "operationId": "UpdateRoleDescription",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAuthorizationRoleDescriptionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAuthorizationRoleDescriptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateAuthorizationRoleDescriptionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/ListRoles": {
       "post": {
         "tags": [
@@ -2851,6 +2943,13 @@
           "name": {
             "type": "string",
             "description": "Case-sensitive name chosen for this role."
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional human-readable description of this role."
           }
         },
         "additionalProperties": false,
@@ -2917,6 +3016,15 @@
             "pattern": "^[A-Za-z0-9]+$",
             "type": "string",
             "description": "Case-sensitive role name; use ASCII letters and digits only."
+          },
+          "description": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional human-readable description of this role."
           }
         },
         "additionalProperties": false,
@@ -3662,16 +3770,6 @@
             ],
             "description": "Short, human-readable error title."
           },
-          "status": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "description": "HTTP status code for this error.",
-            "format": "int32"
-          },
           "detail": {
             "type": [
               "null",
@@ -4048,6 +4146,53 @@
         "additionalProperties": false,
         "description": "User snapshot returned as a list item by `ListTenantUsers`."
       },
+      "UpdateAuthorizationRoleDescriptionRequest": {
+        "required": [
+          "requestId",
+          "roleUri"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "type": "string",
+            "description": "Caller-generated identifier used only to correlate the update request."
+          },
+          "roleUri": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "type": "string",
+            "description": "Canonical URI of the tenant role to update."
+          },
+          "description": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "New human-readable description; omit or send `null` to clear it."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /api/UpdateRoleDescription`."
+      },
+      "UpdateAuthorizationRoleDescriptionResponse": {
+        "required": [
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "role": {
+            "description": "The role after its description has been updated.",
+            "$ref": "#/components/schemas/AuthorizationRole"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response body for `POST /api/UpdateRoleDescription`."
+      },
       "UpdatePolicyRequest": {
         "required": [
           "requestId",
@@ -4204,16 +4349,6 @@
               "string"
             ],
             "description": "Short, human-readable error title."
-          },
-          "status": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "description": "HTTP status code for this error.",
-            "format": "int32"
           },
           "detail": {
             "type": [
