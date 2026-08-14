@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 
+export * from './addTenantUserHeaders';
 export * from './addTenantUserRequest';
 export * from './cedarDiagnosticEntity';
 export * from './cedarDiagnosticEntityAttributes';
@@ -27,6 +28,7 @@ export * from './cedarDiagnosticValueCedarDiagnosticSetValue';
 export * from './cedarDiagnosticValueCedarDiagnosticSetValueKind';
 export * from './cedarDiagnosticValueCedarDiagnosticStringValue';
 export * from './cedarDiagnosticValueCedarDiagnosticStringValueKind';
+export * from './createTenantHeaders';
 export * from './createTenantRequest';
 export * from './createTenantResponse';
 export * from './createUserResponse';
@@ -42,19 +44,23 @@ export * from './listTenantsResponse';
 export * from './listTenantUsersRequest';
 export * from './listTenantUsersResponse';
 export * from './problemDetails';
+export * from './provisionS3DefaultAccountHeaders';
 export * from './provisionS3DefaultAccountResponse';
+export * from './resendInvitationHeaders';
 export * from './resendInvitationRequest';
 export * from './resendInvitationResponse';
 export * from './s3AccessKey';
 export * from './s3Account';
 export * from './s3DefaultAccountResponse';
 export * from './s3RootUser';
+export * from './suspendTenantHeaders';
 export * from './suspendTenantRequest';
 export * from './suspendTenantResponse';
 export * from './tenantData';
 export * from './tenantStatus';
 export * from './tenantSummary';
 export * from './tenantUserSummary';
+export * from './unsuspendTenantHeaders';
 export * from './unsuspendTenantRequest';
 export * from './unsuspendTenantResponse';
 export * from './user';

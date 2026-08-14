@@ -31,6 +31,7 @@ export default defineConfig({
             schemas: './src/generated/schemas',
             clean: true,
             client: 'axios',
+            headers: true,
             baseUrl: '',
             override: {
                 mutator: {

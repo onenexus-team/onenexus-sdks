@@ -11,8 +11,6 @@ class UpdateAuthorizationRoleDescriptionRequest(Parsable):
     """
     # New human-readable description; omit or send `null` to clear it.
     description: Optional[str] = None
-    # Caller-generated identifier used only to correlate the update request.
-    request_id: Optional[str] = None
     # Canonical URI of the tenant role to update.
     role_uri: Optional[str] = None
     
@@ -34,7 +32,6 @@ class UpdateAuthorizationRoleDescriptionRequest(Parsable):
         """
         fields: dict[str, Callable[[Any], None]] = {
             "description": lambda n : setattr(self, 'description', n.get_str_value()),
-            "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
             "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
         }
         return fields
@@ -48,7 +45,6 @@ class UpdateAuthorizationRoleDescriptionRequest(Parsable):
         if writer is None:
             raise TypeError("writer cannot be null.")
         writer.write_str_value("description", self.description)
-        writer.write_str_value("requestId", self.request_id)
         writer.write_str_value("roleUri", self.role_uri)
     
 

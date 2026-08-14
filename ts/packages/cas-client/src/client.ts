@@ -50,7 +50,10 @@ import type {
     UpdateAuthorizationRoleDescriptionResponse,
     UpdatePolicyRequest,
     UpdatePolicyResponse,
+    UpdateProfileRequest,
+    UpdateProfileResponse,
 } from './generated/schemas/index.js';
+import { getAccountProfile } from './generated/account-profile/account-profile.js';
 import { getAuthorizationAdministration } from './generated/authorization-administration/authorization-administration.js';
 import { getAuthorizationPolicy } from './generated/authorization-policy/authorization-policy.js';
 import { getAuthorizationRole } from './generated/authorization-role/authorization-role.js';
@@ -58,6 +61,10 @@ import { getTenantServiceClient } from './generated/tenant-service-client/tenant
 import { getTenantS3 } from './generated/tenant-s3/tenant-s3.js';
 import { getTenantUser } from './generated/tenant-user/tenant-user.js';
 import type { PlatformMutatorOptions } from './mutator.js';
+
+const createIdempotencyHeaders = () => ({
+    'X-Nx1-Idempotency-Key': globalThis.crypto.randomUUID(),
+});
 
 /**
  * Construction-time configuration for {@link CasClient}.
@@ -118,17 +125,14 @@ export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * });
  *
  * const user = await cas.createUser({
- *     tenantId: 'tn_acme',
  *     email: 'a@b.c',
  *     displayName: 'A B',
- *     requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
  * });
  * ```
  */
 export class CasClient extends ClientBase {
-    private readonly authorizationAdministration: ReturnType<
-        typeof getAuthorizationAdministration
-    >;
+    private readonly accountProfile: ReturnType<typeof getAccountProfile>;
+    private readonly authorizationAdministration: ReturnType<typeof getAuthorizationAdministration>;
     private readonly authorizationPolicy: ReturnType<typeof getAuthorizationPolicy>;
     private readonly authorizationRole: ReturnType<typeof getAuthorizationRole>;
     private readonly tenantUser: ReturnType<typeof getTenantUser>;
@@ -137,6 +141,7 @@ export class CasClient extends ClientBase {
 
     constructor(config: CasClientConfig) {
         super(config);
+        this.accountProfile = getAccountProfile();
         this.authorizationAdministration = getAuthorizationAdministration();
         this.authorizationPolicy = getAuthorizationPolicy();
         this.authorizationRole = getAuthorizationRole();
@@ -144,6 +149,26 @@ export class CasClient extends ClientBase {
         this.tenantS3 = getTenantS3();
         this.tenantServiceClient = getTenantServiceClient();
     }
+
+    // -- Account profile ------------------------------------------------------
+
+    /**
+     * Updates selected profile fields for the authenticated human user.
+     *
+     * The user and tenant are derived from the access token. Currently only `displayName` is
+     * supported in `updateMask`.
+     *
+     * @see POST /account/profile
+     */
+    updateProfile = (
+        req: UpdateProfileRequest,
+        options?: CasRequestOptions,
+    ): Promise<UpdateProfileResponse> =>
+        this.accountProfile.updateProfile(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     // -- Tenant user management ----------------------------------------------
 
@@ -158,7 +183,8 @@ export class CasClient extends ClientBase {
     createUser = (
         req: CreateUserRequest,
         options?: CasRequestOptions,
-    ): Promise<CreateUserResponse> => this.tenantUser.createUser(req, this.mutatorOptions(options));
+    ): Promise<CreateUserResponse> =>
+        this.tenantUser.createUser(req, createIdempotencyHeaders(), this.mutatorOptions(options));
 
     /**
      * Lists users in the authenticated caller's own tenant.
@@ -171,8 +197,7 @@ export class CasClient extends ClientBase {
     listUsers = (
         req: ListUsersRequest = {},
         options?: CasRequestOptions,
-    ): Promise<ListUsersResponse> =>
-        this.tenantUser.listUsers(req, this.mutatorOptions(options));
+    ): Promise<ListUsersResponse> => this.tenantUser.listUsers(req, this.mutatorOptions(options));
 
     /**
      * Redeems an invitation, sets a password, and activates the account.
@@ -243,7 +268,11 @@ export class CasClient extends ClientBase {
         req: CreateServiceClientRequest,
         options?: CasRequestOptions,
     ): Promise<CreateServiceClientResponse> =>
-        this.tenantServiceClient.createServiceClient(req, this.mutatorOptions(options));
+        this.tenantServiceClient.createServiceClient(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Add an additional public assertion key to a service client.
@@ -257,7 +286,11 @@ export class CasClient extends ClientBase {
         req: AddServiceClientKeyRequest,
         options?: CasRequestOptions,
     ): Promise<AddServiceClientKeyResponse> =>
-        this.tenantServiceClient.addServiceClientKey(req, this.mutatorOptions(options));
+        this.tenantServiceClient.addServiceClientKey(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Revokes one public assertion key from a service client.
@@ -270,7 +303,11 @@ export class CasClient extends ClientBase {
         req: RemoveServiceClientKeyRequest,
         options?: CasRequestOptions,
     ): Promise<RemoveServiceClientKeyResponse> =>
-        this.tenantServiceClient.removeServiceClientKey(req, this.mutatorOptions(options));
+        this.tenantServiceClient.removeServiceClientKey(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Disables a service client so it cannot obtain new access tokens.
@@ -284,7 +321,11 @@ export class CasClient extends ClientBase {
         req: DisableServiceClientRequest,
         options?: CasRequestOptions,
     ): Promise<DisableServiceClientResponse> =>
-        this.tenantServiceClient.disableServiceClient(req, this.mutatorOptions(options));
+        this.tenantServiceClient.disableServiceClient(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Re-sends an invitation to a pending member in the caller's tenant.
@@ -298,7 +339,9 @@ export class CasClient extends ClientBase {
         req: ResendUserInvitationRequest,
         options?: CasRequestOptions,
     ): Promise<void> =>
-        this.tenantUser.resendUserInvitation(req, this.mutatorOptions(options)).then(() => undefined);
+        this.tenantUser
+            .resendUserInvitation(req, createIdempotencyHeaders(), this.mutatorOptions(options))
+            .then(() => undefined);
 
     // -- Authorization roles -----------------------------------------------
 
@@ -314,7 +357,11 @@ export class CasClient extends ClientBase {
         req: CreateAuthorizationRoleRequest,
         options?: CasRequestOptions,
     ): Promise<CreateAuthorizationRoleResponse> =>
-        this.authorizationRole.createRole(req, this.mutatorOptions(options));
+        this.authorizationRole.createRole(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Updates the optional human-readable description of one tenant role.
@@ -327,7 +374,11 @@ export class CasClient extends ClientBase {
         req: UpdateAuthorizationRoleDescriptionRequest,
         options?: CasRequestOptions,
     ): Promise<UpdateAuthorizationRoleDescriptionResponse> =>
-        this.authorizationRole.updateRoleDescription(req, this.mutatorOptions(options));
+        this.authorizationRole.updateRoleDescription(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Lists authorization roles in the caller's tenant.
@@ -357,7 +408,11 @@ export class CasClient extends ClientBase {
         req: DeleteAuthorizationRoleRequest,
         options?: CasRequestOptions,
     ): Promise<DeleteAuthorizationRoleResponse> =>
-        this.authorizationRole.deleteRole(req, this.mutatorOptions(options));
+        this.authorizationRole.deleteRole(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     // -- Authorization relationships ---------------------------------------
 
@@ -373,7 +428,11 @@ export class CasClient extends ClientBase {
         req: AssignRoleRequest,
         options?: CasRequestOptions,
     ): Promise<AssignRoleResponse> =>
-        this.authorizationAdministration.assignRole(req, this.mutatorOptions(options));
+        this.authorizationAdministration.assignRole(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Removes one direct role assignment using its current state token.
@@ -388,7 +447,11 @@ export class CasClient extends ClientBase {
         req: RemoveRoleAssignmentRequest,
         options?: CasRequestOptions,
     ): Promise<AuthorizationRelationshipRemovedResponse> =>
-        this.authorizationAdministration.removeRoleAssignment(req, this.mutatorOptions(options));
+        this.authorizationAdministration.removeRoleAssignment(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Lists direct assignments by exactly one role or assignee filter.
@@ -416,7 +479,11 @@ export class CasClient extends ClientBase {
         req: AttachPolicyToRoleRequest,
         options?: CasRequestOptions,
     ): Promise<AttachPolicyToRoleResponse> =>
-        this.authorizationAdministration.attachPolicyToRole(req, this.mutatorOptions(options));
+        this.authorizationAdministration.attachPolicyToRole(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Detaches one policy from one role using the relationship state token.
@@ -430,7 +497,11 @@ export class CasClient extends ClientBase {
         req: DetachPolicyFromRoleRequest,
         options?: CasRequestOptions,
     ): Promise<AuthorizationRelationshipRemovedResponse> =>
-        this.authorizationAdministration.detachPolicyFromRole(req, this.mutatorOptions(options));
+        this.authorizationAdministration.detachPolicyFromRole(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Lists roles to which one policy is directly attached.
@@ -466,8 +537,8 @@ export class CasClient extends ClientBase {
      * Validates and publishes new tenant-managed policy content.
      *
      * Creates a policy in the caller's tenant after validating its document. A rejected response
-     * includes safe diagnostics and creates no usable policy. Reuse the same `requestId` when retrying
-     * a timed-out call.
+     * includes safe diagnostics and creates no usable policy. Automatic retries reuse the same
+     * idempotency key.
      *
      * @see POST /api/PublishPolicy
      */
@@ -475,7 +546,11 @@ export class CasClient extends ClientBase {
         req: PublishPolicyRequest,
         options?: CasRequestOptions,
     ): Promise<PublishPolicyResponse> =>
-        this.authorizationPolicy.publishPolicy(req, this.mutatorOptions(options));
+        this.authorizationPolicy.publishPolicy(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Lists one page of policies visible to the caller's tenant.
@@ -500,10 +575,7 @@ export class CasClient extends ClientBase {
      *
      * @see POST /api/GetPolicy
      */
-    getPolicy = (
-        req: GetPolicyRequest,
-        options?: CasRequestOptions,
-    ): Promise<GetPolicyResponse> =>
+    getPolicy = (req: GetPolicyRequest, options?: CasRequestOptions): Promise<GetPolicyResponse> =>
         this.authorizationPolicy.getPolicy(req, this.mutatorOptions(options));
 
     /**
@@ -519,7 +591,11 @@ export class CasClient extends ClientBase {
         req: UpdatePolicyRequest,
         options?: CasRequestOptions,
     ): Promise<UpdatePolicyResponse> =>
-        this.authorizationPolicy.updatePolicy(req, this.mutatorOptions(options));
+        this.authorizationPolicy.updatePolicy(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * Deletes one unattached tenant-managed policy.
@@ -534,5 +610,9 @@ export class CasClient extends ClientBase {
         req: DeletePolicyRequest,
         options?: CasRequestOptions,
     ): Promise<DeletePolicyResponse> =>
-        this.authorizationPolicy.deletePolicy(req, this.mutatorOptions(options));
+        this.authorizationPolicy.deletePolicy(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 }

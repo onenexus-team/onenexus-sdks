@@ -39,13 +39,4 @@ export interface CreateTenantRequest {
      * @maxLength 200
      */
   rootDisplayName: string;
-  /**
-     * Idempotency key bound to a hash of this complete onboarding request.
-  A retry with the same token and content resumes unfinished stages;
-  changing the content or tenant behind a token is rejected.
-     * @minLength 16
-     * @maxLength 128
-     * @pattern ^[a-zA-Z0-9_.-]+$
-     */
-  clientToken: string;
 }

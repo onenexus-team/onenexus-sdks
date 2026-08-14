@@ -13,8 +13,6 @@ class CreateUserRequest(Parsable):
     display_name: Optional[str] = None
     # Email address. Must be a syntactically valid RFC 5322-ish address.Uniqueness is enforced per-tenant via the`(TenantId, NormalizedEmail)` composite index, not globally.
     email: Optional[str] = None
-    # Caller-generated request identifier used for authorization correlation.It is not an idempotency key; per-tenant email uniqueness remains theduplicate guard for user invitations.
-    request_id: Optional[str] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> CreateUserRequest:
@@ -35,7 +33,6 @@ class CreateUserRequest(Parsable):
         fields: dict[str, Callable[[Any], None]] = {
             "displayName": lambda n : setattr(self, 'display_name', n.get_str_value()),
             "email": lambda n : setattr(self, 'email', n.get_str_value()),
-            "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
         }
         return fields
     
@@ -49,6 +46,5 @@ class CreateUserRequest(Parsable):
             raise TypeError("writer cannot be null.")
         writer.write_str_value("displayName", self.display_name)
         writer.write_str_value("email", self.email)
-        writer.write_str_value("requestId", self.request_id)
     
 

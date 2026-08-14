@@ -6,7 +6,9 @@
  * OpenAPI spec version: v1
  */
 import type {
+  AddTenantUserHeaders,
   AddTenantUserRequest,
+  CreateTenantHeaders,
   CreateTenantRequest,
   CreateTenantResponse,
   CreateUserResponse,
@@ -16,10 +18,13 @@ import type {
   ListTenantUsersResponse,
   ListTenantsRequest,
   ListTenantsResponse,
+  ResendInvitationHeaders,
   ResendInvitationRequest,
   ResendInvitationResponse,
+  SuspendTenantHeaders,
   SuspendTenantRequest,
   SuspendTenantResponse,
+  UnsuspendTenantHeaders,
   UnsuspendTenantRequest,
   UnsuspendTenantResponse
 } from '../schemas';
@@ -36,10 +41,11 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  */
 const createTenant = (
     createTenantRequest: CreateTenantRequest,
+    headers: CreateTenantHeaders,
  options?: SecondParameter<typeof platformMutator<CreateTenantResponse>>,) => {
       return platformMutator<CreateTenantResponse>(
       {url: `/support-api/CreateTenant`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
+      headers: {'Content-Type': 'application/json', ...headers},
       data: createTenantRequest
     },
       options);
@@ -126,10 +132,11 @@ separate authorization-administration operations.
  */
 const addTenantUser = (
     addTenantUserRequest: AddTenantUserRequest,
+    headers: AddTenantUserHeaders,
  options?: SecondParameter<typeof platformMutator<CreateUserResponse>>,) => {
       return platformMutator<CreateUserResponse>(
       {url: `/support-api/AddTenantUser`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
+      headers: {'Content-Type': 'application/json', ...headers},
       data: addTenantUserRequest
     },
       options);
@@ -139,10 +146,11 @@ const addTenantUser = (
  */
 const resendInvitation = (
     resendInvitationRequest: ResendInvitationRequest,
+    headers: ResendInvitationHeaders,
  options?: SecondParameter<typeof platformMutator<ResendInvitationResponse>>,) => {
       return platformMutator<ResendInvitationResponse>(
       {url: `/support-api/ResendInvitation`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
+      headers: {'Content-Type': 'application/json', ...headers},
       data: resendInvitationRequest
     },
       options);
@@ -152,10 +160,11 @@ const resendInvitation = (
  */
 const suspendTenant = (
     suspendTenantRequest: SuspendTenantRequest,
+    headers: SuspendTenantHeaders,
  options?: SecondParameter<typeof platformMutator<SuspendTenantResponse>>,) => {
       return platformMutator<SuspendTenantResponse>(
       {url: `/support-api/SuspendTenant`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
+      headers: {'Content-Type': 'application/json', ...headers},
       data: suspendTenantRequest
     },
       options);
@@ -165,10 +174,11 @@ const suspendTenant = (
  */
 const unsuspendTenant = (
     unsuspendTenantRequest: UnsuspendTenantRequest,
+    headers: UnsuspendTenantHeaders,
  options?: SecondParameter<typeof platformMutator<UnsuspendTenantResponse>>,) => {
       return platformMutator<UnsuspendTenantResponse>(
       {url: `/support-api/UnsuspendTenant`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
+      headers: {'Content-Type': 'application/json', ...headers},
       data: unsuspendTenantRequest
     },
       options);

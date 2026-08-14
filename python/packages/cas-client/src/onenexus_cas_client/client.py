@@ -7,7 +7,12 @@ Kiota's request adapter to OneNexus credentials.
 
 from __future__ import annotations
 
+from uuid import uuid4
+
 import httpx
+from kiota_abstractions.base_request_configuration import RequestConfiguration
+from kiota_abstractions.default_query_parameters import QueryParameters
+from kiota_abstractions.headers_collection import HeadersCollection
 from onenexus_sdk_core import ClientContext, Credentials, create_kiota_request_adapter
 
 from .generated.cas_generated_client import CasGeneratedClient
@@ -32,9 +37,11 @@ from .generated.models.create_user_request import CreateUserRequest
 from .generated.models.create_user_response import CreateUserResponse
 from .generated.models.delete_authorization_role_request import DeleteAuthorizationRoleRequest
 from .generated.models.delete_authorization_role_response import DeleteAuthorizationRoleResponse
+from .generated.models.delete_policy_request import DeletePolicyRequest
+from .generated.models.delete_policy_response import DeletePolicyResponse
+from .generated.models.detach_policy_from_role_request import DetachPolicyFromRoleRequest
 from .generated.models.disable_service_client_request import DisableServiceClientRequest
 from .generated.models.disable_service_client_response import DisableServiceClientResponse
-from .generated.models.detach_policy_from_role_request import DetachPolicyFromRoleRequest
 from .generated.models.empty_s3_request import EmptyS3Request
 from .generated.models.empty_service_client_request import EmptyServiceClientRequest
 from .generated.models.list_authorization_roles_request import ListAuthorizationRolesRequest
@@ -48,6 +55,8 @@ from .generated.models.list_s3_roles_response import ListS3RolesResponse
 from .generated.models.list_service_clients_response import ListServiceClientsResponse
 from .generated.models.list_users_request import ListUsersRequest
 from .generated.models.list_users_response import ListUsersResponse
+from .generated.models.publish_policy_request import PublishPolicyRequest
+from .generated.models.publish_policy_response import PublishPolicyResponse
 from .generated.models.remove_role_assignment_request import RemoveRoleAssignmentRequest
 from .generated.models.remove_service_client_key_request import RemoveServiceClientKeyRequest
 from .generated.models.remove_service_client_key_response import RemoveServiceClientKeyResponse
@@ -58,6 +67,16 @@ from .generated.models.update_authorization_role_description_request import (
 from .generated.models.update_authorization_role_description_response import (
     UpdateAuthorizationRoleDescriptionResponse,
 )
+from .generated.models.update_policy_request import UpdatePolicyRequest
+from .generated.models.update_policy_response import UpdatePolicyResponse
+from .generated.models.update_profile_request import UpdateProfileRequest
+from .generated.models.update_profile_response import UpdateProfileResponse
+
+
+def _idempotency_request_configuration() -> RequestConfiguration[QueryParameters]:
+    headers = HeadersCollection()
+    headers.try_add("X-Nx1-Idempotency-Key", uuid4().hex)
+    return RequestConfiguration(headers=headers)
 
 
 class CasClient:
@@ -85,12 +104,14 @@ class CasClient:
         """
         Admin invites a user into their own tenant and triggers the invite email.
 
-        CAS derives the tenant from the caller's access token. The user stays pending until they redeem
-        the emailed invitation and set a password.
+        CAS derives the tenant from the caller's access token. The user stays pending until they
+        redeem the emailed invitation and set a password.
 
         API operation: POST /api/CreateUser.
         """
-        response = await self._client.api.create_user.post(request)
+        response = await self._client.api.create_user.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS CreateUser returned no response body")
         return response
@@ -101,8 +122,9 @@ class CasClient:
         """
         Lists users in the authenticated caller's own tenant.
 
-        CAS always lists the caller's tenant; do not send a tenant identifier. Results include root and
-        member users. Send one returned cursor at a time to move backward or forward through the list.
+        CAS always lists the caller's tenant; do not send a tenant identifier. Results include root
+        and member users. Send one returned cursor at a time to move backward or forward through the
+        list.
 
         API operation: POST /api/ListUsers.
         """
@@ -117,8 +139,8 @@ class CasClient:
         """
         Redeems an invitation, sets a password, and activates the account.
 
-        This endpoint does not require an access token. It accepts the invitation details delivered by
-        email, and an invitation can be used only once. On success, follow `loginUrl` to sign in.
+        This endpoint does not require an access token. It accepts the invitation details delivered
+        by email, and an invitation can be used only once. On success, follow `loginUrl` to sign in.
 
         API operation: POST /api/AcceptInvitation.
         """
@@ -177,13 +199,15 @@ class CasClient:
         """
         Create a tenant-owned service client with its first browser-generated public assertion key.
 
-        Generate the key pair in your application or browser and submit only the public JWK. CAS returns
-        the `clientId` needed at the token endpoint; it never receives or stores the corresponding
-        private key.
+        Generate the key pair in your application or browser and submit only the public JWK. CAS
+        returns the `clientId` needed at the token endpoint; it never receives or stores the
+        corresponding private key.
 
         API operation: POST /api/CreateServiceClient.
         """
-        response = await self._client.api.create_service_client.post(request)
+        response = await self._client.api.create_service_client.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS CreateServiceClient returned no response body")
         return response
@@ -199,7 +223,9 @@ class CasClient:
 
         API operation: POST /api/AddServiceClientKey.
         """
-        response = await self._client.api.add_service_client_key.post(request)
+        response = await self._client.api.add_service_client_key.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS AddServiceClientKey returned no response body")
         return response
@@ -210,11 +236,14 @@ class CasClient:
         """
         Revokes one public assertion key from a service client.
 
-        The final key cannot be removed. Disable the service client when its only key is compromised.
+        The final key cannot be removed. Disable the service client when its only key is
+        compromised.
 
         API operation: POST /api/RemoveServiceClientKey.
         """
-        response = await self._client.api.remove_service_client_key.post(request)
+        response = await self._client.api.remove_service_client_key.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS RemoveServiceClientKey returned no response body")
         return response
@@ -230,7 +259,9 @@ class CasClient:
 
         API operation: POST /api/DisableServiceClient.
         """
-        response = await self._client.api.disable_service_client.post(request)
+        response = await self._client.api.disable_service_client.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS DisableServiceClient returned no response body")
         return response
@@ -239,12 +270,14 @@ class CasClient:
         """
         Re-sends an invitation to a pending member in the caller's tenant.
 
-        CAS derives the tenant from the authenticated caller. Tenant roots and users in other tenants
-        cannot be targeted through this operation.
+        CAS derives the tenant from the authenticated caller. Tenant roots and users in other
+        tenants cannot be targeted through this operation.
 
         API operation: POST /api/ResendUserInvitation.
         """
-        await self._client.api.resend_user_invitation.post(request)
+        await self._client.api.resend_user_invitation.post(
+            request, _idempotency_request_configuration()
+        )
 
     async def create_role(
         self, request: CreateAuthorizationRoleRequest
@@ -257,7 +290,9 @@ class CasClient:
 
         API operation: POST /api/CreateRole.
         """
-        response = await self._client.api.create_role.post(request)
+        response = await self._client.api.create_role.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS CreateRole returned no response body")
         return response
@@ -269,7 +304,9 @@ class CasClient:
 
         API operation: ``POST /api/UpdateRoleDescription``.
         """
-        response = await self._client.api.update_role_description.post(request)
+        response = await self._client.api.update_role_description.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS UpdateRoleDescription returned no response body")
         return response
@@ -280,8 +317,8 @@ class CasClient:
         """
         Lists authorization roles in the caller's tenant.
 
-        Results are ordered by role name. The returned `roleUri` is the stable identifier to use when
-        assigning roles or attaching policies.
+        Results are ordered by role name. The returned `roleUri` is the stable identifier to use
+        when assigning roles or attaching policies.
 
         API operation: POST /api/ListRoles.
         """
@@ -296,16 +333,19 @@ class CasClient:
         self, request: DeleteAuthorizationRoleRequest
     ) -> DeleteAuthorizationRoleResponse:
         """
-        Deletes one unreferenced tenant authorization role. Direct grants, workload bindings, and policy
-        attachments must be removed explicitly before deletion; CAS never cascades those relationships.
+        Deletes one unreferenced tenant authorization role. Direct grants, workload bindings, and
+        policy attachments must be removed explicitly before deletion; CAS never cascades those
+        relationships.
 
-        Remove every direct user, service-client, workload, and policy relationship first. CAS does not
-        cascade deletion, which prevents a role from disappearing unexpectedly from an access
+        Remove every direct user, service-client, workload, and policy relationship first. CAS does
+        not cascade deletion, which prevents a role from disappearing unexpectedly from an access
         configuration.
 
         API operation: POST /api/DeleteRole.
         """
-        response = await self._client.api.delete_role.post(request)
+        response = await self._client.api.delete_role.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS DeleteRole returned no response body")
         return response
@@ -314,12 +354,15 @@ class CasClient:
         """
         Idempotently assigns one role to a user or service client.
 
-        The assignee and role must belong to the caller's tenant. Repeating the same request does not
-        create a second assignment; inspect `created` to tell whether CAS created it on this call.
+        The assignee and role must belong to the caller's tenant. Repeating the same request does
+        not create a second assignment; inspect `created` to tell whether CAS created it on this
+        call.
 
         API operation: POST /api/AssignRole.
         """
-        response = await self._client.api.assign_role.post(request)
+        response = await self._client.api.assign_role.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS AssignRole returned no response body")
         return response
@@ -330,13 +373,15 @@ class CasClient:
         """
         Removes one direct role assignment using its current state token.
 
-        First obtain the assignment with `ListRoleAssignments`, then send its `stateToken`. CAS rejects
-        a stale token so an administrator cannot remove a relationship that changed after it was
-        displayed.
+        First obtain the assignment with `ListRoleAssignments`, then send its `stateToken`. CAS
+        rejects a stale token so an administrator cannot remove a relationship that changed after it
+        was displayed.
 
         API operation: POST /api/RemoveRoleAssignment.
         """
-        response = await self._client.api.remove_role_assignment.post(request)
+        response = await self._client.api.remove_role_assignment.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS RemoveRoleAssignment returned no response body")
         return response
@@ -370,7 +415,9 @@ class CasClient:
 
         API operation: POST /api/AttachPolicyToRole.
         """
-        response = await self._client.api.attach_policy_to_role.post(request)
+        response = await self._client.api.attach_policy_to_role.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS AttachPolicyToRole returned no response body")
         return response
@@ -381,12 +428,14 @@ class CasClient:
         """
         Detaches one policy from one role using the relationship state token.
 
-        Get the attachment first with `ListPolicyAttachments` or `ListRolePolicies`, then provide its
-        `stateToken`. This protects against deleting a relationship that changed concurrently.
+        Get the attachment first with `ListPolicyAttachments` or `ListRolePolicies`, then provide
+        its `stateToken`. This protects against deleting a relationship that changed concurrently.
 
         API operation: POST /api/DetachPolicyFromRole.
         """
-        response = await self._client.api.detach_policy_from_role.post(request)
+        response = await self._client.api.detach_policy_from_role.post(
+            request, _idempotency_request_configuration()
+        )
         if response is None:
             raise RuntimeError("CAS DetachPolicyFromRole returned no response body")
         return response
@@ -397,8 +446,8 @@ class CasClient:
         """
         Lists roles to which one policy is directly attached.
 
-        The response contains the direct policy-to-role relationships, not the users or service clients
-        that inherit access through those roles. Use the returned cursors for paging.
+        The response contains the direct policy-to-role relationships, not the users or service
+        clients that inherit access through those roles. Use the returned cursors for paging.
 
         API operation: POST /api/ListPolicyAttachments.
         """
@@ -413,8 +462,8 @@ class CasClient:
         """
         Lists tenant- and platform-managed policies directly attached to one role.
 
-        This returns only direct attachments. A policy inherited by another mechanism is not included.
-        Use the returned cursors for paging.
+        This returns only direct attachments. A policy inherited by another mechanism is not
+        included. Use the returned cursors for paging.
 
         API operation: POST /api/ListRolePolicies.
         """
@@ -423,7 +472,53 @@ class CasClient:
             raise RuntimeError("CAS ListRolePolicies returned no response body")
         return response
 
+    async def publish_policy(self, request: PublishPolicyRequest) -> PublishPolicyResponse:
+        """Publish a policy in the caller's tenant.
 
+        API operation: ``POST /api/PublishPolicy``.
+        """
+        response = await self._client.api.publish_policy.post(
+            request, _idempotency_request_configuration()
+        )
+        if response is None:
+            raise RuntimeError("CAS PublishPolicy returned no response body")
+        return response
+
+    async def update_policy(self, request: UpdatePolicyRequest) -> UpdatePolicyResponse:
+        """Update a policy in the caller's tenant.
+
+        API operation: ``POST /api/UpdatePolicy``.
+        """
+        response = await self._client.api.update_policy.post(
+            request, _idempotency_request_configuration()
+        )
+        if response is None:
+            raise RuntimeError("CAS UpdatePolicy returned no response body")
+        return response
+
+    async def delete_policy(self, request: DeletePolicyRequest) -> DeletePolicyResponse:
+        """Delete a policy in the caller's tenant.
+
+        API operation: ``POST /api/DeletePolicy``.
+        """
+        response = await self._client.api.delete_policy.post(
+            request, _idempotency_request_configuration()
+        )
+        if response is None:
+            raise RuntimeError("CAS DeletePolicy returned no response body")
+        return response
+
+    async def update_profile(self, request: UpdateProfileRequest) -> UpdateProfileResponse:
+        """Update the authenticated user's profile.
+
+        API operation: ``POST /account/profile``.
+        """
+        response = await self._client.account.profile.post(
+            request, _idempotency_request_configuration()
+        )
+        if response is None:
+            raise RuntimeError("CAS UpdateProfile returned no response body")
+        return response
 
     async def aclose(self) -> None:
         if self._owns_http:
@@ -457,12 +552,13 @@ __all__ = [
     "CreateUserResponse",
     "DeleteAuthorizationRoleRequest",
     "DeleteAuthorizationRoleResponse",
-
+    "DeletePolicyRequest",
+    "DeletePolicyResponse",
     "DetachPolicyFromRoleRequest",
-
+    "DisableServiceClientRequest",
+    "DisableServiceClientResponse",
     "ListAuthorizationRolesRequest",
     "ListAuthorizationRolesResponse",
-
     "ListPolicyAttachmentsRequest",
     "ListPolicyAttachmentsResponse",
     "ListRoleAssignmentsRequest",
@@ -472,7 +568,16 @@ __all__ = [
     "ListServiceClientsResponse",
     "ListUsersRequest",
     "ListUsersResponse",
-
+    "PublishPolicyRequest",
+    "PublishPolicyResponse",
     "RemoveRoleAssignmentRequest",
-
+    "RemoveServiceClientKeyRequest",
+    "RemoveServiceClientKeyResponse",
+    "ResendUserInvitationRequest",
+    "UpdateAuthorizationRoleDescriptionRequest",
+    "UpdateAuthorizationRoleDescriptionResponse",
+    "UpdatePolicyRequest",
+    "UpdatePolicyResponse",
+    "UpdateProfileRequest",
+    "UpdateProfileResponse",
 ]

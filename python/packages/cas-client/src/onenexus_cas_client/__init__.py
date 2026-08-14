@@ -30,9 +30,11 @@ from .client import (
     CreateUserResponse,
     DeleteAuthorizationRoleRequest,
     DeleteAuthorizationRoleResponse,
+    DeletePolicyRequest,
+    DeletePolicyResponse,
+    DetachPolicyFromRoleRequest,
     DisableServiceClientRequest,
     DisableServiceClientResponse,
-    DetachPolicyFromRoleRequest,
     ListAuthorizationRolesRequest,
     ListAuthorizationRolesResponse,
     ListPolicyAttachmentsRequest,
@@ -44,12 +46,18 @@ from .client import (
     ListServiceClientsResponse,
     ListUsersRequest,
     ListUsersResponse,
+    PublishPolicyRequest,
+    PublishPolicyResponse,
     RemoveRoleAssignmentRequest,
     RemoveServiceClientKeyRequest,
     RemoveServiceClientKeyResponse,
     ResendUserInvitationRequest,
     UpdateAuthorizationRoleDescriptionRequest,
     UpdateAuthorizationRoleDescriptionResponse,
+    UpdatePolicyRequest,
+    UpdatePolicyResponse,
+    UpdateProfileRequest,
+    UpdateProfileResponse,
 )
 
 __all__ = [
@@ -73,6 +81,8 @@ __all__ = [
     "CreateUserResponse",
     "DeleteAuthorizationRoleRequest",
     "DeleteAuthorizationRoleResponse",
+    "DeletePolicyRequest",
+    "DeletePolicyResponse",
     "DisableServiceClientRequest",
     "DisableServiceClientResponse",
 
@@ -90,6 +100,8 @@ __all__ = [
     "ListServiceClientsResponse",
     "ListUsersRequest",
     "ListUsersResponse",
+    "PublishPolicyRequest",
+    "PublishPolicyResponse",
 
     "RemoveRoleAssignmentRequest",
     "RemoveServiceClientKeyRequest",
@@ -97,6 +109,10 @@ __all__ = [
     "ResendUserInvitationRequest",
     "UpdateAuthorizationRoleDescriptionRequest",
     "UpdateAuthorizationRoleDescriptionResponse",
+    "UpdatePolicyRequest",
+    "UpdatePolicyResponse",
+    "UpdateProfileRequest",
+    "UpdateProfileResponse",
 
     "generated",
 ]

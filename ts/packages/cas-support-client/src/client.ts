@@ -35,6 +35,10 @@ import type { PlatformMutatorOptions } from './mutator.js';
  */
 const EMPTY_S3_REQUEST: EmptyS3Request = {};
 
+const createIdempotencyHeaders = () => ({
+    'X-Nx1-Idempotency-Key': globalThis.crypto.randomUUID(),
+});
+
 /**
  * Construction-time configuration for {@link CasSupportClient}.
  *
@@ -99,7 +103,6 @@ export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  *     displayName: 'Acme Inc',
  *     rootEmail: 'admin@acme.com',
  *     rootDisplayName: 'Acme Admin',
- *     clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
  * });
  * ```
  */
@@ -125,7 +128,8 @@ export class CasSupportClient extends ClientBase {
     createTenant = (
         req: CreateTenantRequest,
         options?: CasSupportRequestOptions,
-    ): Promise<CreateTenantResponse> => this.tenant.createTenant(req, this.mutatorOptions(options));
+    ): Promise<CreateTenantResponse> =>
+        this.tenant.createTenant(req, createIdempotencyHeaders(), this.mutatorOptions(options));
 
     /**
      * Look up a tenant by Guid PK.
@@ -198,7 +202,8 @@ export class CasSupportClient extends ClientBase {
     addTenantUser = (
         req: AddTenantUserRequest,
         options?: CasSupportRequestOptions,
-    ): Promise<CreateUserResponse> => this.tenant.addTenantUser(req, this.mutatorOptions(options));
+    ): Promise<CreateUserResponse> =>
+        this.tenant.addTenantUser(req, createIdempotencyHeaders(), this.mutatorOptions(options));
 
     /**
      * Re-sends the invitation email for an existing pending user.
@@ -209,7 +214,7 @@ export class CasSupportClient extends ClientBase {
         req: ResendInvitationRequest,
         options?: CasSupportRequestOptions,
     ): Promise<ResendInvitationResponse> =>
-        this.tenant.resendInvitation(req, this.mutatorOptions(options));
+        this.tenant.resendInvitation(req, createIdempotencyHeaders(), this.mutatorOptions(options));
 
     /**
      * Suspends a tenant, preventing normal sign-in and onboarding traffic.
@@ -219,7 +224,8 @@ export class CasSupportClient extends ClientBase {
     suspendTenant = (
         req: SuspendTenantRequest,
         options?: CasSupportRequestOptions,
-    ): Promise<SuspendTenantResponse> => this.tenant.suspendTenant(req, this.mutatorOptions(options));
+    ): Promise<SuspendTenantResponse> =>
+        this.tenant.suspendTenant(req, createIdempotencyHeaders(), this.mutatorOptions(options));
 
     /**
      * Re-activates a suspended tenant.
@@ -230,7 +236,7 @@ export class CasSupportClient extends ClientBase {
         req: UnsuspendTenantRequest,
         options?: CasSupportRequestOptions,
     ): Promise<UnsuspendTenantResponse> =>
-        this.tenant.unsuspendTenant(req, this.mutatorOptions(options));
+        this.tenant.unsuspendTenant(req, createIdempotencyHeaders(), this.mutatorOptions(options));
 
     // -- Authorization diagnostics -----------------------------------------
 
@@ -266,7 +272,11 @@ export class CasSupportClient extends ClientBase {
     provisionS3DefaultAccount = (
         options?: CasSupportRequestOptions,
     ): Promise<ProvisionS3DefaultAccountResponse> =>
-        this.cephS3.provisionS3DefaultAccount(EMPTY_S3_REQUEST, this.mutatorOptions(options));
+        this.cephS3.provisionS3DefaultAccount(
+            EMPTY_S3_REQUEST,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     /**
      * List every RGW account known to the cluster.

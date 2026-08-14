@@ -15,6 +15,7 @@ from kiota_serialization_text.text_serialization_writer_factory import TextSeria
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
+    from .account.account_request_builder import AccountRequestBuilder
     from .api.api_request_builder import ApiRequestBuilder
 
 class CasGeneratedClient(BaseRequestBuilder):
@@ -37,6 +38,15 @@ class CasGeneratedClient(BaseRequestBuilder):
         register_default_deserializer(JsonParseNodeFactory)
         register_default_deserializer(TextParseNodeFactory)
         register_default_deserializer(FormParseNodeFactory)
+    
+    @property
+    def account(self) -> AccountRequestBuilder:
+        """
+        The account property
+        """
+        from .account.account_request_builder import AccountRequestBuilder
+
+        return AccountRequestBuilder(self.request_adapter, self.path_parameters)
     
     @property
     def api(self) -> ApiRequestBuilder:

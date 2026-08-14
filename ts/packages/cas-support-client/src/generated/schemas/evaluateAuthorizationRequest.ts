@@ -13,12 +13,6 @@ import type { JsonElement } from './jsonElement';
 export interface EvaluateAuthorizationRequest {
   /**
      * @minLength 1
-     * @maxLength 128
-     * @pattern ^[a-zA-Z0-9_.-]+$
-     */
-  requestId: string;
-  /**
-     * @minLength 1
      * @maxLength 2048
      */
   principal: string;

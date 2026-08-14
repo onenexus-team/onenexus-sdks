@@ -13,8 +13,6 @@ class CreateAuthorizationRoleRequest(Parsable):
     description: Optional[str] = None
     # Case-sensitive role name; use ASCII letters and digits only.
     name: Optional[str] = None
-    # Caller-generated identifier for safely retrying this create request.
-    request_id: Optional[str] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> CreateAuthorizationRoleRequest:
@@ -35,7 +33,6 @@ class CreateAuthorizationRoleRequest(Parsable):
         fields: dict[str, Callable[[Any], None]] = {
             "description": lambda n : setattr(self, 'description', n.get_str_value()),
             "name": lambda n : setattr(self, 'name', n.get_str_value()),
-            "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
         }
         return fields
     
@@ -49,6 +46,5 @@ class CreateAuthorizationRoleRequest(Parsable):
             raise TypeError("writer cannot be null.")
         writer.write_str_value("description", self.description)
         writer.write_str_value("name", self.name)
-        writer.write_str_value("requestId", self.request_id)
     
 

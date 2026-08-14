@@ -14,8 +14,6 @@ class AttachPolicyToRoleRequest(Parsable):
     """
     # Policy to attach.
     policy: Optional[AuthorizationPolicyReference] = None
-    # Caller-generated identifier for safely retrying this attachment.
-    request_id: Optional[str] = None
     # URI of the role that will receive the policy.
     role_uri: Optional[str] = None
     
@@ -41,7 +39,6 @@ class AttachPolicyToRoleRequest(Parsable):
 
         fields: dict[str, Callable[[Any], None]] = {
             "policy": lambda n : setattr(self, 'policy', n.get_object_value(AuthorizationPolicyReference)),
-            "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
             "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
         }
         return fields
@@ -55,7 +52,6 @@ class AttachPolicyToRoleRequest(Parsable):
         if writer is None:
             raise TypeError("writer cannot be null.")
         writer.write_object_value("policy", self.policy)
-        writer.write_str_value("requestId", self.request_id)
         writer.write_str_value("roleUri", self.role_uri)
     
 

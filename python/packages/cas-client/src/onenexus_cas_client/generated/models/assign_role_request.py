@@ -14,8 +14,6 @@ class AssignRoleRequest(Parsable):
     """
     # User or service client that will receive the role.
     assignee: Optional[AuthorizationAssignee] = None
-    # Caller-generated identifier for safely retrying this assignment.
-    request_id: Optional[str] = None
     # URI of the role to assign.
     role_uri: Optional[str] = None
     
@@ -41,7 +39,6 @@ class AssignRoleRequest(Parsable):
 
         fields: dict[str, Callable[[Any], None]] = {
             "assignee": lambda n : setattr(self, 'assignee', n.get_object_value(AuthorizationAssignee)),
-            "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
             "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
         }
         return fields
@@ -55,7 +52,6 @@ class AssignRoleRequest(Parsable):
         if writer is None:
             raise TypeError("writer cannot be null.")
         writer.write_object_value("assignee", self.assignee)
-        writer.write_str_value("requestId", self.request_id)
         writer.write_str_value("roleUri", self.role_uri)
     
 

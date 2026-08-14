@@ -2,10 +2,113 @@
   "openapi": "3.1.1",
   "info": {
     "title": "OneNexus Central Auth Service — Customer API",
-    "description": "Customer-facing JSON RPC operations under `/api/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.",
+    "description": "Customer-facing JSON RPC operations under `/api/*` and authenticated account self-service under `/account/*`. OAuth 2.1 / OIDC protocol endpoints under `/connect/*` are documented separately by their respective specs and the OIDC discovery document at `/.well-known/openid-configuration`.",
     "version": "v1"
   },
   "paths": {
+    "/account/profile": {
+      "post": {
+        "tags": [
+          "AccountProfile"
+        ],
+        "summary": "Updates selected profile fields for the current human user.",
+        "description": "The user and tenant are derived exclusively from the validated access\ntoken. This operation currently supports only `displayName` and\nnever accepts a user or tenant identifier.",
+        "operationId": "UpdateProfile",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/AssignRole": {
       "post": {
         "tags": [
@@ -14,6 +117,17 @@
         "summary": "Idempotently assigns one role to a user or service client.",
         "description": "The assignee and role must belong to the caller's tenant. Repeating the\nsame request does not create a second assignment; inspect\n`created` to tell whether CAS created it on this call.",
         "operationId": "AssignRole",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -116,6 +230,17 @@
         "summary": "Removes one direct role assignment using its current state token.",
         "description": "First obtain the assignment with `ListRoleAssignments`, then send\nits `stateToken`. CAS rejects a stale token so an administrator\ncannot remove a relationship that changed after it was displayed.",
         "operationId": "RemoveRoleAssignment",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -320,6 +445,17 @@
         "summary": "Compiles and idempotently attaches one tenant- or platform-managed policy to a role.",
         "description": "A direct attachment makes the policy available whenever the role is\nevaluated. Repeating the same request preserves the existing\nrelationship and returns `created: false`.",
         "operationId": "AttachPolicyToRole",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -422,6 +558,17 @@
         "summary": "Detaches one policy from one role using the relationship state token.",
         "description": "Get the attachment first with `ListPolicyAttachments` or\n`ListRolePolicies`, then provide its `stateToken`. This\nprotects against deleting a relationship that changed concurrently.",
         "operationId": "DetachPolicyFromRole",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -726,8 +873,19 @@
           "AuthorizationPolicy"
         ],
         "summary": "Validates and publishes new tenant-managed policy content.",
-        "description": "Creates a policy in the caller's tenant after validating its document.\nA rejected response includes safe diagnostics and creates no usable\npolicy. Reuse the same `requestId` when retrying a timed-out call.",
+        "description": "Creates a policy in the caller's tenant after validating its document.\nA rejected response includes safe diagnostics and creates no usable\npolicy. Reuse the same `X-Nx1-Idempotency-Key` when retrying a timed-out call.",
         "operationId": "PublishPolicy",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -994,6 +1152,17 @@
         "summary": "Updates only the content of an existing tenant-managed policy.",
         "description": "Send the `contentStateToken` returned by the latest read or\nsuccessful write. CAS rejects stale updates rather than overwriting a\nconcurrent change. Platform-managed policies cannot be edited here.",
         "operationId": "UpdatePolicy",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1086,6 +1255,17 @@
         "summary": "Deletes one unattached tenant-managed policy.",
         "description": "Remove every direct role attachment before deleting a policy. Send its\ncurrent `contentStateToken` so CAS can reject a delete based on an\nout-of-date view. Platform-managed policies cannot be deleted here.",
         "operationId": "DeletePolicy",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1188,6 +1368,17 @@
         "summary": "Deletes one unreferenced tenant authorization role. Direct grants,\nworkload bindings, and policy attachments must be removed explicitly\nbefore deletion; CAS never cascades those relationships.",
         "description": "Remove every direct user, service-client, workload, and policy\nrelationship first. CAS does not cascade deletion, which prevents a\nrole from disappearing unexpectedly from an access configuration.",
         "operationId": "DeleteRole",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1290,6 +1481,17 @@
         "summary": "Idempotently creates one tenant authorization role.",
         "description": "Role names are case-sensitive ASCII letters and digits. The role is\nscoped to the caller's tenant; creating an existing role with the same\nname succeeds and returns `created: false`.",
         "operationId": "CreateRole",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1382,6 +1584,17 @@
         "summary": "Updates the optional human-readable description of one tenant role.",
         "description": "Send a description of at most 200 characters. Omit it or send\n`null` to clear the current description. Role names and URIs are\nimmutable.",
         "operationId": "UpdateRoleDescription",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1762,6 +1975,17 @@
         "summary": "Create a tenant-owned service client with its first browser-generated\npublic assertion key.",
         "description": "Generate the key pair in your application or browser and submit only\nthe public JWK. CAS returns the `clientId` needed at the token\nendpoint; it never receives or stores the corresponding private key.",
         "operationId": "CreateServiceClient",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1844,6 +2068,17 @@
         "summary": "Add an additional public assertion key to a service client.",
         "description": "Use this to rotate a client key without interrupting the old key. CAS\naccepts at most three public keys per service client; retain the\nprivate key outside CAS.",
         "operationId": "AddServiceClientKey",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1946,6 +2181,17 @@
         "summary": "Revokes one public assertion key from a service client.",
         "description": "The final key cannot be removed. Disable the service client when its\nonly key is compromised.",
         "operationId": "RemoveServiceClientKey",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2048,6 +2294,17 @@
         "summary": "Disables a service client so it cannot obtain new access tokens.",
         "description": "The operation is idempotent. Already-issued short-lived access tokens\nretain their normal expiry; disabling prevents subsequent token issuance.",
         "operationId": "DisableServiceClient",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2140,6 +2397,17 @@
         "summary": "Admin invites a user into their own tenant and triggers the invite\nemail.",
         "description": "CAS derives the tenant from the caller's access token. The user stays\npending until they redeem the emailed invitation and set a password.",
         "operationId": "CreateUser",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "description": "Request body. Validated by `[ApiController]`.",
           "content": {
@@ -2233,6 +2501,17 @@
         "summary": "Re-sends an invitation to a pending member in the caller's tenant.",
         "description": "CAS derives the tenant from the authenticated caller. Tenant roots and\nusers in other tenants cannot be targeted through this operation.",
         "operationId": "ResendUserInvitation",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2554,19 +2833,11 @@
       },
       "AssignRoleRequest": {
         "required": [
-          "requestId",
           "roleUri",
           "assignee"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated identifier for safely retrying this assignment."
-          },
           "roleUri": {
             "maxLength": 2048,
             "minLength": 1,
@@ -2648,19 +2919,11 @@
       },
       "AttachPolicyToRoleRequest": {
         "required": [
-          "requestId",
           "policy",
           "roleUri"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated identifier for safely retrying this attachment."
-          },
           "policy": {
             "description": "Policy to attach.",
             "$ref": "#/components/schemas/AuthorizationPolicyReference"
@@ -2998,18 +3261,10 @@
       },
       "CreateAuthorizationRoleRequest": {
         "required": [
-          "requestId",
           "name"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated identifier for safely retrying this create request."
-          },
           "name": {
             "maxLength": 128,
             "minLength": 1,
@@ -3089,8 +3344,7 @@
       "CreateUserRequest": {
         "required": [
           "email",
-          "displayName",
-          "requestId"
+          "displayName"
         ],
         "type": "object",
         "properties": {
@@ -3106,13 +3360,6 @@
             "minLength": 1,
             "type": "string",
             "description": "Display name shown in UIs. 1–200 chars."
-          },
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 16,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated request identifier used for authorization correlation.\nIt is not an idempotency key; per-tenant email uniqueness remains the\nduplicate guard for user invitations."
           }
         },
         "additionalProperties": false,
@@ -3134,18 +3381,10 @@
       },
       "DeleteAuthorizationRoleRequest": {
         "required": [
-          "requestId",
           "roleUri"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated identifier used only to correlate the deletion request."
-          },
           "roleUri": {
             "maxLength": 2048,
             "minLength": 1,
@@ -3177,19 +3416,11 @@
       },
       "DeletePolicyRequest": {
         "required": [
-          "requestId",
           "name",
           "expectedContentStateToken"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated identifier used only to correlate the deletion request."
-          },
           "name": {
             "maxLength": 128,
             "minLength": 1,
@@ -3223,20 +3454,12 @@
       },
       "DetachPolicyFromRoleRequest": {
         "required": [
-          "requestId",
           "policy",
           "roleUri",
           "expectedStateToken"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated identifier for safely retrying this removal."
-          },
           "policy": {
             "description": "Policy to detach.",
             "$ref": "#/components/schemas/AuthorizationPolicyReference"
@@ -3789,19 +4012,11 @@
       },
       "PublishPolicyRequest": {
         "required": [
-          "requestId",
           "name",
           "document"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated identifier used to correlate the publication request."
-          },
           "name": {
             "maxLength": 128,
             "minLength": 1,
@@ -3867,20 +4082,12 @@
       },
       "RemoveRoleAssignmentRequest": {
         "required": [
-          "requestId",
           "roleUri",
           "assignee",
           "expectedStateToken"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated identifier for safely retrying this removal."
-          },
           "roleUri": {
             "maxLength": 2048,
             "minLength": 1,
@@ -4148,18 +4355,10 @@
       },
       "UpdateAuthorizationRoleDescriptionRequest": {
         "required": [
-          "requestId",
           "roleUri"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated identifier used only to correlate the update request."
-          },
           "roleUri": {
             "maxLength": 2048,
             "minLength": 1,
@@ -4195,20 +4394,12 @@
       },
       "UpdatePolicyRequest": {
         "required": [
-          "requestId",
           "name",
           "document",
           "expectedContentStateToken"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Caller-generated identifier used only to correlate the update request."
-          },
           "name": {
             "maxLength": 128,
             "minLength": 1,
@@ -4277,6 +4468,47 @@
         },
         "additionalProperties": false,
         "description": "Result of validating and atomically updating policy content."
+      },
+      "UpdateProfileRequest": {
+        "required": [
+          "updateMask"
+        ],
+        "type": "object",
+        "properties": {
+          "updateMask": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Unique lower-camel JSON field names to update. Currently only\n`displayName` is supported."
+          },
+          "displayName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "New display name when `updateMask` contains `displayName`."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /account/profile`."
+      },
+      "UpdateProfileResponse": {
+        "required": [
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "The user's updated display name."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response body for a successful `POST /account/profile`."
       },
       "User": {
         "required": [
@@ -4388,6 +4620,9 @@
     }
   },
   "tags": [
+    {
+      "name": "AccountProfile"
+    },
     {
       "name": "AuthorizationAdministration"
     },

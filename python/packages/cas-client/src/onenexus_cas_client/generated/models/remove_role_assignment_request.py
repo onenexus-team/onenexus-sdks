@@ -16,8 +16,6 @@ class RemoveRoleAssignmentRequest(Parsable):
     assignee: Optional[AuthorizationAssignee] = None
     # Current assignment token returned by `ListRoleAssignments`.
     expected_state_token: Optional[str] = None
-    # Caller-generated identifier for safely retrying this removal.
-    request_id: Optional[str] = None
     # URI of the assigned role.
     role_uri: Optional[str] = None
     
@@ -44,7 +42,6 @@ class RemoveRoleAssignmentRequest(Parsable):
         fields: dict[str, Callable[[Any], None]] = {
             "assignee": lambda n : setattr(self, 'assignee', n.get_object_value(AuthorizationAssignee)),
             "expectedStateToken": lambda n : setattr(self, 'expected_state_token', n.get_str_value()),
-            "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
             "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
         }
         return fields
@@ -59,7 +56,6 @@ class RemoveRoleAssignmentRequest(Parsable):
             raise TypeError("writer cannot be null.")
         writer.write_object_value("assignee", self.assignee)
         writer.write_str_value("expectedStateToken", self.expected_state_token)
-        writer.write_str_value("requestId", self.request_id)
         writer.write_str_value("roleUri", self.role_uri)
     
 

@@ -9,8 +9,6 @@ class DeleteAuthorizationRoleRequest(Parsable):
     """
     Request body for `POST /api/DeleteRole`.
     """
-    # Caller-generated identifier used only to correlate the deletion request.
-    request_id: Optional[str] = None
     # Canonical URI of the tenant role to delete.
     role_uri: Optional[str] = None
     
@@ -31,7 +29,6 @@ class DeleteAuthorizationRoleRequest(Parsable):
         Returns: dict[str, Callable[[ParseNode], None]]
         """
         fields: dict[str, Callable[[Any], None]] = {
-            "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
             "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
         }
         return fields
@@ -44,7 +41,6 @@ class DeleteAuthorizationRoleRequest(Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_str_value("requestId", self.request_id)
         writer.write_str_value("roleUri", self.role_uri)
     
 

@@ -13,8 +13,6 @@ class DeletePolicyRequest(Parsable):
     expected_content_state_token: Optional[str] = None
     # Immutable policy name within the caller's tenant.
     name: Optional[str] = None
-    # Caller-generated identifier used only to correlate the deletion request.
-    request_id: Optional[str] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> DeletePolicyRequest:
@@ -35,7 +33,6 @@ class DeletePolicyRequest(Parsable):
         fields: dict[str, Callable[[Any], None]] = {
             "expectedContentStateToken": lambda n : setattr(self, 'expected_content_state_token', n.get_str_value()),
             "name": lambda n : setattr(self, 'name', n.get_str_value()),
-            "requestId": lambda n : setattr(self, 'request_id', n.get_str_value()),
         }
         return fields
     
@@ -49,6 +46,5 @@ class DeletePolicyRequest(Parsable):
             raise TypeError("writer cannot be null.")
         writer.write_str_value("expectedContentStateToken", self.expected_content_state_token)
         writer.write_str_value("name", self.name)
-        writer.write_str_value("requestId", self.request_id)
     
 

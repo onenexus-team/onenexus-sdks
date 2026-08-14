@@ -33,7 +33,7 @@ class PublishPolicyRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: PublishPolicyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[PublishPolicyResponse]:
         """
-        Creates a policy in the caller's tenant after validating its document.A rejected response includes safe diagnostics and creates no usablepolicy. Reuse the same `requestId` when retrying a timed-out call.
+        Creates a policy in the caller's tenant after validating its document.A rejected response includes safe diagnostics and creates no usablepolicy. Reuse the same `X-Nx1-Idempotency-Key` when retrying a timed-out call.
         param body: Request body for `POST /api/PublishPolicy`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[PublishPolicyResponse]
@@ -60,7 +60,7 @@ class PublishPolicyRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: PublishPolicyRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        Creates a policy in the caller's tenant after validating its document.A rejected response includes safe diagnostics and creates no usablepolicy. Reuse the same `requestId` when retrying a timed-out call.
+        Creates a policy in the caller's tenant after validating its document.A rejected response includes safe diagnostics and creates no usablepolicy. Reuse the same `X-Nx1-Idempotency-Key` when retrying a timed-out call.
         param body: Request body for `POST /api/PublishPolicy`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation

@@ -41,6 +41,7 @@ beforeAll(() => {
     server.listen({ onUnhandledRequest: 'error' });
 });
 afterEach(() => {
+    vi.restoreAllMocks();
     server.resetHandlers();
 });
 afterAll(() => {
@@ -65,7 +66,6 @@ describe('CasClient', () => {
             const result = await cas.createUser({
                 email: 'a@b.c',
                 displayName: 'A B',
-                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             expect(result.user.email).toBe('a@b.c');
@@ -73,8 +73,42 @@ describe('CasClient', () => {
             expect(observedBody).toEqual({
                 email: 'a@b.c',
                 displayName: 'A B',
-                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
+        });
+
+        it('updateProfile adds one idempotency key and reuses it across Ky retries', async () => {
+            const idempotencyKey = '0193fabc-1234-7def-abcd-1234567890ab';
+            const randomUUID = vi
+                .spyOn(globalThis.crypto, 'randomUUID')
+                .mockReturnValue(idempotencyKey);
+            const observedKeys: string[] = [];
+            let requestCount = 0;
+
+            server.use(
+                http.post(`${BASE_URL}/account/profile`, ({ request }) => {
+                    observedKeys.push(request.headers.get('x-nx1-idempotency-key') ?? '');
+                    requestCount += 1;
+                    if (requestCount < 3) {
+                        return HttpResponse.json({ code: 'unavailable' }, { status: 503 });
+                    }
+                    return HttpResponse.json({ displayName: 'Updated Name' });
+                }),
+            );
+
+            const cas = new CasClient({
+                baseUrl: BASE_URL,
+                credentials: staticCreds(),
+                retry: { limit: 2, backoffLimitMs: 0 },
+            });
+            const result = await cas.updateProfile({
+                updateMask: ['displayName'],
+                displayName: 'Updated Name',
+            });
+
+            expect(result.displayName).toBe('Updated Name');
+            expect(idempotencyKey).toMatch(/^[a-zA-Z0-9_.-]{16,128}$/);
+            expect(observedKeys).toEqual([idempotencyKey, idempotencyKey, idempotencyKey]);
+            expect(randomUUID).toHaveBeenCalledTimes(1);
         });
 
         it('passes client-level refreshLeewayMs through ClientBase context', async () => {
@@ -98,7 +132,6 @@ describe('CasClient', () => {
                 cas.createUser({
                     email: 'a@b.c',
                     displayName: 'A B',
-                    requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
                 }),
             ).rejects.toThrow(/stale/i);
         });
@@ -121,7 +154,9 @@ describe('CasClient', () => {
                 }),
                 http.post(`${BASE_URL}/api/DisableServiceClient`, async ({ request }) => {
                     observedBodies.set('disable', await request.json());
-                    return HttpResponse.json({ serviceClient: { ...serviceClient, lifecycleState: 'Disabled' } });
+                    return HttpResponse.json({
+                        serviceClient: { ...serviceClient, lifecycleState: 'Disabled' },
+                    });
                 }),
                 http.post(`${BASE_URL}/api/ResendUserInvitation`, async ({ request }) => {
                     observedBodies.set('resendInvitation', await request.json());
@@ -133,7 +168,9 @@ describe('CasClient', () => {
             await expect(
                 cas.removeServiceClientKey({ serviceClientId: 'client-1', kid: 'key-1' }),
             ).resolves.toMatchObject({ serviceClient });
-            await expect(cas.disableServiceClient({ serviceClientId: 'client-1' })).resolves.toMatchObject({
+            await expect(
+                cas.disableServiceClient({ serviceClientId: 'client-1' }),
+            ).resolves.toMatchObject({
                 serviceClient: { lifecycleState: 'Disabled' },
             });
             await expect(
@@ -167,7 +204,6 @@ describe('CasClient', () => {
                 userId: '0193fabc-1234-7def-abcd-1234567890ab',
                 token: 'invite-token-abc',
                 password: 'a-good-password',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
             expect(user.email).toBe('a@b.c');
             expect(user.loginUrl).toContain('tn_acme');
@@ -228,7 +264,6 @@ describe('CasClient', () => {
 
             const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
             const publishRequest = {
-                requestId: 'request-1',
                 name: 'ReadOnly',
                 description: 'Read-only access',
                 document: { Version: '2012-10-17' },
@@ -239,11 +274,9 @@ describe('CasClient', () => {
             const fetched = await cas.getPolicy({ kind: 'TenantManaged', name: 'ReadOnly' });
             const updated = await cas.updatePolicy({
                 ...publishRequest,
-                requestId: 'request-2',
                 expectedContentStateToken: 'state-1',
             });
             const deleted = await cas.deletePolicy({
-                requestId: 'request-3',
                 name: 'ReadOnly',
                 expectedContentStateToken: 'state-2',
             });
@@ -262,14 +295,12 @@ describe('CasClient', () => {
                         'update',
                         {
                             ...publishRequest,
-                            requestId: 'request-2',
                             expectedContentStateToken: 'state-1',
                         },
                     ],
                     [
                         'delete',
                         {
-                            requestId: 'request-3',
                             name: 'ReadOnly',
                             expectedContentStateToken: 'state-2',
                         },
@@ -310,8 +341,12 @@ describe('CasClient', () => {
                     respond('CreateRole', { created: true, role }),
                 ),
                 http.post(`${BASE_URL}/api/UpdateRoleDescription`, async ({ request }) => {
-                    observedOperations.push(`UpdateRoleDescription:${JSON.stringify(await request.json())}`);
-                    return HttpResponse.json({ role: { ...role, description: 'Read-only access' } });
+                    observedOperations.push(
+                        `UpdateRoleDescription:${JSON.stringify(await request.json())}`,
+                    );
+                    return HttpResponse.json({
+                        role: { ...role, description: 'Read-only access' },
+                    });
                 }),
                 http.post(`${BASE_URL}/api/ListRoles`, () =>
                     respond('ListRoles', { items: [role] }),
@@ -358,38 +393,33 @@ describe('CasClient', () => {
             );
 
             const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
-            expect(
-                await cas.createRole({ requestId: 'request-1', name: 'Reader' }),
-            ).toMatchObject({ created: true, role });
+            expect(await cas.createRole({ name: 'Reader' })).toMatchObject({ created: true, role });
             expect(
                 await cas.updateRoleDescription({
-                    requestId: 'request-2',
                     roleUri,
                     description: 'Read-only access',
                 }),
             ).toMatchObject({ role: { ...role, description: 'Read-only access' } });
             expect((await cas.listRoles()).items).toEqual([role]);
-            expect(
-                await cas.deleteRole({ requestId: 'request-2', roleUri }),
-            ).toMatchObject({ removed: true, roleUri });
-            expect(
-                await cas.assignRole({ requestId: 'request-3', roleUri, assignee }),
-            ).toMatchObject({ created: true, assignment });
+            expect(await cas.deleteRole({ roleUri })).toMatchObject({ removed: true, roleUri });
+            expect(await cas.assignRole({ roleUri, assignee })).toMatchObject({
+                created: true,
+                assignment,
+            });
             expect(
                 await cas.removeRoleAssignment({
-                    requestId: 'request-4',
                     roleUri,
                     assignee,
                     expectedStateToken: 'assignment-state-1',
                 }),
             ).toEqual({ removed: true });
             expect((await cas.listRoleAssignments({ roleUri })).items).toEqual([assignment]);
-            expect(
-                await cas.attachPolicyToRole({ requestId: 'request-5', policy, roleUri }),
-            ).toMatchObject({ created: true, attachment });
+            expect(await cas.attachPolicyToRole({ policy, roleUri })).toMatchObject({
+                created: true,
+                attachment,
+            });
             expect(
                 await cas.detachPolicyFromRole({
-                    requestId: 'request-6',
                     policy,
                     roleUri,
                     expectedStateToken: 'attachment-state-1',
@@ -402,7 +432,7 @@ describe('CasClient', () => {
             );
             expect(observedOperations).toEqual([
                 'CreateRole',
-                'UpdateRoleDescription:{"requestId":"request-2","roleUri":"onenexus:role/Reader","description":"Read-only access"}',
+                'UpdateRoleDescription:{"roleUri":"onenexus:role/Reader","description":"Read-only access"}',
                 'ListRoles',
                 'DeleteRole',
                 'AssignRole',
@@ -445,7 +475,6 @@ describe('CasClient', () => {
             const promise = cas.createUser({
                 email: 'a@b.c',
                 displayName: 'A B',
-                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             await expect(promise).rejects.toBeInstanceOf(AlreadyExistsError);
@@ -481,7 +510,6 @@ describe('CasClient', () => {
             const promise = cas.createUser({
                 email: '',
                 displayName: '',
-                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             await expect(promise).rejects.toBeInstanceOf(InvalidArgumentError);
@@ -537,7 +565,6 @@ describe('CasClient', () => {
             const result = await cas.createUser({
                 email: 'a@b.c',
                 displayName: 'A B',
-                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             expect(result.user.email).toBe('a@b.c');
@@ -566,7 +593,6 @@ describe('CasClient', () => {
                     {
                         email: 'a@b.c',
                         displayName: 'A B',
-                        requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
                     },
                     { signal: controller.signal },
                 ),
@@ -595,12 +621,10 @@ describe('CasClient', () => {
                 casA.createUser({
                     email: 'a@a.c',
                     displayName: 'A',
-                    requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
                 }),
                 casB.createUser({
                     email: 'b@b.c',
                     displayName: 'B',
-                    requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK3',
                 }),
             ]);
 
@@ -623,7 +647,6 @@ describe('CasClient', () => {
             const result = await createUser({
                 email: 'x@x.c',
                 displayName: 'X',
-                requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
             expect(result.user.email).toBe('x@x.c');
         });

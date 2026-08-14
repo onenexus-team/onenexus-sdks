@@ -29,6 +29,7 @@ beforeAll(() => {
     server.listen({ onUnhandledRequest: 'error' });
 });
 afterEach(() => {
+    vi.restoreAllMocks();
     server.resetHandlers();
 });
 afterAll(() => {
@@ -40,10 +41,12 @@ describe('CasSupportClient', () => {
         it('createTenant POSTs to /support-api/CreateTenant with the request body and Bearer auth, parses the response', async () => {
             let observedBody: unknown;
             let observedAuth: string | null = null;
+            let observedIdempotencyKey: string | null = null;
 
             server.use(
                 http.post(`${BASE_URL}/support-api/CreateTenant`, async ({ request }) => {
                     observedAuth = request.headers.get('authorization');
+                    observedIdempotencyKey = request.headers.get('x-nx1-idempotency-key');
                     observedBody = await request.json();
                     return HttpResponse.json({
                         tenantId: 'tn_acme',
@@ -61,18 +64,17 @@ describe('CasSupportClient', () => {
                 displayName: 'Acme Inc',
                 rootEmail: 'admin@acme.test',
                 rootDisplayName: 'Acme Admin',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             expect(result.tenantId).toBe('tn_acme');
             expect(result.tenantSlug).toBe('tn_acme');
             expect(observedAuth).toBe('Bearer at-happy');
+            expect(observedIdempotencyKey).toMatch(/^[a-zA-Z0-9_.-]{16,128}$/);
             expect(observedBody).toEqual({
                 tenantSlug: 'tn_acme',
                 displayName: 'Acme Inc',
                 rootEmail: 'admin@acme.test',
                 rootDisplayName: 'Acme Admin',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
         });
 
@@ -175,23 +177,19 @@ describe('CasSupportClient', () => {
         it('binds authorization evaluation to the generated support operation', async () => {
             let observedBody: unknown;
             server.use(
-                http.post(
-                    `${BASE_URL}/support-api/EvaluateAuthorization`,
-                    async ({ request }) => {
-                        observedBody = await request.json();
-                        return HttpResponse.json({
-                            allowed: true,
-                            reasonCode: 'allowed',
-                            authorizationGeneration: 'generation-1',
-                            cedarEntities: [],
-                        });
-                    },
-                ),
+                http.post(`${BASE_URL}/support-api/EvaluateAuthorization`, async ({ request }) => {
+                    observedBody = await request.json();
+                    return HttpResponse.json({
+                        allowed: true,
+                        reasonCode: 'allowed',
+                        authorizationGeneration: 'generation-1',
+                        cedarEntities: [],
+                    });
+                }),
             );
 
             const support = new CasSupportClient({ baseUrl: BASE_URL, credentials: staticCreds() });
             const result = await support.evaluateAuthorization({
-                requestId: 'request-authorization-1',
                 principal: 'onenexus:user/user-1',
                 action: 'onenexus:action/Read',
                 resource: 'onenexus:resource/document-1',
@@ -200,7 +198,6 @@ describe('CasSupportClient', () => {
 
             expect(result.allowed).toBe(true);
             expect(observedBody).toEqual({
-                requestId: 'request-authorization-1',
                 principal: 'onenexus:user/user-1',
                 action: 'onenexus:action/Read',
                 resource: 'onenexus:resource/document-1',
@@ -220,13 +217,16 @@ describe('CasSupportClient', () => {
                         account: null,
                     });
                 }),
-                http.post(`${BASE_URL}/support-api/ProvisionS3DefaultAccount`, async ({ request }) => {
-                    observedBodies.set('provision', await request.json());
-                    return HttpResponse.json({
-                        account: { id: 'account-1', name: 'tenant-root' },
-                        rootUser: null,
-                    });
-                }),
+                http.post(
+                    `${BASE_URL}/support-api/ProvisionS3DefaultAccount`,
+                    async ({ request }) => {
+                        observedBodies.set('provision', await request.json());
+                        return HttpResponse.json({
+                            account: { id: 'account-1', name: 'tenant-root' },
+                            rootUser: null,
+                        });
+                    },
+                ),
                 http.post(`${BASE_URL}/support-api/ListS3Accounts`, async ({ request }) => {
                     observedBodies.set('list', await request.json());
                     return HttpResponse.json({
@@ -283,7 +283,6 @@ describe('CasSupportClient', () => {
                 displayName: 'Acme',
                 rootEmail: 'admin@acme.test',
                 rootDisplayName: 'Acme Admin',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             await expect(promise).rejects.toBeInstanceOf(AlreadyExistsError);
@@ -321,7 +320,6 @@ describe('CasSupportClient', () => {
                 displayName: '',
                 rootEmail: '',
                 rootDisplayName: '',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             await expect(promise).rejects.toBeInstanceOf(InvalidArgumentError);
@@ -350,12 +348,20 @@ describe('CasSupportClient', () => {
             );
             const credentials: Credentials = { resolve };
 
+            const idempotencyKey = '0193fabc-1234-7def-abcd-1234567890ab';
+            const randomUUID = vi
+                .spyOn(globalThis.crypto, 'randomUUID')
+                .mockReturnValue(idempotencyKey);
             const observedAuth: string[] = [];
+            const observedIdempotencyKeys: string[] = [];
             let serverCallCount = 0;
 
             server.use(
                 http.post(`${BASE_URL}/support-api/CreateTenant`, ({ request }) => {
                     observedAuth.push(request.headers.get('authorization') ?? '');
+                    observedIdempotencyKeys.push(
+                        request.headers.get('x-nx1-idempotency-key') ?? '',
+                    );
                     serverCallCount += 1;
                     if (serverCallCount === 1) {
                         return HttpResponse.json(
@@ -382,11 +388,12 @@ describe('CasSupportClient', () => {
                 displayName: 'Acme',
                 rootEmail: 'admin@acme.test',
                 rootDisplayName: 'Acme Admin',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
             expect(result.tenantId).toBe('tn_acme');
             expect(observedAuth).toEqual(['Bearer at-stale', 'Bearer at-fresh']);
+            expect(observedIdempotencyKeys).toEqual([idempotencyKey, idempotencyKey]);
+            expect(randomUUID).toHaveBeenCalledTimes(1);
             expect(resolve).toHaveBeenCalledTimes(2);
         });
     });
@@ -416,7 +423,6 @@ describe('CasSupportClient', () => {
                         displayName: 'Acme',
                         rootEmail: 'admin@acme.test',
                         rootDisplayName: 'Acme Admin',
-                        clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
                     },
                     { signal: controller.signal },
                 ),
@@ -456,14 +462,12 @@ describe('CasSupportClient', () => {
                     displayName: 'A',
                     rootEmail: 'admin-a@acme.test',
                     rootDisplayName: 'Admin A',
-                    clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
                 }),
                 supportB.createTenant({
                     tenantSlug: 'tn_b',
                     displayName: 'B',
                     rootEmail: 'admin-b@acme.test',
                     rootDisplayName: 'Admin B',
-                    clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK3',
                 }),
             ]);
 
@@ -491,7 +495,6 @@ describe('CasSupportClient', () => {
                 displayName: 'X',
                 rootEmail: 'admin@x.test',
                 rootDisplayName: 'Admin X',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
             expect(result.tenantId).toBe('tn_x');
         });

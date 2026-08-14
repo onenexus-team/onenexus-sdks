@@ -74,6 +74,17 @@
         ],
         "summary": "Provision the first-party default S3 account and its account-root user.\nIdempotent on the account: if it already exists the existing account is\nreturned and the root user is not (re)created.",
         "operationId": "ProvisionS3DefaultAccount",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -287,6 +298,17 @@
         ],
         "summary": "Create a new tenant.",
         "operationId": "CreateTenant",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "description": "Request body. Validated by\n    `[ApiController]` before this action runs.",
           "content": {
@@ -568,6 +590,17 @@
         "summary": "Add a roleless user to an existing active tenant. Role grants are\nseparate authorization-administration operations.",
         "description": "    Authorization. The caller must be an active human\nTenantAdmin of the reserved platform tenant. This is the\nimplemented operator gate until a distinct platform_admin\nauthorization contract exists.\n    Differs from TenantUserController.CreateUser in that\nthe target tenant comes from the request body, not the caller's\nprincipal. The downstream invitation logic is identical and runs\nthrough IInvitationService.",
         "operationId": "AddTenantUser",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "description": "Request body. Validated by\n    `[ApiController]` before this action runs.",
           "content": {
@@ -640,6 +673,17 @@
         ],
         "summary": "Re-sends the invitation email for an existing pending user.",
         "operationId": "ResendInvitation",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "description": "Request body. Contains the target user id.",
           "content": {
@@ -722,6 +766,17 @@
         ],
         "summary": "Suspends a tenant, preventing normal sign-in and onboarding traffic.",
         "operationId": "SuspendTenant",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -793,6 +848,17 @@
         ],
         "summary": "Re-activates a suspended tenant.",
         "operationId": "UnsuspendTenant",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1154,8 +1220,7 @@
           "tenantSlug",
           "displayName",
           "rootEmail",
-          "rootDisplayName",
-          "clientToken"
+          "rootDisplayName"
         ],
         "type": "object",
         "properties": {
@@ -1184,13 +1249,6 @@
             "minLength": 1,
             "type": "string",
             "description": "Display name of the tenant's root user."
-          },
-          "clientToken": {
-            "maxLength": 128,
-            "minLength": 16,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string",
-            "description": "Idempotency key bound to a hash of this complete onboarding request.\nA retry with the same token and content resumes unfinished stages;\nchanging the content or tenant behind a token is rejected."
           }
         },
         "additionalProperties": false,
@@ -1266,19 +1324,12 @@
       },
       "EvaluateAuthorizationRequest": {
         "required": [
-          "requestId",
           "principal",
           "action",
           "resource"
         ],
         "type": "object",
         "properties": {
-          "requestId": {
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[a-zA-Z0-9_.-]+$",
-            "type": "string"
-          },
           "principal": {
             "maxLength": 2048,
             "minLength": 1,

@@ -8,6 +8,7 @@
 import type {
   EmptyS3Request,
   ListS3AccountsResponse,
+  ProvisionS3DefaultAccountHeaders,
   ProvisionS3DefaultAccountResponse,
   S3DefaultAccountResponse
 } from '../schemas';
@@ -40,10 +41,11 @@ returned and the root user is not (re)created.
  */
 const provisionS3DefaultAccount = (
     emptyS3Request: EmptyS3Request,
+    headers: ProvisionS3DefaultAccountHeaders,
  options?: SecondParameter<typeof platformMutator<ProvisionS3DefaultAccountResponse>>,) => {
       return platformMutator<ProvisionS3DefaultAccountResponse>(
       {url: `/support-api/ProvisionS3DefaultAccount`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
+      headers: {'Content-Type': 'application/json', ...headers},
       data: emptyS3Request
     },
       options);
