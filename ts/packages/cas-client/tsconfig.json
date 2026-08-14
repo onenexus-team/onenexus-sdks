@@ -1,4 +1,7 @@
 {
     "extends": "../../tsconfig.base.json",
-    "include": ["src/**/*", "test/**/*", "tsup.config.ts", "vitest.config.ts", "orval.config.ts"]
+    "compilerOptions": {
+        "exactOptionalPropertyTypes": false
+    },
+    "include": ["src/**/*", "test/**/*", "tsup.config.ts", "vitest.config.ts"]
 }

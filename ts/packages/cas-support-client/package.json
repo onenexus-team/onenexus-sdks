@@ -31,9 +31,14 @@
         "typecheck": "tsc --noEmit",
         "lint": "eslint .",
         "test": "vitest run --passWithNoTests",
-        "generate": "orval --config ./orval.config.ts"
+        "generate": "../../../.tools/kiota/kiota generate --language TypeScript --openapi ../../../specs/cas-support/openapi.json --output ./src/generated --class-name CasSupportApiClient --namespace-name OneNexus.CasSupport --clean-output --exclude-backward-compatible --additional-data false --structured-mime-types application/json --structured-mime-types application/problem+json"
     },
     "dependencies": {
+        "@microsoft/kiota-abstractions": "1.0.0-preview.103",
+        "@microsoft/kiota-serialization-form": "1.0.0-preview.103",
+        "@microsoft/kiota-serialization-json": "1.0.0-preview.103",
+        "@microsoft/kiota-serialization-multipart": "1.0.0-preview.103",
+        "@microsoft/kiota-serialization-text": "1.0.0-preview.103",
         "@onenexus-team/sdk-core": "workspace:^"
     }
 }

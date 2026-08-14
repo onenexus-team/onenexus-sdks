@@ -1,4 +1,8 @@
-import { ClientBase, type ClientBaseConfig } from '@onenexus-team/sdk-core';
+import {
+    ClientBase,
+    type ClientBaseConfig,
+    type ClientRequestOptions,
+} from '@onenexus-team/sdk-core';
 
 import type {
     AcceptInvitationRequest,
@@ -50,14 +54,8 @@ import type {
     UpdateAuthorizationRoleDescriptionResponse,
     UpdatePolicyRequest,
     UpdatePolicyResponse,
-} from './generated/schemas/index.js';
-import { getAuthorizationAdministration } from './generated/authorization-administration/authorization-administration.js';
-import { getAuthorizationPolicy } from './generated/authorization-policy/authorization-policy.js';
-import { getAuthorizationRole } from './generated/authorization-role/authorization-role.js';
-import { getTenantServiceClient } from './generated/tenant-service-client/tenant-service-client.js';
-import { getTenantS3 } from './generated/tenant-s3/tenant-s3.js';
-import { getTenantUser } from './generated/tenant-user/tenant-user.js';
-import type { PlatformMutatorOptions } from './mutator.js';
+} from './generated/models/index.js';
+import { createCasApiClient, type CasApiClient } from './generated/casApiClient.js';
 
 /**
  * Construction-time configuration for {@link CasClient}.
@@ -79,7 +77,11 @@ export type CasClientConfig = ClientBaseConfig;
  * exported so future per-call overrides (custom headers, request-id, etc.)
  * can be added without changing every method signature.
  */
-export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
+export type CasRequestOptions = ClientRequestOptions;
+
+type NumericLimitRequest<T extends { limit?: unknown }> = Omit<T, 'limit'> & {
+    readonly limit?: T['limit'] | number | string;
+};
 
 /**
  * Typed client for the Central Auth Service Customer API `/api/*` RPC surface.
@@ -88,10 +90,9 @@ export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * Tenant-management and support operations live in a separate spec and are
  * served by `@onenexus-team/cas-support-client` (`/support-api/*`).
  *
- * Each method is a thin binding around an orval-generated function: the client
- * inherits {@link ClientBase}'s Ky transport, credentials, retry policy, and
- * client context, then passes the transport through to the mutator via the
- * second-argument options slot.
+ * Each method is a thin binding around a Kiota-generated request builder. The
+ * client inherits {@link ClientBase}'s request adapter, credentials, native
+ * retry policy, timeout behavior, and skew-aware client context.
  * Construction is cheap; instantiate one per CAS deployment (typically once
  * per process), or per logical caller when an application needs to talk to CAS
  * under multiple identities (e.g. an admin background job alongside a
@@ -126,23 +127,11 @@ export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * ```
  */
 export class CasClient extends ClientBase {
-    private readonly authorizationAdministration: ReturnType<
-        typeof getAuthorizationAdministration
-    >;
-    private readonly authorizationPolicy: ReturnType<typeof getAuthorizationPolicy>;
-    private readonly authorizationRole: ReturnType<typeof getAuthorizationRole>;
-    private readonly tenantUser: ReturnType<typeof getTenantUser>;
-    private readonly tenantS3: ReturnType<typeof getTenantS3>;
-    private readonly tenantServiceClient: ReturnType<typeof getTenantServiceClient>;
+    private readonly kiota: CasApiClient;
 
     constructor(config: CasClientConfig) {
         super(config);
-        this.authorizationAdministration = getAuthorizationAdministration();
-        this.authorizationPolicy = getAuthorizationPolicy();
-        this.authorizationRole = getAuthorizationRole();
-        this.tenantUser = getTenantUser();
-        this.tenantS3 = getTenantS3();
-        this.tenantServiceClient = getTenantServiceClient();
+        this.kiota = createCasApiClient(this.requestAdapter);
     }
 
     // -- Tenant user management ----------------------------------------------
@@ -158,7 +147,10 @@ export class CasClient extends ClientBase {
     createUser = (
         req: CreateUserRequest,
         options?: CasRequestOptions,
-    ): Promise<CreateUserResponse> => this.tenantUser.createUser(req, this.mutatorOptions(options));
+    ): Promise<CreateUserResponse> =>
+        this.expectResponse(
+            this.kiota.api.createUser.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Lists users in the authenticated caller's own tenant.
@@ -169,10 +161,15 @@ export class CasClient extends ClientBase {
      * @see POST /api/ListUsers
      */
     listUsers = (
-        req: ListUsersRequest = {},
+        req: NumericLimitRequest<ListUsersRequest> = {},
         options?: CasRequestOptions,
     ): Promise<ListUsersResponse> =>
-        this.tenantUser.listUsers(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.listUsers.post(
+                req as ListUsersRequest,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     /**
      * Redeems an invitation, sets a password, and activates the account.
@@ -186,7 +183,9 @@ export class CasClient extends ClientBase {
         req: AcceptInvitationRequest,
         options?: CasRequestOptions,
     ): Promise<AcceptInvitationResponse> =>
-        this.tenantUser.acceptInvitation(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.acceptInvitation.post(req, this.requestConfiguration(req, options)),
+        );
 
     // -- Tenant S3 -----------------------------------------------------------
 
@@ -199,8 +198,12 @@ export class CasClient extends ClientBase {
      *
      * @see POST /api/ListS3Roles
      */
-    listS3Roles = (options?: CasRequestOptions): Promise<ListS3RolesResponse> =>
-        this.tenantS3.listS3Roles({}, this.mutatorOptions(options));
+    listS3Roles = (options?: CasRequestOptions): Promise<ListS3RolesResponse> => {
+        const body = {};
+        return this.expectResponse(
+            this.kiota.api.listS3Roles.post(body, this.requestConfiguration(body, options)),
+        );
+    };
 
     /**
      * Assume an S3 role in the caller's tenant account and return temporary credentials.
@@ -215,7 +218,9 @@ export class CasClient extends ClientBase {
         req: AssumeS3RoleRequest,
         options?: CasRequestOptions,
     ): Promise<AssumeS3RoleResponse> =>
-        this.tenantS3.assumeS3Role(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.assumeS3Role.post(req, this.requestConfiguration(req, options)),
+        );
 
     // -- Tenant service clients --------------------------------------------
 
@@ -227,8 +232,12 @@ export class CasClient extends ClientBase {
      *
      * @see POST /api/ListServiceClients
      */
-    listServiceClients = (options?: CasRequestOptions): Promise<ListServiceClientsResponse> =>
-        this.tenantServiceClient.listServiceClients({}, this.mutatorOptions(options));
+    listServiceClients = (options?: CasRequestOptions): Promise<ListServiceClientsResponse> => {
+        const body = {};
+        return this.expectResponse(
+            this.kiota.api.listServiceClients.post(body, this.requestConfiguration(body, options)),
+        );
+    };
 
     /**
      * Create a tenant-owned service client with its first browser-generated public assertion key.
@@ -243,7 +252,9 @@ export class CasClient extends ClientBase {
         req: CreateServiceClientRequest,
         options?: CasRequestOptions,
     ): Promise<CreateServiceClientResponse> =>
-        this.tenantServiceClient.createServiceClient(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.createServiceClient.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Add an additional public assertion key to a service client.
@@ -257,7 +268,9 @@ export class CasClient extends ClientBase {
         req: AddServiceClientKeyRequest,
         options?: CasRequestOptions,
     ): Promise<AddServiceClientKeyResponse> =>
-        this.tenantServiceClient.addServiceClientKey(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.addServiceClientKey.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Revokes one public assertion key from a service client.
@@ -270,7 +283,12 @@ export class CasClient extends ClientBase {
         req: RemoveServiceClientKeyRequest,
         options?: CasRequestOptions,
     ): Promise<RemoveServiceClientKeyResponse> =>
-        this.tenantServiceClient.removeServiceClientKey(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.removeServiceClientKey.post(
+                req,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     /**
      * Disables a service client so it cannot obtain new access tokens.
@@ -284,7 +302,9 @@ export class CasClient extends ClientBase {
         req: DisableServiceClientRequest,
         options?: CasRequestOptions,
     ): Promise<DisableServiceClientResponse> =>
-        this.tenantServiceClient.disableServiceClient(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.disableServiceClient.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Re-sends an invitation to a pending member in the caller's tenant.
@@ -298,7 +318,9 @@ export class CasClient extends ClientBase {
         req: ResendUserInvitationRequest,
         options?: CasRequestOptions,
     ): Promise<void> =>
-        this.tenantUser.resendUserInvitation(req, this.mutatorOptions(options)).then(() => undefined);
+        this.expectNoResponse(
+            this.kiota.api.resendUserInvitation.post(req, this.requestConfiguration(req, options)),
+        );
 
     // -- Authorization roles -----------------------------------------------
 
@@ -314,7 +336,9 @@ export class CasClient extends ClientBase {
         req: CreateAuthorizationRoleRequest,
         options?: CasRequestOptions,
     ): Promise<CreateAuthorizationRoleResponse> =>
-        this.authorizationRole.createRole(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.createRole.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Updates the optional human-readable description of one tenant role.
@@ -327,7 +351,9 @@ export class CasClient extends ClientBase {
         req: UpdateAuthorizationRoleDescriptionRequest,
         options?: CasRequestOptions,
     ): Promise<UpdateAuthorizationRoleDescriptionResponse> =>
-        this.authorizationRole.updateRoleDescription(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.updateRoleDescription.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Lists authorization roles in the caller's tenant.
@@ -338,10 +364,15 @@ export class CasClient extends ClientBase {
      * @see POST /api/ListRoles
      */
     listRoles = (
-        req: ListAuthorizationRolesRequest = {},
+        req: NumericLimitRequest<ListAuthorizationRolesRequest> = {},
         options?: CasRequestOptions,
     ): Promise<ListAuthorizationRolesResponse> =>
-        this.authorizationRole.listRoles(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.listRoles.post(
+                req as ListAuthorizationRolesRequest,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     /**
      * Deletes one unreferenced tenant authorization role. Direct grants, workload bindings, and policy
@@ -357,7 +388,9 @@ export class CasClient extends ClientBase {
         req: DeleteAuthorizationRoleRequest,
         options?: CasRequestOptions,
     ): Promise<DeleteAuthorizationRoleResponse> =>
-        this.authorizationRole.deleteRole(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.deleteRole.post(req, this.requestConfiguration(req, options)),
+        );
 
     // -- Authorization relationships ---------------------------------------
 
@@ -373,7 +406,9 @@ export class CasClient extends ClientBase {
         req: AssignRoleRequest,
         options?: CasRequestOptions,
     ): Promise<AssignRoleResponse> =>
-        this.authorizationAdministration.assignRole(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.assignRole.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Removes one direct role assignment using its current state token.
@@ -388,7 +423,9 @@ export class CasClient extends ClientBase {
         req: RemoveRoleAssignmentRequest,
         options?: CasRequestOptions,
     ): Promise<AuthorizationRelationshipRemovedResponse> =>
-        this.authorizationAdministration.removeRoleAssignment(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.removeRoleAssignment.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Lists direct assignments by exactly one role or assignee filter.
@@ -399,10 +436,15 @@ export class CasClient extends ClientBase {
      * @see POST /api/ListRoleAssignments
      */
     listRoleAssignments = (
-        req: ListRoleAssignmentsRequest = {},
+        req: NumericLimitRequest<ListRoleAssignmentsRequest> = {},
         options?: CasRequestOptions,
     ): Promise<ListRoleAssignmentsResponse> =>
-        this.authorizationAdministration.listRoleAssignments(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.listRoleAssignments.post(
+                req as ListRoleAssignmentsRequest,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     /**
      * Compiles and idempotently attaches one tenant- or platform-managed policy to a role.
@@ -416,7 +458,9 @@ export class CasClient extends ClientBase {
         req: AttachPolicyToRoleRequest,
         options?: CasRequestOptions,
     ): Promise<AttachPolicyToRoleResponse> =>
-        this.authorizationAdministration.attachPolicyToRole(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.attachPolicyToRole.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Detaches one policy from one role using the relationship state token.
@@ -430,7 +474,9 @@ export class CasClient extends ClientBase {
         req: DetachPolicyFromRoleRequest,
         options?: CasRequestOptions,
     ): Promise<AuthorizationRelationshipRemovedResponse> =>
-        this.authorizationAdministration.detachPolicyFromRole(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.detachPolicyFromRole.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Lists roles to which one policy is directly attached.
@@ -441,10 +487,15 @@ export class CasClient extends ClientBase {
      * @see POST /api/ListPolicyAttachments
      */
     listPolicyAttachments = (
-        req: ListPolicyAttachmentsRequest,
+        req: NumericLimitRequest<ListPolicyAttachmentsRequest>,
         options?: CasRequestOptions,
     ): Promise<ListPolicyAttachmentsResponse> =>
-        this.authorizationAdministration.listPolicyAttachments(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.listPolicyAttachments.post(
+                req as ListPolicyAttachmentsRequest,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     /**
      * Lists tenant- and platform-managed policies directly attached to one role.
@@ -455,10 +506,15 @@ export class CasClient extends ClientBase {
      * @see POST /api/ListRolePolicies
      */
     listRolePolicies = (
-        req: ListRolePoliciesRequest,
+        req: NumericLimitRequest<ListRolePoliciesRequest>,
         options?: CasRequestOptions,
     ): Promise<ListPolicyAttachmentsResponse> =>
-        this.authorizationAdministration.listRolePolicies(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.listRolePolicies.post(
+                req as ListRolePoliciesRequest,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     // -- Authorization policies --------------------------------------------
 
@@ -475,7 +531,9 @@ export class CasClient extends ClientBase {
         req: PublishPolicyRequest,
         options?: CasRequestOptions,
     ): Promise<PublishPolicyResponse> =>
-        this.authorizationPolicy.publishPolicy(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.publishPolicy.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Lists one page of policies visible to the caller's tenant.
@@ -487,10 +545,15 @@ export class CasClient extends ClientBase {
      * @see POST /api/ListPolicies
      */
     listPolicies = (
-        req: ListPoliciesRequest = {},
+        req: NumericLimitRequest<ListPoliciesRequest> = {},
         options?: CasRequestOptions,
     ): Promise<ListPoliciesResponse> =>
-        this.authorizationPolicy.listPolicies(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.listPolicies.post(
+                req as ListPoliciesRequest,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     /**
      * Gets one policy's content without its role attachments.
@@ -500,11 +563,10 @@ export class CasClient extends ClientBase {
      *
      * @see POST /api/GetPolicy
      */
-    getPolicy = (
-        req: GetPolicyRequest,
-        options?: CasRequestOptions,
-    ): Promise<GetPolicyResponse> =>
-        this.authorizationPolicy.getPolicy(req, this.mutatorOptions(options));
+    getPolicy = (req: GetPolicyRequest, options?: CasRequestOptions): Promise<GetPolicyResponse> =>
+        this.expectResponse(
+            this.kiota.api.getPolicy.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Updates only the content of an existing tenant-managed policy.
@@ -519,7 +581,9 @@ export class CasClient extends ClientBase {
         req: UpdatePolicyRequest,
         options?: CasRequestOptions,
     ): Promise<UpdatePolicyResponse> =>
-        this.authorizationPolicy.updatePolicy(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.updatePolicy.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Deletes one unattached tenant-managed policy.
@@ -534,5 +598,7 @@ export class CasClient extends ClientBase {
         req: DeletePolicyRequest,
         options?: CasRequestOptions,
     ): Promise<DeletePolicyResponse> =>
-        this.authorizationPolicy.deletePolicy(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.api.deletePolicy.post(req, this.requestConfiguration(req, options)),
+        );
 }

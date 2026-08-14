@@ -13,6 +13,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { CasSupportClient } from '../src/client.js';
 
 const BASE_URL = 'https://cas.test.invalid';
+const TENANT_ID = '0193fabc-1234-7def-abcd-1234567890ab';
 
 function staticCreds(label = 'static'): Credentials {
     return new TokenGrantCredentials({
@@ -46,7 +47,7 @@ describe('CasSupportClient', () => {
                     observedAuth = request.headers.get('authorization');
                     observedBody = await request.json();
                     return HttpResponse.json({
-                        tenantId: 'tn_acme',
+                        tenantId: TENANT_ID,
                         tenantSlug: 'tn_acme',
                     });
                 }),
@@ -64,7 +65,7 @@ describe('CasSupportClient', () => {
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
-            expect(result.tenantId).toBe('tn_acme');
+            expect(result.tenantId).toBe(TENANT_ID);
             expect(result.tenantSlug).toBe('tn_acme');
             expect(observedAuth).toBe('Bearer at-happy');
             expect(observedBody).toEqual({
@@ -110,14 +111,14 @@ describe('CasSupportClient', () => {
             const tenant = await support.describeTenant({
                 tenantId: '0193fabc-1234-7def-abcd-1234567890ab',
             });
-            expect(tenant.data.userCount).toBe(3);
+            expect(tenant.data?.userCount).toBe(3);
 
             const created = await support.addTenantUser({
                 tenantId: '0193fabc-1234-7def-abcd-1234567890ac',
                 email: 'a@b.c',
                 displayName: 'A B',
             });
-            expect(created.user.email).toBe('a@b.c');
+            expect(created.user?.email).toBe('a@b.c');
         });
 
         it('resendInvitation POSTs the user ID and returns invitation details', async () => {
@@ -175,18 +176,15 @@ describe('CasSupportClient', () => {
         it('binds authorization evaluation to the generated support operation', async () => {
             let observedBody: unknown;
             server.use(
-                http.post(
-                    `${BASE_URL}/support-api/EvaluateAuthorization`,
-                    async ({ request }) => {
-                        observedBody = await request.json();
-                        return HttpResponse.json({
-                            allowed: true,
-                            reasonCode: 'allowed',
-                            authorizationGeneration: 'generation-1',
-                            cedarEntities: [],
-                        });
-                    },
-                ),
+                http.post(`${BASE_URL}/support-api/EvaluateAuthorization`, async ({ request }) => {
+                    observedBody = await request.json();
+                    return HttpResponse.json({
+                        allowed: true,
+                        reasonCode: 'allowed',
+                        authorizationGeneration: 'generation-1',
+                        cedarEntities: [],
+                    });
+                }),
             );
 
             const support = new CasSupportClient({ baseUrl: BASE_URL, credentials: staticCreds() });
@@ -220,13 +218,16 @@ describe('CasSupportClient', () => {
                         account: null,
                     });
                 }),
-                http.post(`${BASE_URL}/support-api/ProvisionS3DefaultAccount`, async ({ request }) => {
-                    observedBodies.set('provision', await request.json());
-                    return HttpResponse.json({
-                        account: { id: 'account-1', name: 'tenant-root' },
-                        rootUser: null,
-                    });
-                }),
+                http.post(
+                    `${BASE_URL}/support-api/ProvisionS3DefaultAccount`,
+                    async ({ request }) => {
+                        observedBodies.set('provision', await request.json());
+                        return HttpResponse.json({
+                            account: { id: 'account-1', name: 'tenant-root' },
+                            rootUser: null,
+                        });
+                    },
+                ),
                 http.post(`${BASE_URL}/support-api/ListS3Accounts`, async ({ request }) => {
                     observedBodies.set('list', await request.json());
                     return HttpResponse.json({
@@ -241,7 +242,7 @@ describe('CasSupportClient', () => {
             const listed = await support.listS3Accounts();
 
             expect(account.rootUserId).toBe('root-user-1');
-            expect(provisioned.account.id).toBe('account-1');
+            expect(provisioned.account?.id).toBe('account-1');
             expect(listed.items).toEqual([{ id: 'account-1', name: 'tenant-root' }]);
             expect(observedBodies).toEqual(
                 new Map([
@@ -335,8 +336,9 @@ describe('CasSupportClient', () => {
         });
     });
 
-    describe('401 retry with server-clock update', () => {
-        it('end-to-end through CasSupportClient: first 401 records server time; retry resolves fresh token and succeeds', async () => {
+    describe('native retry with server-clock update', () => {
+        it('retries a POST after 503 with stable auth and observes server time', async () => {
+            vi.spyOn(Math, 'random').mockReturnValue(0);
             const stale: AccessToken = {
                 accessToken: 'at-stale',
                 tokenType: 'Bearer',
@@ -359,9 +361,9 @@ describe('CasSupportClient', () => {
                     serverCallCount += 1;
                     if (serverCallCount === 1) {
                         return HttpResponse.json(
-                            { code: 'unauthenticated', detail: 'token expired' },
+                            { code: 'unavailable', detail: 'temporarily unavailable' },
                             {
-                                status: 401,
+                                status: 503,
                                 headers: {
                                     'content-type': 'application/problem+json',
                                     date: new Date(cutoff + 1_000).toUTCString(),
@@ -370,13 +372,17 @@ describe('CasSupportClient', () => {
                         );
                     }
                     return HttpResponse.json({
-                        tenantId: 'tn_acme',
+                        tenantId: TENANT_ID,
                         tenantSlug: 'tn_acme',
                     });
                 }),
             );
 
-            const support = new CasSupportClient({ baseUrl: BASE_URL, credentials });
+            const support = new CasSupportClient({
+                baseUrl: BASE_URL,
+                credentials,
+                retry: { limit: 1, backoffLimitMs: 0 },
+            });
             const result = await support.createTenant({
                 tenantSlug: 'tn_acme',
                 displayName: 'Acme',
@@ -385,9 +391,9 @@ describe('CasSupportClient', () => {
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
-            expect(result.tenantId).toBe('tn_acme');
-            expect(observedAuth).toEqual(['Bearer at-stale', 'Bearer at-fresh']);
-            expect(resolve).toHaveBeenCalledTimes(2);
+            expect(result.tenantId).toBe(TENANT_ID);
+            expect(observedAuth).toEqual(['Bearer at-stale', 'Bearer at-stale']);
+            expect(resolve).toHaveBeenCalledOnce();
         });
     });
 
@@ -477,7 +483,7 @@ describe('CasSupportClient', () => {
             server.use(
                 http.post(`${BASE_URL}/support-api/CreateTenant`, () =>
                     HttpResponse.json({
-                        tenantId: 'tn_x',
+                        tenantId: TENANT_ID,
                         tenantSlug: 'tn_x',
                     }),
                 ),
@@ -493,7 +499,7 @@ describe('CasSupportClient', () => {
                 rootDisplayName: 'Admin X',
                 clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
-            expect(result.tenantId).toBe('tn_x');
+            expect(result.tenantId).toBe(TENANT_ID);
         });
     });
 });

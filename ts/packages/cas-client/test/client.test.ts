@@ -68,7 +68,7 @@ describe('CasClient', () => {
                 requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
-            expect(result.user.email).toBe('a@b.c');
+            expect(result.user?.email).toBe('a@b.c');
             expect(observedAuth).toBe('Bearer at-happy');
             expect(observedBody).toEqual({
                 email: 'a@b.c',
@@ -106,7 +106,7 @@ describe('CasClient', () => {
         it('wraps service-client key management and invitation resend operations', async () => {
             const observedBodies = new Map<string, unknown>();
             const serviceClient = {
-                id: 'client-1',
+                id: '0193fabc-1234-7def-abcd-1234567890ac',
                 uri: 'onenexus:service-client/client-1',
                 clientId: 'client-id-1',
                 displayName: 'Automation',
@@ -121,7 +121,9 @@ describe('CasClient', () => {
                 }),
                 http.post(`${BASE_URL}/api/DisableServiceClient`, async ({ request }) => {
                     observedBodies.set('disable', await request.json());
-                    return HttpResponse.json({ serviceClient: { ...serviceClient, lifecycleState: 'Disabled' } });
+                    return HttpResponse.json({
+                        serviceClient: { ...serviceClient, lifecycleState: 'Disabled' },
+                    });
                 }),
                 http.post(`${BASE_URL}/api/ResendUserInvitation`, async ({ request }) => {
                     observedBodies.set('resendInvitation', await request.json());
@@ -133,7 +135,9 @@ describe('CasClient', () => {
             await expect(
                 cas.removeServiceClientKey({ serviceClientId: 'client-1', kid: 'key-1' }),
             ).resolves.toMatchObject({ serviceClient });
-            await expect(cas.disableServiceClient({ serviceClientId: 'client-1' })).resolves.toMatchObject({
+            await expect(
+                cas.disableServiceClient({ serviceClientId: 'client-1' }),
+            ).resolves.toMatchObject({
                 serviceClient: { lifecycleState: 'Disabled' },
             });
             await expect(
@@ -167,7 +171,6 @@ describe('CasClient', () => {
                 userId: '0193fabc-1234-7def-abcd-1234567890ab',
                 token: 'invite-token-abc',
                 password: 'a-good-password',
-                clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
             expect(user.email).toBe('a@b.c');
             expect(user.loginUrl).toContain('tn_acme');
@@ -250,7 +253,7 @@ describe('CasClient', () => {
 
             expect(published.contentStateToken).toBe('state-1');
             expect(listed.items).toEqual([summary]);
-            expect(fetched.policy.createdByUri).toBe('onenexus:user/user-1');
+            expect(fetched.policy?.createdByUri).toBe('onenexus:user/user-1');
             expect(updated.contentStateToken).toBe('state-2');
             expect(deleted.name).toBe('ReadOnly');
             expect(observedBodies).toEqual(
@@ -284,20 +287,20 @@ describe('CasClient', () => {
             const policy = { kind: 'TenantManaged' as const, name: 'ReadOnly' };
             const role = { roleUri, name: 'Reader' };
             const assignment = {
-                assignmentId: 'assignment-1',
+                assignmentId: '0193fabc-1234-7def-abcd-1234567890ad',
                 roleUri,
                 assignee,
                 stateToken: 'assignment-state-1',
                 assignedByUri: 'onenexus:user/admin-1',
-                assignedAtUtc: '2026-07-18T10:00:00Z',
+                assignedAtUtc: new Date('2026-07-18T10:00:00Z'),
             };
             const attachment = {
-                attachmentId: 'attachment-1',
+                attachmentId: '0193fabc-1234-7def-abcd-1234567890ae',
                 policy,
                 roleUri,
                 stateToken: 'attachment-state-1',
                 attachedByUri: 'onenexus:user/admin-1',
-                attachedAtUtc: '2026-07-18T10:00:00Z',
+                attachedAtUtc: new Date('2026-07-18T10:00:00Z'),
             };
             const observedOperations: string[] = [];
             const respond = (operation: string, body: object) => {
@@ -310,8 +313,12 @@ describe('CasClient', () => {
                     respond('CreateRole', { created: true, role }),
                 ),
                 http.post(`${BASE_URL}/api/UpdateRoleDescription`, async ({ request }) => {
-                    observedOperations.push(`UpdateRoleDescription:${JSON.stringify(await request.json())}`);
-                    return HttpResponse.json({ role: { ...role, description: 'Read-only access' } });
+                    observedOperations.push(
+                        `UpdateRoleDescription:${JSON.stringify(await request.json())}`,
+                    );
+                    return HttpResponse.json({
+                        role: { ...role, description: 'Read-only access' },
+                    });
                 }),
                 http.post(`${BASE_URL}/api/ListRoles`, () =>
                     respond('ListRoles', { items: [role] }),
@@ -358,9 +365,10 @@ describe('CasClient', () => {
             );
 
             const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
-            expect(
-                await cas.createRole({ requestId: 'request-1', name: 'Reader' }),
-            ).toMatchObject({ created: true, role });
+            expect(await cas.createRole({ requestId: 'request-1', name: 'Reader' })).toMatchObject({
+                created: true,
+                role,
+            });
             expect(
                 await cas.updateRoleDescription({
                     requestId: 'request-2',
@@ -369,9 +377,10 @@ describe('CasClient', () => {
                 }),
             ).toMatchObject({ role: { ...role, description: 'Read-only access' } });
             expect((await cas.listRoles()).items).toEqual([role]);
-            expect(
-                await cas.deleteRole({ requestId: 'request-2', roleUri }),
-            ).toMatchObject({ removed: true, roleUri });
+            expect(await cas.deleteRole({ requestId: 'request-2', roleUri })).toMatchObject({
+                removed: true,
+                roleUri,
+            });
             expect(
                 await cas.assignRole({ requestId: 'request-3', roleUri, assignee }),
             ).toMatchObject({ created: true, assignment });
@@ -397,7 +406,7 @@ describe('CasClient', () => {
             ).toEqual({ removed: true });
             expect((await cas.listPolicyAttachments({ policy })).items).toEqual([attachment]);
             expect((await cas.listRolePolicies({ roleUri })).items).toEqual([attachment]);
-            expect((await cas.listUsers({ limit: 10 })).items[0]?.userUri).toBe(
+            expect((await cas.listUsers({ limit: 10 })).items?.[0]?.userUri).toBe(
                 'onenexus:user/user-1',
             );
             expect(observedOperations).toEqual([
@@ -495,8 +504,9 @@ describe('CasClient', () => {
         });
     });
 
-    describe('401 retry with server-clock update', () => {
-        it('end-to-end through CasClient: first 401 records server time; retry resolves fresh token and succeeds', async () => {
+    describe('native retry with server-clock update', () => {
+        it('retries a POST after 503 with stable auth and observes server time', async () => {
+            vi.spyOn(Math, 'random').mockReturnValue(0);
             const stale: AccessToken = {
                 accessToken: 'at-stale',
                 tokenType: 'Bearer',
@@ -519,9 +529,9 @@ describe('CasClient', () => {
                     serverCallCount += 1;
                     if (serverCallCount === 1) {
                         return HttpResponse.json(
-                            { code: 'unauthenticated', detail: 'token expired' },
+                            { code: 'unavailable', detail: 'temporarily unavailable' },
                             {
-                                status: 401,
+                                status: 503,
                                 headers: {
                                     'content-type': 'application/problem+json',
                                     date: new Date(cutoff + 1_000).toUTCString(),
@@ -533,16 +543,20 @@ describe('CasClient', () => {
                 }),
             );
 
-            const cas = new CasClient({ baseUrl: BASE_URL, credentials });
+            const cas = new CasClient({
+                baseUrl: BASE_URL,
+                credentials,
+                retry: { limit: 1, backoffLimitMs: 0 },
+            });
             const result = await cas.createUser({
                 email: 'a@b.c',
                 displayName: 'A B',
                 requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
 
-            expect(result.user.email).toBe('a@b.c');
-            expect(observedAuth).toEqual(['Bearer at-stale', 'Bearer at-fresh']);
-            expect(resolve).toHaveBeenCalledTimes(2);
+            expect(result.user?.email).toBe('a@b.c');
+            expect(observedAuth).toEqual(['Bearer at-stale', 'Bearer at-stale']);
+            expect(resolve).toHaveBeenCalledOnce();
         });
     });
 
@@ -625,7 +639,7 @@ describe('CasClient', () => {
                 displayName: 'X',
                 requestId: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
             });
-            expect(result.user.email).toBe('x@x.c');
+            expect(result.user?.email).toBe('x@x.c');
         });
     });
 });

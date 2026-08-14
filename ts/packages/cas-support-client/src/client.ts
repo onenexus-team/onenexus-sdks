@@ -1,4 +1,8 @@
-import { ClientBase, type ClientBaseConfig } from '@onenexus-team/sdk-core';
+import {
+    ClientBase,
+    type ClientBaseConfig,
+    type ClientRequestOptions,
+} from '@onenexus-team/sdk-core';
 
 import type {
     AddTenantUserRequest,
@@ -23,11 +27,11 @@ import type {
     SuspendTenantResponse,
     UnsuspendTenantRequest,
     UnsuspendTenantResponse,
-} from './generated/schemas/index.js';
-import { getCephS3 } from './generated/ceph-s3/ceph-s3.js';
-import { getSupportAuthorization } from './generated/support-authorization/support-authorization.js';
-import { getTenant } from './generated/tenant/tenant.js';
-import type { PlatformMutatorOptions } from './mutator.js';
+} from './generated/models/index.js';
+import {
+    createCasSupportApiClient,
+    type CasSupportApiClient,
+} from './generated/casSupportApiClient.js';
 
 /**
  * Shared empty request body for the parameterless S3 administration RPCs.
@@ -55,7 +59,14 @@ export type CasSupportClientConfig = ClientBaseConfig;
  * exported so future per-call overrides (custom headers, request-id, etc.)
  * can be added without changing every method signature.
  */
-export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
+export type CasSupportRequestOptions = ClientRequestOptions;
+
+type NumericLimitRequest<T extends { limit?: unknown }> = Omit<T, 'limit'> & {
+    readonly limit?: T['limit'] | number | string;
+};
+type EvaluateAuthorizationFacadeRequest = Omit<EvaluateAuthorizationRequest, 'context'> & {
+    readonly context?: unknown;
+};
 
 /**
  * Typed client for the Central Auth Service Support API `/support-api/*` RPC
@@ -66,10 +77,9 @@ export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * OpenAPI spec (`specs/cas-support/openapi.json`) and shares the same
  * transport, credential, and error primitives from `@onenexus-team/sdk-core`.
  *
- * Each method is a thin binding around an orval-generated function: the client
- * inherits {@link ClientBase}'s Ky transport, credentials, retry policy, and
- * client context, then passes the transport through to the mutator via the
- * second-argument options slot.
+ * Each method is a thin binding around a Kiota-generated request builder. The
+ * client inherits {@link ClientBase}'s request adapter, credentials, native
+ * retry policy, timeout behavior, and skew-aware client context.
  * Construction is cheap; instantiate one per CAS deployment (typically once
  * per process), or per logical caller when an application needs to talk to CAS
  * under multiple identities.
@@ -104,15 +114,11 @@ export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * ```
  */
 export class CasSupportClient extends ClientBase {
-    private readonly tenant: ReturnType<typeof getTenant>;
-    private readonly cephS3: ReturnType<typeof getCephS3>;
-    private readonly supportAuthorization: ReturnType<typeof getSupportAuthorization>;
+    private readonly kiota: CasSupportApiClient;
 
     constructor(config: CasSupportClientConfig) {
         super(config);
-        this.tenant = getTenant();
-        this.cephS3 = getCephS3();
-        this.supportAuthorization = getSupportAuthorization();
+        this.kiota = createCasSupportApiClient(this.requestAdapter);
     }
 
     // -- Tenant management ---------------------------------------------------
@@ -125,7 +131,10 @@ export class CasSupportClient extends ClientBase {
     createTenant = (
         req: CreateTenantRequest,
         options?: CasSupportRequestOptions,
-    ): Promise<CreateTenantResponse> => this.tenant.createTenant(req, this.mutatorOptions(options));
+    ): Promise<CreateTenantResponse> =>
+        this.expectResponse(
+            this.kiota.supportApi.createTenant.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Look up a tenant by Guid PK.
@@ -136,7 +145,9 @@ export class CasSupportClient extends ClientBase {
         req: DescribeTenantRequest,
         options?: CasSupportRequestOptions,
     ): Promise<DescribeTenantResponse> =>
-        this.tenant.describeTenant(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.supportApi.describeTenant.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Page across all tenants known to CAS. Platform-admin / support surface — there is no tenant
@@ -154,9 +165,15 @@ export class CasSupportClient extends ClientBase {
      * @see POST /support-api/ListTenants
      */
     listTenants = (
-        req: ListTenantsRequest,
+        req: NumericLimitRequest<ListTenantsRequest>,
         options?: CasSupportRequestOptions,
-    ): Promise<ListTenantsResponse> => this.tenant.listTenants(req, this.mutatorOptions(options));
+    ): Promise<ListTenantsResponse> =>
+        this.expectResponse(
+            this.kiota.supportApi.listTenants.post(
+                req as ListTenantsRequest,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     /**
      * Page across the users belonging to a specific tenant. Platform-admin / support surface — the
@@ -178,10 +195,15 @@ export class CasSupportClient extends ClientBase {
      * @see POST /support-api/ListTenantUsers
      */
     listTenantUsers = (
-        req: ListTenantUsersRequest,
+        req: NumericLimitRequest<ListTenantUsersRequest>,
         options?: CasSupportRequestOptions,
     ): Promise<ListTenantUsersResponse> =>
-        this.tenant.listTenantUsers(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.supportApi.listTenantUsers.post(
+                req as ListTenantUsersRequest,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     /**
      * Add a roleless user to an existing active tenant. Role grants are separate authorization-
@@ -198,7 +220,10 @@ export class CasSupportClient extends ClientBase {
     addTenantUser = (
         req: AddTenantUserRequest,
         options?: CasSupportRequestOptions,
-    ): Promise<CreateUserResponse> => this.tenant.addTenantUser(req, this.mutatorOptions(options));
+    ): Promise<CreateUserResponse> =>
+        this.expectResponse(
+            this.kiota.supportApi.addTenantUser.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Re-sends the invitation email for an existing pending user.
@@ -209,7 +234,12 @@ export class CasSupportClient extends ClientBase {
         req: ResendInvitationRequest,
         options?: CasSupportRequestOptions,
     ): Promise<ResendInvitationResponse> =>
-        this.tenant.resendInvitation(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.supportApi.resendInvitation.post(
+                req,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     /**
      * Suspends a tenant, preventing normal sign-in and onboarding traffic.
@@ -219,7 +249,10 @@ export class CasSupportClient extends ClientBase {
     suspendTenant = (
         req: SuspendTenantRequest,
         options?: CasSupportRequestOptions,
-    ): Promise<SuspendTenantResponse> => this.tenant.suspendTenant(req, this.mutatorOptions(options));
+    ): Promise<SuspendTenantResponse> =>
+        this.expectResponse(
+            this.kiota.supportApi.suspendTenant.post(req, this.requestConfiguration(req, options)),
+        );
 
     /**
      * Re-activates a suspended tenant.
@@ -230,7 +263,12 @@ export class CasSupportClient extends ClientBase {
         req: UnsuspendTenantRequest,
         options?: CasSupportRequestOptions,
     ): Promise<UnsuspendTenantResponse> =>
-        this.tenant.unsuspendTenant(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.supportApi.unsuspendTenant.post(
+                req,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     // -- Authorization diagnostics -----------------------------------------
 
@@ -241,10 +279,15 @@ export class CasSupportClient extends ClientBase {
      * @see POST /support-api/EvaluateAuthorization
      */
     evaluateAuthorization = (
-        req: EvaluateAuthorizationRequest,
+        req: EvaluateAuthorizationFacadeRequest,
         options?: CasSupportRequestOptions,
     ): Promise<EvaluateAuthorizationResponse> =>
-        this.supportAuthorization.evaluateAuthorization(req, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.supportApi.evaluateAuthorization.post(
+                req as EvaluateAuthorizationRequest,
+                this.requestConfiguration(req, options),
+            ),
+        );
 
     // -- Ceph S3 administration ---------------------------------------------
 
@@ -254,7 +297,12 @@ export class CasSupportClient extends ClientBase {
      * @see POST /support-api/GetS3DefaultAccount
      */
     getS3DefaultAccount = (options?: CasSupportRequestOptions): Promise<S3DefaultAccountResponse> =>
-        this.cephS3.getS3DefaultAccount(EMPTY_S3_REQUEST, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.supportApi.getS3DefaultAccount.post(
+                EMPTY_S3_REQUEST,
+                this.requestConfiguration(EMPTY_S3_REQUEST, options),
+            ),
+        );
 
     /**
      * Provision the first-party default S3 account and its account-root user. Idempotent on the
@@ -266,7 +314,12 @@ export class CasSupportClient extends ClientBase {
     provisionS3DefaultAccount = (
         options?: CasSupportRequestOptions,
     ): Promise<ProvisionS3DefaultAccountResponse> =>
-        this.cephS3.provisionS3DefaultAccount(EMPTY_S3_REQUEST, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.supportApi.provisionS3DefaultAccount.post(
+                EMPTY_S3_REQUEST,
+                this.requestConfiguration(EMPTY_S3_REQUEST, options),
+            ),
+        );
 
     /**
      * List every RGW account known to the cluster.
@@ -274,5 +327,10 @@ export class CasSupportClient extends ClientBase {
      * @see POST /support-api/ListS3Accounts
      */
     listS3Accounts = (options?: CasSupportRequestOptions): Promise<ListS3AccountsResponse> =>
-        this.cephS3.listS3Accounts(EMPTY_S3_REQUEST, this.mutatorOptions(options));
+        this.expectResponse(
+            this.kiota.supportApi.listS3Accounts.post(
+                EMPTY_S3_REQUEST,
+                this.requestConfiguration(EMPTY_S3_REQUEST, options),
+            ),
+        );
 }

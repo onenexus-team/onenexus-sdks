@@ -5,3 +5,4 @@ dist
 coverage
 .vitest-cache
 .local-packages
+**/.kiota.log

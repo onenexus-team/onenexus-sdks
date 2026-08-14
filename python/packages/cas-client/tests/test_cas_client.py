@@ -1,10 +1,19 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from email.utils import format_datetime
+from unittest.mock import AsyncMock
 
 import httpx
-from onenexus_sdk_core import AccessToken, TokenGrantCredentials
+import pytest
+from kiota_abstractions.api_error import APIError
+from onenexus_sdk_core import (
+    AccessToken,
+    ClientContext,
+    SystemClock,
+    TokenGrantCredentials,
+)
 
 from onenexus_cas_client import (
     AssignRoleRequest,
@@ -22,7 +31,9 @@ from onenexus_cas_client import (
 )
 from onenexus_cas_client.generated.models.assume_s3_role_request import AssumeS3RoleRequest
 from onenexus_cas_client.generated.models.create_user_request import CreateUserRequest
-from onenexus_cas_client.generated.models.disable_service_client_request import DisableServiceClientRequest
+from onenexus_cas_client.generated.models.disable_service_client_request import (
+    DisableServiceClientRequest,
+)
 
 
 def _credentials() -> TokenGrantCredentials:
@@ -154,19 +165,140 @@ async def test_service_client_key_management_and_invitation_resend_route_through
         captured.append((request.url.path, json.loads(request.content)))
         if request.url.path == "/api/ResendUserInvitation":
             return httpx.Response(204)
-        return httpx.Response(200, json={"serviceClient": {}}, headers={"content-type": "application/json"})
+        return httpx.Response(
+            200, json={"serviceClient": {}}, headers={"content-type": "application/json"}
+        )
 
     async with _client(httpx.MockTransport(handler)) as cas:
         await cas.remove_service_client_key(
-            RemoveServiceClientKeyRequest(service_client_id="0193fabc-1234-7def-abcd-1234567890ab", kid="key-1")
+            RemoveServiceClientKeyRequest(
+                service_client_id="0193fabc-1234-7def-abcd-1234567890ab", kid="key-1"
+            )
         )
-        await cas.disable_service_client(DisableServiceClientRequest(service_client_id="0193fabc-1234-7def-abcd-1234567890ab"))
+        await cas.disable_service_client(
+            DisableServiceClientRequest(service_client_id="0193fabc-1234-7def-abcd-1234567890ab")
+        )
         await cas.resend_user_invitation(
             ResendUserInvitationRequest(user_id="0193fabc-1234-7def-abcd-1234567890ac")
         )
 
     assert captured == [
-        ("/api/RemoveServiceClientKey", {"serviceClientId": "0193fabc-1234-7def-abcd-1234567890ab", "kid": "key-1"}),
+        (
+            "/api/RemoveServiceClientKey",
+            {"serviceClientId": "0193fabc-1234-7def-abcd-1234567890ab", "kid": "key-1"},
+        ),
         ("/api/DisableServiceClient", {"serviceClientId": "0193fabc-1234-7def-abcd-1234567890ab"}),
         ("/api/ResendUserInvitation", {"userId": "0193fabc-1234-7def-abcd-1234567890ac"}),
     ]
+
+
+async def test_retryable_post_uses_kiota_retry_middleware(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    attempts: list[tuple[str | None, str | None, bytes]] = []
+    retry_sleep = AsyncMock()
+    monkeypatch.setattr("kiota_http.middleware.retry_handler.asyncio.sleep", retry_sleep)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        attempts.append(
+            (
+                request.headers.get("authorization"),
+                request.headers.get("x-caller-header"),
+                request.content,
+            )
+        )
+        if len(attempts) == 1:
+            return httpx.Response(503)
+        return httpx.Response(200, json={}, headers={"content-type": "application/json"})
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(handler),
+        base_url="https://cas.test",
+        headers={"x-caller-header": "stable"},
+    ) as http:
+        async with CasClient(
+            base_url="https://cas.test",
+            credentials=_credentials(),
+            http_client=http,
+        ) as cas:
+            await cas.create_user(CreateUserRequest(email="a@b.c", display_name="A B"))
+
+        assert not http.is_closed
+
+    assert len(attempts) == 2
+    assert attempts[0] == attempts[1]
+    assert attempts[0][0] == "Bearer at-test"
+    assert attempts[0][1] == "stable"
+    retry_sleep.assert_awaited_once()
+
+
+async def test_non_retryable_post_is_not_retried() -> None:
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        return httpx.Response(
+            409,
+            json={"title": "Conflict"},
+            headers={"content-type": "application/problem+json"},
+        )
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(handler),
+        base_url="https://cas.test",
+    ) as http:
+        async with CasClient(
+            base_url="https://cas.test",
+            credentials=_credentials(),
+            http_client=http,
+        ) as cas:
+            with pytest.raises(APIError):
+                await cas.create_user(CreateUserRequest(email="a@b.c", display_name="A B"))
+
+    assert attempts == 1
+
+
+async def test_injected_http_client_preserves_hooks_and_observes_server_date() -> None:
+    server_date = datetime.now(UTC) + timedelta(seconds=120)
+    caller_hook = AsyncMock()
+    context = ClientContext(
+        clock=SystemClock(),
+        refresh_leeway=timedelta(seconds=30),
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={},
+            headers={
+                "content-type": "application/json",
+                "date": format_datetime(server_date),
+            },
+        )
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(handler),
+        base_url="https://cas.test",
+        event_hooks={"response": [caller_hook]},
+    ) as http:
+        async with CasClient(
+            base_url="https://cas.test",
+            credentials=_credentials(),
+            context=context,
+            http_client=http,
+        ) as cas:
+            await cas.list_users()
+
+    caller_hook.assert_awaited_once()
+    assert context.clock.server_now() > datetime.now(UTC) + timedelta(seconds=110)
+
+
+async def test_cas_client_closes_owned_http_client() -> None:
+    cas = CasClient(base_url="https://cas.test", credentials=_credentials())
+    owned_http = cas._http_client
+
+    async with cas:
+        pass
+
+    assert owned_http.is_closed

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from email.utils import parsedate_to_datetime
+from urllib.parse import urlparse
 
 import httpx
 from kiota_abstractions.authentication.access_token_provider import AccessTokenProvider
@@ -19,6 +20,7 @@ from kiota_abstractions.authentication.base_bearer_token_authentication_provider
     BaseBearerTokenAuthenticationProvider,
 )
 from kiota_http.httpx_request_adapter import HttpxRequestAdapter
+from kiota_http.kiota_client_factory import KiotaClientFactory
 
 from .credentials.model import ClientContext, Credentials, default_client_context
 
@@ -59,19 +61,29 @@ def create_kiota_request_adapter(
 ) -> HttpxRequestAdapter:
     """Build a Kiota ``HttpxRequestAdapter`` wired to OneNexus credentials.
 
-    The returned adapter uses Kiota's standard HTTPX transport and serialization
-    stack, while the bearer token comes from our ``Credentials`` protocol. Server
-    ``Date`` headers are observed into the supplied context's clock.
+    The returned adapter uses Kiota's standard HTTPX transport, default middleware,
+    and serialization stack, while the bearer token comes from our ``Credentials``
+    protocol. Server ``Date`` headers are observed into the supplied context's clock.
     """
     resolved_context = context or default_client_context()
+    resolved_allowed_hosts = allowed_hosts
+    if resolved_allowed_hosts is None:
+        parsed_base_url = urlparse(base_url)
+        if parsed_base_url.scheme not in {"http", "https"} or parsed_base_url.hostname is None:
+            raise ValueError("base_url must be an absolute HTTP(S) URL")
+        resolved_allowed_hosts = [parsed_base_url.hostname]
+
     provider = BaseBearerTokenAuthenticationProvider(
-        OneNexusAccessTokenProvider(credentials, resolved_context, allowed_hosts=allowed_hosts)
+        OneNexusAccessTokenProvider(
+            credentials,
+            resolved_context,
+            allowed_hosts=resolved_allowed_hosts,
+        )
     )
-    client = http_client or httpx.AsyncClient(
-        base_url=base_url,
-        event_hooks={"response": [_observe_server_date(resolved_context)]},
-    )
-    adapter = HttpxRequestAdapter(provider, http_client=client, base_url=base_url)
+    client = http_client or httpx.AsyncClient(base_url=base_url)
+    client.event_hooks["response"].append(_observe_server_date(resolved_context))
+    kiota_client = KiotaClientFactory.create_with_default_middleware(client)
+    adapter = HttpxRequestAdapter(provider, http_client=kiota_client, base_url=base_url)
     adapter.base_url = base_url
     return adapter
 

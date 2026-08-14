@@ -12,9 +12,9 @@ export {
     UnauthenticatedError,
     UnavailableError,
 } from './errors.js';
-export { createKy, type CreateKyOptions } from './ky-client.js';
 export {
-    platformMutator,
-    type PlatformMutatorOptions,
-    type PlatformMutatorRequestConfig,
-} from './mutator.js';
+    createRequestAdapter,
+    type CreateRequestAdapterOptions,
+    type KiotaRetryConfig,
+    OneNexusAuthenticationProvider,
+} from './request-adapter.js';
