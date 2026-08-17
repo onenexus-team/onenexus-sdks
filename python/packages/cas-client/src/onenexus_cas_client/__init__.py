@@ -58,6 +58,7 @@ from .client import (
     UpdatePolicyResponse,
     UpdateProfileRequest,
     UpdateProfileResponse,
+    resolve_assume_s3_role_base_url,
 )
 
 __all__ = [
@@ -69,6 +70,7 @@ __all__ = [
     "AssignRoleResponse",
     "AssumeS3RoleRequest",
     "AssumeS3RoleResponse",
+    "resolve_assume_s3_role_base_url",
     "AttachPolicyToRoleRequest",
     "AttachPolicyToRoleResponse",
     "AuthorizationRelationshipRemovedResponse",

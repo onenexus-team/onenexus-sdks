@@ -69,7 +69,7 @@ const createIdempotencyHeaders = () => ({
 /**
  * Construction-time configuration for {@link CasClient}.
  *
- * `baseUrl` is the CAS service host (e.g. `https://cas.acme.com`); the client
+ * `baseUrl` is the CAS service host (e.g. `https://auth.acme.com`); the client
  * appends `/api/...` paths against it at request time. `credentials` provides
  * `Authorization` headers for every request. `issuer` for the
  * underlying credential is configured separately, on the credential itself.
@@ -114,7 +114,7 @@ export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * import { TokenGrantCredentials } from '@onenexus-team/sdk-core';
  *
  * const cas = new CasClient({
- *     baseUrl: 'https://cas.acme.com',
+ *     baseUrl: 'https://auth.acme.com',
  *     credentials: new TokenGrantCredentials({
  *         token: {
  *             accessToken: '...',

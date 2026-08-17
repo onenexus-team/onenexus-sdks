@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import re
 from datetime import UTC, datetime
@@ -10,7 +11,7 @@ import pytest
 from kiota_abstractions.request_option import RequestOption
 from kiota_http.kiota_client_factory import KiotaClientFactory
 from kiota_http.middleware.options.retry_handler_option import RetryHandlerOption
-from onenexus_sdk_core import AccessToken, TokenGrantCredentials
+from onenexus_sdk_core import AccessToken, ClientContext, TokenGrantCredentials
 
 from onenexus_cas_client import (
     AddServiceClientKeyRequest,
@@ -31,6 +32,7 @@ from onenexus_cas_client import (
     UpdateAuthorizationRoleDescriptionRequest,
     UpdatePolicyRequest,
     UpdateProfileRequest,
+    resolve_assume_s3_role_base_url,
 )
 from onenexus_cas_client.generated.models.assume_s3_role_request import AssumeS3RoleRequest
 from onenexus_cas_client.generated.models.create_user_request import CreateUserRequest
@@ -41,15 +43,49 @@ from onenexus_cas_client.generated.models.disable_service_client_request import 
 IDEMPOTENCY_KEY_PATTERN = re.compile(r"^[a-zA-Z0-9_.-]{16,128}$")
 
 
-def _credentials() -> TokenGrantCredentials:
+class RotatingCredentials:
+    def __init__(self, *tokens: AccessToken) -> None:
+        self._tokens = tokens
+        self.resolve_calls = 0
+
+    async def resolve(self, context: ClientContext) -> AccessToken:
+        return self._next_token()
+
+    def resolve_sync(self, context: ClientContext) -> AccessToken:
+        return self._next_token()
+
+    def _next_token(self) -> AccessToken:
+        index = min(self.resolve_calls, len(self._tokens) - 1)
+        self.resolve_calls += 1
+        return self._tokens[index]
+
+
+def _credentials(access_token: str = "at-test") -> TokenGrantCredentials:
     return TokenGrantCredentials(
-        token=AccessToken("at-test", datetime(2030, 1, 1, tzinfo=UTC)),
+        token=AccessToken(access_token, datetime(2030, 1, 1, tzinfo=UTC)),
     )
 
 
-def _client(handler: httpx.MockTransport | httpx.AsyncBaseTransport) -> CasClient:
-    http = httpx.AsyncClient(transport=handler, base_url="https://cas.test")
-    return CasClient(base_url="https://cas.test", credentials=_credentials(), http_client=http)
+def _client(
+    handler: httpx.MockTransport | httpx.AsyncBaseTransport,
+    *,
+    base_url: str = "https://auth.test",
+    access_token: str = "at-test",
+) -> CasClient:
+    http = httpx.AsyncClient(transport=handler, base_url=base_url)
+    return CasClient(
+        base_url=base_url,
+        credentials=_credentials(access_token),
+        http_client=http,
+    )
+
+
+def _unsigned_access_token(issuer: str) -> str:
+    def encode(value: dict[str, str]) -> str:
+        raw = json.dumps(value, separators=(",", ":")).encode()
+        return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+
+    return f"{encode({'alg': 'ES256'})}.{encode({'iss': issuer})}.signature"
 
 
 async def test_create_user_routes_through_kiota_adapter() -> None:
@@ -115,6 +151,102 @@ async def test_assume_s3_role_parses_kiota_response() -> None:
 
     assert result.access_key_id == "AKIA"
     assert result.session_token == "token"
+
+
+async def test_assume_s3_role_routes_global_token_to_global_issuer() -> None:
+    requests: list[tuple[str, str | None]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append((str(request.url), request.headers.get("authorization")))
+        return httpx.Response(
+            200,
+            json={
+                "accessKeyId": "AKIA",
+                "secretAccessKey": "secret",
+                "sessionToken": "token",
+                "expiration": "2026-05-13T11:00:00Z",
+            },
+            headers={"content-type": "application/json"},
+        )
+
+    access_token = _unsigned_access_token("https://auth.onenexus.test")
+    async with _client(
+        httpx.MockTransport(handler),
+        base_url="https://auth.onenexus.test",
+        access_token=access_token,
+    ) as cas:
+        await cas.assume_s3_role(AssumeS3RoleRequest(role_name="reader"))
+
+    assert requests == [
+        ("https://auth.onenexus.test/api/AssumeS3Role", f"Bearer {access_token}")
+    ]
+
+
+async def test_assume_s3_role_uses_one_token_for_routing_and_authorization() -> None:
+    requests: list[tuple[str, str | None]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append((str(request.url), request.headers.get("authorization")))
+        return httpx.Response(
+            200,
+            json={
+                "accessKeyId": "AKIA",
+                "secretAccessKey": "secret",
+                "sessionToken": "token",
+                "expiration": "2026-05-13T11:00:00Z",
+            },
+            headers={"content-type": "application/json"},
+        )
+
+    regional_access_token = _unsigned_access_token("https://auth.ric1.onenexus.test")
+    global_access_token = _unsigned_access_token("https://auth.onenexus.test")
+    credentials = RotatingCredentials(
+        AccessToken(regional_access_token, datetime(2030, 1, 1, tzinfo=UTC)),
+        AccessToken(global_access_token, datetime(2030, 1, 1, tzinfo=UTC)),
+    )
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(handler),
+        base_url="https://auth.onenexus.test",
+    ) as http_client:
+        async with CasClient(
+            base_url="https://auth.onenexus.test",
+            credentials=credentials,
+            http_client=http_client,
+        ) as cas:
+            await cas.assume_s3_role(AssumeS3RoleRequest(role_name="reader"))
+
+    assert credentials.resolve_calls == 1
+    assert requests == [
+        (
+            "https://auth.ric1.onenexus.test/api/AssumeS3Role",
+            f"Bearer {regional_access_token}",
+        )
+    ]
+
+
+def test_assume_s3_role_requires_global_auth_base_url() -> None:
+    with pytest.raises(ValueError, match=r"global auth\.<domain> endpoint"):
+        resolve_assume_s3_role_base_url("https://cas.onenexus.test", "opaque-token")
+
+
+def test_assume_s3_role_rejects_regional_configured_base_for_global_token() -> None:
+    access_token = _unsigned_access_token("https://auth.onenexus.test")
+
+    with pytest.raises(ValueError, match=r"global auth\.<domain> endpoint"):
+        resolve_assume_s3_role_base_url(
+            "https://auth.ric1.onenexus.test",
+            access_token,
+        )
+
+
+def test_assume_s3_role_rejects_issuer_outside_configured_root_domain() -> None:
+    access_token = _unsigned_access_token("https://auth.ric1.attacker.test")
+
+    with pytest.raises(ValueError, match="not trusted"):
+        resolve_assume_s3_role_base_url(
+            "https://auth.onenexus.test",
+            access_token,
+        )
 
 
 async def test_authorization_and_user_list_methods_route_through_kiota() -> None:

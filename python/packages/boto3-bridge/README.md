@@ -26,13 +26,13 @@ from onenexus_boto3 import OneNexusBoto3Bridge, WorkloadIdentityS3Credentials
 
 # 1. The workload identity: a token file CAS exchanges for an access token.
 credentials = WorkloadIdentityFileCredentials(
-    issuer="https://cas.onenexus.local",
+    issuer="https://auth.onenexus.local",
     token_path="/var/run/secrets/onenexus/token",
 )
 
 # 2. Bridge it to boto3. Each refresh runs resolve_sync() -> AssumeS3Role.
 s3_credentials = WorkloadIdentityS3Credentials(
-    cas_base_url="https://cas.onenexus.local",
+    cas_base_url="https://auth.onenexus.local",
     role_name="S3ObjectFullAccess",
     credentials=credentials,
     s3_endpoint_url="http://s3.onenexus.local",
@@ -55,7 +55,7 @@ from onenexus_sdk_core import PrivateKeyJwtCredentials
 private_jwk = json.loads(Path("service-client-private.jwk.json").read_text())
 
 credentials = PrivateKeyJwtCredentials(
-    issuer="https://cas.onenexus.local",
+    issuer="https://auth.onenexus.local",
     client_id="<service-client-client-id>",
     signing_key=jwt.PyJWK.from_dict(private_jwk).key,
     signing_key_id=private_jwk["kid"],
@@ -63,7 +63,7 @@ credentials = PrivateKeyJwtCredentials(
 )
 
 s3_credentials = WorkloadIdentityS3Credentials(
-    cas_base_url="https://cas.onenexus.local",
+    cas_base_url="https://auth.onenexus.local",
     role_name="S3ObjectFullAccess",
     credentials=credentials,
     s3_endpoint_url="http://s3.onenexus.local",
@@ -75,6 +75,10 @@ print(s3.list_buckets())
 
 The bridge owns no background event loop. It uses the synchronous credential
 resolution path because botocore refreshes credentials synchronously.
+
+`cas_base_url` must be the global `https://auth.<domain>` endpoint. For
+`AssumeS3Role`, a regional workload token is sent to its regional CAS issuer
+automatically; global user and service-client tokens use the configured global endpoint.
 
 ## How it works
 

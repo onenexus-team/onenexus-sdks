@@ -34,8 +34,8 @@ Private-key JWT + CAS AssumeS3Role + S3 smoke test:
 ```sh
 pnpm install
 ONENEXUS_PRIVATE_JWK_PATH=/secure/path/client-private-jwk.json \
-ONENEXUS_CAS_ISSUER=https://cas.onenexus.local \
-ONENEXUS_CAS_API_BASE_URL=https://cas.onenexus.local \
+ONENEXUS_CAS_ISSUER=https://auth.onenexus.local \
+ONENEXUS_CAS_API_BASE_URL=https://auth.onenexus.local \
 ONENEXUS_CLIENT_ID=<client-id> \
 ONENEXUS_S3_ROLE_NAME=<role-name> \
 ONENEXUS_S3_ENDPOINT_URL=<s3-endpoint> \

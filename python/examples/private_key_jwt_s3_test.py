@@ -11,7 +11,7 @@ from botocore.config import Config
 from onenexus_boto3 import OneNexusBoto3Bridge, WorkloadIdentityS3Credentials
 from onenexus_sdk_core import PrivateKeyJwtCredentials, default_client_context
 
-DEFAULT_CAS_BASE_URL = "https://cas.onenexus-do.cloud"
+DEFAULT_CAS_BASE_URL = "https://auth.onenexus-do.cloud"
 DEFAULT_S3_ENDPOINT_URL = "https://s3.onenexus-do.cloud"
 DEFAULT_CLIENT_ID = "019eee64e6697778a21a5f7ae95005b6"
 DEFAULT_PRIVATE_JWK_PATH = Path(__file__).resolve().parents[3] / "private-jwt-test.json"

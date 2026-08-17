@@ -13,7 +13,13 @@ import httpx
 from kiota_abstractions.base_request_configuration import RequestConfiguration
 from kiota_abstractions.default_query_parameters import QueryParameters
 from kiota_abstractions.headers_collection import HeadersCollection
-from onenexus_sdk_core import ClientContext, Credentials, create_kiota_request_adapter
+from onenexus_sdk_core import (
+    AccessToken,
+    ClientContext,
+    Credentials,
+    create_kiota_request_adapter,
+    default_client_context,
+)
 
 from .generated.cas_generated_client import CasGeneratedClient
 from .generated.models.accept_invitation_request import AcceptInvitationRequest
@@ -71,11 +77,20 @@ from .generated.models.update_policy_request import UpdatePolicyRequest
 from .generated.models.update_policy_response import UpdatePolicyResponse
 from .generated.models.update_profile_request import UpdateProfileRequest
 from .generated.models.update_profile_response import UpdateProfileResponse
+from .routing import resolve_assume_s3_role_base_url
 
 
 def _idempotency_request_configuration() -> RequestConfiguration[QueryParameters]:
     headers = HeadersCollection()
     headers.try_add("X-Nx1-Idempotency-Key", uuid4().hex)
+    return RequestConfiguration(headers=headers)
+
+
+def _authorization_request_configuration(
+    token: AccessToken,
+) -> RequestConfiguration[QueryParameters]:
+    headers = HeadersCollection()
+    headers.try_add("Authorization", f"{token.token_type} {token.access_token}")
     return RequestConfiguration(headers=headers)
 
 
@@ -90,12 +105,15 @@ class CasClient:
         context: ClientContext | None = None,
         http_client: httpx.AsyncClient | None = None,
     ) -> None:
+        self._base_url = base_url.rstrip("/")
+        self._credentials = credentials
+        self._context = context or default_client_context()
         self._owns_http = http_client is None
-        self._http_client = http_client or httpx.AsyncClient(base_url=base_url)
+        self._http_client = http_client or httpx.AsyncClient(base_url=self._base_url)
         self._adapter = create_kiota_request_adapter(
-            base_url=base_url,
+            base_url=self._base_url,
             credentials=credentials,
-            context=context,
+            context=self._context,
             http_client=self._http_client,
         )
         self._client = CasGeneratedClient(self._adapter)
@@ -174,7 +192,11 @@ class CasClient:
 
         API operation: POST /api/AssumeS3Role.
         """
-        response = await self._client.api.assume_s3_role.post(request)
+        token = await self._credentials.resolve(self._context)
+        base_url = resolve_assume_s3_role_base_url(self._base_url, token.access_token)
+        response = await self._client.api.assume_s3_role.with_url(
+            f"{base_url}/api/AssumeS3Role"
+        ).post(request, _authorization_request_configuration(token))
         if response is None:
             raise RuntimeError("CAS AssumeS3Role returned no response body")
         return response
@@ -540,6 +562,7 @@ __all__ = [
     "AssignRoleResponse",
     "AssumeS3RoleRequest",
     "AssumeS3RoleResponse",
+    "resolve_assume_s3_role_base_url",
     "AttachPolicyToRoleRequest",
     "AttachPolicyToRoleResponse",
     "AuthorizationRelationshipRemovedResponse",

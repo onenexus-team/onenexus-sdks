@@ -16,7 +16,7 @@ import boto3
 import botocore.session
 import httpx
 from botocore.credentials import RefreshableCredentials
-from onenexus_cas_client import AssumeS3RoleResponse
+from onenexus_cas_client import AssumeS3RoleResponse, resolve_assume_s3_role_base_url
 from onenexus_sdk_core import (
     ClientContext,
     Credentials,
@@ -59,9 +59,9 @@ class WorkloadIdentityS3Credentials:
 
     Example:
         >>> from onenexus_sdk_core import WorkloadIdentityFileCredentials
-        >>> creds = WorkloadIdentityFileCredentials(issuer="https://cas.example")
+        >>> creds = WorkloadIdentityFileCredentials(issuer="https://auth.example")
         >>> s3_creds = WorkloadIdentityS3Credentials(
-        ...     cas_base_url="https://cas.example",
+        ...     cas_base_url="https://auth.example",
         ...     role_name="S3ObjectFullAccess",
         ...     credentials=creds,
         ...     s3_endpoint_url="https://s3.example",
@@ -69,9 +69,10 @@ class WorkloadIdentityS3Credentials:
         >>> s3 = OneNexusBoto3Bridge.create_s3_client(s3_creds)
         >>> s3.list_buckets()
 
-    The instance owns no background event loop. It uses synchronous HTTP calls
-    for the CAS ``AssumeS3Role`` refresh path because botocore refresh callbacks
-    are synchronous.
+    ``cas_base_url`` must be the global ``https://auth.<domain>`` endpoint. The
+    instance owns no background event loop. It uses synchronous HTTP calls for
+    the CAS ``AssumeS3Role`` refresh path because botocore refresh callbacks are
+    synchronous.
     """
 
     def __init__(
@@ -133,8 +134,12 @@ class WorkloadIdentityS3Credentials:
 
     def _assume_sync(self) -> AssumeS3RoleResponse:
         token = self._credentials.resolve_sync(self._context)
+        cas_base_url = resolve_assume_s3_role_base_url(
+            self._cas_base_url,
+            token.access_token,
+        )
         with httpx.Client(
-            base_url=self._cas_base_url,
+            base_url=cas_base_url,
             verify=self._verify,
             timeout=self._timeout,
             transport=self._transport,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import datetime
 import json
 import urllib.parse
@@ -30,6 +31,14 @@ class SyncStaticCredentials:
     def resolve_sync(self, context: ClientContext) -> AccessToken:
         self.resolve_sync_calls += 1
         return self._token
+
+
+def _unsigned_access_token(issuer: str) -> str:
+    def encode(value: dict[str, str]) -> str:
+        raw = json.dumps(value, separators=(",", ":")).encode()
+        return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+
+    return f"{encode({'alg': 'ES256'})}.{encode({'iss': issuer})}.signature"
 
 
 def test_to_botocore_metadata_maps_all_fields() -> None:
@@ -97,7 +106,7 @@ def test_refresh_uses_sync_credentials_and_sync_assume_s3_role() -> None:
         )
 
     bridge_credentials = WorkloadIdentityS3Credentials(
-        cas_base_url="https://cas.test.invalid",
+        cas_base_url="https://auth.test.invalid",
         role_name="S3ObjectFullAccess",
         credentials=credentials,
         s3_endpoint_url="https://s3.test.invalid",
@@ -119,6 +128,38 @@ def test_refresh_uses_sync_credentials_and_sync_assume_s3_role() -> None:
     ]
 
 
+def test_refresh_routes_regional_workload_token_to_its_issuer() -> None:
+    requests: list[tuple[str, str | None]] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append((str(request.url), request.headers.get("authorization")))
+        return httpx.Response(
+            200,
+            json={
+                "accessKeyId": "AKIAEXAMPLE",
+                "secretAccessKey": "secret",
+                "sessionToken": "session-token",
+                "expiration": "2030-01-01T00:00:00+00:00",
+            },
+        )
+
+    access_token = _unsigned_access_token("https://auth.ric1.onenexus.test")
+    credentials = SyncStaticCredentials(access_token)
+    bridge_credentials = WorkloadIdentityS3Credentials(
+        cas_base_url="https://auth.onenexus.test",
+        role_name="S3ObjectFullAccess",
+        credentials=credentials,
+        s3_endpoint_url="https://s3.ric1.onenexus.test",
+        transport=httpx.MockTransport(handle),
+    )
+
+    bridge_credentials.refreshable_credentials.get_frozen_credentials()
+
+    assert requests == [
+        ("https://auth.ric1.onenexus.test/api/AssumeS3Role", f"Bearer {access_token}")
+    ]
+
+
 def test_private_key_jwt_credentials_can_back_s3_bridge() -> None:
     requests: list[dict[str, object]] = []
 
@@ -127,8 +168,8 @@ def test_private_key_jwt_credentials_can_back_s3_bridge() -> None:
             return httpx.Response(
                 200,
                 json={
-                    "issuer": "https://cas.test.invalid",
-                    "token_endpoint": "https://cas.test.invalid/token",
+                    "issuer": "https://auth.test.invalid",
+                    "token_endpoint": "https://auth.test.invalid/token",
                 },
             )
         if request.url.path.endswith("/token"):
@@ -156,7 +197,7 @@ def test_private_key_jwt_credentials_can_back_s3_bridge() -> None:
 
     transport = httpx.MockTransport(handle)
     credentials = PrivateKeyJwtCredentials(
-        issuer="https://cas.test.invalid",
+        issuer="https://auth.test.invalid",
         client_id="acme-batch",
         signing_key=_rsa_private_key_pem(),
         signing_key_id="acme-2026",
@@ -164,7 +205,7 @@ def test_private_key_jwt_credentials_can_back_s3_bridge() -> None:
     )
 
     bridge_credentials = WorkloadIdentityS3Credentials(
-        cas_base_url="https://cas.test.invalid",
+        cas_base_url="https://auth.test.invalid",
         role_name="S3ObjectFullAccess",
         credentials=credentials,
         s3_endpoint_url="https://s3.test.invalid",
@@ -202,7 +243,7 @@ def test_create_s3_client_uses_credentials_endpoint_and_region() -> None:
         )
 
     bridge_credentials = WorkloadIdentityS3Credentials(
-        cas_base_url="https://cas.test.invalid",
+        cas_base_url="https://auth.test.invalid",
         role_name="S3ObjectFullAccess",
         credentials=credentials,
         s3_endpoint_url="https://s3.test.invalid",

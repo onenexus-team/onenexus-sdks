@@ -85,7 +85,7 @@ For example, the `POST /api/CreateTenant` call above looks like this in **TypeSc
 
 ```typescript
 const cas = new CasClient({
-    baseUrl:     'https://cas.acme.com',
+    baseUrl:     'https://auth.acme.com',
   credentials: new TokenGrantCredentials({ /* ... */ }),
 });
 
@@ -102,7 +102,7 @@ And in **Python**:
 
 ```python
 cas = CasClient(
-    base_url="https://cas.acme.com",
+    base_url="https://auth.acme.com",
   credentials=TokenGrantCredentials(...),
 )
 
@@ -314,7 +314,7 @@ Please use https://github.com/authts/oidc-client-ts library for this flow.
 
 ```typescript
 let credentials = new PrivateKeyJwtCredentials({
-    issuer:       "https://cas.example.com",
+    issuer:       "https://auth.example.com",
     clientId:     "acme-overnight-batch",
     audience:     "inference-api",
     scopes:       ["inference:run"],

@@ -8,6 +8,10 @@ the Python counterpart of `@onenexus-team/cas-client`.
     `specs/cas/openapi.json`. **Do not edit by hand.**
 - Credentials and transport come from `onenexus-sdk-core`.
 
+`base_url` must be the global `https://auth.<domain>` endpoint.
+`assume_s3_role()` keeps global user and service-client tokens on that endpoint;
+regional workload tokens use `https://auth.<region>.<domain>/api/AssumeS3Role`.
+
 ## Regenerate
 
 From `python/`:
@@ -47,7 +51,7 @@ async def main() -> None:
             expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
         ),
     )
-    async with CasClient(base_url="https://cas.acme.com", credentials=credentials) as cas:
+    async with CasClient(base_url="https://auth.acme.com", credentials=credentials) as cas:
         result = await cas.create_user(
             CreateUserRequest(
                 email="a@b.c",

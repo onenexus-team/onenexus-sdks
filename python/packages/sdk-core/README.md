@@ -56,7 +56,7 @@ async def main() -> None:
             expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
         ),
     )
-    async with ExampleClient(base_url="https://cas.acme.com", credentials=credentials) as client:
+    async with ExampleClient(base_url="https://auth.acme.com", credentials=credentials) as client:
         ...
 
 
