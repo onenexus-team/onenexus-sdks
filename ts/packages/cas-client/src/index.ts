@@ -11,6 +11,7 @@
  */
 
 export { CasClient, type CasClientConfig, type CasRequestOptions } from './client.js';
+export { resolveAssumeS3RoleBaseUrl } from './routing.js';
 
 // Re-export the generated request/response schemas as types. Consumers
 // typically import these to declare local variables typed against the

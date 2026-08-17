@@ -13,6 +13,13 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { CasClient } from '../src/client.js';
 
 const BASE_URL = 'https://cas.test.invalid';
+const GLOBAL_AUTH_URL = 'https://auth.onenexus.test';
+const REGIONAL_AUTH_URL = 'https://auth.ric1.onenexus.test';
+
+function unsignedAccessToken(issuer: string): string {
+    const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+    return `${encode({ alg: 'ES256' })}.${encode({ iss: issuer })}.signature`;
+}
 
 function staticCreds(label = 'static'): Credentials {
     return new TokenGrantCredentials({
@@ -109,6 +116,91 @@ describe('CasClient', () => {
             expect(idempotencyKey).toMatch(/^[a-zA-Z0-9_.-]{16,128}$/);
             expect(observedKeys).toEqual([idempotencyKey, idempotencyKey, idempotencyKey]);
             expect(randomUUID).toHaveBeenCalledTimes(1);
+        });
+
+        it('routes AssumeS3Role with one token and reuses it across non-auth retries', async () => {
+            vi.spyOn(Math, 'random').mockReturnValue(0);
+            const regionalAccessToken = unsignedAccessToken(REGIONAL_AUTH_URL);
+            const globalAccessToken = unsignedAccessToken(GLOBAL_AUTH_URL);
+            const regionalToken: AccessToken = {
+                accessToken: regionalAccessToken,
+                tokenType: 'Bearer',
+                expiresAt: new Date('2030-01-01T00:00:00Z'),
+            };
+            const globalToken: AccessToken = {
+                ...regionalToken,
+                accessToken: globalAccessToken,
+            };
+            const resolve = vi
+                .fn()
+                .mockResolvedValueOnce(regionalToken)
+                .mockResolvedValue(globalToken);
+            const credentials: Credentials = { resolve };
+            const observedAuthorization: string[] = [];
+            let requestCount = 0;
+
+            server.use(
+                http.post(`${REGIONAL_AUTH_URL}/api/AssumeS3Role`, ({ request }) => {
+                    observedAuthorization.push(request.headers.get('authorization') ?? '');
+                    requestCount += 1;
+                    if (requestCount < 3) {
+                        return HttpResponse.json({ code: 'unavailable' }, { status: 503 });
+                    }
+                    return HttpResponse.json({
+                        accessKeyId: 'AKIAEXAMPLE',
+                        secretAccessKey: 'secret',
+                        sessionToken: 'session-token',
+                        expiration: '2030-01-01T00:00:00Z',
+                    });
+                }),
+            );
+
+            const cas = new CasClient({
+                baseUrl: GLOBAL_AUTH_URL,
+                credentials,
+                retry: { limit: 2, backoffLimitMs: 0 },
+            });
+            const result = await cas.assumeS3Role({ roleName: 'S3ObjectFullAccess' });
+
+            expect(result.accessKeyId).toBe('AKIAEXAMPLE');
+            expect(resolve).toHaveBeenCalledOnce();
+            expect(observedAuthorization).toEqual([
+                `Bearer ${regionalAccessToken}`,
+                `Bearer ${regionalAccessToken}`,
+                `Bearer ${regionalAccessToken}`,
+            ]);
+        });
+
+        it('does not retry a routed AssumeS3Role request on 401', async () => {
+            const regionalAccessToken = unsignedAccessToken(REGIONAL_AUTH_URL);
+            const token: AccessToken = {
+                accessToken: regionalAccessToken,
+                tokenType: 'Bearer',
+                expiresAt: new Date('2030-01-01T00:00:00Z'),
+            };
+            const resolve = vi.fn().mockResolvedValue(token);
+            const credentials: Credentials = { resolve };
+            let requestCount = 0;
+
+            server.use(
+                http.post(`${REGIONAL_AUTH_URL}/api/AssumeS3Role`, () => {
+                    requestCount += 1;
+                    return HttpResponse.json(
+                        { code: 'unauthenticated', detail: 'token expired' },
+                        { status: 401, headers: { 'content-type': 'application/problem+json' } },
+                    );
+                }),
+            );
+
+            const cas = new CasClient({
+                baseUrl: GLOBAL_AUTH_URL,
+                credentials,
+                retry: { limit: 2, backoffLimitMs: 0 },
+            });
+
+            await expect(cas.assumeS3Role({ roleName: 'S3ObjectFullAccess' })).rejects.toBeDefined();
+            expect(resolve).toHaveBeenCalledOnce();
+            expect(requestCount).toBe(1);
         });
 
         it('passes client-level refreshLeewayMs through ClientBase context', async () => {

@@ -61,6 +61,9 @@ import { getTenantServiceClient } from './generated/tenant-service-client/tenant
 import { getTenantS3 } from './generated/tenant-s3/tenant-s3.js';
 import { getTenantUser } from './generated/tenant-user/tenant-user.js';
 import type { PlatformMutatorOptions } from './mutator.js';
+import { resolveAssumeS3RoleBaseUrl } from './routing.js';
+
+const ASSUME_S3_ROLE_NON_RETRYABLE_STATUS_CODES = [401] as const;
 
 const createIdempotencyHeaders = () => ({
     'X-Nx1-Idempotency-Key': globalThis.crypto.randomUUID(),
@@ -230,17 +233,27 @@ export class CasClient extends ClientBase {
     /**
      * Assume an S3 role in the caller's tenant account and return temporary credentials.
      *
-     * CAS authorizes the requested role before issuing credentials. Use the returned access key,
-     * secret, and session token for S3 requests until `expiration`; never persist or share the
-     * temporary secret.
+     * CAS authorizes the requested role before issuing credentials. The configured `baseUrl` must
+     * be the global `auth.<domain>` endpoint; regional tokens are routed to their trusted issuer.
+     * Use the returned access key, secret, and session token until `expiration`; never persist or
+     * share the temporary secret.
      *
      * @see POST /api/AssumeS3Role
      */
-    assumeS3Role = (
+    assumeS3Role = async (
         req: AssumeS3RoleRequest,
         options?: CasRequestOptions,
-    ): Promise<AssumeS3RoleResponse> =>
-        this.tenantS3.assumeS3Role(req, this.mutatorOptions(options));
+    ): Promise<AssumeS3RoleResponse> => {
+        const token = await this.credentials.resolve(this.context, options?.signal);
+        const baseUrl = resolveAssumeS3RoleBaseUrl(this.baseUrl, token.accessToken);
+        const fixedCredentials = { resolve: () => Promise.resolve(token) };
+        const http = this.createHttp(
+            baseUrl,
+            fixedCredentials,
+            ASSUME_S3_ROLE_NON_RETRYABLE_STATUS_CODES,
+        );
+        return this.tenantS3.assumeS3Role(req, this.mutatorOptions(options, http));
+    };
 
     // -- Tenant service clients --------------------------------------------
 

@@ -1,4 +1,4 @@
-import ky, { type KyInstance, type Options as KyOptions } from 'ky';
+import ky, { HTTPError, type KyInstance, type Options as KyOptions } from 'ky';
 
 import type { ClientContext, Credentials } from '../credentials/credentials.js';
 import { AuthenticationError, StaleCredentialsError } from '../credentials/credentials.js';
@@ -34,6 +34,8 @@ export interface CreateKyOptions {
         readonly limit?: number;
         readonly backoffLimitMs?: number;
     };
+    /** Statuses that must fail before another network attempt. Used by routed service operations. */
+    readonly nonRetryableStatusCodes?: readonly number[];
     /**
      * Additional Ky options merged in last. Escape hatch for advanced
      * consumers; prefer the named fields above where possible.
@@ -47,9 +49,17 @@ export interface CreateKyOptions {
  * call sites pass through `options.http`.
  */
 export function createKy(config: CreateKyOptions): KyInstance {
-    const { baseUrl, credentials, context, timeout = 30_000, retry, extraOptions } = config;
+    const {
+        baseUrl,
+        credentials,
+        context,
+        timeout = 30_000,
+        retry,
+        nonRetryableStatusCodes,
+        extraOptions,
+    } = config;
 
-    return ky.create({
+    const client = ky.create({
         prefixUrl: baseUrl,
         timeout,
         retry: {
@@ -87,6 +97,21 @@ export function createKy(config: CreateKyOptions): KyInstance {
         },
         ...extraOptions,
     });
+
+    return nonRetryableStatusCodes === undefined
+        ? client
+        : client.extend({
+              hooks: {
+                  beforeRetry: [({ error }) => {
+                      if (
+                          error instanceof HTTPError &&
+                          nonRetryableStatusCodes.includes(error.response.status)
+                      ) {
+                          throw error;
+                      }
+                  }],
+              },
+          });
 }
 
 function jitteredExponentialRetryDelay(attemptCount: number): number {
