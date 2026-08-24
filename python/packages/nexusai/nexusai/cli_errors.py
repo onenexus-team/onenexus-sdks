@@ -34,8 +34,8 @@ def render_error(
 
     if isinstance(error, OneNexusAPIError):
         status = str(error.status_code)
-        code = error.code or "API_ERROR"
-        detail = error.message
+        code = error.problem_type or "about:blank"
+        detail = error.detail
         request_id = error.request_id or "-"
 
     use_color = _color_enabled(stream, no_color)

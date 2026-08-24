@@ -68,9 +68,7 @@ async def _assume_s3_role(
         delay: float | None = None
         client = cas_client_factory()
         try:
-            return await client.assume_s3_role(
-                AssumeS3RoleRequest(role_name=role_name)
-            )
+            return await client.assume_s3_role(AssumeS3RoleRequest(role_name=role_name))
         except Exception as error:
             if not _should_retry(error, retry_policy, attempt, started_at):
                 raise

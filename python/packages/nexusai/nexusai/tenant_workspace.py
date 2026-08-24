@@ -19,7 +19,6 @@ class TenantWorkspaceClient:
         datahub_bucket: str,
         checkpoint_bucket: str,
         tokenizer_bucket: str,
-        tenant_gpus_quota: int = 16,
         extras_data: Optional[dict[str, Any]] = None,
     ) -> TenantWorkspaceDetail:
         return self._api.post_model(
@@ -32,7 +31,6 @@ class TenantWorkspaceClient:
                     "datahub_bucket": datahub_bucket,
                     "checkpoint_bucket": checkpoint_bucket,
                     "tokenizer_bucket": tokenizer_bucket,
-                    "tenant_gpus_quota": tenant_gpus_quota,
                     "extras_data": extras_data,
                 }
             ),

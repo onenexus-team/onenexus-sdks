@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, field, fields
 from collections.abc import Iterator
 from typing import Any, Generic, Mapping, Optional, TypeVar, cast
 
@@ -28,8 +28,7 @@ class APIModel:
 @dataclass(frozen=True)
 class Page(Generic[ItemT]):
     items: list[ItemT]
-    total_pages: Optional[int] = None
-    code: Optional[str] = None
+    total_pages: int
     message: Optional[str] = None
     request_id: Optional[str] = None
 
@@ -53,12 +52,17 @@ class ResourceReference(APIModel):
 class ActionResult(APIModel):
     resource_id: str
     status: str
+    message_code: str
     status_message: str
 
 
 @dataclass(frozen=True)
-class InferenceActionResult(ActionResult):
+class InferenceActionResult(APIModel):
+    resource_id: str
+    status: str
+    message_code: str
     endpoint: Optional[str] = None
+    operation_id: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -95,7 +99,8 @@ class UploadInstruction(APIModel):
 class TenantWorkspaceSummary(APIModel):
     id: str
     name: str
-    tenant_gpus_quota: int
+    status: str
+    message_code: Optional[str]
     num_models: int
     num_model_versions: int
     num_datasets: int
@@ -107,6 +112,7 @@ class TenantWorkspaceSummary(APIModel):
 
 @dataclass(frozen=True)
 class TenantWorkspaceDetail(TenantWorkspaceSummary):
+    message: Optional[str] = None
     extras_data: Optional[dict[str, Any]] = None
 
 
@@ -115,6 +121,7 @@ class DatasetSummary(APIModel):
     id: str
     name: str
     status: str
+    message_code: str
     status_message: str
     file_count: int
     total_size_bytes: int
@@ -139,10 +146,14 @@ class ModelSummary(APIModel):
     id: str
     name: str
     status: str
+    message_code: str
     status_message: str
     version_count: int
     created_at: str
     updated_at: str
+    source: str = "trained"
+    model_family: Optional[str] = None
+    hf_repo_id: Optional[str] = None
     latest_version: Optional[ModelVersionReference] = None
 
     @classmethod
@@ -159,6 +170,7 @@ class ModelSummary(APIModel):
 
 @dataclass(frozen=True)
 class ModelDetail(ModelSummary):
+    inference_config: Optional[dict[str, Any]] = None
     extras_data: Optional[dict[str, Any]] = None
 
 
@@ -177,11 +189,13 @@ class ModelVersionSummary(APIModel):
     model_id: str
     name: str
     status: str
+    message_code: str
     status_message: str
     file_count: int
     total_size_bytes: int
     created_at: str
     updated_at: str
+    artifact_kind: str = "full_weights"
     artifact_format: Optional[str] = None
     finalized_at: Optional[str] = None
 
@@ -312,7 +326,7 @@ class RunSummary(APIModel):
     training_type: str
     flavor: str
     status: str
-    status_message: str
+    message_code: str
     created_at: str
     updated_at: str
     step: Optional[str] = None
@@ -333,6 +347,7 @@ class RunDetail(RunSummary):
     checkpoint_count: int = 0
     output_model: Optional[ResourceReference] = None
     output_model_version: Optional[ResourceReference] = None
+    message: Optional[str] = None
     extras_data: Optional[dict[str, Any]] = None
 
     @classmethod
@@ -368,11 +383,6 @@ class RunMonitoringOverview(MonitoringOverview):
 
 
 @dataclass(frozen=True)
-class InferenceMonitoringOverview(MonitoringOverview):
-    iframe_url: Optional[str] = None
-
-
-@dataclass(frozen=True)
 class MonitoringAttempt(APIModel):
     attempt: int
     status: str
@@ -388,11 +398,6 @@ class RunMonitoringAttempt(MonitoringAttempt):
     iframe_url: Optional[str] = None
     model_metrics_iframe_url: Optional[str] = None
     system_metrics_iframe_url: Optional[str] = None
-
-
-@dataclass(frozen=True)
-class InferenceMonitoringAttempt(MonitoringAttempt):
-    iframe_url: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -413,20 +418,25 @@ class RunMonitoringResult(APIModel):
 
 
 @dataclass(frozen=True)
-class InferenceMonitoringResult(APIModel):
+class InferenceLogsResult(APIModel):
     inference_instance_id: str
-    overview: InferenceMonitoringOverview
-    attempts: list[InferenceMonitoringAttempt]
+    inference_instance_name: str
+    logs: list[str]
+    degraded: bool = False
 
-    @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> InferenceMonitoringResult:
-        data = dict(payload)
-        data["overview"] = InferenceMonitoringOverview.from_dict(data["overview"])
-        data["attempts"] = [
-            InferenceMonitoringAttempt.from_dict(item)
-            for item in data.get("attempts", [])
-        ]
-        return super().from_dict(data)
+
+@dataclass(frozen=True)
+class InferenceMetricsResult(APIModel):
+    inference_instance_id: str
+    inference_instance_name: str
+    metrics: dict[str, Any]
+    grafana_logs_url: Optional[str] = None
+    grafana_metrics_url: Optional[str] = None
+    pd_metrics: Optional[dict[str, Any]] = None
+    pools: Optional[list[Any]] = None
+
+
+InferenceMonitoringResult = InferenceLogsResult | InferenceMetricsResult
 
 
 # Kept as the concise public name for training-run monitoring.
@@ -438,6 +448,7 @@ class RunCheckpoint(APIModel):
     id: str
     name: str
     status: str
+    message_code: str
     status_message: str
     file_count: int
     size_bytes: int
@@ -451,6 +462,7 @@ class RunCheckpoint(APIModel):
 class RunTokenizer(APIModel):
     id: str
     status: str
+    message_code: str
     status_message: str
     file_count: int
     size_bytes: int
@@ -466,10 +478,11 @@ class InferenceInstanceSummary(APIModel):
     served_model_name: str
     flavor: str
     status: str
-    status_message: str
+    message_code: str
     created_at: str
     updated_at: str
     endpoint: Optional[str] = None
+    status_detail: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> InferenceInstanceSummary:
@@ -480,7 +493,9 @@ class InferenceInstanceSummary(APIModel):
 
 @dataclass(frozen=True)
 class InferenceInstanceDetail(InferenceInstanceSummary):
-    configuration: Optional[dict[str, Any]] = None
+    configuration: dict[str, Any] = field(default_factory=dict)
+    operation_id: Optional[str] = None
+    message: Optional[str] = None
     extras_data: Optional[dict[str, Any]] = None
 
 
@@ -519,7 +534,10 @@ class TrainingConfiguration(APIModel):
 @dataclass(frozen=True)
 class InferenceConfiguration(APIModel):
     id: str
+    name: str
     runtime: str
     default_configuration: dict[str, Any]
     created_at: str
     updated_at: str
+    model_family: Optional[str] = None
+    serving_pattern: Optional[str] = None

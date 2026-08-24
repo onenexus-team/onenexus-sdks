@@ -104,8 +104,8 @@ class ModelRegistryClient:
     ) -> ModelSummary | ModelDetail:
         return self.get_model_by_name(name) or self.create_model(name, extras_data)
 
-    def delete_model(self, model_id: str) -> ActionResult:
-        return self._api.post_model(
+    def delete_model(self, model_id: str) -> Optional[ActionResult]:
+        return self._api.post_optional_model(
             "/v1/ModelRegistry/DeleteModel",
             ActionResult,
             body={"model_id": model_id},
@@ -239,8 +239,8 @@ class ModelRegistryClient:
         self,
         model_id: str,
         model_version_id: str,
-    ) -> ActionResult:
-        return self._api.post_model(
+    ) -> Optional[ActionResult]:
+        return self._api.post_optional_model(
             "/v1/ModelRegistry/DeleteModelVersion",
             ActionResult,
             body={"model_id": model_id, "model_version_id": model_version_id},

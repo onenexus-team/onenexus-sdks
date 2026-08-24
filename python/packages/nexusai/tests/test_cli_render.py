@@ -13,7 +13,7 @@ from nexusai.cli_handlers import (
 from nexusai.cli_errors import ExitCode, render_error
 from nexusai.cli_progress import is_transfer_command, transfer_progress_for
 from nexusai.cli_render import render_result
-from nexusai.errors import OneNexusAPIError
+from nexusai.errors import OneNexusAPIError, ProblemType
 from nexusai.models import DatasetSummary, Page
 
 
@@ -31,6 +31,7 @@ def dataset() -> DatasetSummary:
         id="dataset-1",
         name="sample",
         status="READY",
+        message_code="DATASET_READY",
         status_message="Ready",
         file_count=1,
         total_size_bytes=12,
@@ -120,8 +121,9 @@ def test_error_table_contains_stable_fields_and_exit_code() -> None:
     stream = TerminalBuffer(tty=False)
     error = OneNexusAPIError(
         status_code=404,
-        code="DATASET_NOT_FOUND",
-        message="Dataset does not exist",
+        problem_type=ProblemType.RESOURCE_NOT_FOUND,
+        title="Resource not found",
+        detail="Dataset does not exist",
         request_id="request-1",
     )
 
@@ -130,7 +132,7 @@ def test_error_table_contains_stable_fields_and_exit_code() -> None:
     output = stream.getvalue()
     assert exit_code == ExitCode.NOT_FOUND
     assert "HTTP status   404" in output
-    assert "DATASET_NOT_FOUND" in output
+    assert ProblemType.RESOURCE_NOT_FOUND in output
     assert "Dataset does not exist" in output
     assert "request-1" in output
     assert "Traceback" not in output

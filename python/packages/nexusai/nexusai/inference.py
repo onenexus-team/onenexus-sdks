@@ -6,7 +6,8 @@ from .models import (
     InferenceEndpoint,
     InferenceInstanceDetail,
     InferenceInstanceSummary,
-    InferenceMonitoringResult,
+    InferenceLogsResult,
+    InferenceMetricsResult,
     Page,
 )
 from .wait import WaitPolicy, wait_for_status
@@ -148,8 +149,12 @@ class InferenceClient:
 
     def delete_inference_instance(
         self, inference_instance_id: str
-    ) -> InferenceActionResult:
-        return self._action("DeleteInferenceInstance", inference_instance_id)
+    ) -> Optional[InferenceActionResult]:
+        return self._api.post_optional_model(
+            "/v1/Inference/DeleteInferenceInstance",
+            InferenceActionResult,
+            body={"inference_instance_id": inference_instance_id},
+        )
 
     def get_inference_instance_endpoint(
         self,
@@ -166,12 +171,17 @@ class InferenceClient:
         inference_instance_id: str,
         start_timestamp: Optional[str] = None,
         end_timestamp: Optional[str] = None,
-    ) -> InferenceMonitoringResult:
-        return self._monitoring(
-            "GetInferenceInstanceLogs",
-            inference_instance_id,
-            start_timestamp,
-            end_timestamp,
+    ) -> InferenceLogsResult:
+        return self._api.post_model(
+            "/v1/Inference/GetInferenceInstanceLogs",
+            InferenceLogsResult,
+            body=_clean(
+                {
+                    "inference_instance_id": inference_instance_id,
+                    "start_timestamp": start_timestamp,
+                    "end_timestamp": end_timestamp,
+                }
+            ),
         )
 
     def get_inference_instance_metrics(
@@ -179,12 +189,17 @@ class InferenceClient:
         inference_instance_id: str,
         start_timestamp: Optional[str] = None,
         end_timestamp: Optional[str] = None,
-    ) -> InferenceMonitoringResult:
-        return self._monitoring(
-            "GetInferenceInstanceMetrics",
-            inference_instance_id,
-            start_timestamp,
-            end_timestamp,
+    ) -> InferenceMetricsResult:
+        return self._api.post_model(
+            "/v1/Inference/GetInferenceInstanceMetrics",
+            InferenceMetricsResult,
+            body=_clean(
+                {
+                    "inference_instance_id": inference_instance_id,
+                    "start_timestamp": start_timestamp,
+                    "end_timestamp": end_timestamp,
+                }
+            ),
         )
 
     def _action(
@@ -194,23 +209,4 @@ class InferenceClient:
             f"/v1/Inference/{operation}",
             InferenceActionResult,
             body={"inference_instance_id": inference_instance_id},
-        )
-
-    def _monitoring(
-        self,
-        operation: str,
-        inference_instance_id: str,
-        start_timestamp: Optional[str],
-        end_timestamp: Optional[str],
-    ) -> InferenceMonitoringResult:
-        return self._api.post_model(
-            f"/v1/Inference/{operation}",
-            InferenceMonitoringResult,
-            body=_clean(
-                {
-                    "inference_instance_id": inference_instance_id,
-                    "start_timestamp": start_timestamp,
-                    "end_timestamp": end_timestamp,
-                }
-            ),
         )

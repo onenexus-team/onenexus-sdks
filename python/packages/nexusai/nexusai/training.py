@@ -101,8 +101,8 @@ class TrainingClient:
             ),
         )
 
-    def delete_experiment(self, experiment_id: str) -> ActionResult:
-        return self._api.post_model(
+    def delete_experiment(self, experiment_id: str) -> Optional[ActionResult]:
+        return self._api.post_optional_model(
             "/v1/Training/DeleteExperiment",
             ActionResult,
             body={"experiment_id": experiment_id},
@@ -209,8 +209,14 @@ class TrainingClient:
     def cancel_run(self, experiment_id: str, run_id: str) -> ActionResult:
         return self._run_action("CancelRun", experiment_id, run_id)
 
-    def delete_run(self, experiment_id: str, run_id: str) -> ActionResult:
-        return self._run_action("DeleteRun", experiment_id, run_id)
+    def delete_run(
+        self, experiment_id: str, run_id: str
+    ) -> Optional[ActionResult]:
+        return self._api.post_optional_model(
+            "/v1/Training/DeleteRun",
+            ActionResult,
+            body={"experiment_id": experiment_id, "run_id": run_id},
+        )
 
     def resume_run(
         self,
@@ -341,8 +347,14 @@ class TrainingClient:
             files=to_public_transfer_files(result.files),
         )
 
-    def delete_run_checkpoints(self, experiment_id: str, run_id: str) -> ActionResult:
-        return self._run_action("DeleteRunCheckpoints", experiment_id, run_id)
+    def delete_run_checkpoints(
+        self, experiment_id: str, run_id: str
+    ) -> Optional[ActionResult]:
+        return self._api.post_optional_model(
+            "/v1/Training/DeleteRunCheckpoints",
+            ActionResult,
+            body={"experiment_id": experiment_id, "run_id": run_id},
+        )
 
     def list_run_checkpoint_files(
         self,
@@ -367,8 +379,8 @@ class TrainingClient:
         experiment_id: str,
         run_id: str,
         checkpoint_name: str,
-    ) -> ActionResult:
-        return self._api.post_model(
+    ) -> Optional[ActionResult]:
+        return self._api.post_optional_model(
             "/v1/Training/DeleteRunCheckpoint",
             ActionResult,
             body={
@@ -424,8 +436,14 @@ class TrainingClient:
             files=to_public_transfer_files(result.files),
         )
 
-    def delete_run_tokenizer(self, experiment_id: str, run_id: str) -> ActionResult:
-        return self._run_action("DeleteRunTokenizer", experiment_id, run_id)
+    def delete_run_tokenizer(
+        self, experiment_id: str, run_id: str
+    ) -> Optional[ActionResult]:
+        return self._api.post_optional_model(
+            "/v1/Training/DeleteRunTokenizer",
+            ActionResult,
+            body={"experiment_id": experiment_id, "run_id": run_id},
+        )
 
     def _run_action(
         self,

@@ -9,6 +9,10 @@ class FakeAPI:
         self.calls.append(("POST", path, body))
         return object()
 
+    def post_optional_model(self, path, _model, body=None):
+        self.calls.append(("POST", path, body))
+        return object()
+
     def post_page(self, path, _model, body=None):
         self.calls.append(("POST", path, body))
         return object()

@@ -66,7 +66,7 @@ def client(*, max_attempts: int = 3) -> APIClient:
 
 
 def test_read_operation_retries_transient_http_error(monkeypatch) -> None:
-    attempts = [http_error(503), Response({"data": []})]
+    attempts = [http_error(503), Response({"items": [], "total_pages": 0})]
 
     def send(*_args, **_kwargs):
         response = attempts.pop(0)
@@ -77,7 +77,7 @@ def test_read_operation_retries_transient_http_error(monkeypatch) -> None:
     monkeypatch.setattr(http_module, "urlopen", send)
     monkeypatch.setattr(http_module.time, "sleep", lambda _delay: None)
 
-    assert client().post("/v1/DataHub/ListDatasets", {}) == []
+    assert client().post_list("/v1/DataHub/ListDatasets", {}) == []
     assert attempts == []
 
 
@@ -128,9 +128,7 @@ def test_mutation_with_stable_idempotency_key_can_retry(monkeypatch) -> None:
     assert result == {"id": "dataset-1"}
     assert len(requests) == 2
     assert requests[0].data == requests[1].data
-    assert requests[0].get_header("X-request-id") == requests[1].get_header(
-        "X-request-id"
-    )
+    assert requests[0].get_header("X-request-id") is None
     assert requests[0].get_header("Idempotency-key") == "stable-key"
 
 
@@ -275,7 +273,7 @@ def test_retry_after_controls_delay(monkeypatch) -> None:
     assert delays == [2.0]
 
 
-def test_requests_include_sdk_version_and_request_id(monkeypatch) -> None:
+def test_requests_include_sdk_version_but_not_caller_request_id(monkeypatch) -> None:
     requests = []
 
     def send(request, **_kwargs):
@@ -287,21 +285,25 @@ def test_requests_include_sdk_version_and_request_id(monkeypatch) -> None:
     client().post("/v1/DataHub/GetDataset", {"dataset_id": "d"})
 
     assert requests[0].get_header("User-agent").startswith("nexusai/")
-    assert requests[0].get_header("X-request-id")
+    assert requests[0].get_header("X-request-id") is None
 
 
 def test_response_and_error_request_ids_prefer_server_headers(monkeypatch) -> None:
     responses = [
         Response(
-            {"data": []},
+            {"items": [], "total_pages": 0},
             headers={"X-Request-ID": "server-request-1"},
         ),
         HTTPError(
             "https://api.example.test",
             404,
             "not found",
-            {"X-Trace-ID": "server-trace-2"},
-            io.BytesIO(b'{"code":"NOT_FOUND","message":"missing"}'),
+            {"X-Request-ID": "server-request-2"},
+            io.BytesIO(
+                b'{"type":"https://api.onenexus.vn/problems/resource-not-found",'
+                b'"title":"Resource not found","status":404,"detail":"missing",'
+                b'"instance":"urn:onenexus:request:server-request-2"}'
+            ),
         ),
     ]
 
@@ -318,4 +320,7 @@ def test_response_and_error_request_ids_prefer_server_headers(monkeypatch) -> No
     assert page.request_id == "server-request-1"
     with pytest.raises(OneNexusAPIError) as caught:
         api.post("/v1/DataHub/GetDataset", {"dataset_id": "missing"})
-    assert caught.value.request_id == "server-trace-2"
+    assert caught.value.request_id == "server-request-2"
+    assert caught.value.problem_type.endswith("/resource-not-found")
+    assert caught.value.title == "Resource not found"
+    assert caught.value.detail == "missing"

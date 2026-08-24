@@ -3,6 +3,17 @@
 All notable NexusAI changes are recorded here. The project follows semantic
 versioning and the compatibility policy in `COMPATIBILITY.md`.
 
+## 1.0.0
+
+- Aligned every MLOps client with the public PascalCase RPC surface and strict
+  `data`/`items` success envelopes.
+- Added typed RFC 7807 problem identifiers and stable lifecycle message-code
+  constants.
+- Removed legacy success/error envelope decoding and caller-authored request
+  IDs.
+- Made synchronous delete operations return `None` for `204 No Content` and
+  asynchronous deletes return their public lifecycle action.
+
 ## 0.1.4
 
 - Keep checkpoint uploads retryable when a post-transfer source validation

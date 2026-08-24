@@ -52,7 +52,6 @@ def handle_create_tenant_workspace(
         datahub_bucket=args.datahub_bucket,
         checkpoint_bucket=args.checkpoint_bucket,
         tokenizer_bucket=args.tokenizer_bucket,
-        tenant_gpus_quota=args.tenant_gpus_quota,
         extras_data=parse_json(args.extras_json),
     )
 

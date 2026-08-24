@@ -20,7 +20,8 @@ from nexusai.models import (
     InferenceActionResult,
     InferenceInstanceDetail,
     InferenceInstanceSummary,
-    InferenceMonitoringResult,
+    InferenceLogsResult,
+    InferenceMetricsResult,
     ModelDetail,
     ModelSummary,
     ModelVersionDetail,
@@ -76,7 +77,8 @@ PUBLIC_MODEL_SCHEMAS = {
     DatasetSizeResult: "DatasetSizeResponse",
     ModelVersionSizeResult: "ModelVersionSizeResponse",
     RunMonitoringResult: "RunLogsResponse",
-    InferenceMonitoringResult: "InferenceMonitoringResponse",
+    InferenceLogsResult: "InferenceLogsPublicResponse",
+    InferenceMetricsResult: "InferenceMetricsPublicResponse",
 }
 
 
@@ -135,11 +137,9 @@ def test_committed_openapi_excludes_internal_contracts() -> None:
         for schema_name in schema_names
         for marker in (
             "execution",
-            "readerlease",
             "uploadsession",
             "checkpointprocess",
             "transfertarget",
-            "workloadimage",
         )
     )
 

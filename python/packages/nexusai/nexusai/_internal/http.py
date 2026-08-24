@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, TypeVar, cast
 from uuid import uuid4
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -27,9 +27,15 @@ ModelT = TypeVar("ModelT", bound=APIModel)
 @dataclass(frozen=True)
 class APIEnvelope(Generic[DataT]):
     data: DataT
-    code: Optional[str] = None
     message: Optional[str] = None
-    total_pages: Optional[int] = None
+    request_id: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class APIListEnvelope(Generic[DataT]):
+    items: list[DataT]
+    total_pages: int
+    message: Optional[str] = None
     request_id: Optional[str] = None
 
 
@@ -65,7 +71,17 @@ class APIClient:
         path: str,
         body: Optional[dict[str, Any]] = None,
     ) -> APIEnvelope[Any]:
-        return self._request("POST", path, body=body)
+        return cast(APIEnvelope[Any], self._request("POST", path, body=body))
+
+    def post_list_envelope(
+        self,
+        path: str,
+        body: Optional[dict[str, Any]] = None,
+    ) -> APIListEnvelope[dict[str, Any]]:
+        return cast(
+            APIListEnvelope[dict[str, Any]],
+            self._request("POST", path, body=body, list_response=True),
+        )
 
     def post_model(
         self,
@@ -91,19 +107,10 @@ class APIClient:
         model: type[ModelT],
         body: Optional[dict[str, Any]] = None,
     ) -> Page[ModelT]:
-        response = self.post_envelope(path, body)
-        payload = response.data
-        if not isinstance(payload, list) or not all(
-            isinstance(item, dict) for item in payload
-        ):
-            raise OneNexusError(
-                f"OneNexus API returned {type(payload).__name__}; "
-                "expected a list of objects"
-            )
+        response = self.post_list_envelope(path, body)
         return Page(
-            items=[model.from_dict(item) for item in payload],
+            items=[model.from_dict(item) for item in response.items],
             total_pages=response.total_pages,
-            code=response.code,
             message=response.message,
             request_id=response.request_id,
         )
@@ -138,15 +145,7 @@ class APIClient:
         path: str,
         body: Optional[dict[str, Any]] = None,
     ) -> list[dict[str, Any]]:
-        payload = self.post(path, body)
-        if not isinstance(payload, list) or not all(
-            isinstance(item, dict) for item in payload
-        ):
-            raise OneNexusError(
-                f"OneNexus API returned {type(payload).__name__}; "
-                "expected a list of objects"
-            )
-        return payload
+        return self.post_list_envelope(path, body).items
 
     def _request(
         self,
@@ -154,14 +153,14 @@ class APIClient:
         path: str,
         body: Optional[dict[str, Any]] = None,
         params: Optional[dict[str, Any]] = None,
-    ) -> APIEnvelope[Any]:
+        list_response: bool = False,
+    ) -> APIEnvelope[Any] | APIListEnvelope[Any]:
         url = self._url(path, params=params)
         data = None
         headers = {
             "Accept": "application/json",
             "Authorization": self._authorization_header(),
             "User-Agent": f"nexusai/{__version__}",
-            "X-Request-ID": str(uuid4()),
         }
         if body is not None:
             data = json.dumps(body).encode("utf-8")
@@ -190,14 +189,17 @@ class APIClient:
                             data=None,
                             request_id=self._response_request_id(
                                 getattr(response, "headers", None),
-                                fallback=headers["X-Request-ID"],
                             ),
                         )
-                    return self._decode_response(
+                    decoder = (
+                        self._decode_list_response
+                        if list_response
+                        else self._decode_response
+                    )
+                    return decoder(
                         response.read(),
                         request_id=self._response_request_id(
                             getattr(response, "headers", None),
-                            fallback=headers["X-Request-ID"],
                         ),
                     )
             except HTTPError as error:
@@ -206,14 +208,9 @@ class APIClient:
                     attempt,
                     started_at,
                     status_code=error.code,
-                    idempotency_in_progress=self._is_idempotency_in_progress(
-                        error
-                    ),
+                    idempotency_in_progress=self._is_idempotency_in_progress(error),
                 ):
-                    raise self._api_error(
-                        error,
-                        fallback_request_id=headers["X-Request-ID"],
-                    ) from error
+                    raise self._api_error(error) from error
                 delay = self._retry_delay(attempt, error.headers.get("Retry-After"))
             except (URLError, TimeoutError) as error:
                 if not self._should_retry(
@@ -259,67 +256,79 @@ class APIClient:
         if not raw:
             return APIEnvelope(data=None, request_id=request_id)
         payload = json.loads(raw.decode("utf-8"))
-        if isinstance(payload, dict) and "data" in payload:
-            return APIEnvelope(
-                data=payload["data"],
-                code=payload.get("code"),
-                message=payload.get("message"),
-                total_pages=payload.get("total_pages"),
-                request_id=payload.get("request_id")
-                or payload.get("trace_id")
-                or request_id,
-            )
-        return APIEnvelope(data=payload, request_id=request_id)
+        if not isinstance(payload, dict) or "data" not in payload:
+            raise OneNexusError("OneNexus API returned an invalid object envelope")
+        return APIEnvelope(
+            data=payload["data"],
+            message=payload.get("message"),
+            request_id=request_id,
+        )
+
+    def _decode_list_response(
+        self,
+        raw: bytes,
+        *,
+        request_id: Optional[str] = None,
+    ) -> APIListEnvelope[Any]:
+        if not raw:
+            raise OneNexusError("OneNexus API returned an empty list response")
+        payload = json.loads(raw.decode("utf-8"))
+        if not isinstance(payload, dict):
+            raise OneNexusError("OneNexus API returned an invalid list envelope")
+        items = payload.get("items")
+        total_pages = payload.get("total_pages")
+        if not isinstance(items, list) or not all(
+            isinstance(item, dict) for item in items
+        ):
+            raise OneNexusError("OneNexus API returned invalid list items")
+        if (
+            isinstance(total_pages, bool)
+            or not isinstance(total_pages, int)
+            or total_pages < 0
+        ):
+            raise OneNexusError("OneNexus API returned invalid total_pages")
+        return APIListEnvelope(
+            items=items,
+            total_pages=total_pages,
+            message=payload.get("message"),
+            request_id=request_id,
+        )
 
     def _api_error(
         self,
         error: HTTPError,
-        *,
-        fallback_request_id: Optional[str] = None,
     ) -> OneNexusAPIError:
         payload = self._read_error_payload(error)
-        detail = payload.get("error") if isinstance(payload, dict) else None
-        if isinstance(detail, dict):
-            code = detail.get("code")
-            message = detail.get("message") or error.reason
-        else:
-            code = payload.get("code") if isinstance(payload, dict) else None
-            message = (
-                payload.get("message")
-                if isinstance(payload, dict)
-                else str(payload)
-                if payload
-                else error.reason
-            )
+        problem = payload if isinstance(payload, dict) else {}
+        title = problem.get("title") or str(error.reason)
+        detail = problem.get("detail") or title
+        instance = problem.get("instance")
         return OneNexusAPIError(
             status_code=error.code,
-            code=code,
-            message=message,
-            payload=payload if isinstance(payload, dict) else {},
-            request_id=(
-                payload.get("request_id") or payload.get("trace_id")
-                if isinstance(payload, dict)
-                else None
-            )
-            or self._response_request_id(
-                error.headers,
-                fallback=fallback_request_id,
-            ),
+            problem_type=problem.get("type"),
+            title=title,
+            detail=detail,
+            instance=instance,
+            payload=problem,
+            request_id=self._response_request_id(error.headers)
+            or self._request_id_from_instance(instance),
         )
 
     @staticmethod
     def _response_request_id(
         headers: Any,
-        *,
-        fallback: Optional[str] = None,
     ) -> Optional[str]:
         if headers is None:
-            return fallback
-        for name in ("X-Request-ID", "X-Trace-ID", "Trace-ID"):
-            value = headers.get(name)
-            if value:
-                return str(value)
-        return fallback
+            return None
+        value = headers.get("X-Request-ID")
+        return str(value) if value else None
+
+    @staticmethod
+    def _request_id_from_instance(instance: Any) -> Optional[str]:
+        prefix = "urn:onenexus:request:"
+        if isinstance(instance, str) and instance.startswith(prefix):
+            return instance.removeprefix(prefix)
+        return None
 
     @staticmethod
     def _is_read_only_operation(
@@ -367,10 +376,7 @@ class APIClient:
     def _is_idempotency_in_progress(error: HTTPError) -> bool:
         if error.code != 409 or error.headers is None:
             return False
-        return (
-            error.headers.get("X-Idempotency-Status")
-            == "idempotency_in_progress"
-        )
+        return error.headers.get("X-Idempotency-Status") == "idempotency_in_progress"
 
     def _retry_delay(
         self,

@@ -88,8 +88,8 @@ class DataHubClient:
             },
         )
 
-    def delete_dataset(self, dataset_id: str) -> ActionResult:
-        return self._api.post_model(
+    def delete_dataset(self, dataset_id: str) -> Optional[ActionResult]:
+        return self._api.post_optional_model(
             "/v1/DataHub/DeleteDataset",
             ActionResult,
             body={"dataset_id": dataset_id},

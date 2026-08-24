@@ -24,7 +24,6 @@ def test_tenant_workspace_create_uses_pascal_case_endpoint():
         datahub_bucket="data-a",
         checkpoint_bucket="checkpoints-a",
         tokenizer_bucket="tokenizers-a",
-        tenant_gpus_quota=8,
         extras_data={"team": "ml"},
     )
 
@@ -38,7 +37,6 @@ def test_tenant_workspace_create_uses_pascal_case_endpoint():
                 "datahub_bucket": "data-a",
                 "checkpoint_bucket": "checkpoints-a",
                 "tokenizer_bucket": "tokenizers-a",
-                "tenant_gpus_quota": 8,
                 "extras_data": {"team": "ml"},
             },
         )

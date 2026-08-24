@@ -193,8 +193,10 @@ def _flatten_detail(
         field = f"{prefix}.{key}" if prefix else str(key)
         if isinstance(item, dict) and item:
             rows.extend(_flatten_detail(item, prefix=field))
-        elif isinstance(item, list) and item and any(
-            isinstance(element, (dict, list)) for element in item
+        elif (
+            isinstance(item, list)
+            and item
+            and any(isinstance(element, (dict, list)) for element in item)
         ):
             for index, element in enumerate(item):
                 indexed_field = f"{field}.{index}"

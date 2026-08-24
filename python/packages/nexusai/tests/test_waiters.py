@@ -23,6 +23,7 @@ def run(status: str) -> RunDetail:
             "training_type": "pretraining",
             "flavor": "2x2-mi355",
             "status": status,
+            "message_code": f"TRAINING_RUN_{status}",
             "status_message": status.title(),
             "created_at": "2026-07-13T00:00:00Z",
             "updated_at": "2026-07-13T00:00:00Z",
@@ -42,6 +43,9 @@ def inference(status: str) -> InferenceInstanceDetail:
             "served_model_name": "qwen",
             "flavor": "1x1-mi355",
             "status": status,
+            "message_code": (
+                "WORKLOAD_RUNNING" if status == "RUNNING" else "WORKLOAD_STARTING"
+            ),
             "status_message": status.title(),
             "created_at": "2026-07-13T00:00:00Z",
             "updated_at": "2026-07-13T00:00:00Z",
@@ -51,18 +55,18 @@ def inference(status: str) -> InferenceInstanceDetail:
 
 def test_training_waiter_polls_until_requested_status(monkeypatch) -> None:
     client = object.__new__(TrainingClient)
-    responses = iter([run("SCHEDULING"), run("RUNNING"), run("COMPLETED")])
+    responses = iter([run("SCHEDULING"), run("RUNNING"), run("SUCCEEDED")])
     monkeypatch.setattr(client, "get_run", lambda *_args: next(responses))
     monkeypatch.setattr(wait_module.time, "sleep", lambda _delay: None)
 
     result = client.wait_for_run(
         "exp-1",
         "run-1",
-        target_statuses={"COMPLETED"},
+        target_statuses={"SUCCEEDED"},
         policy=WaitPolicy(timeout_seconds=1, interval_seconds=0),
     )
 
-    assert result.status == "COMPLETED"
+    assert result.status == "SUCCEEDED"
 
 
 def test_inference_waiter_returns_running_instance(monkeypatch) -> None:

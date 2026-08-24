@@ -39,7 +39,6 @@ def add_tenant_workspace_commands(
     add_required(command, "--datahub-bucket")
     add_required(command, "--checkpoint-bucket")
     add_required(command, "--tokenizer-bucket")
-    command.add_argument("--tenant-gpus-quota", type=int, default=16)
     command.add_argument("--extras-json")
     command.set_defaults(handler=handlers.handle_create_tenant_workspace)
 

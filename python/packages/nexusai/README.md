@@ -85,6 +85,25 @@ for model in page:
     print(model.id, model.latest_version)
 ```
 
+## Errors and Lifecycle Codes
+
+API failures raise `OneNexusAPIError`. Branch on the RFC 7807 problem URI, not
+the localized title or detail:
+
+```python
+from nexusai import OneNexusAPIError, ProblemType
+
+try:
+    client.data_hub.get_dataset("missing-id")
+except OneNexusAPIError as error:
+    if error.problem_type == ProblemType.RESOURCE_NOT_FOUND:
+        print("Dataset not found", error.request_id)
+```
+
+Resources and accepted asynchronous actions expose the server-provided
+`message_code`. Stable values are listed by `nexusai.MessageCode`; the SDK does
+not infer a code from status.
+
 ## Dataset Upload and Download
 
 High-level methods own the complete create, transfer, and finalize workflow.

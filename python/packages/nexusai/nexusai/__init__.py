@@ -2,9 +2,10 @@ from ._version import __version__
 from .cas import create_cas_client
 from .client import NexusAIClient, OneNexusClient
 from .data_hub import DataHubClient
-from .errors import OneNexusAPIError, OneNexusError
+from .errors import OneNexusAPIError, OneNexusError, ProblemType
 from .inference import InferenceClient
 from .model_registry import ModelRegistryClient
+from .message_codes import MessageCode
 from .models import (
     ActionResult,
     DatasetDetail,
@@ -20,6 +21,8 @@ from .models import (
     InferenceEndpoint,
     InferenceInstanceDetail,
     InferenceInstanceSummary,
+    InferenceLogsResult,
+    InferenceMetricsResult,
     InferenceMonitoringResult,
     ModelDetail,
     ModelSummary,
@@ -66,6 +69,8 @@ __all__ = [
     "InferenceEndpoint",
     "InferenceInstanceDetail",
     "InferenceInstanceSummary",
+    "InferenceLogsResult",
+    "InferenceMetricsResult",
     "InferenceMonitoringResult",
     "ModelDetail",
     "ModelRegistryClient",
@@ -73,6 +78,7 @@ __all__ = [
     "ModelVersionDetail",
     "ModelVersionSizeResult",
     "ModelVersionSummary",
+    "MessageCode",
     "MonitoringResult",
     "NexusAIClient",
     "NewRunOutputModel",
@@ -80,6 +86,7 @@ __all__ = [
     "OneNexusError",
     "Page",
     "PlatformCatalogClient",
+    "ProblemType",
     "RetryPolicy",
     "RunCheckpoint",
     "RunDetail",
