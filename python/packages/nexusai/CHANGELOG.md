@@ -3,6 +3,13 @@
 All notable NexusAI changes are recorded here. The project follows semantic
 versioning and the compatibility policy in `COMPATIBILITY.md`.
 
+## 1.0.1
+
+- Publish model uploads with the complete versioned serving manifest required
+  for integrity and inference compatibility checks.
+- Added model architecture, runtime, and accelerator options to model upload
+  APIs and CLI commands.
+
 ## 1.0.0
 
 - Aligned every MLOps client with the public PascalCase RPC surface and strict

@@ -341,6 +341,10 @@ def handle_upload_model_version(
         model_extras_data=parse_json(args.model_extras_json),
         version_extras_data=parse_json(args.version_extras_json),
         expires_in=args.expires_in,
+        artifact_format=args.artifact_format,
+        model_architecture=args.model_architecture,
+        runtime=args.runtime,
+        accelerators=tuple(args.accelerator or ("amd",)),
     )
 
 
@@ -353,6 +357,10 @@ def handle_upload_model_version_by_id(
         source_path=args.source_path,
         version_extras_data=parse_json(args.version_extras_json),
         expires_in=args.expires_in,
+        artifact_format=args.artifact_format,
+        model_architecture=args.model_architecture,
+        runtime=args.runtime,
+        accelerators=tuple(args.accelerator or ("amd",)),
     )
 
 
@@ -364,6 +372,10 @@ def handle_upload_to_model_version(
         model_version_id=args.model_version_id,
         source_path=args.source_path,
         expires_in=args.expires_in,
+        artifact_format=args.artifact_format,
+        model_architecture=args.model_architecture,
+        runtime=args.runtime,
+        accelerators=tuple(args.accelerator or ("amd",)),
     )
 
 

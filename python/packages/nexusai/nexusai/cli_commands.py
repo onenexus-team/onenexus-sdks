@@ -242,6 +242,7 @@ def add_model_registry_commands(
     command.add_argument("--model-extras-json")
     command.add_argument("--version-extras-json")
     command.add_argument("--expires-in", type=int, default=3600)
+    _add_serving_manifest_options(command)
     command.set_defaults(handler=handlers.handle_upload_model_version)
 
     command = commands.add_parser("UploadModelVersionById")
@@ -250,6 +251,7 @@ def add_model_registry_commands(
     add_required(command, "--source-path")
     command.add_argument("--version-extras-json")
     command.add_argument("--expires-in", type=int, default=3600)
+    _add_serving_manifest_options(command)
     command.set_defaults(handler=handlers.handle_upload_model_version_by_id)
 
     command = commands.add_parser("UploadToModelVersion")
@@ -257,6 +259,7 @@ def add_model_registry_commands(
     add_required(command, "--model-version-id")
     add_required(command, "--source-path")
     command.add_argument("--expires-in", type=int, default=3600)
+    _add_serving_manifest_options(command)
     command.set_defaults(handler=handlers.handle_upload_to_model_version)
 
     command = commands.add_parser("DownloadModel")
@@ -499,6 +502,13 @@ def add_list_filters(command: argparse.ArgumentParser) -> None:
 
 def add_expires_arg(command: argparse.ArgumentParser) -> None:
     command.add_argument("--expires-in", type=int, default=3600)
+
+
+def _add_serving_manifest_options(command: argparse.ArgumentParser) -> None:
+    command.add_argument("--artifact-format")
+    command.add_argument("--model-architecture")
+    command.add_argument("--runtime", default="sglang")
+    command.add_argument("--accelerator", action="append")
 
 
 def add_experiment_run_ids(command: argparse.ArgumentParser) -> None:

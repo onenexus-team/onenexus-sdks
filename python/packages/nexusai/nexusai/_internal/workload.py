@@ -5,6 +5,7 @@ from .cas_storage import create_runtime_s3_credential
 from ..config import CAS_S3_ROLE_NAME, S3_ENDPOINT_URL
 from .http import APIClient
 from .results import InternalUploadResult as UploadResult
+from .serving_manifest import build_serving_manifest
 from .storage import StorageTransferFile, upload_path
 
 
@@ -246,6 +247,9 @@ class ModelRegistryWorkloadClient:
         *,
         idempotency_key: Optional[str] = None,
         artifact_format: Optional[str] = None,
+        model_architecture: Optional[str] = None,
+        runtime: str = "sglang",
+        accelerators: Iterable[str] = ("amd",),
     ) -> UploadResult[dict[str, Any]]:
         version = self.start_model_version_upload(
             model_id,
@@ -265,7 +269,15 @@ class ModelRegistryWorkloadClient:
             finalized = self.finalize_model_version_upload(
                 model_id,
                 model_version_id,
-                manifest=_manifest_from_uploaded_files(files, credential["prefix"]),
+                manifest=build_serving_manifest(
+                    files,
+                    storage_prefix=credential["prefix"],
+                    model_version_id=model_version_id,
+                    artifact_format=artifact_format,
+                    model_architecture=model_architecture,
+                    runtime=runtime,
+                    accelerators=accelerators,
+                ),
                 file_count=len(files),
                 total_size_bytes=sum(file.size_bytes for file in files),
                 artifact_format=artifact_format,

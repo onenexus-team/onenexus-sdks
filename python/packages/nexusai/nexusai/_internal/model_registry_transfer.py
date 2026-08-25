@@ -8,7 +8,8 @@ from .results import (
     InternalDownloadResult as DownloadResult,
     InternalUploadResult as UploadResult,
 )
-from .storage import StorageTransferFile, download_prefix, upload_path
+from .serving_manifest import build_serving_manifest
+from .storage import download_prefix, upload_path
 
 
 def _clean(payload: dict[str, Any]) -> dict[str, Any]:
@@ -329,6 +330,9 @@ class ModelRegistryTransferClient:
         version_extras_data: Optional[dict[str, Any]] = None,
         expires_in: int = DEFAULT_EXPIRES_IN,
         artifact_format: Optional[str] = None,
+        model_architecture: Optional[str] = None,
+        runtime: str = "sglang",
+        accelerators: Iterable[str] = ("amd",),
     ) -> UploadResult[dict[str, Any]]:
         model = self.get_or_create_model(
             name=model_name,
@@ -345,6 +349,9 @@ class ModelRegistryTransferClient:
             source_path=source_path,
             model_version=model_version,
             artifact_format=artifact_format,
+            model_architecture=model_architecture,
+            runtime=runtime,
+            accelerators=accelerators,
         )
 
     def upload_model_version_by_id(
@@ -355,6 +362,9 @@ class ModelRegistryTransferClient:
         version_extras_data: Optional[dict[str, Any]] = None,
         expires_in: int = DEFAULT_EXPIRES_IN,
         artifact_format: Optional[str] = None,
+        model_architecture: Optional[str] = None,
+        runtime: str = "sglang",
+        accelerators: Iterable[str] = ("amd",),
     ) -> UploadResult[dict[str, Any]]:
         model_version = self.create_model_version(
             model_id=model_id,
@@ -367,6 +377,9 @@ class ModelRegistryTransferClient:
             source_path=source_path,
             model_version=model_version,
             artifact_format=artifact_format,
+            model_architecture=model_architecture,
+            runtime=runtime,
+            accelerators=accelerators,
         )
 
     def upload_to_model_version(
@@ -376,6 +389,9 @@ class ModelRegistryTransferClient:
         source_path: str,
         expires_in: int = DEFAULT_EXPIRES_IN,
         artifact_format: Optional[str] = None,
+        model_architecture: Optional[str] = None,
+        runtime: str = "sglang",
+        accelerators: Iterable[str] = ("amd",),
     ) -> UploadResult[dict[str, Any]]:
         model_version = self.get_model_version(
             model_id=model_id,
@@ -387,6 +403,9 @@ class ModelRegistryTransferClient:
             source_path=source_path,
             model_version=model_version,
             artifact_format=artifact_format,
+            model_architecture=model_architecture,
+            runtime=runtime,
+            accelerators=accelerators,
         )
 
     def _upload_to_model_version_resource(
@@ -397,6 +416,9 @@ class ModelRegistryTransferClient:
         source_path: str,
         model_version: dict[str, Any],
         artifact_format: Optional[str] = None,
+        model_architecture: Optional[str] = None,
+        runtime: str = "sglang",
+        accelerators: Iterable[str] = ("amd",),
     ) -> UploadResult[dict[str, Any]]:
         self.start_model_version_upload(
             model_id=model_id,
@@ -412,9 +434,14 @@ class ModelRegistryTransferClient:
             finalized_model_version = self.finalize_model_version_upload(
                 model_id=model_id,
                 model_version_id=model_version_id,
-                manifest=_manifest_from_uploaded_files(
+                manifest=build_serving_manifest(
                     files,
-                    prefix=credential["prefix"],
+                    storage_prefix=credential["prefix"],
+                    model_version_id=model_version_id,
+                    artifact_format=artifact_format,
+                    model_architecture=model_architecture,
+                    runtime=runtime,
+                    accelerators=accelerators,
                 ),
                 file_count=len(files),
                 total_size_bytes=sum(int(file.size_bytes) for file in files),
@@ -502,27 +529,3 @@ class ModelRegistryTransferClient:
             prefix=str(target["prefix"]),
             retry_policy=self._api.retry_policy,
         )
-
-
-def _manifest_from_uploaded_files(
-    files: Iterable[StorageTransferFile],
-    prefix: str,
-) -> dict[str, Any]:
-    return {
-        "files": [
-            {
-                "path": _relative_object_key(file.object_key, prefix),
-                "size": int(file.size_bytes),
-            }
-            for file in files
-        ]
-    }
-
-
-def _relative_object_key(object_key: str, prefix: str) -> str:
-    normalized_prefix = str(prefix or "").strip("/")
-    normalized_key = str(object_key or "").strip("/")
-    folder = f"{normalized_prefix}/" if normalized_prefix else ""
-    if folder and normalized_key.startswith(folder):
-        return normalized_key[len(folder) :]
-    return normalized_key

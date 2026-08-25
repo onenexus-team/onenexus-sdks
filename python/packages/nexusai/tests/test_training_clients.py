@@ -759,6 +759,8 @@ def test_internal_workload_model_upload_uses_workload_lifecycle(monkeypatch, tmp
             raise AssertionError(f"unexpected endpoint: {path}")
 
     api = UploadAPI()
+    weights = tmp_path / "model.safetensors"
+    weights.write_bytes(b"weights")
     monkeypatch.setattr(
         internal_workload,
         "create_runtime_s3_credential",
@@ -772,10 +774,10 @@ def test_internal_workload_model_upload_uses_workload_lifecycle(monkeypatch, tmp
         "upload_path",
         lambda *_args, **_kwargs: [
             StorageTransferFile(
-                local_path=str(tmp_path / "model.safetensors"),
+                local_path=str(weights),
                 object_key="model-1/version-1/model.safetensors",
                 relative_path="model.safetensors",
-                size_bytes=128,
+                size_bytes=weights.stat().st_size,
             )
         ],
     )
@@ -788,6 +790,7 @@ def test_internal_workload_model_upload_uses_workload_lifecycle(monkeypatch, tmp
         model_version_id="version-1",
         source_path=str(tmp_path),
         artifact_format="safetensors",
+        model_architecture="Qwen3ForCausalLM",
     )
 
     assert result.resource["status"] == "FINALIZED"
@@ -796,9 +799,11 @@ def test_internal_workload_model_upload_uses_workload_lifecycle(monkeypatch, tmp
         "/protected/v1/ModelRegistry/GetModelVersionTransferTarget",
         "/workload/v1/ModelRegistry/FinalizeModelVersionUpload",
     ]
-    assert api.calls[-1][2]["manifest"] == {
-        "files": [{"path": "model.safetensors", "size": 128}]
-    }
+    manifest = api.calls[-1][2]["manifest"]
+    assert manifest["schema_version"] == "onenexus.serving-manifest/v1"
+    assert manifest["model_architecture"] == "Qwen3ForCausalLM"
+    assert manifest["files"][0]["path"] == "model.safetensors"
+    assert manifest["files"][0]["digest"].startswith("sha256:")
 
 
 def test_rpc_training_downloads_checkpoint_through_protected_target(

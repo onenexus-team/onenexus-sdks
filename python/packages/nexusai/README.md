@@ -203,7 +203,10 @@ print(version.id, version.status, version.artifact_format)
 
 You can also upload and download a model version directly with
 `upload_model_version`, `upload_to_model_version`, and
-`download_model_version`. These methods keep transfer credentials private.
+`download_model_version`. Uploads hash every artifact and publish the versioned
+serving manifest automatically. Pass `model_architecture`, `runtime`, or
+`accelerators` only when they cannot be inferred or differ from the default
+SGLang/AMD target. These methods keep transfer credentials private.
 
 ## Inference
 

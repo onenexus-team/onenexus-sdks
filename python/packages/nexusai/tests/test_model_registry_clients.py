@@ -1,6 +1,10 @@
+import hashlib
+import json
+
 from nexusai import RetryPolicy
 from nexusai._internal import model_registry_transfer
 from nexusai._internal.model_registry_transfer import ModelRegistryTransferClient
+from nexusai._internal.storage import StorageTransferFile
 
 
 class AssumeS3RoleResponse:
@@ -21,12 +25,6 @@ class FakeCasClient:
 
     async def aclose(self):
         self.closed = True
-
-
-class UploadedFile:
-    def __init__(self, object_key, size_bytes):
-        self.object_key = object_key
-        self.size_bytes = size_bytes
 
 
 class FakeAPI:
@@ -56,7 +54,7 @@ class FakeAPI:
         return {"ok": True}
 
 
-def test_model_version_upload_finalizes(monkeypatch):
+def test_model_version_upload_finalizes_with_serving_manifest(monkeypatch, tmp_path):
     api = FakeAPI()
     cas = FakeCasClient()
     client = ModelRegistryTransferClient(
@@ -66,23 +64,40 @@ def test_model_version_upload_finalizes(monkeypatch):
         s3_role_name="S3ObjectFullAccess",
     )
     upload_calls = []
+    weights = tmp_path / "model.safetensors"
+    weights.write_bytes(b"weights")
+    config = tmp_path / "config.json"
+    config.write_text('{"architectures":["Qwen3ForCausalLM"]}', encoding="utf-8")
 
     def fake_upload_path(source_path, credential):
         upload_calls.append((source_path, credential))
-        return [UploadedFile("model-1/version-1/weight.bin", 128)]
+        return [
+            StorageTransferFile(
+                local_path=str(weights),
+                object_key="model-1/version-1/model.safetensors",
+                relative_path="model.safetensors",
+                size_bytes=weights.stat().st_size,
+            ),
+            StorageTransferFile(
+                local_path=str(config),
+                object_key="model-1/version-1/config.json",
+                relative_path="config.json",
+                size_bytes=config.stat().st_size,
+            ),
+        ]
 
     monkeypatch.setattr(model_registry_transfer, "upload_path", fake_upload_path)
 
     result = client.upload_to_model_version(
         model_id="model-1",
         model_version_id="version-1",
-        source_path="/tmp/model",
+        source_path=str(tmp_path),
     )
 
     assert result.resource == {"id": "version-1", "status": "FINALIZED"}
     assert upload_calls == [
         (
-            "/tmp/model",
+            str(tmp_path),
             {
                 "endpoint_url": "https://s3.test",
                 "bucket": "model-bucket",
@@ -96,7 +111,7 @@ def test_model_version_upload_finalizes(monkeypatch):
     ]
     assert cas.assume_calls == ["S3ObjectFullAccess"]
     assert cas.closed is True
-    assert api.calls == [
+    assert api.calls[:3] == [
         (
             "POST",
             "/v1/ModelRegistry/GetModelVersion",
@@ -112,15 +127,20 @@ def test_model_version_upload_finalizes(monkeypatch):
             "/protected/v1/ModelRegistry/GetModelVersionTransferTarget",
             {"model_id": "model-1", "model_version_id": "version-1"},
         ),
-        (
-            "POST",
-            "/v1/ModelRegistry/FinalizeModelVersionUpload",
-            {
-                "model_id": "model-1",
-                "model_version_id": "version-1",
-                "manifest": {"files": [{"path": "weight.bin", "size": 128}]},
-                "file_count": 1,
-                "total_size_bytes": 128,
-            },
-        ),
     ]
+    finalize = api.calls[3][2]
+    manifest = finalize["manifest"]
+    assert finalize["file_count"] == 2
+    assert manifest["schema_version"] == "onenexus.serving-manifest/v1"
+    assert manifest["artifact_format"] == "safetensors"
+    assert manifest["model_architecture"] == "Qwen3ForCausalLM"
+    assert manifest["config_files"] == ["config.json"]
+    declared_digest = manifest["manifest_digest"]
+    manifest["manifest_digest"] = None
+    assert (
+        declared_digest
+        == "sha256:"
+        + hashlib.sha256(
+            json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+    )

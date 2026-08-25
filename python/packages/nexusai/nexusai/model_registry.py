@@ -323,6 +323,9 @@ class ModelRegistryClient:
         version_extras_data: Optional[dict[str, Any]] = None,
         expires_in: int = DEFAULT_EXPIRES_IN,
         artifact_format: Optional[str] = None,
+        model_architecture: Optional[str] = None,
+        runtime: str = "sglang",
+        accelerators: tuple[str, ...] = ("amd",),
     ) -> UploadResult[ModelVersionDetail]:
         result = self._transfer.upload_model_version(
             model_name=model_name,
@@ -332,6 +335,9 @@ class ModelRegistryClient:
             version_extras_data=version_extras_data,
             expires_in=expires_in,
             artifact_format=artifact_format,
+            model_architecture=model_architecture,
+            runtime=runtime,
+            accelerators=accelerators,
         )
         model = self.get_model_by_name(model_name)
         if model is None:
@@ -354,6 +360,9 @@ class ModelRegistryClient:
         version_extras_data: Optional[dict[str, Any]] = None,
         expires_in: int = DEFAULT_EXPIRES_IN,
         artifact_format: Optional[str] = None,
+        model_architecture: Optional[str] = None,
+        runtime: str = "sglang",
+        accelerators: tuple[str, ...] = ("amd",),
     ) -> UploadResult[ModelVersionDetail]:
         result = self._transfer.upload_model_version_by_id(
             model_id=model_id,
@@ -362,6 +371,9 @@ class ModelRegistryClient:
             version_extras_data=version_extras_data,
             expires_in=expires_in,
             artifact_format=artifact_format,
+            model_architecture=model_architecture,
+            runtime=runtime,
+            accelerators=accelerators,
         )
         version_id = str(
             result.resource.get("resource_id") or result.resource.get("id") or ""
@@ -380,6 +392,9 @@ class ModelRegistryClient:
         source_path: str,
         expires_in: int = DEFAULT_EXPIRES_IN,
         artifact_format: Optional[str] = None,
+        model_architecture: Optional[str] = None,
+        runtime: str = "sglang",
+        accelerators: tuple[str, ...] = ("amd",),
     ) -> UploadResult[ModelVersionDetail]:
         result = self._transfer.upload_to_model_version(
             model_id=model_id,
@@ -387,6 +402,9 @@ class ModelRegistryClient:
             source_path=source_path,
             expires_in=expires_in,
             artifact_format=artifact_format,
+            model_architecture=model_architecture,
+            runtime=runtime,
+            accelerators=accelerators,
         )
         return UploadResult(
             resource=self.get_model_version(model_id, model_version_id),
