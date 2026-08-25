@@ -11,6 +11,18 @@ def add_auth_commands(
     login = domains.add_parser("login")
     login.add_argument("--token", help="Token to save. Prompts if omitted.")
     login.add_argument(
+        "--client-id",
+        help="CAS service client ID for private-key JWT authentication.",
+    )
+    login.add_argument(
+        "--key-id",
+        help="CAS key ID (kid) registered for the service client.",
+    )
+    login.add_argument(
+        "--credential-file",
+        help="Path to the PEM private key. The file must have mode 600.",
+    )
+    login.add_argument(
         "--url",
         help="Platform URL to save. Defaults to https://ai-api-v3.ric1.onenexus-do.cloud.",
     )

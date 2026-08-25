@@ -49,7 +49,7 @@ class OneNexusClient:
         )
 
     @classmethod
-    def _from_credentials(
+    def from_credentials(
         cls,
         credentials: Credentials,
         *,
@@ -72,6 +72,8 @@ class OneNexusClient:
             retry_policy=retry_policy,
         )
         return client
+
+    _from_credentials = from_credentials
 
     def _configure(
         self,

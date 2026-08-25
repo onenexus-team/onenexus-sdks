@@ -5,6 +5,8 @@ import traceback
 from enum import IntEnum
 from typing import TextIO
 
+from onenexus_sdk_core import AuthenticationError, StaleCredentialsError
+
 from .cli_render import RED, _color_enabled, _style
 from .errors import OneNexusAPIError, OneNexusError
 
@@ -64,6 +66,8 @@ def exit_code_for(error: BaseException) -> ExitCode:
             return ExitCode.VALIDATION_OR_CONFLICT
         if error.status_code in {408, 429} or error.status_code >= 500:
             return ExitCode.TRANSIENT_EXHAUSTED
+    if isinstance(error, (AuthenticationError, StaleCredentialsError)):
+        return ExitCode.AUTH
     if isinstance(error, (OneNexusError, TimeoutError, ConnectionError)):
         return ExitCode.TRANSIENT_EXHAUSTED
     return ExitCode.UNEXPECTED

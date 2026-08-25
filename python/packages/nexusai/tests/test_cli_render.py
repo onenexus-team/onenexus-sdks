@@ -4,6 +4,8 @@ import io
 from argparse import Namespace
 from types import SimpleNamespace
 
+from onenexus_sdk_core import AuthenticationError
+
 from nexusai.cli import build_parser
 from nexusai.cli_handlers import (
     handle_delete_dataset,
@@ -136,6 +138,15 @@ def test_error_table_contains_stable_fields_and_exit_code() -> None:
     assert "Dataset does not exist" in output
     assert "request-1" in output
     assert "Traceback" not in output
+
+
+def test_credential_authentication_failure_uses_auth_exit_code() -> None:
+    stream = TerminalBuffer(tty=False)
+
+    exit_code = render_error(AuthenticationError("invalid client"), stream=stream)
+
+    assert exit_code == ExitCode.AUTH
+    assert "invalid client" in stream.getvalue()
 
 
 def test_transfer_progress_is_disabled_for_machine_output() -> None:

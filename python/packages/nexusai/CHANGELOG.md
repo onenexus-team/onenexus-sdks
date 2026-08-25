@@ -3,6 +3,15 @@
 All notable NexusAI changes are recorded here. The project follows semantic
 versioning and the compatibility policy in `COMPATIBILITY.md`.
 
+## 1.1.0
+
+- Added CAS service-client login using a registered RSA private key and
+  `private_key_jwt` client credentials.
+- Added public `OneNexusClient.from_credentials(...)` construction for
+  refreshable SDK credential providers.
+- Credential login stores only client metadata and the private-key path; it
+  never persists the private key or minted access tokens.
+
 ## 1.0.1
 
 - Publish model uploads with the complete versioned serving manifest required

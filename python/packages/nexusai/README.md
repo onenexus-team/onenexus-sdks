@@ -48,6 +48,24 @@ configuration directory:
 nexusai login --url https://ai-api-v3.ric1.onenexus-do.cloud
 ```
 
+For a CAS service client, register the public key in CAS and keep its PEM
+private key in a file readable only by its owner:
+
+```bash
+chmod 600 /path/to/private-key.pem
+nexusai login \
+  --client-id "$CAS_CLIENT_ID" \
+  --key-id "$CAS_KEY_ID" \
+  --credential-file /path/to/private-key.pem \
+  --url https://ai-api-v3.ric1.onenexus-do.cloud \
+  --cas-url https://auth.onenexus-do.cloud
+```
+
+Credential login uses CAS `private_key_jwt` client credentials. NexusAI stores
+only the client ID, key ID, and private-key path under `~/.nexusai`; it mints
+and refreshes short-lived access tokens in memory. It never copies the private
+key or saves a minted token.
+
 For non-interactive use, pass a token explicitly:
 
 ```bash
@@ -74,6 +92,23 @@ client = OneNexusClient(
 datasets = client.data_hub.list_datasets(limit=20)
 for dataset in datasets:
     print(dataset.id, dataset.name, dataset.status)
+```
+
+Service applications can use the same refreshable credential provider:
+
+```python
+from pathlib import Path
+
+from nexusai import OneNexusClient, PrivateKeyJwtCredentials
+
+
+credentials = PrivateKeyJwtCredentials(
+    issuer="https://auth.onenexus-do.cloud",
+    client_id="<client-id>",
+    signing_key=Path("/path/to/private-key.pem").read_text(),
+    signing_key_id="<key-id>",
+)
+client = OneNexusClient.from_credentials(credentials)
 ```
 
 List methods return a typed `Page[T]`. The page preserves response metadata:

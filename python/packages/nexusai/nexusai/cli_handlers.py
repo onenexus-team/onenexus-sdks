@@ -4,12 +4,18 @@ import argparse
 import json
 from typing import Any
 
+from onenexus_sdk_core import default_client_context
+
 from .auth import (
+    CredentialLogin,
+    create_private_key_jwt_credentials,
     delete_token,
     load_api_url,
     load_cas_url,
+    load_credential_login,
     load_token,
     prompt_token,
+    save_credential_login,
     save_login,
     token_profile,
 )
@@ -19,12 +25,53 @@ from .models import ExistingRunOutputModel, NewRunOutputModel, RunOutputModel
 
 
 def handle_login(args: argparse.Namespace) -> Any:
-    token = args.token or prompt_token()
     api_url = args.url or args.base_url or PLATFORM_BASE_URL
     cas_url = args.cas_url or CAS_BASE_URL
+    client_id = getattr(args, "client_id", None)
+    key_id = getattr(args, "key_id", None)
+    credential_file = getattr(args, "credential_file", None)
+    credential_values = (client_id, key_id, credential_file)
+    if any(credential_values):
+        if args.token:
+            raise ValueError("token and client credential login are mutually exclusive")
+        if not all(credential_values):
+            raise ValueError(
+                "--client-id, --key-id, and --credential-file are required together"
+            )
+        assert isinstance(client_id, str)
+        assert isinstance(key_id, str)
+        assert isinstance(credential_file, str)
+        login = CredentialLogin(
+            client_id=client_id,
+            key_id=key_id,
+            credential_file=credential_file,
+        )
+        credentials = create_private_key_jwt_credentials(login, cas_url=cas_url)
+        token = credentials.resolve_sync(default_client_context()).access_token
+        save_credential_login(
+            client_id=login.client_id,
+            key_id=login.key_id,
+            credential_file=login.credential_file,
+            api_url=api_url,
+            cas_url=cas_url,
+        )
+        return {
+            "logged_in": True,
+            "authentication_method": "private_key_jwt",
+            "api_url": api_url,
+            "cas_url": cas_url,
+            **token_profile(token),
+        }
+
+    token = args.token or prompt_token()
     save_login(token=token, api_url=api_url, cas_url=cas_url)
-    profile = token_profile(token)
-    return {"logged_in": True, "api_url": api_url, "cas_url": cas_url, **profile}
+    return {
+        "logged_in": True,
+        "authentication_method": "token",
+        "api_url": api_url,
+        "cas_url": cas_url,
+        **token_profile(token),
+    }
 
 
 def handle_logout(args: argparse.Namespace) -> Any:
@@ -33,10 +80,19 @@ def handle_logout(args: argparse.Namespace) -> Any:
 
 def handle_whoami(args: argparse.Namespace) -> Any:
     token = load_token(args.token)
+    credential_login = None if token else load_credential_login()
+    if credential_login:
+        credentials = create_private_key_jwt_credentials(
+            credential_login,
+            cas_url=load_cas_url(args.cas_url),
+        )
+        token = credentials.resolve_sync(default_client_context()).access_token
     profile = token_profile(token) if token else {}
     return {
         "logged_in": bool(token),
-        "token_source": "explicit_or_saved" if token else None,
+        "authentication_method": (
+            "private_key_jwt" if credential_login else "token" if token else None
+        ),
         "api_url": load_api_url(args.base_url),
         "cas_url": load_cas_url(args.cas_url),
         **profile,

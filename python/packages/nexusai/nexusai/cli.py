@@ -2,8 +2,10 @@ import argparse
 
 from ._version import __version__
 from .auth import (
+    create_private_key_jwt_credentials,
     load_api_url,
     load_cas_url,
+    load_credential_login,
     load_token,
 )
 from .client import OneNexusClient
@@ -29,13 +31,27 @@ def main() -> None:
                 result = args.handler(args)
             else:
                 token = load_token(args.token)
-                if not token:
+                credential_login = None if token else load_credential_login()
+                if not token and not credential_login:
                     parser.error("run `nexusai login` or pass --token")
-                client = OneNexusClient(
-                    token=token,
-                    base_url=load_api_url(args.base_url),
-                    cas_url=load_cas_url(args.cas_url),
-                )
+                api_url = load_api_url(args.base_url)
+                cas_url = load_cas_url(args.cas_url)
+                if token:
+                    client = OneNexusClient(
+                        token=token,
+                        base_url=api_url,
+                        cas_url=cas_url,
+                    )
+                else:
+                    assert credential_login is not None
+                    client = OneNexusClient.from_credentials(
+                        create_private_key_jwt_credentials(
+                            credential_login,
+                            cas_url=cas_url,
+                        ),
+                        base_url=api_url,
+                        cas_url=cas_url,
+                    )
                 result = args.handler(client, args)
         if result is not None:
             render_result(

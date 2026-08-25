@@ -49,6 +49,7 @@ from .retry import RetryPolicy
 from .tenant_workspace import TenantWorkspaceClient
 from .training import TrainingClient
 from .wait import WaitPolicy, WaitTimeoutError
+from onenexus_sdk_core import PrivateKeyJwtCredentials
 
 __all__ = [
     "OneNexusAPIError",
@@ -87,6 +88,7 @@ __all__ = [
     "Page",
     "PlatformCatalogClient",
     "ProblemType",
+    "PrivateKeyJwtCredentials",
     "RetryPolicy",
     "RunCheckpoint",
     "RunDetail",
