@@ -81,6 +81,22 @@ def test_read_operation_retries_transient_http_error(monkeypatch) -> None:
     assert attempts == []
 
 
+def test_list_operation_omits_unspecified_optional_fields(monkeypatch) -> None:
+    requests = []
+
+    def send(request, **_kwargs):
+        requests.append(request)
+        return Response({"items": [], "total_pages": 0})
+
+    monkeypatch.setattr(http_module, "urlopen", send)
+
+    assert client().post_list(
+        "/v1/DataHub/ListDatasets",
+        {"page": None, "limit": 1, "name": None},
+    ) == []
+    assert json.loads(requests[0].data) == {"limit": 1}
+
+
 def test_mutation_gets_stable_generated_idempotency_key_for_retry(
     monkeypatch,
 ) -> None:

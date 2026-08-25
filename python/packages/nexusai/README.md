@@ -6,8 +6,8 @@ RPC operations on the wire while exposing idiomatic Python client methods.
 
 Default services:
 
-- Platform API: `https://ai-api-v2.ric1.onenexus-do.cloud`
-- CAS: `https://cas.ric1.onenexus-do.cloud`
+- Platform API: `https://ai-api-v3.ric1.onenexus-do.cloud`
+- CAS: `https://auth.onenexus-do.cloud`
 
 The SDK accepts one token and sends it to the Platform API. High-level transfer
 methods exchange that token through CAS for short-lived, resource-scoped S3
@@ -45,7 +45,7 @@ Interactive login stores the token and service URLs in the current user's
 configuration directory:
 
 ```bash
-nexusai login --url https://ai-api-v2.ric1.onenexus-do.cloud
+nexusai login --url https://ai-api-v3.ric1.onenexus-do.cloud
 ```
 
 For non-interactive use, pass a token explicitly:

@@ -1,9 +1,9 @@
 import os
 
 
-PLATFORM_BASE_URL = "https://ai-api-v2.ric1.onenexus-do.cloud"
+PLATFORM_BASE_URL = "https://ai-api-v3.ric1.onenexus-do.cloud"
 PLATFORM_API_BASE_URL = f"{PLATFORM_BASE_URL}/api"
-CAS_BASE_URL = "https://cas.ric1.onenexus-do.cloud"
+CAS_BASE_URL = "https://auth.onenexus-do.cloud"
 S3_ENDPOINT_URL = os.getenv("ONENEXUS_S3_ENDPOINT_URL", "https://s3.onenexus-do.cloud")
 CAS_S3_ROLE_NAME = os.getenv("ONENEXUS_CAS_S3_ROLE_NAME", "S3ObjectFullAccess")
 DEFAULT_REGION = "us-east-1"

@@ -78,6 +78,11 @@ class APIClient:
         path: str,
         body: Optional[dict[str, Any]] = None,
     ) -> APIListEnvelope[dict[str, Any]]:
+        body = (
+            {key: value for key, value in body.items() if value is not None}
+            if body is not None
+            else None
+        )
         return cast(
             APIListEnvelope[dict[str, Any]],
             self._request("POST", path, body=body, list_response=True),

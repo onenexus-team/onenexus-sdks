@@ -12,11 +12,11 @@ def add_auth_commands(
     login.add_argument("--token", help="Token to save. Prompts if omitted.")
     login.add_argument(
         "--url",
-        help="Platform URL to save. Defaults to https://ai-api-v2.ric1.onenexus-do.cloud.",
+        help="Platform URL to save. Defaults to https://ai-api-v3.ric1.onenexus-do.cloud.",
     )
     login.add_argument(
         "--cas-url",
-        help="CAS URL to save. Defaults to https://cas.ric1.onenexus-do.cloud.",
+        help="CAS URL to save. Defaults to https://auth.onenexus-do.cloud.",
     )
     login.set_defaults(auth_command=True, handler=handlers.handle_login)
 
