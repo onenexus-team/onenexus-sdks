@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 @dataclass
 class AuthorizationRoleAssignment(Parsable):
     """
-    The created or existing direct assignment.
+    One direct role assignment returned by CAS.
     """
     # When the assignment was created, in UTC.
     assigned_at_utc: Optional[datetime.datetime] = None

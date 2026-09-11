@@ -5,7 +5,7 @@ from kiota_abstractions.serialization import Parsable, ParseNode, SerializationW
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .list_role_assignments_request_assignee import ListRoleAssignmentsRequest_assignee
+    from .authorization_assignee import AuthorizationAssignee
 
 @dataclass
 class ListRoleAssignmentsRequest(Parsable):
@@ -15,9 +15,11 @@ class ListRoleAssignmentsRequest(Parsable):
     # Cursor returned by a previous response for the following page.
     after: Optional[str] = None
     # The assignee property
-    assignee: Optional[ListRoleAssignmentsRequest_assignee] = None
+    assignee: Optional[AuthorizationAssignee] = None
     # Cursor returned by a previous response for the preceding page.
     before: Optional[str] = None
+    # Maximum number of assignments to return, from 1 through 200.
+    limit: Optional[int] = None
     # Role URI to filter by. Supply this or AuthorizationAssignee? ListRoleAssignmentsRequest.Assignee, but not both.
     role_uri: Optional[str] = None
     
@@ -37,14 +39,15 @@ class ListRoleAssignmentsRequest(Parsable):
         The deserialization information for the current model
         Returns: dict[str, Callable[[ParseNode], None]]
         """
-        from .list_role_assignments_request_assignee import ListRoleAssignmentsRequest_assignee
+        from .authorization_assignee import AuthorizationAssignee
 
-        from .list_role_assignments_request_assignee import ListRoleAssignmentsRequest_assignee
+        from .authorization_assignee import AuthorizationAssignee
 
         fields: dict[str, Callable[[Any], None]] = {
             "after": lambda n : setattr(self, 'after', n.get_str_value()),
-            "assignee": lambda n : setattr(self, 'assignee', n.get_object_value(ListRoleAssignmentsRequest_assignee)),
+            "assignee": lambda n : setattr(self, 'assignee', n.get_object_value(AuthorizationAssignee)),
             "before": lambda n : setattr(self, 'before', n.get_str_value()),
+            "limit": lambda n : setattr(self, 'limit', n.get_int_value()),
             "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
         }
         return fields
@@ -60,6 +63,7 @@ class ListRoleAssignmentsRequest(Parsable):
         writer.write_str_value("after", self.after)
         writer.write_object_value("assignee", self.assignee)
         writer.write_str_value("before", self.before)
+        writer.write_int_value("limit", self.limit)
         writer.write_str_value("roleUri", self.role_uri)
     
 

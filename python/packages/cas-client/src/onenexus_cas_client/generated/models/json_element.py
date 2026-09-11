@@ -6,9 +6,6 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 
 @dataclass
 class JsonElement(Parsable):
-    """
-    Validated policy object containing exactly the required,case-sensitive `Effect` (`Allow` or `Deny`),`Action`, and `ResourceScope` fields plus optional`Condition`. `Action` and `ResourceScope` containnormalized non-empty string arrays; `Condition` groups conditionkeys by operator.
-    """
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> JsonElement:
         """

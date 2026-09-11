@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 @dataclass
 class AuthorizationAssignee(Parsable):
     """
-    User or service client that receives the role.
+    A canonical role assignee supplied to an administration API.
     """
     # The strict kind of principal represented by string AuthorizationAssignee.Uri.
     kind: Optional[AuthorizationAssigneeKind] = None

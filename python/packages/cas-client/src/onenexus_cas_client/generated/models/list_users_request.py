@@ -13,6 +13,8 @@ class ListUsersRequest(Parsable):
     after: Optional[str] = None
     # Backward cursor returned by the preceding response. Mutually exclusivewith string? ListUsersRequest.After.
     before: Optional[str] = None
+    # Maximum number of items returned by this page.
+    limit: Optional[int] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> ListUsersRequest:
@@ -33,6 +35,7 @@ class ListUsersRequest(Parsable):
         fields: dict[str, Callable[[Any], None]] = {
             "after": lambda n : setattr(self, 'after', n.get_str_value()),
             "before": lambda n : setattr(self, 'before', n.get_str_value()),
+            "limit": lambda n : setattr(self, 'limit', n.get_int_value()),
         }
         return fields
     
@@ -46,5 +49,6 @@ class ListUsersRequest(Parsable):
             raise TypeError("writer cannot be null.")
         writer.write_str_value("after", self.after)
         writer.write_str_value("before", self.before)
+        writer.write_int_value("limit", self.limit)
     
 

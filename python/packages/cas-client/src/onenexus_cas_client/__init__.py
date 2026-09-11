@@ -35,8 +35,12 @@ from .client import (
     DetachPolicyFromRoleRequest,
     DisableServiceClientRequest,
     DisableServiceClientResponse,
+    GetPolicyRequest,
+    GetPolicyResponse,
     ListAuthorizationRolesRequest,
     ListAuthorizationRolesResponse,
+    ListPoliciesRequest,
+    ListPoliciesResponse,
     ListPolicyAttachmentsRequest,
     ListPolicyAttachmentsResponse,
     ListRoleAssignmentsRequest,
@@ -87,11 +91,15 @@ __all__ = [
     "DeletePolicyResponse",
     "DisableServiceClientRequest",
     "DisableServiceClientResponse",
+    "GetPolicyRequest",
+    "GetPolicyResponse",
 
     "DetachPolicyFromRoleRequest", 
 
     "ListAuthorizationRolesRequest",
     "ListAuthorizationRolesResponse",
+    "ListPoliciesRequest",
+    "ListPoliciesResponse",
 
     "ListPolicyAttachmentsRequest",
     "ListPolicyAttachmentsResponse",

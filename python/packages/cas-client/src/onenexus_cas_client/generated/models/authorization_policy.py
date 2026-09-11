@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 @dataclass
 class AuthorizationPolicy(Parsable):
     """
-    The requested policy content.
+    Complete customer-visible authorization policy content.
     """
     # Optimistic concurrency token for policy content changes.
     content_state_token: Optional[str] = None

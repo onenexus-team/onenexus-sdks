@@ -9,7 +9,7 @@ from uuid import UUID
 @dataclass
 class User(Parsable):
     """
-    The freshly-created user.
+    Wire shape for a user returned by the `CreateUser` family of RPCs.
     """
     # UTC instant when the row was created.
     created_at: Optional[datetime.datetime] = None

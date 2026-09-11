@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 @dataclass
 class AuthorizationPolicyReference(Parsable):
     """
-    Policy attached to the role.
+    A stable reference to a policy available to the caller's tenant.
     """
     # Whether the policy is tenant-managed or platform-managed.
     kind: Optional[AuthorizationPolicyKind] = None

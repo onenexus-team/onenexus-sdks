@@ -50,8 +50,12 @@ from .generated.models.disable_service_client_request import DisableServiceClien
 from .generated.models.disable_service_client_response import DisableServiceClientResponse
 from .generated.models.empty_s3_request import EmptyS3Request
 from .generated.models.empty_service_client_request import EmptyServiceClientRequest
+from .generated.models.get_policy_request import GetPolicyRequest
+from .generated.models.get_policy_response import GetPolicyResponse
 from .generated.models.list_authorization_roles_request import ListAuthorizationRolesRequest
 from .generated.models.list_authorization_roles_response import ListAuthorizationRolesResponse
+from .generated.models.list_policies_request import ListPoliciesRequest
+from .generated.models.list_policies_response import ListPoliciesResponse
 from .generated.models.list_policy_attachments_request import ListPolicyAttachmentsRequest
 from .generated.models.list_policy_attachments_response import ListPolicyAttachmentsResponse
 from .generated.models.list_role_assignments_request import ListRoleAssignmentsRequest
@@ -494,6 +498,32 @@ class CasClient:
             raise RuntimeError("CAS ListRolePolicies returned no response body")
         return response
 
+    async def list_policies(
+        self, request: ListPoliciesRequest | None = None
+    ) -> ListPoliciesResponse:
+        """List policies available to the caller's tenant.
+
+        Send one returned cursor at a time to page through tenant- and platform-managed policies.
+
+        API operation: POST /api/ListPolicies.
+        """
+        response = await self._client.api.list_policies.post(request or ListPoliciesRequest())
+        if response is None:
+            raise RuntimeError("CAS ListPolicies returned no response body")
+        return response
+
+    async def get_policy(self, request: GetPolicyRequest) -> GetPolicyResponse:
+        """Get one policy's content without its role attachments.
+
+        Use the returned ``contentStateToken`` when updating or deleting the policy.
+
+        API operation: POST /api/GetPolicy.
+        """
+        response = await self._client.api.get_policy.post(request)
+        if response is None:
+            raise RuntimeError("CAS GetPolicy returned no response body")
+        return response
+
     async def publish_policy(self, request: PublishPolicyRequest) -> PublishPolicyResponse:
         """Publish a policy in the caller's tenant.
 
@@ -580,8 +610,12 @@ __all__ = [
     "DetachPolicyFromRoleRequest",
     "DisableServiceClientRequest",
     "DisableServiceClientResponse",
+    "GetPolicyRequest",
+    "GetPolicyResponse",
     "ListAuthorizationRolesRequest",
     "ListAuthorizationRolesResponse",
+    "ListPoliciesRequest",
+    "ListPoliciesResponse",
     "ListPolicyAttachmentsRequest",
     "ListPolicyAttachmentsResponse",
     "ListRoleAssignmentsRequest",

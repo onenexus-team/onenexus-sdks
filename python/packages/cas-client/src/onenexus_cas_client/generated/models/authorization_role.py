@@ -7,7 +7,7 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 @dataclass
 class AuthorizationRole(Parsable):
     """
-    The role after its description has been updated.
+    One tenant authorization role returned by CAS.
     """
     # Optional human-readable description of this role.
     description: Optional[str] = None

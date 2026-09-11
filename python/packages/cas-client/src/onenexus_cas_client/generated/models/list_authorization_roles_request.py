@@ -9,6 +9,9 @@ class ListAuthorizationRolesRequest(Parsable):
     """
     Request body for `POST /api/ListRoles`.
     """
+    # Maximum number of roles to return, from 1 through 200.
+    limit: Optional[int] = None
+    
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> ListAuthorizationRolesRequest:
         """
@@ -26,6 +29,7 @@ class ListAuthorizationRolesRequest(Parsable):
         Returns: dict[str, Callable[[ParseNode], None]]
         """
         fields: dict[str, Callable[[Any], None]] = {
+            "limit": lambda n : setattr(self, 'limit', n.get_int_value()),
         }
         return fields
     
@@ -37,5 +41,6 @@ class ListAuthorizationRolesRequest(Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
+        writer.write_int_value("limit", self.limit)
     
 

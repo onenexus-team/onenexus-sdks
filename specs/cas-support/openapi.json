@@ -357,7 +357,7 @@
             }
           },
           "409": {
-            "description": "The slug is already taken\n    (`type=https://onenexus.cloud/errors/already-exists`).",
+            "description": "The slug or root email is already reserved\n    (`type=https://onenexus.cloud/errors/already-exists`).",
             "content": {
               "application/problem+json": {
                 "schema": {

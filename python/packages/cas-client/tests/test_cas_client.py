@@ -23,7 +23,10 @@ from onenexus_cas_client import (
     DeleteAuthorizationRoleRequest,
     DeletePolicyRequest,
     DetachPolicyFromRoleRequest,
+    GetPolicyRequest,
+    ListPoliciesRequest,
     ListPolicyAttachmentsRequest,
+    ListRoleAssignmentsRequest,
     ListRolePoliciesRequest,
     PublishPolicyRequest,
     RemoveRoleAssignmentRequest,
@@ -251,10 +254,12 @@ def test_assume_s3_role_rejects_issuer_outside_configured_root_domain() -> None:
 
 async def test_authorization_and_user_list_methods_route_through_kiota() -> None:
     captured_paths: list[str] = []
+    captured_bodies: dict[str, object] = {}
     captured_idempotency_keys: list[tuple[str, str]] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         captured_paths.append(request.url.path)
+        captured_bodies[request.url.path] = json.loads(request.content)
         idempotency_key = request.headers.get("x-nx1-idempotency-key")
         if idempotency_key is not None:
             captured_idempotency_keys.append((request.url.path, idempotency_key))
@@ -277,7 +282,9 @@ async def test_authorization_and_user_list_methods_route_through_kiota() -> None
         await cas.delete_role(DeleteAuthorizationRoleRequest())
         await cas.assign_role(AssignRoleRequest())
         await cas.remove_role_assignment(RemoveRoleAssignmentRequest())
-        await cas.list_role_assignments()
+        await cas.list_role_assignments(
+            ListRoleAssignmentsRequest(role_uri="onenexus:role/Reader", limit=25)
+        )
         await cas.attach_policy_to_role(AttachPolicyToRoleRequest())
         await cas.detach_policy_from_role(DetachPolicyFromRoleRequest())
         await cas.list_policy_attachments(ListPolicyAttachmentsRequest())
@@ -306,9 +313,46 @@ async def test_authorization_and_user_list_methods_route_through_kiota() -> None
         "/api/AttachPolicyToRole",
         "/api/DetachPolicyFromRole",
     ]
+    assert captured_bodies["/api/ListRoleAssignments"] == {
+        "limit": 25,
+        "roleUri": "onenexus:role/Reader",
+    }
     assert all(
         IDEMPOTENCY_KEY_PATTERN.fullmatch(key) for _, key in captured_idempotency_keys
     )
+
+
+async def test_policy_read_methods_route_through_kiota() -> None:
+    captured: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured[request.url.path] = json.loads(request.content)
+        if request.url.path == "/api/ListPolicies":
+            return httpx.Response(
+                200,
+                json={"items": [{"name": "reader"}]},
+                headers={"content-type": "application/json"},
+            )
+        if request.url.path == "/api/GetPolicy":
+            return httpx.Response(
+                200,
+                json={"policy": {"name": "reader"}},
+                headers={"content-type": "application/json"},
+            )
+        raise AssertionError(f"unexpected request: {request.url.path}")
+
+    async with _client(httpx.MockTransport(handler)) as cas:
+        policies = await cas.list_policies(ListPoliciesRequest(limit=25))
+        policy = await cas.get_policy(GetPolicyRequest(name="reader"))
+
+    assert captured == {
+        "/api/ListPolicies": {"limit": 25},
+        "/api/GetPolicy": {"name": "reader"},
+    }
+    assert policies.items is not None
+    assert policies.items[0].name == "reader"
+    assert policy.policy is not None
+    assert policy.policy.name == "reader"
 
 
 async def test_service_client_key_management_and_invitation_resend_route_through_kiota() -> None:

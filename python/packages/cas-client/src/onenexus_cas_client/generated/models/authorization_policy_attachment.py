@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 @dataclass
 class AuthorizationPolicyAttachment(Parsable):
     """
-    The created or existing direct attachment.
+    One policy-to-role attachment returned by CAS.
     """
     # When the attachment was created, in UTC.
     attached_at_utc: Optional[datetime.datetime] = None

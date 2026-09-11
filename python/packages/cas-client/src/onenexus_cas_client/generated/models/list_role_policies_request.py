@@ -13,6 +13,8 @@ class ListRolePoliciesRequest(Parsable):
     after: Optional[str] = None
     # Cursor returned by a previous response for the preceding page.
     before: Optional[str] = None
+    # Maximum number of attachments to return, from 1 through 200.
+    limit: Optional[int] = None
     # Role whose direct policy attachments to return.
     role_uri: Optional[str] = None
     
@@ -35,6 +37,7 @@ class ListRolePoliciesRequest(Parsable):
         fields: dict[str, Callable[[Any], None]] = {
             "after": lambda n : setattr(self, 'after', n.get_str_value()),
             "before": lambda n : setattr(self, 'before', n.get_str_value()),
+            "limit": lambda n : setattr(self, 'limit', n.get_int_value()),
             "roleUri": lambda n : setattr(self, 'role_uri', n.get_str_value()),
         }
         return fields
@@ -49,6 +52,7 @@ class ListRolePoliciesRequest(Parsable):
             raise TypeError("writer cannot be null.")
         writer.write_str_value("after", self.after)
         writer.write_str_value("before", self.before)
+        writer.write_int_value("limit", self.limit)
         writer.write_str_value("roleUri", self.role_uri)
     
 
