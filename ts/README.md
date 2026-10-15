@@ -12,8 +12,8 @@ and service calls; server-side token validation belongs to the services.
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `@onenexus-team/sdk-core`      | Credential primitives (`AccessToken`, `Credentials`, `ClientContext`), `ClientBase`, Ky-based HTTP transport, custom mutator factory, RFC 9457 error mapping. |
 | `@onenexus-team/sdk-core/node` | Node-only subpath. Exports `WorkloadIdentityFileCredentials` (reads a runtime-mounted token file off disk).         |
-| `@onenexus-team/cas-client`    | Generated client for the Central Auth Service, built from `specs/cas/openapi.json` via `orval@8.10.0`.            |
-| `@onenexus-team/cas-support-client` | Generated client for the Central Auth Service support API, built from `specs/cas-support/openapi.json` via `orval@8.10.0`. |
+| `@onenexus-team/cas-client`    | Generated client for the Central Auth Service, built from `specs/cas/openapi.json` via `orval@8.43.0`.            |
+| `@onenexus-team/cas-support-client` | Generated client for the Central Auth Service support API, built from `specs/cas-support/openapi.json` via `orval@8.43.0`. |
 
 ## Prerequisites
 

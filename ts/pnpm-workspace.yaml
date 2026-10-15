@@ -1,9 +1,26 @@
 packages:
-    - 'packages/*'
+  - 'packages/*'
 
 allowBuilds:
-    esbuild: true
-    msw: false
+  esbuild: true
+  msw: false
+
+minimumReleaseAgeExclude:
+  - '@orval/angular@8.43.0'
+  - '@orval/axios@8.43.0'
+  - '@orval/core@8.43.0'
+  - '@orval/effect@8.43.0'
+  - '@orval/fetch@8.43.0'
+  - '@orval/hono@8.43.0'
+  - '@orval/mcp@8.43.0'
+  - '@orval/mock@8.43.0'
+  - '@orval/pinia-colada@8.43.0'
+  - '@orval/query@8.43.0'
+  - '@orval/solid-start@8.43.0'
+  - '@orval/swr@8.43.0'
+  - '@orval/zod@8.43.0'
+  - orval@8.43.0
+  - tsup@9.0.0
 
 saveExact: true
 strictPeerDependencies: true
