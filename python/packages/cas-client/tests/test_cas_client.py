@@ -3,7 +3,8 @@ from __future__ import annotations
 import base64
 import json
 import re
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from email.utils import format_datetime
 from uuid import UUID
 
 import httpx
@@ -134,6 +135,49 @@ async def test_create_user_routes_through_kiota_adapter() -> None:
     assert result.user is not None
     assert result.user.email == "a@b.c"
     assert str(result.user.user_id) == "0193fabc-1234-7def-abcd-1234567890ab"
+
+
+@pytest.mark.parametrize("inject_http", [False, True])
+async def test_cas_client_observes_server_date_and_preserves_http_hooks(
+    monkeypatch: pytest.MonkeyPatch, inject_http: bool
+) -> None:
+    context = ClientContext()
+    server_time = (datetime.now(UTC) + timedelta(minutes=5)).replace(microsecond=0)
+    observed_statuses: list[int] = []
+
+    async def existing_hook(response: httpx.Response) -> None:
+        observed_statuses.append(response.status_code)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={"users": []},
+            headers={"Date": format_datetime(server_time, usegmt=True)},
+        )
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(handler),
+        event_hooks={"response": [existing_hook]},
+    ) as http:
+        if not inject_http:
+            def create_http(*, base_url: str) -> httpx.AsyncClient:
+                assert base_url == "https://auth.test"
+                return http
+
+            monkeypatch.setattr("onenexus_cas_client.client.httpx.AsyncClient", create_http)
+
+        async with CasClient(
+            base_url="https://auth.test",
+            credentials=_credentials(),
+            context=context,
+            http_client=http if inject_http else None,
+        ) as cas:
+            await cas.list_users()
+
+        assert http.is_closed is (not inject_http)
+
+    assert observed_statuses == [200]
+    assert abs((context.clock.server_now() - server_time).total_seconds()) < 5
 
 
 async def test_assume_s3_role_parses_kiota_response() -> None:

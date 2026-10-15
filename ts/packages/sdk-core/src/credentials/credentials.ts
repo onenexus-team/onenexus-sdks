@@ -93,18 +93,20 @@ export class AuthenticationError extends Error {
 }
 
 /**
- * A source of `AccessToken`. Active implementations cache, single-flight concurrent
- * refreshes, and honour cancellation. Static implementations just return their
- * held value.
+ * A source of `AccessToken`. Active implementations cache and single-flight
+ * concurrent refreshes. Built-in implementations currently ignore `signal`
+ * during token discovery and refresh; service-request cancellation does not
+ * cancel token acquisition.
  */
 export interface Credentials {
     /**
      * Return an `AccessToken` value that is non-expired at the moment of the
      * call, using the supplied client context for expiry decisions.
      *
-     * Implementations should refresh when the cached token is near expiry,
-     * single-flight concurrent calls during refresh, and propagate
-     * cancellation via the optional `AbortSignal`.
+     * Implementations should refresh when the cached token is near expiry and
+     * single-flight concurrent calls during refresh. The optional `AbortSignal`
+     * is available to custom implementations; built-in credentials do not yet
+     * use it to cancel token acquisition.
      *
      * @throws StaleCredentialsError when a held token is expired and this
      * credential cannot refresh it itself.

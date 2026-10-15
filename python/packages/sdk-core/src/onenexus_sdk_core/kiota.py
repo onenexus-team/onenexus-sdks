@@ -61,16 +61,15 @@ def create_kiota_request_adapter(
 
     The returned adapter uses Kiota's standard HTTPX transport and serialization
     stack, while the bearer token comes from our ``Credentials`` protocol. Server
-    ``Date`` headers are observed into the supplied context's clock.
+    ``Date`` headers are observed into the supplied context's clock. The response
+    hook is appended to supplied clients too, preserving their existing hooks.
     """
     resolved_context = context or default_client_context()
     provider = BaseBearerTokenAuthenticationProvider(
         OneNexusAccessTokenProvider(credentials, resolved_context, allowed_hosts=allowed_hosts)
     )
-    client = http_client or httpx.AsyncClient(
-        base_url=base_url,
-        event_hooks={"response": [_observe_server_date(resolved_context)]},
-    )
+    client = http_client or httpx.AsyncClient(base_url=base_url)
+    client.event_hooks["response"].append(_observe_server_date(resolved_context))
     adapter = HttpxRequestAdapter(provider, http_client=client, base_url=base_url)
     adapter.base_url = base_url
     return adapter

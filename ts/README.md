@@ -3,8 +3,8 @@
 pnpm workspace containing the TypeScript client SDKs for the OneNexus platform.
 
 The credential object system that underpins every client is documented in
-[`../README.md`](../README.md). Server-side concerns (token validation, codegen
-internals, per-service SDK shape) are out of scope for this workspace.
+[`../README.md`](../README.md). This workspace implements client authentication
+and service calls; server-side token validation belongs to the services.
 
 ## Packages
 
@@ -29,23 +29,6 @@ pnpm install              # install workspace dependencies
 pnpm package              # generate clients, build packages, run tests, then pack tarballs to .local-packages/
 ```
 
-Private-key JWT + CAS AssumeS3Role + S3 smoke test:
-
-```sh
-pnpm install
-ONENEXUS_PRIVATE_JWK_PATH=/secure/path/client-private-jwk.json \
-ONENEXUS_CAS_ISSUER=https://auth.onenexus.local \
-ONENEXUS_CAS_API_BASE_URL=https://auth.onenexus.local \
-ONENEXUS_CLIENT_ID=<client-id> \
-ONENEXUS_S3_ROLE_NAME=<role-name> \
-ONENEXUS_S3_ENDPOINT_URL=<s3-endpoint> \
-ONENEXUS_INSECURE_SKIP_TLS_VERIFY=true \
-pnpm exec tsx examples/private-key-jwt-assume-s3-role.ts
-```
-
-Use `ONENEXUS_DEBUG_CLIENT_ASSERTION=true` to print the non-secret assertion
-header/claims while debugging CAS `invalid_client` responses.
-
 `pnpm package` is the single pre-release/local-consumption command. It regenerates
 all service clients from the committed OpenAPI specs, builds every package, runs
 the package tests, synchronizes package versions from `../VERSION`, and writes
@@ -56,10 +39,10 @@ local tarballs under `ts/.local-packages/`.
 Local TypeScript package versions are synchronized from the repository-level
 `../VERSION` file before packaging. Publishing a GitHub release with a tag such
 as `v0.0.6` triggers the SDK release workflow, which derives `0.0.6` from the tag
-and uses it as every package version. The TypeScript job runs in parallel with
-the Python job, caches pnpm package restores, builds and tests the workspace,
-attaches the `.tgz` tarballs to the triggering release, and publishes the
-packages to GitHub Packages' npm registry.
+and uses it as every registered release package's version. Both jobs use
+`self-hosted` runners. The TypeScript job caches pnpm package restores, builds
+and tests the workspace, attaches the `.tgz` tarballs to the triggering release,
+and publishes the packages to GitHub Packages' npm registry.
 
 Consumers using GitHub Packages need an npm token that can read packages and a
 scope mapping for the OneNexus packages:
@@ -80,7 +63,8 @@ the GitHub release assets when registry consumption is not desired.
 
 ## Architecture
 
-Three layers, separated by package boundary:
+The client wrapper and generated operations live in each service package; shared
+credentials and HTTP behavior live in `sdk-core`:
 
 ```mermaid
 flowchart LR
@@ -92,17 +76,18 @@ flowchart LR
     end
 
     subgraph core["@onenexus-team/sdk-core"]
-        coreNode["Credentials interface + concrete types<br/>(TokenGrantCredentials, PrivateKeyJwtCredentials,<br/>KubernetesSACredentials, …)<br/><br/>ClientBase(baseUrl, credentials, context?, retry, timeout)<br/>— owns ClientContext + Ky transport<br/><br/>createKy(baseUrl, credentials, context, retry, timeout)<br/>— pre-wires beforeRequest auth +<br/>afterResponse server clock observation<br/><br/>platformMutator(config, options)<br/>— orval-facing entry point; dispatches via<br/>options.http, parses Problem Details<br/><br/>PlatformError + 9 subclasses<br/>(keyed by RFC 9457 'code')"]
+        coreNode["Credentials interface + concrete types<br/>(TokenGrantCredentials, PrivateKeyJwtCredentials,<br/>WorkloadIdentityFileCredentials via /node)<br/><br/>ClientBase(config)<br/>— owns ClientContext + Ky transport<br/><br/>createKy(config)<br/>— pre-wires beforeRequest auth +<br/>afterResponse server clock observation<br/><br/>platformMutator(config, options)<br/>— orval-facing entry point; dispatches via<br/>options.http, parses Problem Details<br/><br/>PlatformError + 9 subclasses<br/>(keyed by RFC 9457 'code')"]
     end
 
     client -- "passes mutator options per call" --> gen
     gen -- "calls platformMutator" --> coreNode
 ```
 
-**Call flow for a single CAS RPC** (e.g. `cas.createTenant(req)`):
+**Call flow for a single CAS RPC** (e.g. `cas.createUser(req)`):
 
-1. `CasClient.createTenant` calls the orval-generated `createTenant` with
-    mutator options supplied by `ClientBase` as the second argument.
+1. `CasClient.createUser` creates an idempotency header and calls the generated
+   `createUser(req, headers, options)` function. `ClientBase` supplies the
+   transport through `options`. The header value is reused across retries.
 2. The generated function constructs the `{ url, method, headers, data }`
    config and calls `platformMutator`.
 3. `platformMutator` dispatches the request through the supplied Ky instance.
@@ -117,6 +102,12 @@ flowchart LR
     methods including POST, exponential backoff with full jitter, and a default
     per-retry delay cap of 5 seconds. Client constructors expose `retry.limit`,
     `retry.backoffLimitMs`, and `refreshLeewayMs`.
+
+`AssumeS3Role` resolves one token for both endpoint selection and authorization,
+routes regional tokens to their trusted CAS issuer, and does not retry `401`.
+The configured `baseUrl` for that operation must be the global `auth.<domain>`
+endpoint. Service calls accept an `AbortSignal`, but built-in credentials
+currently ignore it during token discovery and refresh.
 
 ## Adding a new service client
 
@@ -153,7 +144,6 @@ packages/<service>-client/
 {
     "name": "@onenexus-team/<service>-client",
     "version": "0.0.0",
-    "private": true,
     "type": "module",
     "exports": {
         ".": {
@@ -163,6 +153,15 @@ packages/<service>-client/
         },
     },
     "files": ["dist"],
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com",
+        "exports": {
+            ".": {
+                "types": "./dist/index.d.ts",
+                "import": "./dist/index.js",
+            },
+        },
+    },
     "scripts": {
         "build": "tsup",
         "typecheck": "tsc --noEmit",
@@ -215,12 +214,14 @@ import { defineConfig } from 'orval';
 
 export default defineConfig({
     <service>: {
-        input: { target: '../../../specs/<service>/<version>/openapi.json' },
+        input: { target: '../../../specs/<service>/openapi.json' },
         output: {
             mode: 'tags-split',                              // one file per OpenAPI tag
             target: './src/generated/<service>.ts',
             schemas: './src/generated/schemas',
+            clean: true,
             client: 'axios',                                 // ← see note below
+            headers: true,                                   // generate spec-defined header arguments
             baseUrl: '',                                     // runtime baseUrl via Ky's prefixUrl
             override: {
                 mutator: { path: './src/mutator.ts', name: 'platformMutator' },
@@ -351,7 +352,31 @@ export { <Service>Client, type <Service>ClientConfig, type <Service>RequestOptio
 export type * from './generated/schemas/index.js';
 ```
 
-### 9. Verify and package
+For operations with a required `X-Nx1-Idempotency-Key` header, create one key per
+wrapper invocation and pass it in the generated function's headers argument,
+before the mutator options. For example, the CAS mutation binding is:
+
+```ts
+this.tenantUser.createUser(
+    req,
+    { 'X-Nx1-Idempotency-Key': globalThis.crypto.randomUUID() },
+    this.mutatorOptions(options),
+);
+```
+
+The key must be created outside transport retry hooks so retries reuse it.
+
+### 9. Register the package for releases
+
+Add the new package's `package.json` path to `packagePaths` in
+[`scripts/sync-ts-package-versions.mjs`](../scripts/sync-ts-package-versions.mjs).
+Add its package directory to the publish loop in
+[`.github/workflows/sdk-release.yml`](../.github/workflows/sdk-release.yml), after
+any packages it depends on. These lists are explicit; creating a workspace
+directory does not update them. Keep release packages publishable by omitting
+`"private": true` and retaining the `publishConfig` shown above.
+
+### 10. Verify and package
 
 ```sh
 pnpm install
@@ -373,11 +398,12 @@ then threads the transport as the second argument to every generated call.
 Without the wrapper class, every consumer call site repeats the setup.
 
 **What retry policy do clients use?** The SDK uses Ky retries with RPC-friendly
-methods (including POST), retryable statuses `401`, `408`, `429`, and `5xx`,
-default limit `2`, and exponential backoff with full jitter. The default base
-delay is 300 ms and the per-retry delay is capped at 5 seconds. Set
+methods (including POST), retryable statuses `401`, `408`, `429`, `500`, `502`,
+`503`, and `504`, default limit `2`, and exponential backoff with full jitter.
+The default base delay is 300 ms and the per-retry delay is capped at 5 seconds. Set
 `retry.limit` and `retry.backoffLimitMs` on the service-client constructor to
-tune this.
+tune this. `AssumeS3Role` excludes `401` from retries and reuses the token chosen
+for routing throughout the call.
 
 **Why `client: 'axios'` even though we don't use axios?** The label describes
 the shape of the config object orval passes to the mutator (`{ url, method,
@@ -385,7 +411,7 @@ headers, params, data, signal }`), which gives us the second-argument slot we
 need for `{ http }`. `client: 'fetch'` passes
 `(url: string, init: RequestInit)` directly — no slot for per-call instance
 state. Verified by the generated `import` in
-`packages/cas-client/src/generated/tenant/tenant.ts`: nothing imports from
+`packages/cas-client/src/generated/tenant-user/tenant-user.ts`: nothing imports from
 `'axios'`.
 
 **Why a `function` wrapper for the mutator, not a re-export?** Orval's
