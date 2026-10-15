@@ -29,6 +29,7 @@ from onenexus_cas_client import (
     ListPolicyAttachmentsRequest,
     ListRoleAssignmentsRequest,
     ListRolePoliciesRequest,
+    ListUsersRequest,
     PublishPolicyRequest,
     RemoveRoleAssignmentRequest,
     RemoveServiceClientKeyRequest,
@@ -36,6 +37,7 @@ from onenexus_cas_client import (
     UpdateAuthorizationRoleDescriptionRequest,
     UpdatePolicyRequest,
     UpdateProfileRequest,
+    UserLifecycleState,
     resolve_assume_s3_role_base_url,
 )
 from onenexus_cas_client.generated.models.assume_s3_role_request import AssumeS3RoleRequest
@@ -135,6 +137,46 @@ async def test_create_user_routes_through_kiota_adapter() -> None:
     assert result.user is not None
     assert result.user.email == "a@b.c"
     assert str(result.user.user_id) == "0193fabc-1234-7def-abcd-1234567890ab"
+
+
+async def test_list_users_serializes_query_and_parses_lifecycle_status() -> None:
+    captured: dict[str, object] = {}
+    user_id = "0193fabc-1234-7def-abcd-1234567890ab"
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(
+            200,
+            json={
+                "items": [{
+                    "userId": user_id,
+                    "userUri": f"onenexus:user/{user_id}",
+                    "email": "an.nguyen@acme.test",
+                    "displayName": "Nguyễn Văn An",
+                    "kind": "Member",
+                    "emailConfirmed": True,
+                    "status": "Suspended",
+                    "createdAt": "2026-05-13T10:00:00Z",
+                }],
+                "before": user_id,
+                "after": None,
+            },
+        )
+
+    async with _client(httpx.MockTransport(handler)) as cas:
+        result = await cas.list_users(
+            ListUsersRequest(query="nguyễn an", limit=20, after=user_id)
+        )
+
+    assert captured["path"] == "/api/ListUsers"
+    assert captured["body"] == {"query": "nguyễn an", "limit": 20, "after": user_id}
+    assert result.items is not None
+    assert len(result.items) == 1
+    assert result.items[0].status is UserLifecycleState.Suspended
+    assert result.items[0].display_name == "Nguyễn Văn An"
+    assert result.before == user_id
+    assert result.after is None
 
 
 @pytest.mark.parametrize("inject_http", [False, True])

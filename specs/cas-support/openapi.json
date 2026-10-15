@@ -582,6 +582,69 @@
         ]
       }
     },
+    "/support-api/SearchUsers": {
+      "post": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Searches the users of every tenant by name or email.",
+        "description": "Results include users of suspended tenants and users in every lifecycle\nstate, deleted users included, because support investigates past\naccounts too. The query text is personal data and is never logged.",
+        "operationId": "SearchUsers",
+        "requestBody": {
+          "description": "Request body. Validated by\n    `[ApiController]` before this action runs.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchUsersRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchUsersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Matching users, each with its tenant's id and name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchUsersResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure, including a blank query or\n    malformed cursor (`type=https://onenexus.cloud/errors/invalid-argument`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/support-api/AddTenantUser": {
       "post": {
         "tags": [
@@ -917,6 +980,194 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/support-api/SuspendTenantUser": {
+      "post": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Suspends an active user. Sign-in, token issuance and refresh, and\nauthorization checks are denied until the user is unsuspended.",
+        "description": "    The user's role assignments are retained and become inert, because\nsign-in and authorization admit only Active users; unsuspending\ntherefore restores the previous access in one change. Live CAS sessions\nend at their next security-stamp validation. Access tokens already\nissued keep a valid signature until they expire, and each region denies\nauthorization once CDC has applied the change.\n    Invited and pending users cannot be suspended: accepting the invitation\nwould make them active again. A caller cannot suspend themselves,\nbecause that would lock them out of the API that undoes it.",
+        "operationId": "SuspendTenantUser",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Request body. Contains the target user id.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendTenantUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendTenantUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "The user is suspended, or already was.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuspendTenantUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (`type=https://onenexus.cloud/errors/invalid-argument`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No user with that id exists, or the user is deleted\n    (`type=https://onenexus.cloud/errors/not-found`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The user is neither active nor suspended, or is the\n    caller (`type=https://onenexus.cloud/errors/failed-precondition`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/support-api/UnsuspendTenantUser": {
+      "post": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Re-activates a suspended user with the role assignments they had\nbefore suspension.",
+        "description": "The user's own state is independent of the tenant's: a user unsuspended\nin a suspended tenant still cannot sign in until the tenant is\nunsuspended too.",
+        "operationId": "UnsuspendTenantUser",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Request body. Contains the target user id.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsuspendTenantUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsuspendTenantUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "The user is active, or already was.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsuspendTenantUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure (`type=https://onenexus.cloud/errors/invalid-argument`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No user with that id exists, or the user is deleted\n    (`type=https://onenexus.cloud/errors/not-found`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The user is neither suspended nor active\n    (`type=https://onenexus.cloud/errors/failed-precondition`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1489,6 +1740,15 @@
             "description": "Maximum number of items returned in the page. Defaults to\nint ListTenantUsersRequest.DefaultLimit when omitted from the request body.\nMust be between 1 and int ListTenantUsersRequest.MaxLimit inclusive.",
             "format": "int32"
           },
+          "query": {
+            "maxLength": 256,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional search text. Only users whose display name or email matches\nare returned: every word of the query must be the start of a word in\nthe name or email, ignoring case, accents, and punctuation, so\n`nguyen an` finds \"Nguyễn Văn An\" and `acme` finds\n`an.nguyen@acme.vn`. A complete user id finds exactly that user.\nBlank means no filter. Start from the first page whenever the query\nchanges."
+          },
           "after": {
             "maxLength": 36,
             "minLength": 0,
@@ -1541,6 +1801,52 @@
         },
         "additionalProperties": false,
         "description": "Response body for `POST /support-api/ListTenantUsers`."
+      },
+      "PlatformUserSummary": {
+        "required": [
+          "userId",
+          "userUri",
+          "email",
+          "displayName",
+          "status",
+          "tenantId",
+          "tenantName"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The user's UUID v7 primary key.",
+            "format": "uuid"
+          },
+          "userUri": {
+            "type": "string",
+            "description": "Canonical principal URI."
+          },
+          "email": {
+            "type": "string",
+            "description": "The user's email (verbatim, not normalised)."
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name shown in UIs."
+          },
+          "status": {
+            "description": "The user's lifecycle state.",
+            "$ref": "#/components/schemas/UserLifecycleState"
+          },
+          "tenantId": {
+            "type": "string",
+            "description": "Guid primary key of the user's tenant.",
+            "format": "uuid"
+          },
+          "tenantName": {
+            "type": "string",
+            "description": "The tenant's display name."
+          }
+        },
+        "additionalProperties": false,
+        "description": "User snapshot returned as a list item by `SearchUsers`."
       },
       "ProblemDetails": {
         "required": [
@@ -1770,6 +2076,82 @@
         "additionalProperties": false,
         "description": "An account-root user and its freshly minted keys."
       },
+      "SearchUsersRequest": {
+        "required": [
+          "query"
+        ],
+        "type": "object",
+        "properties": {
+          "query": {
+            "maxLength": 256,
+            "minLength": 0,
+            "type": "string",
+            "description": "Search text. Every word of the query must be the start of a word in\nthe user's display name or email, ignoring case, accents, and\npunctuation, so `nguyen an` finds \"Nguyễn Văn An\" and\n`an.nguyen@acme.vn` finds that address. A complete user id finds\nexactly that user. Start from the first page whenever the query changes."
+          },
+          "limit": {
+            "maximum": 200,
+            "minimum": 1,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Maximum number of items returned by this page.",
+            "format": "int32"
+          },
+          "after": {
+            "maxLength": 36,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Forward cursor returned by the preceding response. Mutually exclusive\nwith string? SearchUsersRequest.Before."
+          },
+          "before": {
+            "maxLength": 36,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Backward cursor returned by the preceding response. Mutually exclusive\nwith string? SearchUsersRequest.After."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /support-api/SearchUsers`."
+      },
+      "SearchUsersResponse": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformUserSummary"
+            },
+            "description": "Matching users of every tenant and lifecycle state, ordered by user id."
+          },
+          "before": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Cursor for the previous page, if one exists."
+          },
+          "after": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Cursor for the next page, if one exists."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response body for `POST /support-api/SearchUsers`."
+      },
       "SuspendTenantRequest": {
         "required": [
           "tenantId"
@@ -1804,6 +2186,41 @@
         },
         "additionalProperties": false,
         "description": "Response body for `POST /support-api/SuspendTenant`."
+      },
+      "SuspendTenantUserRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Guid primary key of the active user to suspend.",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /support-api/SuspendTenantUser`."
+      },
+      "SuspendTenantUserResponse": {
+        "required": [
+          "userId",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The target user id.",
+            "format": "uuid"
+          },
+          "status": {
+            "description": "The user's lifecycle state after the operation.",
+            "$ref": "#/components/schemas/UserLifecycleState"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response body for `POST /support-api/SuspendTenantUser`."
       },
       "TenantData": {
         "required": [
@@ -1913,6 +2330,7 @@
           "displayName",
           "kind",
           "emailConfirmed",
+          "status",
           "createdAt"
         ],
         "type": "object",
@@ -1941,6 +2359,10 @@
           "emailConfirmed": {
             "type": "boolean",
             "description": "Whether the user has accepted the invitation and verified their\ninbox. `false` for users still in the pending-invite state."
+          },
+          "status": {
+            "description": "The user's lifecycle state. Only `Active` users can sign in or\nbe authorized.",
+            "$ref": "#/components/schemas/UserLifecycleState"
           },
           "createdAt": {
             "type": "string",
@@ -1985,6 +2407,41 @@
         },
         "additionalProperties": false,
         "description": "Response body for `POST /support-api/UnsuspendTenant`."
+      },
+      "UnsuspendTenantUserRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Guid primary key of the suspended user to re-activate.",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /support-api/UnsuspendTenantUser`."
+      },
+      "UnsuspendTenantUserResponse": {
+        "required": [
+          "userId",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The target user id.",
+            "format": "uuid"
+          },
+          "status": {
+            "description": "The user's lifecycle state after the operation.",
+            "$ref": "#/components/schemas/UserLifecycleState"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response body for `POST /support-api/UnsuspendTenantUser`."
       },
       "User": {
         "required": [
@@ -2039,6 +2496,18 @@
           "Member"
         ],
         "description": "Distinguishes a tenant's single root user from its ordinary members.\nImmutable once a OneNexusUser row is created."
+      },
+      "UserLifecycleState": {
+        "enum": [
+          "PendingActivation",
+          "Invited",
+          "Provisioned",
+          "Active",
+          "Suspended",
+          "Deprovisioned",
+          "Deleted"
+        ],
+        "description": "Explicit lifecycle state of a OneNexusUser, replacing the\nad hoc \"no marker at all means pending\" inference that the old\n`Invitation*` columns required."
       },
       "ValidationProblemDetails": {
         "required": [

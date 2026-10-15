@@ -19,10 +19,16 @@ import type {
     ResendInvitationRequest,
     ResendInvitationResponse,
     S3DefaultAccountResponse,
+    SearchUsersRequest,
+    SearchUsersResponse,
     SuspendTenantRequest,
     SuspendTenantResponse,
+    SuspendTenantUserRequest,
+    SuspendTenantUserResponse,
     UnsuspendTenantRequest,
     UnsuspendTenantResponse,
+    UnsuspendTenantUserRequest,
+    UnsuspendTenantUserResponse,
 } from './generated/schemas/index.js';
 import { getCephS3 } from './generated/ceph-s3/ceph-s3.js';
 import { getSupportAuthorization } from './generated/support-authorization/support-authorization.js';
@@ -167,6 +173,9 @@ export class CasSupportClient extends ClientBase {
      * target tenant is identified by Guid in the request body, not inferred from the caller's
      * principal.
      *
+     * An optional query filters by name, email, or a complete user id. Start from the first page
+     * whenever the query changes. Each item includes the user's lifecycle status.
+     *
      * Ordering + pagination. Same shape as Task&lt;IActionResult&gt;
      * TenantController.ListTenants(ListTenantsRequest request, CancellationToken cancellationToken)
      * but on the Users table, filtered to a single tenant. The WHERE TenantId = ? AND Id &gt; ?
@@ -186,6 +195,20 @@ export class CasSupportClient extends ClientBase {
         options?: CasSupportRequestOptions,
     ): Promise<ListTenantUsersResponse> =>
         this.tenant.listTenantUsers(req, this.mutatorOptions(options));
+
+    /**
+     * Searches users across all tenants by name, email, or a complete user id.
+     *
+     * Results include suspended tenants and users in every lifecycle state, including deleted
+     * users. Each result identifies its tenant. Send one returned cursor at a time and start from
+     * the first page whenever the query changes.
+     *
+     * @see POST /support-api/SearchUsers
+     */
+    searchUsers = (
+        req: SearchUsersRequest,
+        options?: CasSupportRequestOptions,
+    ): Promise<SearchUsersResponse> => this.tenant.searchUsers(req, this.mutatorOptions(options));
 
     /**
      * Add a roleless user to an existing active tenant. Role grants are separate authorization-
@@ -237,6 +260,44 @@ export class CasSupportClient extends ClientBase {
         options?: CasSupportRequestOptions,
     ): Promise<UnsuspendTenantResponse> =>
         this.tenant.unsuspendTenant(req, createIdempotencyHeaders(), this.mutatorOptions(options));
+
+    /**
+     * Suspends an active user while retaining their role assignments.
+     *
+     * Sign-in, token issuance and refresh, and authorization are denied. Existing sessions end at
+     * their next security-stamp validation; regional authorization follows replication. Pending
+     * and invited users, and the caller themselves, cannot be suspended. Automatic retries reuse
+     * the same idempotency key.
+     *
+     * @see POST /support-api/SuspendTenantUser
+     */
+    suspendTenantUser = (
+        req: SuspendTenantUserRequest,
+        options?: CasSupportRequestOptions,
+    ): Promise<SuspendTenantUserResponse> =>
+        this.tenant.suspendTenantUser(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
+
+    /**
+     * Re-activates a suspended user with their previous role assignments.
+     *
+     * A user in a suspended tenant still cannot sign in until the tenant is unsuspended too.
+     * Automatic retries reuse the same idempotency key.
+     *
+     * @see POST /support-api/UnsuspendTenantUser
+     */
+    unsuspendTenantUser = (
+        req: UnsuspendTenantUserRequest,
+        options?: CasSupportRequestOptions,
+    ): Promise<UnsuspendTenantUserResponse> =>
+        this.tenant.unsuspendTenantUser(
+            req,
+            createIdempotencyHeaders(),
+            this.mutatorOptions(options),
+        );
 
     // -- Authorization diagnostics -----------------------------------------
 

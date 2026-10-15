@@ -8,6 +8,7 @@ from uuid import UUID
 
 if TYPE_CHECKING:
     from .user_kind import UserKind
+    from .user_lifecycle_state import UserLifecycleState
 
 @dataclass
 class TenantUserSummary(Parsable):
@@ -24,6 +25,8 @@ class TenantUserSummary(Parsable):
     email_confirmed: Optional[bool] = None
     # Whether this is the tenant root user or an ordinary member.
     kind: Optional[UserKind] = None
+    # The user's lifecycle state. Only `Active` users can sign in orbe authorized.
+    status: Optional[UserLifecycleState] = None
     # The user's UUID v7 primary key.
     user_id: Optional[UUID] = None
     # Canonical principal URI used by role-assignment APIs.
@@ -46,8 +49,10 @@ class TenantUserSummary(Parsable):
         Returns: dict[str, Callable[[ParseNode], None]]
         """
         from .user_kind import UserKind
+        from .user_lifecycle_state import UserLifecycleState
 
         from .user_kind import UserKind
+        from .user_lifecycle_state import UserLifecycleState
 
         fields: dict[str, Callable[[Any], None]] = {
             "createdAt": lambda n : setattr(self, 'created_at', n.get_datetime_value()),
@@ -55,6 +60,7 @@ class TenantUserSummary(Parsable):
             "email": lambda n : setattr(self, 'email', n.get_str_value()),
             "emailConfirmed": lambda n : setattr(self, 'email_confirmed', n.get_bool_value()),
             "kind": lambda n : setattr(self, 'kind', n.get_enum_value(UserKind)),
+            "status": lambda n : setattr(self, 'status', n.get_enum_value(UserLifecycleState)),
             "userId": lambda n : setattr(self, 'user_id', n.get_uuid_value()),
             "userUri": lambda n : setattr(self, 'user_uri', n.get_str_value()),
         }
@@ -73,6 +79,7 @@ class TenantUserSummary(Parsable):
         writer.write_str_value("email", self.email)
         writer.write_bool_value("emailConfirmed", self.email_confirmed)
         writer.write_enum_value("kind", self.kind)
+        writer.write_enum_value("status", self.status)
         writer.write_uuid_value("userId", self.user_id)
         writer.write_str_value("userUri", self.user_uri)
     

@@ -16,7 +16,7 @@ class ListUsersResponse(Parsable):
     after: Optional[str] = None
     # Cursor for the previous page, if one exists.
     before: Optional[str] = None
-    # Users in the caller's tenant, ordered by user id.
+    # Users in the caller's tenant, ordered by user id. Deleted users are not listed.
     items: Optional[list[TenantUserSummary]] = None
     
     @staticmethod

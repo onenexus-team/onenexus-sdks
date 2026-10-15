@@ -145,8 +145,9 @@ class CasClient:
         Lists users in the authenticated caller's own tenant.
 
         CAS always lists the caller's tenant; do not send a tenant identifier. Results include root
-        and member users. Send one returned cursor at a time to move backward or forward through the
-        list.
+        and member users, but not deleted users. An optional query filters by name, email, or a
+        complete user id. Send one returned cursor at a time and start from the first page whenever
+        the query changes. Each item includes the user's lifecycle status.
 
         API operation: POST /api/ListUsers.
         """

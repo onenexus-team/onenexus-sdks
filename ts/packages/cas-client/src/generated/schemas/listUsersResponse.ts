@@ -11,7 +11,7 @@ import type { TenantUserSummary } from './tenantUserSummary';
  * Response body for `POST /api/ListUsers`.
  */
 export interface ListUsersResponse {
-  /** Users in the caller's tenant, ordered by user id. */
+  /** Users in the caller's tenant, ordered by user id. Deleted users are not listed. */
   items: TenantUserSummary[];
   /**
      * Cursor for the previous page, if one exists.

@@ -97,5 +97,6 @@ export * from './updateProfileResponse';
 export * from './updateRoleDescriptionHeaders';
 export * from './user';
 export * from './userKind';
+export * from './userLifecycleState';
 export * from './validationProblemDetails';
 export * from './validationProblemDetailsErrors';

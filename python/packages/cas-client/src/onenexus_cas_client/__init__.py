@@ -64,6 +64,7 @@ from .client import (
     UpdateProfileResponse,
     resolve_assume_s3_role_base_url,
 )
+from .generated.models.user_lifecycle_state import UserLifecycleState
 
 __all__ = [
     "AcceptInvitationRequest",
@@ -123,6 +124,7 @@ __all__ = [
     "UpdatePolicyResponse",
     "UpdateProfileRequest",
     "UpdateProfileResponse",
+    "UserLifecycleState",
 
     "generated",
 ]
