@@ -11,6 +11,7 @@ import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { CasClient } from '../src/client.js';
+import type { ListUsersResponse } from '../src/index.js';
 
 const BASE_URL = 'https://cas.test.invalid';
 const GLOBAL_AUTH_URL = 'https://auth.onenexus.test';
@@ -81,6 +82,39 @@ describe('CasClient', () => {
                 email: 'a@b.c',
                 displayName: 'A B',
             });
+        });
+
+        it('listUsers sends the search query and returns lifecycle status with pagination', async () => {
+            const userId = '0193fabc-1234-7def-abcd-1234567890ab';
+            const response: ListUsersResponse = {
+                items: [
+                    {
+                        userId,
+                        userUri: `onenexus:user/${userId}`,
+                        email: 'an.nguyen@acme.test',
+                        displayName: 'Nguyễn Văn An',
+                        kind: 'Member',
+                        emailConfirmed: true,
+                        status: 'Suspended',
+                        createdAt: '2026-05-13T10:00:00Z',
+                    },
+                ],
+                before: userId,
+                after: null,
+            };
+            let observedBody: unknown;
+            server.use(
+                http.post(`${BASE_URL}/api/ListUsers`, async ({ request }) => {
+                    observedBody = await request.json();
+                    return HttpResponse.json(response);
+                }),
+            );
+
+            const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            const req = { query: 'nguyễn an', limit: 20, after: userId };
+
+            expect(await cas.listUsers(req)).toEqual(response);
+            expect(observedBody).toEqual(req);
         });
 
         it('updateProfile adds one idempotency key and reuses it across Ky retries', async () => {

@@ -18,6 +18,19 @@ export interface ListUsersRequest {
      */
   limit?: number | string;
   /**
+     * Optional search text. Only users whose display name or email matches
+     * are returned: every word of the query must be the start of a word in
+     * the name or email, ignoring case, accents, and punctuation, so
+     * `nguyen an` finds "Nguyễn Văn An" and `acme` finds
+     * `an.nguyen@acme.vn`. A complete user id finds exactly that user.
+     * Blank means no filter. Start from the first page whenever the query
+     * changes.
+     * @minLength 0
+     * @maxLength 256
+     * @nullable
+     */
+  query?: string | null;
+  /**
      * Forward cursor returned by the preceding response. Mutually exclusive
      * with string? ListUsersRequest.Before.
      * @minLength 0

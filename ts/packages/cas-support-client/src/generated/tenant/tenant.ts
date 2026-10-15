@@ -21,12 +21,20 @@ import type {
   ResendInvitationHeaders,
   ResendInvitationRequest,
   ResendInvitationResponse,
+  SearchUsersRequest,
+  SearchUsersResponse,
   SuspendTenantHeaders,
   SuspendTenantRequest,
   SuspendTenantResponse,
+  SuspendTenantUserHeaders,
+  SuspendTenantUserRequest,
+  SuspendTenantUserResponse,
   UnsuspendTenantHeaders,
   UnsuspendTenantRequest,
-  UnsuspendTenantResponse
+  UnsuspendTenantResponse,
+  UnsuspendTenantUserHeaders,
+  UnsuspendTenantUserRequest,
+  UnsuspendTenantUserResponse
 } from '../schemas';
 
 import { platformMutator } from '../../mutator';
@@ -119,6 +127,22 @@ const listTenantUsers = (
       options);
     }
   /**
+ * Results include users of suspended tenants and users in every lifecycle
+ * state, deleted users included, because support investigates past
+ * accounts too. The query text is personal data and is never logged.
+ * @summary Searches the users of every tenant by name or email.
+ */
+const searchUsers = (
+    searchUsersRequest: SearchUsersRequest,
+ options?: SecondParameter<typeof platformMutator<SearchUsersResponse>>,) => {
+      return platformMutator<SearchUsersResponse>(
+      {url: `/support-api/SearchUsers`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: searchUsersRequest
+    },
+      options);
+    }
+  /**
  *     Authorization. The caller must be an active human
  * TenantAdmin of the reserved platform tenant. This is the
  * implemented operator gate until a distinct platform_admin
@@ -183,7 +207,49 @@ const unsuspendTenant = (
     },
       options);
     }
-  return {createTenant,describeTenant,listTenants,listTenantUsers,addTenantUser,resendInvitation,suspendTenant,unsuspendTenant}};
+  /**
+ *     The user's role assignments are retained and become inert, because
+ * sign-in and authorization admit only Active users; unsuspending
+ * therefore restores the previous access in one change. Live CAS sessions
+ * end at their next security-stamp validation. Access tokens already
+ * issued keep a valid signature until they expire, and each region denies
+ * authorization once CDC has applied the change.
+ *     Invited and pending users cannot be suspended: accepting the invitation
+ * would make them active again. A caller cannot suspend themselves,
+ * because that would lock them out of the API that undoes it.
+ * @summary Suspends an active user. Sign-in, token issuance and refresh, and
+authorization checks are denied until the user is unsuspended.
+ */
+const suspendTenantUser = (
+    suspendTenantUserRequest: SuspendTenantUserRequest,
+    headers: SuspendTenantUserHeaders,
+ options?: SecondParameter<typeof platformMutator<SuspendTenantUserResponse>>,) => {
+      return platformMutator<SuspendTenantUserResponse>(
+      {url: `/support-api/SuspendTenantUser`, method: 'POST',
+      headers: {'Content-Type': 'application/json', ...headers},
+      data: suspendTenantUserRequest
+    },
+      options);
+    }
+  /**
+ * The user's own state is independent of the tenant's: a user unsuspended
+ * in a suspended tenant still cannot sign in until the tenant is
+ * unsuspended too.
+ * @summary Re-activates a suspended user with the role assignments they had
+before suspension.
+ */
+const unsuspendTenantUser = (
+    unsuspendTenantUserRequest: UnsuspendTenantUserRequest,
+    headers: UnsuspendTenantUserHeaders,
+ options?: SecondParameter<typeof platformMutator<UnsuspendTenantUserResponse>>,) => {
+      return platformMutator<UnsuspendTenantUserResponse>(
+      {url: `/support-api/UnsuspendTenantUser`, method: 'POST',
+      headers: {'Content-Type': 'application/json', ...headers},
+      data: unsuspendTenantUserRequest
+    },
+      options);
+    }
+  return {createTenant,describeTenant,listTenants,listTenantUsers,searchUsers,addTenantUser,resendInvitation,suspendTenant,unsuspendTenant,suspendTenantUser,unsuspendTenantUser}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -193,7 +259,10 @@ export type CreateTenantResult = NonNullable<Awaited<ReturnType<ReturnType<typeo
 export type DescribeTenantResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['describeTenant']>>>
 export type ListTenantsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['listTenants']>>>
 export type ListTenantUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['listTenantUsers']>>>
+export type SearchUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['searchUsers']>>>
 export type AddTenantUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['addTenantUser']>>>
 export type ResendInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['resendInvitation']>>>
 export type SuspendTenantResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['suspendTenant']>>>
 export type UnsuspendTenantResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['unsuspendTenant']>>>
+export type SuspendTenantUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['suspendTenantUser']>>>
+export type UnsuspendTenantUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['unsuspendTenantUser']>>>

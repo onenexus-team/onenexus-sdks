@@ -2608,7 +2608,7 @@
           "TenantUser"
         ],
         "summary": "Lists users in the authenticated caller's own tenant.",
-        "description": "CAS always lists the caller's tenant; do not send a tenant identifier.\nResults include root and member users. Send one returned cursor at a\ntime to move backward or forward through the list.",
+        "description": "CAS always lists the caller's tenant; do not send a tenant identifier.\nResults include root and member users, but not deleted users. An\noptional `query` narrows the list to users whose name or email\nmatches it. Send one returned cursor at a time to move backward or\nforward through the same query's results.",
         "operationId": "ListUsers",
         "requestBody": {
           "content": {
@@ -3914,6 +3914,15 @@
             "description": "Maximum number of items returned by this page.",
             "format": "int32"
           },
+          "query": {
+            "maxLength": 256,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional search text. Only users whose display name or email matches\nare returned: every word of the query must be the start of a word in\nthe name or email, ignoring case, accents, and punctuation, so\n`nguyen an` finds \"Nguyễn Văn An\" and `acme` finds\n`an.nguyen@acme.vn`. A complete user id finds exactly that user.\nBlank means no filter. Start from the first page whenever the query\nchanges."
+          },
           "after": {
             "maxLength": 36,
             "minLength": 0,
@@ -3947,7 +3956,7 @@
             "items": {
               "$ref": "#/components/schemas/TenantUserSummary"
             },
-            "description": "Users in the caller's tenant, ordered by user id."
+            "description": "Users in the caller's tenant, ordered by user id. Deleted users are not listed."
           },
           "before": {
             "type": [
@@ -4315,6 +4324,7 @@
           "displayName",
           "kind",
           "emailConfirmed",
+          "status",
           "createdAt"
         ],
         "type": "object",
@@ -4343,6 +4353,10 @@
           "emailConfirmed": {
             "type": "boolean",
             "description": "Whether the user has accepted the invitation and verified their\ninbox. `false` for users still in the pending-invite state."
+          },
+          "status": {
+            "description": "The user's lifecycle state. Only `Active` users can sign in or\nbe authorized.",
+            "$ref": "#/components/schemas/UserLifecycleState"
           },
           "createdAt": {
             "type": "string",
@@ -4563,6 +4577,18 @@
           "Member"
         ],
         "description": "Distinguishes a tenant's single root user from its ordinary members.\nImmutable once a OneNexusUser row is created."
+      },
+      "UserLifecycleState": {
+        "enum": [
+          "PendingActivation",
+          "Invited",
+          "Provisioned",
+          "Active",
+          "Suspended",
+          "Deprovisioned",
+          "Deleted"
+        ],
+        "description": "Explicit lifecycle state of a OneNexusUser, replacing the\nad hoc \"no marker at all means pending\" inference that the old\n`Invitation*` columns required."
       },
       "ValidationProblemDetails": {
         "required": [

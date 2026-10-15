@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { UserKind } from './userKind';
+import type { UserLifecycleState } from './userLifecycleState';
 
 /**
  * User snapshot returned as a list item by `ListTenantUsers`.
@@ -26,6 +27,11 @@ export interface TenantUserSummary {
      * inbox. `false` for users still in the pending-invite state.
      */
   emailConfirmed: boolean;
+  /**
+     * The user's lifecycle state. Only `Active` users can sign in or
+     * be authorized.
+     */
+  status: UserLifecycleState;
   /** UTC instant when the user row was created. */
   createdAt: string;
 }

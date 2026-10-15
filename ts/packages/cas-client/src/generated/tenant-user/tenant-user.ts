@@ -59,8 +59,10 @@ const resendUserInvitation = (
     }
   /**
  * CAS always lists the caller's tenant; do not send a tenant identifier.
- * Results include root and member users. Send one returned cursor at a
- * time to move backward or forward through the list.
+ * Results include root and member users, but not deleted users. An
+ * optional `query` narrows the list to users whose name or email
+ * matches it. Send one returned cursor at a time to move backward or
+ * forward through the same query's results.
  * @summary Lists users in the authenticated caller's own tenant.
  */
 const listUsers = (

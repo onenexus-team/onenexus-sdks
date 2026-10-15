@@ -15,6 +15,8 @@ class ListUsersRequest(Parsable):
     before: Optional[str] = None
     # Maximum number of items returned by this page.
     limit: Optional[int] = None
+    # Optional search text. Only users whose display name or email matchesare returned: every word of the query must be the start of a word inthe name or email, ignoring case, accents, and punctuation, so`nguyen an` finds "Nguyễn Văn An" and `acme` finds`an.nguyen@acme.vn`. A complete user id finds exactly that user.Blank means no filter. Start from the first page whenever the querychanges.
+    query: Optional[str] = None
     
     @staticmethod
     def create_from_discriminator_value(parse_node: ParseNode) -> ListUsersRequest:
@@ -36,6 +38,7 @@ class ListUsersRequest(Parsable):
             "after": lambda n : setattr(self, 'after', n.get_str_value()),
             "before": lambda n : setattr(self, 'before', n.get_str_value()),
             "limit": lambda n : setattr(self, 'limit', n.get_int_value()),
+            "query": lambda n : setattr(self, 'query', n.get_str_value()),
         }
         return fields
     
@@ -50,5 +53,6 @@ class ListUsersRequest(Parsable):
         writer.write_str_value("after", self.after)
         writer.write_str_value("before", self.before)
         writer.write_int_value("limit", self.limit)
+        writer.write_str_value("query", self.query)
     
 

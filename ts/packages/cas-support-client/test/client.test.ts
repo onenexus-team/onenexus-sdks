@@ -11,6 +11,11 @@ import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { CasSupportClient } from '../src/client.js';
+import type {
+    ListTenantUsersResponse,
+    SearchUsersRequest,
+    SearchUsersResponse,
+} from '../src/index.js';
 
 const BASE_URL = 'https://cas.test.invalid';
 
@@ -121,6 +126,130 @@ describe('CasSupportClient', () => {
             });
             expect(created.user.email).toBe('a@b.c');
         });
+
+        it.each([undefined, null, 'nguyễn an'])(
+            'listTenantUsers accepts query %s and returns lifecycle status',
+            async (query) => {
+                const userId = '0193fabc-1234-7def-abcd-1234567890ab';
+                const response: ListTenantUsersResponse = {
+                    items: [
+                        {
+                            userId,
+                            userUri: `onenexus:user/${userId}`,
+                            email: 'an.nguyen@acme.test',
+                            displayName: 'Nguyễn Văn An',
+                            kind: 'Member',
+                            emailConfirmed: true,
+                            status: 'Suspended',
+                            createdAt: '2026-05-13T10:00:00Z',
+                        },
+                    ],
+                    before: userId,
+                    after: null,
+                };
+                let observedBody: unknown;
+                server.use(
+                    http.post(`${BASE_URL}/support-api/ListTenantUsers`, async ({ request }) => {
+                        observedBody = await request.json();
+                        return HttpResponse.json(response);
+                    }),
+                );
+
+                const support = new CasSupportClient({
+                    baseUrl: BASE_URL,
+                    credentials: staticCreds(),
+                });
+                const req = {
+                    tenantId: '0193fabc-1234-7def-abcd-1234567890ac',
+                    limit: 20,
+                    after: userId,
+                    ...(query !== undefined && { query }),
+                };
+
+                expect(await support.listTenantUsers(req)).toEqual(response);
+                expect(observedBody).toEqual(req);
+            },
+        );
+
+        it('searchUsers sends the query and cursor and returns users with tenant details', async () => {
+            const userId = '0193fabc-1234-7def-abcd-1234567890ab';
+            const response: SearchUsersResponse = {
+                items: [
+                    {
+                        userId,
+                        userUri: `onenexus:user/${userId}`,
+                        email: 'an.nguyen@acme.test',
+                        displayName: 'Nguyễn Văn An',
+                        status: 'Deleted',
+                        tenantId: '0193fabc-1234-7def-abcd-1234567890ac',
+                        tenantName: 'Acme',
+                    },
+                ],
+                before: userId,
+                after: null,
+            };
+            let observedBody: unknown;
+            let observedAuth: string | null = null;
+            server.use(
+                http.post(`${BASE_URL}/support-api/SearchUsers`, async ({ request }) => {
+                    observedBody = await request.json();
+                    observedAuth = request.headers.get('authorization');
+                    return HttpResponse.json(response);
+                }),
+            );
+
+            const support = new CasSupportClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+            const { searchUsers } = support;
+            const req: SearchUsersRequest = { query: 'nguyễn an', limit: 20, after: userId };
+
+            expect(await searchUsers(req)).toEqual(response);
+            expect(observedBody).toEqual(req);
+            expect(observedAuth).toBe('Bearer at-static');
+        });
+
+        it.each([
+            ['suspendTenantUser', 'SuspendTenantUser', 'Suspended'],
+            ['unsuspendTenantUser', 'UnsuspendTenantUser', 'Active'],
+        ] as const)(
+            '%s creates one key per call and reuses it across retries',
+            async (method, operation, status) => {
+                const firstKey = '0193fabc-1234-7def-abcd-1234567890ab';
+                const secondKey = '0193fabc-1234-7def-abcd-1234567890ac';
+                const randomUUID = vi
+                    .spyOn(globalThis.crypto, 'randomUUID')
+                    .mockReturnValueOnce(firstKey)
+                    .mockReturnValueOnce(secondKey);
+                const req = { userId: '0193fabc-1234-7def-abcd-1234567890ad' };
+                const observedKeys: (string | null)[] = [];
+                const observedBodies: unknown[] = [];
+                server.use(
+                    http.post(`${BASE_URL}/support-api/${operation}`, async ({ request }) => {
+                        observedKeys.push(request.headers.get('x-nx1-idempotency-key'));
+                        observedBodies.push(await request.json());
+                        if (observedKeys.length % 2 === 1) {
+                            return HttpResponse.json({ code: 'unavailable' }, { status: 503 });
+                        }
+                        return HttpResponse.json({ userId: req.userId, status });
+                    }),
+                );
+
+                const support = new CasSupportClient({
+                    baseUrl: BASE_URL,
+                    credentials: staticCreds(),
+                    retry: { limit: 1, backoffLimitMs: 0 },
+                });
+                const call = support[method];
+
+                expect(await call(req)).toEqual({ userId: req.userId, status });
+                expect(await call(req)).toEqual({ userId: req.userId, status });
+                expect(randomUUID).toHaveBeenCalledTimes(2);
+                expect(observedKeys).toEqual([firstKey, firstKey, secondKey, secondKey]);
+                for (const key of observedKeys) {
+                    expect(key).toMatch(/^[a-zA-Z0-9_.-]{16,128}$/);
+                }
+                expect(observedBodies).toEqual([req, req, req, req]);
+            },
+        );
 
         it('resendInvitation POSTs the user ID and returns invitation details', async () => {
             let observedBody: unknown;

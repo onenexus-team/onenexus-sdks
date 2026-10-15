@@ -34,7 +34,7 @@ class ListUsersRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: ListUsersRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ListUsersResponse]:
         """
-        CAS always lists the caller's tenant; do not send a tenant identifier.Results include root and member users. Send one returned cursor at atime to move backward or forward through the list.
+        CAS always lists the caller's tenant; do not send a tenant identifier.Results include root and member users, but not deleted users. Anoptional `query` narrows the list to users whose name or emailmatches it. Send one returned cursor at a time to move backward orforward through the same query's results.
         param body: Request body for `POST /api/ListUsers`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[ListUsersResponse]
@@ -61,7 +61,7 @@ class ListUsersRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: ListUsersRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        CAS always lists the caller's tenant; do not send a tenant identifier.Results include root and member users. Send one returned cursor at atime to move backward or forward through the list.
+        CAS always lists the caller's tenant; do not send a tenant identifier.Results include root and member users, but not deleted users. Anoptional `query` narrows the list to users whose name or emailmatches it. Send one returned cursor at a time to move backward orforward through the same query's results.
         param body: Request body for `POST /api/ListUsers`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
