@@ -70,7 +70,7 @@ def create_kiota_request_adapter(
     )
     client = http_client or httpx.AsyncClient(base_url=base_url)
     client.event_hooks["response"].append(_observe_server_date(resolved_context))
-    adapter = HttpxRequestAdapter(provider, http_client=client, base_url=base_url)
+    adapter = HttpxRequestAdapter(provider, http_client=client)
     adapter.base_url = base_url
     return adapter
 

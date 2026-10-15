@@ -19,7 +19,7 @@
  */
 
 import { http, HttpResponse, type DefaultBodyType, type StrictRequest } from 'msw';
-import { setupServer, type SetupServerApi } from 'msw/node';
+import { setupServer } from 'msw/node';
 
 /** Shape of a successful token-endpoint reply. Field names match RFC 6749. */
 export interface MockTokenResponse {
@@ -48,7 +48,7 @@ export interface RecordedTokenRequest {
 
 export interface MockOidcServer {
     /** The MSW server. Tests must call `server.listen()` / `.close()` themselves. */
-    readonly server: SetupServerApi;
+    readonly server: ReturnType<typeof setupServer>;
     /** Issuer URL the mock advertises. Pass this to the credential under test. */
     readonly issuer: string;
     /**
