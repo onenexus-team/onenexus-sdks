@@ -16,7 +16,7 @@ concurrency:
 jobs:
   release-python-wheels:
     name: Build and release Python wheels
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Check out release tag
@@ -73,7 +73,7 @@ jobs:
 
   release-typescript-packages:
     name: Build and publish TypeScript packages
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Check out release tag
