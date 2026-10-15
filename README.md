@@ -33,21 +33,20 @@ the direct wheel URL format.
 This repository contains the client SDKs that apps use to call OneNexus platform services.
 
 ## Client convention & generation
-Client SDKs are built to make it easier for customers to interact with OneNexus platform using their programming languages of choice. 
-OneNexus APIs generally has RPC-like structure, with each API calls being a POST request
-with a request and a response object, for example:
+
+The SDKs expose typed operations for OneNexus services. CAS customer operations
+usually use `POST /api/<OperationName>` with a JSON request and response, for example:
 
 ```http
-POST /api/CreateTenant HTTP/1.1
-Host: cas.acme.com
+POST /api/CreateUser HTTP/1.1
+Host: auth.acme.com
 Authorization: Bearer <access-token>
 Content-Type: application/json
-X-Api-Version: v1
+X-Nx1-Idempotency-Key: 0193fabc-1234-7def-abcd-1234567890ab
 
 {
-    "tenantId":    "tn_acme",
-    "name":        "Acme Inc",
-    "clientToken": "01HV8XR4D0YPRNNK8YY8VJ3QK2"
+    "email": "a@b.c",
+    "displayName": "A B"
 }
 ```
 
@@ -56,62 +55,65 @@ HTTP/1.1 200 OK
 Content-Type: application/json
 
 {
-    "tenantId":  "tn_acme",
-    "name":      "Acme Inc",
-    "status":    1,
-    "userCount": 0,
-    "createdAt": "2026-05-13T10:00:00Z"
+    "user": {
+        "userId": "0193fabc-1234-7def-abcd-1234567890ab",
+        "userUri": "onenexus:user/0193fabc-1234-7def-abcd-1234567890ab",
+        "tenantId": "0193fabc-1234-7def-abcd-1234567890ac",
+        "email": "a@b.c",
+        "displayName": "A B",
+        "emailConfirmed": false,
+        "createdAt": "2026-05-13T10:00:00Z"
+    }
 }
 ```
 
-Every operation across every service follows this same wire shape:
+The committed OpenAPI specs define each operation's path, request, response, and
+required headers. CAS support operations use `/support-api/*`, and account
+profile updates use `/account/profile`. The MLOps spec uses REST routes with path
+and query parameters; no MLOps SDK package is implemented here yet.
 
-- The URL is always `POST /api/<OperationName>` — no path parameters, no nested
-  REST routes. The operation name (PascalCase) is the entire routing decision.
-- The request body is a single JSON object whose schema is one
-  `<OperationName>Request` type in the OpenAPI spec.
-- The success response is a single JSON object whose schema is one
-  `<OperationName>Response` type. Failure responses use the RFC 9457
-  Problem Details envelope.
-- `Authorization` carries a CAS-issued bearer token; `X-Api-Version` selects
-  the API version. Both are required.
+CAS failures use RFC 9457 Problem Details. Successful operations usually return
+JSON, but some, such as `ResendUserInvitation`, return no body. Authenticated
+operations require a CAS bearer token; `AcceptInvitation` is anonymous in the
+API contract, although the SDK client constructors still require credentials.
+The current CAS specs and generated clients do not use `X-Api-Version`.
 
-Each SDK translates this calls into the SDK operation API. The specific syntax depends on the language,
-but generally speaking, the SDK libraries have the following APIs:
-- Create a new "client" object for the service being targeted. Credentials and other options are passed as input.
-- Calling operation APIs using language-specific syntax.
+Mutation operations that require `X-Nx1-Idempotency-Key` receive a new key from
+the hand-written client wrapper. The same key is retained for transport retries
+within that call. A separate method invocation gets a new key. There is no
+`clientToken` request-body field for these operations.
 
-For example, the `POST /api/CreateTenant` call above looks like this in **TypeScript**:
+Applications construct a client with a service URL and credentials, then call
+its typed methods. This **TypeScript** function performs the request above using
+credentials supplied by the application:
 
 ```typescript
-const cas = new CasClient({
-    baseUrl:     'https://auth.acme.com',
-  credentials: new TokenGrantCredentials({ /* ... */ }),
-});
+import { CasClient, type CreateUserRequest, type CreateUserResponse } from '@onenexus-team/cas-client';
+import type { Credentials } from '@onenexus-team/sdk-core';
 
-const request: CreateTenantResquest = {
-    tenantId:    'tn_acme',
-    name:        'Acme Inc',
-    clientToken: '01HV8XR4D0YPRNNK8YY8VJ3QK2',
-};
-
-const response: CreateTenantResponse = await cas.createTenant(request);
+async function inviteUser(credentials: Credentials): Promise<CreateUserResponse> {
+    const cas = new CasClient({ baseUrl: 'https://auth.acme.com', credentials });
+    const request: CreateUserRequest = { email: 'a@b.c', displayName: 'A B' };
+    return await cas.createUser(request);
+}
 ```
 
 And in **Python**:
 
 ```python
-cas = CasClient(
-    base_url="https://auth.acme.com",
-  credentials=TokenGrantCredentials(...),
-)
+from onenexus_cas_client import CasClient, CreateUserRequest, CreateUserResponse
+from onenexus_sdk_core import Credentials
 
-response = await cas.create_tenant(
-    tenant_id="tn_acme",
-    name="Acme Inc",
-    client_token="01HV8XR4D0YPRNNK8YY8VJ3QK2",
-)
+
+async def invite_user(credentials: Credentials) -> CreateUserResponse:
+    async with CasClient(base_url="https://auth.acme.com", credentials=credentials) as cas:
+        return await cas.create_user(CreateUserRequest(email="a@b.c", display_name="A B"))
 ```
+
+Tenant creation belongs to the TypeScript `CasSupportClient.createTenant()`
+operation at `/support-api/CreateTenant`. Its request contains `tenantSlug`,
+`displayName`, `rootEmail`, and `rootDisplayName`. There is currently no Python
+CAS Support package.
 
 ### OpenAPI & Code generation
 To make client development quick, we utilize OpenAPI specs and generator tools to generate client SDK for the services.
@@ -173,9 +175,10 @@ can be overridden with `ONENEXUS_DOTNET_SDK_VERSION`, `ONENEXUS_NODE_VERSION`,
 Local package versions are specified by the repository-level `VERSION` file.
 Publishing a GitHub release with a stable semantic-version tag such as `v0.0.6`
 triggers the SDK release workflow. The workflow derives `0.0.6` from the tag and
-uses it as the package version in parallel Python and TypeScript jobs. It builds
-and tests both workspaces, attaches the Python wheels and TypeScript tarballs to
-the existing GitHub release, and publishes the TypeScript SDK packages to GitHub
+uses it as the package version in separate Python and TypeScript jobs on
+`self-hosted` runners. It builds and tests both workspaces, attaches the Python
+wheels and TypeScript tarballs to the existing GitHub release, and publishes the
+TypeScript SDK packages to GitHub
 Packages' npm registry.
 
 For local builds and consumption examples, see [`python/README.md`](python/README.md)
@@ -183,15 +186,14 @@ and [`ts/README.md`](ts/README.md).
 
 ## Credentials systems
 
-Every call into a platform API crosses a trust boundary and must carry a
-short-lived bearer token issued by the Central Auth Service (CAS). The
-CAS auth architecture defines four scenarios that produce such a token:
+Authenticated platform API calls carry a short-lived bearer token issued by
+the Central Auth Service (CAS). The auth architecture defines these scenarios:
 
 | Scenario | Caller | Grant |
 |---|---|---|
 | 3.1a | A human user via browser / mobile / CLI | Authorization Code + PKCE |
 | 3.1b | A customer's backend with a registered keypair | Client Credentials + `private_key_jwt` |
-| 3.2  | A platform pod calling another platform service | Client Credentials + K8s SA assertion |
+| 3.2  | A platform pod calling another platform service | Custom workload-identity grant with a runtime-mounted token |
 | 3.3  | A platform service acting on behalf of a user | Token Exchange (RFC 8693) |
 | 3.4  | A customer workload running on the platform | Same mechanics as 3.2, tenant-scoped at CAS |
 
@@ -241,21 +243,32 @@ authorization-code credential type in the service SDKs.
 resolve(context: ClientContext, signal?: AbortSignal): Promise<AccessToken>
 ```
 
-Active implementations cache, single-flight concurrent refreshes, and honor
-cancellation. The supplied `ClientContext` carries the per-client clock used for
-expiry decisions. The transport calls `resolve(...)` before each request and
-sets the `Authorization: Bearer <token>` header from the returned
-`AccessToken`.
+Active implementations cache tokens and coordinate concurrent refreshes so
+callers share one refresh. `ClientContext` supplies the clock used for expiry
+decisions. Python credentials expose both async `resolve(context)` and
+`resolve_sync(context)` for synchronous integrations such as boto3, with separate
+locks for async and sync refreshes.
 
-There is no cache-invalidation hook. A target API `401` is retried according to
-the transport retry policy; observed server time from the response updates the
-client clock, so the next `resolve(...)` evaluates expiry against the server
-clock. Early revocation is treated as a terminal identity problem and is allowed
-to surface to the application.
+TypeScript service calls accept an `AbortSignal` for the API request. Built-in
+credential implementations currently ignore that signal during token discovery
+and refresh, so cancellation does not stop token acquisition. Python async
+credentials use normal asyncio task cancellation.
 
-The default transport retry policy retries twice for retryable statuses using
-exponential backoff with full jitter, capped at 5 seconds per retry. Service
-clients expose `retry.limit` and `retry.backoffLimitMs` at construction time.
+There is no credential cache-invalidation hook. Resolving again can refresh a
+token that has become stale, but does not force replacement of a still-live token
+that the server has revoked.
+
+TypeScript clients use the shared Ky transport. Its default policy retries twice
+for statuses `401`, `408`, `429`, `500`, `502`, `503`, and `504`, with exponential
+backoff and full jitter capped at 5 seconds. Constructors expose `retry.limit`
+and `retry.backoffLimitMs`. `AssumeS3Role` resolves one token for both routing and
+authorization and does not retry `401` responses.
+
+Python `CasClient` uses Kiota's request adapter with HTTPX and generated error
+models. It does not use Python `ClientBase` or expose the TypeScript retry
+options. Its default HTTP client has no general status-code retry middleware;
+callers can supply a configured `http_client`. Python `ClientBase` is a separate
+core building block with `RetryConfig` and platform error mapping.
 
 Two credential errors are part of the contract:
 
@@ -267,17 +280,18 @@ Two credential errors are part of the contract:
 
 #### `ClientContext` and `Clock`
 
-Each service client owns a `ClientContext`. Today it contains a skew-aware
-`Clock` and a `refreshLeewayMs` preemptive refresh window. The HTTP transport
-observes the server `Date` header on responses and records it in the clock;
-credential implementations call `clock.serverNow()` when deciding whether a
-cached access token is near expiry.
+Each service client owns a `ClientContext` containing a clock corrected by
+observed server time and a preemptive refresh window, defaulting to 30 seconds.
+TypeScript uses `clock.serverNow()` and `refreshLeewayMs`; Python uses
+`clock.server_now()` and a `timedelta` named `refresh_leeway`. The TypeScript
+transport and Python Kiota adapter record response `Date` headers in this clock.
 
-The shared `ClientBase` class creates the default context (`SystemClock`) and
-the Ky transport for every generated service client. A caller may inject a
-custom `ClientContext` when multiple clients should share clock observations,
-or pass `refreshLeewayMs` when constructing a client. `TokenGrantCredentials`
-also accepts `refreshLeewayMs` as a credential-specific override.
+TypeScript `ClientBase` creates the context and Ky transport. Its constructors
+accept `context` and a `refreshLeewayMs` override. Python `CasClient` accepts
+`context=ClientContext(refresh_leeway=timedelta(...))` and creates its Kiota
+adapter separately. Both languages' `TokenGrantCredentials` also accept a
+credential-specific refresh-window override. Clients can share a context to
+share clock observations.
 
 ---
 

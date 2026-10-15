@@ -1,7 +1,7 @@
 # `onenexus-sdk-core`
 
-Credential primitives and the async HTTP transport shared by every OneNexus
-Python SDK. The Python counterpart of `@onenexus-team/sdk-core`.
+Credential primitives, an async HTTP transport, and a Kiota adapter for OneNexus
+Python SDKs. The Python counterpart of `@onenexus-team/sdk-core`.
 
 The language-agnostic credential design is documented in
 [`../../../README.md`](../../../README.md).
@@ -30,7 +30,14 @@ async path (`asyncio.Lock`) and guard sync refreshes separately, and raise
 
 ## Building a service client
 
-Subclass `ClientBase` and bind operations to `request`:
+For a client using the core transport directly, subclass `ClientBase` and bind
+operations to `request`. This provides `RetryConfig` and `PlatformError` mapping.
+The existing `CasClient` instead uses `create_kiota_request_adapter` with Kiota's
+generated request builders and error models; see its
+[package README](../cas-client/README.md).
+
+The following example assumes application-defined `CreateThingRequest` and
+`CreateThingResponse` types with `to_dict()` and `from_dict()` methods:
 
 ```python
 from onenexus_sdk_core import ClientBase
