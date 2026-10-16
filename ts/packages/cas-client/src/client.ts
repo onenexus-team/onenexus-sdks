@@ -46,6 +46,10 @@ import type {
     RemoveServiceClientKeyRequest,
     RemoveServiceClientKeyResponse,
     ResendUserInvitationRequest,
+    SuspendUserRequest,
+    SuspendUserResponse,
+    UnsuspendUserRequest,
+    UnsuspendUserResponse,
     UpdateAuthorizationRoleDescriptionRequest,
     UpdateAuthorizationRoleDescriptionResponse,
     UpdatePolicyRequest,
@@ -203,6 +207,37 @@ export class CasClient extends ClientBase {
         req: ListUsersRequest = {},
         options?: CasRequestOptions,
     ): Promise<ListUsersResponse> => this.tenantUser.listUsers(req, this.mutatorOptions(options));
+
+    /**
+     * Suspends an active member in the caller's tenant while retaining role assignments.
+     *
+     * Root, deleted, and cross-tenant users cannot be targeted, and self-suspension is refused.
+     * Sessions end at their next validation; regional authorization follows replication.
+     * Already issued access tokens retain valid signatures until expiry. Repeating suspension
+     * succeeds without changing security stamps. Automatic retries reuse the same idempotency key.
+     *
+     * @see POST /api/SuspendUser
+     */
+    suspendUser = (
+        req: SuspendUserRequest,
+        options?: CasRequestOptions,
+    ): Promise<SuspendUserResponse> =>
+        this.tenantUser.suspendUser(req, createIdempotencyHeaders(), this.mutatorOptions(options));
+
+    /**
+     * Restores a suspended member in the caller's tenant with their previous role assignments.
+     *
+     * Only suspended or already-active members can be targeted. Restoring a member does not
+     * reactivate a suspended tenant or revive revoked sessions. Automatic retries reuse the
+     * same idempotency key.
+     *
+     * @see POST /api/UnsuspendUser
+     */
+    unsuspendUser = (
+        req: UnsuspendUserRequest,
+        options?: CasRequestOptions,
+    ): Promise<UnsuspendUserResponse> =>
+        this.tenantUser.unsuspendUser(req, createIdempotencyHeaders(), this.mutatorOptions(options));
 
     /**
      * Redeems an invitation, sets a password, and activates the account.

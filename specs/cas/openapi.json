@@ -2731,6 +2731,232 @@
           }
         }
       }
+    },
+    "/api/SuspendUser": {
+      "post": {
+        "tags": [
+          "TenantUser"
+        ],
+        "summary": "Suspends an active member in the authenticated caller's tenant.",
+        "description": "Requires `CAS::SuspendUser` on the target user's canonical URI.\nThe tenant is derived from the caller; root, deleted and cross-tenant\nusers return 404. The tenant root cannot be suspended through this API.\nSelf-suspension is refused. Role assignments are retained. Suspension rotates\nthe security stamp atomically with the lifecycle change; sessions end at\ntheir next validation, and regional authorization observes the change after\nCDC projection. Already issued access tokens retain valid signatures until expiry.\nRepeating the operation on a suspended member succeeds without changing stamps.",
+        "operationId": "SuspendUser",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuspendUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/UnsuspendUser": {
+      "post": {
+        "tags": [
+          "TenantUser"
+        ],
+        "summary": "Restores a suspended member in the authenticated caller's tenant.",
+        "description": "Requires `CAS::UnsuspendUser` on the target user's canonical URI.\nThe tenant is derived from the caller; root, deleted and cross-tenant\nusers return 404. Only suspended or already-active members are accepted;\npending, invited, provisioned and deprovisioned users cannot be activated here.\nExisting role assignments become usable again. Repeating the operation on\nan active member succeeds without changing stamps. Restoring the member\ndoes not reactivate a suspended tenant or revive revoked sessions.",
+        "operationId": "UnsuspendUser",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsuspendUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsuspendUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsuspendUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -4316,6 +4542,41 @@
         "additionalProperties": false,
         "description": "A public key registered on a service client."
       },
+      "SuspendUserRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Identifier of the active tenant member to suspend.",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /api/SuspendUser`."
+      },
+      "SuspendUserResponse": {
+        "required": [
+          "userId",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The target member's identifier.",
+            "format": "uuid"
+          },
+          "status": {
+            "description": "The member's lifecycle state after the operation.",
+            "$ref": "#/components/schemas/UserLifecycleState"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response body for `POST /api/SuspendUser`."
+      },
       "TenantUserSummary": {
         "required": [
           "userId",
@@ -4366,6 +4627,41 @@
         },
         "additionalProperties": false,
         "description": "User snapshot returned as a list item by `ListTenantUsers`."
+      },
+      "UnsuspendUserRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Identifier of the suspended tenant member to restore.",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /api/UnsuspendUser`."
+      },
+      "UnsuspendUserResponse": {
+        "required": [
+          "userId",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The target member's identifier.",
+            "format": "uuid"
+          },
+          "status": {
+            "description": "The member's lifecycle state after the operation.",
+            "$ref": "#/components/schemas/UserLifecycleState"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response body for `POST /api/UnsuspendUser`."
       },
       "UpdateAuthorizationRoleDescriptionRequest": {
         "required": [

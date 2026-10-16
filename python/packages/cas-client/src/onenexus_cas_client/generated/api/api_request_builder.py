@@ -31,6 +31,8 @@ if TYPE_CHECKING:
     from .remove_role_assignment.remove_role_assignment_request_builder import RemoveRoleAssignmentRequestBuilder
     from .remove_service_client_key.remove_service_client_key_request_builder import RemoveServiceClientKeyRequestBuilder
     from .resend_user_invitation.resend_user_invitation_request_builder import ResendUserInvitationRequestBuilder
+    from .suspend_user.suspend_user_request_builder import SuspendUserRequestBuilder
+    from .unsuspend_user.unsuspend_user_request_builder import UnsuspendUserRequestBuilder
     from .update_policy.update_policy_request_builder import UpdatePolicyRequestBuilder
     from .update_role_description.update_role_description_request_builder import UpdateRoleDescriptionRequestBuilder
 
@@ -271,6 +273,24 @@ class ApiRequestBuilder(BaseRequestBuilder):
         from .resend_user_invitation.resend_user_invitation_request_builder import ResendUserInvitationRequestBuilder
 
         return ResendUserInvitationRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def suspend_user(self) -> SuspendUserRequestBuilder:
+        """
+        The SuspendUser property
+        """
+        from .suspend_user.suspend_user_request_builder import SuspendUserRequestBuilder
+
+        return SuspendUserRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def unsuspend_user(self) -> UnsuspendUserRequestBuilder:
+        """
+        The UnsuspendUser property
+        """
+        from .unsuspend_user.unsuspend_user_request_builder import UnsuspendUserRequestBuilder
+
+        return UnsuspendUserRequestBuilder(self.request_adapter, self.path_parameters)
     
     @property
     def update_policy(self) -> UpdatePolicyRequestBuilder:
