@@ -34,6 +34,10 @@ from onenexus_cas_client import (
     RemoveRoleAssignmentRequest,
     RemoveServiceClientKeyRequest,
     ResendUserInvitationRequest,
+    SuspendUserRequest,
+    SuspendUserResponse,
+    UnsuspendUserRequest,
+    UnsuspendUserResponse,
     UpdateAuthorizationRoleDescriptionRequest,
     UpdatePolicyRequest,
     UpdateProfileRequest,
@@ -177,6 +181,55 @@ async def test_list_users_serializes_query_and_parses_lifecycle_status() -> None
     assert result.items[0].display_name == "Nguyễn Văn An"
     assert result.before == user_id
     assert result.after is None
+
+
+@pytest.mark.parametrize(
+    ("operation", "status"),
+    [
+        ("SuspendUser", UserLifecycleState.Suspended),
+        ("UnsuspendUser", UserLifecycleState.Active),
+    ],
+)
+async def test_user_lifecycle_methods_route_through_kiota(
+    operation: str, status: UserLifecycleState
+) -> None:
+    captured: list[httpx.Request] = []
+    user_id = UUID("0193fabc-1234-7def-abcd-1234567890ab")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        return httpx.Response(200, json={"userId": str(user_id), "status": status.value})
+
+    result: SuspendUserResponse | UnsuspendUserResponse
+    async with _client(httpx.MockTransport(handler)) as cas:
+        if operation == "SuspendUser":
+            result = await cas.suspend_user(SuspendUserRequest(user_id=user_id))
+            assert isinstance(result, SuspendUserResponse)
+        else:
+            result = await cas.unsuspend_user(UnsuspendUserRequest(user_id=user_id))
+            assert isinstance(result, UnsuspendUserResponse)
+
+    assert len(captured) == 1
+    request = captured[0]
+    assert request.method == "POST"
+    assert request.url.path == f"/api/{operation}"
+    assert request.headers["authorization"] == "Bearer at-test"
+    assert request.headers["content-type"] == "application/json"
+    assert IDEMPOTENCY_KEY_PATTERN.fullmatch(request.headers["x-nx1-idempotency-key"])
+    assert json.loads(request.content) == {"userId": str(user_id)}
+    assert result.user_id == user_id
+    assert result.status is status
+
+
+@pytest.mark.parametrize("operation", ["SuspendUser", "UnsuspendUser"])
+async def test_user_lifecycle_methods_reject_missing_response_body(operation: str) -> None:
+    user_id = UUID("0193fabc-1234-7def-abcd-1234567890ab")
+    async with _client(httpx.MockTransport(lambda _: httpx.Response(204))) as cas:
+        with pytest.raises(RuntimeError, match=f"CAS {operation} returned no response body"):
+            if operation == "SuspendUser":
+                await cas.suspend_user(SuspendUserRequest(user_id=user_id))
+            else:
+                await cas.unsuspend_user(UnsuspendUserRequest(user_id=user_id))
 
 
 @pytest.mark.parametrize("inject_http", [False, True])
@@ -558,25 +611,38 @@ async def test_policy_and_profile_methods_route_through_kiota() -> None:
     assert profile.display_name == "Updated User"
 
 
+@pytest.mark.parametrize("operation", ["CreateUser", "SuspendUser", "UnsuspendUser"])
+@pytest.mark.parametrize("retry_status", [429, 503, 504])
 async def test_idempotency_key_is_reused_when_kiota_retries(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, operation: str, retry_status: int
 ) -> None:
     attempts: list[str] = []
     uuid_calls = 0
+    user_id = UUID("0193fabc-1234-7def-abcd-1234567890ab")
+    expected_body = (
+        {"email": "a@b.c", "displayName": "A B"}
+        if operation == "CreateUser" else {"userId": str(user_id)}
+    )
 
     def fake_uuid4() -> UUID:
         nonlocal uuid_calls
         uuid_calls += 1
-        return UUID("12345678-1234-5678-1234-567812345678")
+        return UUID(int=uuid_calls)
 
     async def skip_retry_delay(_: float) -> None:
         return None
 
     def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "POST"
+        assert request.url.path == f"/api/{operation}"
+        body = json.loads(request.content)
+        assert body == expected_body
+        assert "requestId" not in body
+        assert "clientToken" not in body
         attempts.append(request.headers["x-nx1-idempotency-key"])
-        if len(attempts) == 1:
+        if len(attempts) % 2 == 1:
             return httpx.Response(
-                503,
+                retry_status,
                 json={"title": "temporarily unavailable"},
                 headers={"content-type": "application/problem+json"},
             )
@@ -603,8 +669,19 @@ async def test_idempotency_key_is_reused_when_kiota_retries(
             credentials=_credentials(),
             http_client=retry_http,
         )
-        await cas.create_user(CreateUserRequest(email="a@b.c", display_name="A B"))
+        create_request = CreateUserRequest(email="a@b.c", display_name="A B")
+        suspend_request = SuspendUserRequest(user_id=user_id)
+        unsuspend_request = UnsuspendUserRequest(user_id=user_id)
+        for _ in range(2):
+            if operation == "CreateUser":
+                await cas.create_user(create_request)
+            elif operation == "SuspendUser":
+                await cas.suspend_user(suspend_request)
+            else:
+                await cas.unsuspend_user(unsuspend_request)
 
-    expected_key = "12345678123456781234567812345678"
-    assert uuid_calls == 1
-    assert attempts == [expected_key, expected_key]
+    first_key, second_key = UUID(int=1).hex, UUID(int=2).hex
+    assert uuid_calls == 2
+    assert attempts == [first_key, first_key, second_key, second_key]
+    assert first_key != second_key
+    assert all(IDEMPOTENCY_KEY_PATTERN.fullmatch(key) for key in attempts)

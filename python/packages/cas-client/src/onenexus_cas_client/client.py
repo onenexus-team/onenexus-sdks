@@ -71,6 +71,10 @@ from .generated.models.remove_role_assignment_request import RemoveRoleAssignmen
 from .generated.models.remove_service_client_key_request import RemoveServiceClientKeyRequest
 from .generated.models.remove_service_client_key_response import RemoveServiceClientKeyResponse
 from .generated.models.resend_user_invitation_request import ResendUserInvitationRequest
+from .generated.models.suspend_user_request import SuspendUserRequest
+from .generated.models.suspend_user_response import SuspendUserResponse
+from .generated.models.unsuspend_user_request import UnsuspendUserRequest
+from .generated.models.unsuspend_user_response import UnsuspendUserResponse
 from .generated.models.update_authorization_role_description_request import (
     UpdateAuthorizationRoleDescriptionRequest,
 )
@@ -154,6 +158,46 @@ class CasClient:
         response = await self._client.api.list_users.post(request or ListUsersRequest())
         if response is None:
             raise RuntimeError("CAS ListUsers returned no response body")
+        return response
+
+    async def suspend_user(self, request: SuspendUserRequest) -> SuspendUserResponse:
+        """Suspend an active member in the authenticated caller's tenant.
+
+        Requires ``CAS::SuspendUser`` on the target user's canonical URI. The tenant root,
+        the caller, and deleted or cross-tenant users cannot be suspended. Role assignments
+        are retained. Sessions end at their next validation; regional authorization sees
+        the change after projection, and issued access tokens retain valid signatures until
+        expiry. Suspending an already-suspended member succeeds without changing stamps.
+
+        The SDK creates one idempotency key per call and reuses it across transport retries.
+
+        API operation: ``POST /api/SuspendUser``.
+        """
+        response = await self._client.api.suspend_user.post(
+            request, _idempotency_request_configuration()
+        )
+        if response is None:
+            raise RuntimeError("CAS SuspendUser returned no response body")
+        return response
+
+    async def unsuspend_user(self, request: UnsuspendUserRequest) -> UnsuspendUserResponse:
+        """Restore a suspended member in the authenticated caller's tenant.
+
+        Requires ``CAS::UnsuspendUser`` on the target user's canonical URI. Only suspended
+        or already-active members are accepted; root, deleted and cross-tenant users cannot
+        be restored. Existing role assignments become usable again, but a suspended tenant
+        stays suspended and revoked sessions are not revived. Restoring an already-active
+        member succeeds without changing stamps.
+
+        The SDK creates one idempotency key per call and reuses it across transport retries.
+
+        API operation: ``POST /api/UnsuspendUser``.
+        """
+        response = await self._client.api.unsuspend_user.post(
+            request, _idempotency_request_configuration()
+        )
+        if response is None:
+            raise RuntimeError("CAS UnsuspendUser returned no response body")
         return response
 
     async def accept_invitation(
@@ -632,6 +676,10 @@ __all__ = [
     "RemoveServiceClientKeyRequest",
     "RemoveServiceClientKeyResponse",
     "ResendUserInvitationRequest",
+    "SuspendUserRequest",
+    "SuspendUserResponse",
+    "UnsuspendUserRequest",
+    "UnsuspendUserResponse",
     "UpdateAuthorizationRoleDescriptionRequest",
     "UpdateAuthorizationRoleDescriptionResponse",
     "UpdatePolicyRequest",

@@ -11,7 +11,11 @@ import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { CasClient } from '../src/client.js';
-import type { ListUsersResponse } from '../src/index.js';
+import type {
+    ListUsersResponse,
+    SuspendUserResponse,
+    UnsuspendUserResponse,
+} from '../src/index.js';
 
 const BASE_URL = 'https://cas.test.invalid';
 const GLOBAL_AUTH_URL = 'https://auth.onenexus.test';
@@ -116,6 +120,58 @@ describe('CasClient', () => {
             expect(await cas.listUsers(req)).toEqual(response);
             expect(observedBody).toEqual(req);
         });
+
+        it.each([
+            ['suspendUser', 'SuspendUser', 'Suspended'],
+            ['unsuspendUser', 'UnsuspendUser', 'Active'],
+        ] as const)(
+            '%s creates one key per call and reuses it across retries',
+            async (method, operation, status) => {
+                const firstKey = '0193fabc-1234-7def-abcd-1234567890ab';
+                const secondKey = '0193fabc-1234-7def-abcd-1234567890ac';
+                const randomUUID = vi
+                    .spyOn(globalThis.crypto, 'randomUUID')
+                    .mockReturnValueOnce(firstKey)
+                    .mockReturnValueOnce(secondKey);
+                const req = { userId: '0193fabc-1234-7def-abcd-1234567890ad' };
+                const response: SuspendUserResponse | UnsuspendUserResponse = {
+                    userId: req.userId,
+                    status,
+                };
+                const observedKeys: (string | null)[] = [];
+                const observedBodies: unknown[] = [];
+                const observedAuth: (string | null)[] = [];
+                server.use(
+                    http.post(`${BASE_URL}/api/${operation}`, async ({ request }) => {
+                        observedKeys.push(request.headers.get('x-nx1-idempotency-key'));
+                        observedBodies.push(await request.json());
+                        observedAuth.push(request.headers.get('authorization'));
+                        if (observedKeys.length % 2 === 1) {
+                            return HttpResponse.json({ code: 'unavailable' }, { status: 503 });
+                        }
+                        return HttpResponse.json(response);
+                    }),
+                );
+
+                const cas = new CasClient({
+                    baseUrl: BASE_URL,
+                    credentials: staticCreds(),
+                    retry: { limit: 1, backoffLimitMs: 0 },
+                });
+                const call = cas[method];
+
+                expect(await call(req)).toEqual(response);
+                expect(randomUUID).toHaveBeenCalledTimes(1);
+                expect(await call(req)).toEqual(response);
+                expect(randomUUID).toHaveBeenCalledTimes(2);
+                expect(observedKeys).toEqual([firstKey, firstKey, secondKey, secondKey]);
+                for (const key of observedKeys) {
+                    expect(key).toMatch(/^[a-zA-Z0-9_.-]{16,128}$/);
+                }
+                expect(observedBodies).toEqual([req, req, req, req]);
+                expect(observedAuth).toEqual(Array<string>(4).fill('Bearer at-static'));
+            },
+        );
 
         it('updateProfile adds one idempotency key and reuses it across Ky retries', async () => {
             const idempotencyKey = '0193fabc-1234-7def-abcd-1234567890ab';

@@ -14,7 +14,13 @@ import type {
   ListUsersRequest,
   ListUsersResponse,
   ResendUserInvitationHeaders,
-  ResendUserInvitationRequest
+  ResendUserInvitationRequest,
+  SuspendUserHeaders,
+  SuspendUserRequest,
+  SuspendUserResponse,
+  UnsuspendUserHeaders,
+  UnsuspendUserRequest,
+  UnsuspendUserResponse
 } from '../schemas';
 
 import { platformMutator } from '../../mutator';
@@ -91,7 +97,50 @@ const acceptInvitation = (
     },
       options);
     }
-  return {createUser,resendUserInvitation,listUsers,acceptInvitation}};
+  /**
+ * Requires `CAS::SuspendUser` on the target user's canonical URI.
+ * The tenant is derived from the caller; root, deleted and cross-tenant
+ * users return 404. The tenant root cannot be suspended through this API.
+ * Self-suspension is refused. Role assignments are retained. Suspension rotates
+ * the security stamp atomically with the lifecycle change; sessions end at
+ * their next validation, and regional authorization observes the change after
+ * CDC projection. Already issued access tokens retain valid signatures until expiry.
+ * Repeating the operation on a suspended member succeeds without changing stamps.
+ * @summary Suspends an active member in the authenticated caller's tenant.
+ */
+const suspendUser = (
+    suspendUserRequest: SuspendUserRequest,
+    headers: SuspendUserHeaders,
+ options?: SecondParameter<typeof platformMutator<SuspendUserResponse>>,) => {
+      return platformMutator<SuspendUserResponse>(
+      {url: `/api/SuspendUser`, method: 'POST',
+      headers: {'Content-Type': 'application/json', ...headers},
+      data: suspendUserRequest
+    },
+      options);
+    }
+  /**
+ * Requires `CAS::UnsuspendUser` on the target user's canonical URI.
+ * The tenant is derived from the caller; root, deleted and cross-tenant
+ * users return 404. Only suspended or already-active members are accepted;
+ * pending, invited, provisioned and deprovisioned users cannot be activated here.
+ * Existing role assignments become usable again. Repeating the operation on
+ * an active member succeeds without changing stamps. Restoring the member
+ * does not reactivate a suspended tenant or revive revoked sessions.
+ * @summary Restores a suspended member in the authenticated caller's tenant.
+ */
+const unsuspendUser = (
+    unsuspendUserRequest: UnsuspendUserRequest,
+    headers: UnsuspendUserHeaders,
+ options?: SecondParameter<typeof platformMutator<UnsuspendUserResponse>>,) => {
+      return platformMutator<UnsuspendUserResponse>(
+      {url: `/api/UnsuspendUser`, method: 'POST',
+      headers: {'Content-Type': 'application/json', ...headers},
+      data: unsuspendUserRequest
+    },
+      options);
+    }
+  return {createUser,resendUserInvitation,listUsers,acceptInvitation,suspendUser,unsuspendUser}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -101,3 +150,5 @@ export type CreateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof 
 export type ResendUserInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['resendUserInvitation']>>>
 export type ListUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['listUsers']>>>
 export type AcceptInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['acceptInvitation']>>>
+export type SuspendUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['suspendUser']>>>
+export type UnsuspendUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['unsuspendUser']>>>
