@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   release-python-wheels:
+    if: startsWith(github.event.release.tag_name, 'v')
     name: Build and release Python wheels
     runs-on: self-hosted
 
@@ -75,6 +76,7 @@ jobs:
           overwrite_files: true
 
   release-typescript-packages:
+    if: startsWith(github.event.release.tag_name, 'v')
     name: Build and publish TypeScript packages
     runs-on: self-hosted
 

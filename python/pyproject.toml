@@ -28,6 +28,15 @@ examples = [
 [tool.mypy]
 python_version = "3.11"
 strict = true
+exclude = [
+    "(?:^|/)build/",
+    "(?:^|/)dist/",
+    "(?:^|/)tests?/",
+]
+
+[[tool.mypy.overrides]]
+module = ["boto3", "boto3.*", "botocore", "botocore.*"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["onenexus_cas_client.generated.*"]
