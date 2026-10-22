@@ -1,0 +1,75 @@
+name: Log contract release
+on:
+  push:
+    tags: ['log-correlation-v*']
+permissions:
+  contents: read
+concurrency:
+  group: log-contract-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.11'
+      - name: Require a version tag on main
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^log-correlation-v([0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+(\.[a-z0-9]+)*)?)$ ]] \
+            || { echo 'Invalid contract tag'; exit 1; }
+          version="${TAG#log-correlation-v}"
+          git merge-base --is-ancestor HEAD origin/main
+          [[ -f "contracts/log-correlation/versions/$version/manifest.json" ]]
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Validate before packaging
+        run: bash scripts/check-log-contracts.sh
+      - name: Build versioned archive
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .artifacts/log-contract
+          digest="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "contracts/log-correlation/versions/$VERSION/manifest.json")"
+          python3 contracts/log-correlation/check_contract.py build \
+            --version "$VERSION" --expected-digest "$digest" \
+            --output ".artifacts/log-contract/log-correlation-$VERSION.tar.gz"
+          cd .artifacts/log-contract
+          sha256sum "log-correlation-$VERSION.tar.gz" > SHA256SUMS
+      - name: Upload validation artifact
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: log-correlation-${{ steps.version.outputs.version }}
+          path: .artifacts/log-contract/*
+          if-no-files-found: error
+      - name: Publish a new release without overwriting
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo 'Release exists; refusing to overwrite.'
+            exit 1
+          fi
+          flags=()
+          [[ "$VERSION" != *-* ]] || flags+=(--prerelease)
+          gh release create "$TAG" --verify-tag "${flags[@]}" \
+            --title "Log correlation contract $VERSION" \
+            --notes 'Versioned schema, shared test cases and offline result checker. No runtime language package or production adoption claim.' \
+            ".artifacts/log-contract/log-correlation-$VERSION.tar.gz" \
+            .artifacts/log-contract/SHA256SUMS

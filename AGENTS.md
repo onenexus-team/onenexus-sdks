@@ -5,6 +5,7 @@ Guidance for AI coding agents working in the standalone OneNexus SDK repository.
 ## Repository shape
 
 - `README.md` documents the language-agnostic SDK architecture and credential model.
+- `contracts/log-correlation/` owns immutable schema versions and shared language-adapter cases.
 - `specs/` contains committed OpenAPI specifications used for code generation.
 - `python/` is a `uv` workspace for Python SDK packages.
 - `ts/` is a `pnpm` workspace for TypeScript SDK packages.
@@ -35,3 +36,13 @@ Run TypeScript commands from `ts/`:
 pnpm install
 pnpm package
 ```
+
+## Log contract checks
+
+```sh
+bash scripts/check-log-contracts.sh origin/main
+```
+
+Keep accepted contract versions byte-for-byte unchanged. Add a new version for
+schema/vector changes. A checker pass proves reported case agreement, not service
+adoption. Runtime packages must execute the shared cases through their actual APIs.
