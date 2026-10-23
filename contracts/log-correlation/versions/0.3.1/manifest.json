@@ -1,0 +1,32 @@
+{
+  "contract": "log-correlation",
+  "version": "0.3.1",
+  "status": "release",
+  "sha256": "4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34",
+  "digest_algorithm": "SHA256(filename + NUL + file bytes), in files order",
+  "files": [
+    {
+      "path": "contract-v1.schema.json",
+      "sha256": "e157541bb46a07f608a666f05c6d52ec420fda98707dbf0b75450697b08ee087"
+    },
+    {
+      "path": "contract-v1.vectors.json",
+      "sha256": "7cc6a759bc91ca6e5ac7f69d13bb246b26e521ef072168f7fec5a7fbda6e2ea4"
+    }
+  ],
+  "source": {
+    "repository": "onenexus-team/onenexus-sdks",
+    "path": "contracts/log-correlation/versions/1.0.0-rc.2",
+    "predecessor_version": "1.0.0-rc.2",
+    "predecessor_sha256": "5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64",
+    "change": "Release unchanged rc.2 schema rules and shared cases as contract 0.3.1"
+  },
+  "profiles": [
+    "common",
+    "correlated",
+    "lifecycle"
+  ],
+  "record_cases": 56,
+  "context_cases": 10,
+  "adapter_protocol": 1
+}

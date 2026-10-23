@@ -22,7 +22,7 @@
 
 | What holds | Why it is sound |
 |---|---|
-| Version compatibility | Original rc.1 bytes retain the #795 digest; rc.2 requires canonical environment in every profile. Neither is a stable release. |
+| Version compatibility | Both prior candidates remain immutable. Contract 0.3.1 keeps rc.2 rules and cases; version identity changes only. Select the approved version explicitly, not by version sorting. |
 | No production side effects | Checker is offline; no Kubernetes, database or logging configuration changes. |
 | Safe handoff boundary | README separates contract checks, package checks and live service validation. |
 
@@ -32,9 +32,9 @@
 | Before release | Repository protections and release owner need confirmation | Source code cannot stop an administrator rewriting a tag | OPS1 |
 | Before adoption | Language packages and services are not integrated | Common fields are not automatically added yet | QA1 |
 
-- Current contract: `1.0.0-rc.2`; every profile requires `environment` equal to `development`, `staging`, or `prod`.
+- Current contract: `0.3.1`; every profile requires `environment` equal to `development`, `staging`, or `prod`.
 - New shared cases cover valid values and missing, null, empty, numeric, aliased and unknown environments in every profile.
-- Upgrade packages and test observations explicitly to rc.2. An rc.1 result is not evidence of rc.2 compliance; no deployed consumer is upgraded by this PR.
+- Upgrade packages and test observations explicitly to 0.3.1. An earlier-version result is not evidence of 0.3.1 compliance; no deployed consumer is upgraded by this PR.
 
 ## 2. System context
 
@@ -171,7 +171,7 @@ sequenceDiagram
 
 | ID | Priority / problem | Recommended solution | Status |
 |---|---|---|---|
-| CD1 | P2 release gate: remote publication and interrupted-upload recovery are unverified | SDK owner publishes the candidate only after approval; verify downloaded archive and complete assets | Not started; blocks publication, not source merge |
+| CD1 | P2 release gate: remote publication and interrupted-upload recovery are unverified | SDK owner publishes the reviewed contract after merge and approval; verify downloaded archive and complete assets | Not started; blocks publication, not source merge |
 | OPS1 | P2 release gate: branch/tag protection and accountable release owner are unverified | SDK owner enables mandatory checks, protects version tags, records ownership, and retains released assets | Not started; blocks publication |
 | QA1 | P2 adoption gate: no language logging package or service has adopted this artifact | Follow-up tasks implement actual package adapters, pin released artifacts, then run platform integration/raw tests | Not started; blocks service-compliance claims |
 
@@ -190,9 +190,9 @@ sequenceDiagram
 
 | Local evidence, 23 October 2026 | Result |
 |---|---|
-| Python 3.11.16 and Python 3.14.5 checker suite | 17 tests passed on each |
+| Python 3.11.16 and Python 3.14.5 checker suite | 18 tests passed on each |
 | Original #795 implementation observations | 29 record + 10 context cases passed for rc.1 (prior validation) |
-| Independent JSON Schema validator | All 27 rc.2 environment cases passed |
+| Independent JSON Schema validator | All 27 environment cases passed for rc.2 (prior validation); 0.3.1 rules and cases are identical |
 | Archive built with both Python versions | Identical SHA-256; extracted checker passed |
 | Ruff, ShellCheck, workflow YAML/shell syntax | Passed |
 | Mermaid diagrams | All six rendered |
@@ -203,8 +203,8 @@ sequenceDiagram
 ```bash
 bash scripts/check-log-contracts.sh origin/main
 python3 contracts/log-correlation/check_contract.py check-results \
-  --version 1.0.0-rc.2 \
-  --expected-digest 5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64 \
+  --version 0.3.1 \
+  --expected-digest 4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34 \
   --results /path/to/actual-package-results.json
 ```
 
@@ -232,7 +232,7 @@ Distributed-systems protocol — not applicable: this change has no application 
 ### Phase 1 — release readiness
 
 - [ ] OPS1 — SDK owner confirms protection, ownership and retention settings.
-- [ ] CD1 — Publish only after explicit approval; download, verify and test the published candidate.
+- [ ] CD1 — Publish only after explicit approval; download, verify and test the published contract.
 
 ### Phase 2 — package and service adoption
 
@@ -294,8 +294,8 @@ stateDiagram-v2
 | Rollout phase | Old behavior | New behavior | Validation / rollback |
 |---|---|---|---|
 | Merge SDK files | Platform snapshot unchanged | Canonical authoring location added | Exact byte parity; no runtime change |
-| Publish candidate | Existing consumers unchanged | New immutable artifact available | CD1, OPS1; retain prior artifacts |
-| Adopt package/service | Old rc.1 pins still work without required environment | rc.2 consumers must configure environment and pass its expanded cases | QA1; revert consumer pin if needed |
+| Publish contract | Existing consumers unchanged | New immutable artifact available | CD1, OPS1; retain prior artifacts |
+| Adopt package/service | Old rc.1 pins still work without required environment | 0.3.1 consumers must configure environment and pass its expanded cases | QA1; revert consumer pin if needed |
 
 | Contract area | Assessment |
 |---|---|

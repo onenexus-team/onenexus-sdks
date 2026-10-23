@@ -16,13 +16,13 @@ flowchart TD
 
 | Delivered here | Separate follow-up |
 |---|---|
-| Current `1.0.0-rc.2` schema, 56 record cases, 10 context cases | Shared logging packages and automatic enrichment |
+| Current `0.3.1` schema, 56 record cases, 10 context cases | Shared logging packages and automatic enrichment |
 | Common adapter-result protocol and checker | Production service integration and deployed package inventory |
 | Digest checks, immutable-version CI and reproducible release archive | Package publication and platform consumption cutover |
 
 - `versions/<version>/` is append-only after merge, including release candidates. Never edit or delete an existing version; create a successor.
-- Current candidate: `1.0.0-rc.2`, requiring `environment` in every profile. The original `1.0.0-rc.1` directory preserves the exact #795 bytes for compatibility; neither candidate is a stable `1.0.0` release.
-- The SHA-256 is `5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64`.
+- Current contract: `0.3.1`, requiring `environment` in every profile. Its rules and cases are unchanged from `1.0.0-rc.2`; only version identity changes. Both earlier candidates remain immutable. Consumers select the explicit approved version; do not choose it by sorting versions.
+- The SHA-256 is `4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34`.
 - Compute it by hashing each filename, a NUL byte, and the original bytes, in manifest order. Per-file hashes also appear in the manifest.
 - A matching hash proves content identity, not author approval. Consumers pin the reviewed repository/tag or commit **and** digest in their own trusted policy.
 
@@ -66,8 +66,8 @@ Python 3.11+ standard library only. No package installation, cluster access or c
 python3 -m unittest discover -s contracts/log-correlation/tests -v
 
 python3 contracts/log-correlation/check_contract.py verify \
-  --version 1.0.0-rc.2 \
-  --expected-digest 5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64
+  --version 0.3.1 \
+  --expected-digest 4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34
 
 python3 contracts/log-correlation/check_contract.py immutable --base origin/main
 ```
@@ -94,8 +94,8 @@ Example result envelope (the real file must contain **all 66 results**):
 ```json
 {
   "adapter_protocol": 1,
-  "contract_version": "1.0.0-rc.2",
-  "contract_sha256": "5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64",
+  "contract_version": "0.3.1",
+  "contract_sha256": "4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34",
   "results": [
     {"kind": "record", "id": "system_without_context", "errors": []},
     {
@@ -110,8 +110,8 @@ Example result envelope (the real file must contain **all 66 results**):
 
 ```bash
 python3 contracts/log-correlation/check_contract.py check-results \
-  --version 1.0.0-rc.2 \
-  --expected-digest 5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64 \
+  --version 0.3.1 \
+  --expected-digest 4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34 \
   --results /path/to/package-test-results.json
 ```
 
@@ -144,9 +144,9 @@ sequenceDiagram
 
 ```bash
 python3 contracts/log-correlation/check_contract.py build \
-  --version 1.0.0-rc.2 \
-  --expected-digest 5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64 \
-  --output /tmp/log-correlation-1.0.0-rc.2.tar.gz
+  --version 0.3.1 \
+  --expected-digest 4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34 \
+  --output /tmp/log-correlation-0.3.1.tar.gz
 ```
 
 | Migration stage | Authority and validation |
@@ -163,6 +163,23 @@ python3 contracts/log-correlation/check_contract.py build \
 - Review details: [design and validation](design-and-validation.md).
 
 ## Live validation handoff
+
+### Future MLOps integration
+
+The contract is a specification, not a logging library. The Python logging package
+and MLOps adoption are separate follow-up changes.
+
+| Step | Implementation | Validation before proceeding |
+|---|---|---|
+| 1. Build shared Python package | Bundle the approved contract version and digest; implement record formatting and context helpers | Execute all 66 shared cases through actual package APIs; test concurrency and cleanup |
+| 2. Connect MLOps logging | Pin the package in MLOps dependencies; initialize it in `src/core/observability/logging.py` | Capture real logger output and check required fields, custom fields and size limits |
+| 3. Supply field values | Read service, environment and region from trusted deployment configuration; supply timestamp, level and message from each log call | Reject invalid configuration; prevent custom fields overriding common fields |
+| 4. Connect request/job context | Create or restore trace context at trusted boundaries, propagate it, and clear it when work ends | Test HTTP calls, concurrent requests, exceptions, jobs and retries |
+| 5. Verify collection | Preserve the supported stdout/OTLP paths and validate their field mapping | Run development-cluster raw tests; query related MLOps logs by trace ID and environment |
+
+- Existing Python logger calls can use the shared handler/formatter. Lifecycle events still need explicit event and outcome values.
+- Package version and contract version are separate pins. Bundle the schema at build time; do not download it per request.
+- Existing OTel resource attributes do not by themselves prove that exported records satisfy the contract. Verify the final collected records.
 
 - Existing platform procedure: [raw log-correlation tests](https://github.com/onenexus-team/one-nexus-ai-platform/blob/main/platforms/mlops/backend/tests/raw_tests/observability/RUNNING.md).
 - Run that lane after a follow-up changes an actual logging package, service or collection path. Keep isolated test workloads and their cleanup in the platform repository.

@@ -72,9 +72,9 @@ class ContractTests(unittest.TestCase):
 
     def test_environment_is_required_in_each_current_profile(self):
         manifest, vectors, snapshots = gate.load_bundle(
-            "1.0.0-rc.2",
+            "0.3.1",
             self.root,
-            "5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64",
+            "4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34",
         )
         schema = json.loads(snapshots[gate.ARTIFACTS[0]])
         for name, profile in schema["$defs"].items():
@@ -98,8 +98,11 @@ class ContractTests(unittest.TestCase):
                 sum(case["errors"] == ["schema_invalid"] for case in cases), 6
             )
         self.assertEqual(manifest["record_cases"], 56)
-        self.assertEqual(manifest["source"]["predecessor_sha256"], DIGEST)
-        # The predecessor still accepts records without environment.
+        self.assertEqual(
+            manifest["source"]["predecessor_sha256"],
+            "5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64",
+        )
+        # The original rc.1 still accepts records without environment.
         self.assertNotIn(
             "environment",
             json.loads(
@@ -108,7 +111,7 @@ class ContractTests(unittest.TestCase):
         )
 
     def test_current_results_reject_accepting_invalid_environment(self):
-        manifest, vectors, _ = gate.load_bundle("1.0.0-rc.2", self.root)
+        manifest, vectors, _ = gate.load_bundle("0.3.1", self.root)
         result = copy.deepcopy(self.result)
         result["contract_version"] = manifest["version"]
         result["contract_sha256"] = manifest["sha256"]
@@ -139,13 +142,13 @@ class ContractTests(unittest.TestCase):
                         )
                     item["errors"] = ["schema_invalid"]
 
-    def test_current_candidate_is_packaged_and_defaulted(self):
-        manifest, _, _ = gate.load_bundle("1.0.0-rc.2", self.root)
+    def test_current_contract_is_packaged_and_defaulted(self):
+        manifest, _, _ = gate.load_bundle("0.3.1", self.root)
         output = self.work / "current.tgz"
         gate.build_archive(manifest["version"], manifest["sha256"], output, self.root)
         with tarfile.open(output) as archive:
             schema = json.load(
-                archive.extractfile("versions/1.0.0-rc.2/contract-v1.schema.json")
+                archive.extractfile("versions/0.3.1/contract-v1.schema.json")
             )
             self.assertIn("environment", schema["$defs"]["common"]["required"])
         result = subprocess.run(
@@ -162,7 +165,17 @@ class ContractTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(json.loads(result.stdout)["contract_version"], "1.0.0-rc.2")
+        self.assertEqual(json.loads(result.stdout)["contract_version"], "0.3.1")
+
+    def test_release_preserves_candidate_rules_and_cases(self):
+        previous, _, before = gate.load_bundle("1.0.0-rc.2", self.root)
+        current, _, after = gate.load_bundle("0.3.1", self.root)
+        self.assertEqual(current["source"]["predecessor_sha256"], previous["sha256"])
+        self.assertNotEqual(current["sha256"], previous["sha256"])
+        for name in gate.ARTIFACTS:
+            self.assertEqual(
+                before[name].replace(b"1.0.0-rc.2", b"0.3.1"), after[name]
+            )
 
     def test_wrong_trusted_pin_or_version_rejected(self):
         with self.assertRaises(gate.ContractError):
