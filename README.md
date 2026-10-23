@@ -1,5 +1,12 @@
 # OneNexus SDKs
 
+## Shared observability contract
+
+The [log-correlation contract](contracts/log-correlation/README.md) defines common
+log fields and shared cases for future language packages. It includes an offline
+result checker and versioned release archive; it does not change application
+logging automatically. Run `bash scripts/check-log-contracts.sh origin/main`.
+
 ## Install packages from GitHub Packages
 
 TypeScript SDK packages are published to the OneNexus GitHub Packages npm

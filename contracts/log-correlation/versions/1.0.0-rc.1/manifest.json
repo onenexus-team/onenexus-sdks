@@ -1,0 +1,31 @@
+{
+  "contract": "log-correlation",
+  "version": "1.0.0-rc.1",
+  "status": "candidate",
+  "sha256": "e514c4411aaf93e1a83c662c8e6b4dfdd99772b6d1c89ed7b586d475993a2274",
+  "digest_algorithm": "SHA256(filename + NUL + file bytes), in files order",
+  "files": [
+    {
+      "path": "contract-v1.schema.json",
+      "sha256": "7e0cb2be4f6285f396619cc9c896197e96953b18b09e531e66f6b125afd617e0"
+    },
+    {
+      "path": "contract-v1.vectors.json",
+      "sha256": "ed9e0cc5641d115f08a3a5c2e00bb142059eb3c111d9d82f40120c93273e8cfb"
+    }
+  ],
+  "source": {
+    "repository": "onenexus-team/one-nexus-ai-platform",
+    "commit": "e6ccc64c14d34737072fd603eaa41e8cbe9c1ab5",
+    "issue": 795,
+    "path": "platforms/mlops/backend/tests/raw_tests/observability"
+  },
+  "profiles": [
+    "common",
+    "correlated",
+    "lifecycle"
+  ],
+  "record_cases": 29,
+  "context_cases": 10,
+  "adapter_protocol": 1
+}
