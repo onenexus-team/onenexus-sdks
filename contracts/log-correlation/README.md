@@ -16,15 +16,15 @@ flowchart TD
 
 | Delivered here | Separate follow-up |
 |---|---|
-| Current `0.3.1` schema, 56 record cases, 10 context cases | Shared logging packages and automatic enrichment |
+| Current `0.3.2` schema, 56 record cases, 10 context cases | Shared logging packages and automatic enrichment |
 | Common adapter-result protocol and checker | Production service integration and deployed package inventory |
-| Digest checks and reproducible release archive | Package publication and platform consumption cutover |
+| Digest checks, release archive and generated Python wheel | Platform consumption cutover |
 
 - Source contains one current bundle: `schema.json`, `vectors.json` and `manifest.json`.
-- Current contract: `0.3.1`, requiring `environment` in every profile.
-- Historical versions live in protected Git tags and release archives, not copied source folders. The two unpublished candidates were removed from the working tree; Git history retains them.
+- Current contract: `0.3.2`, requiring `environment` in every profile.
+- Historical versions live in Git tags and release assets, not copied source folders. The two unpublished candidates were removed from the working tree; Git history retains them.
 - For a new release, update version identities and hashes in the current bundle. Never move a published tag or replace its assets. Consumers pin an exact release and checksum.
-- The SHA-256 is `9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538`.
+- The SHA-256 is `4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923`.
 - Compute it by hashing each filename, a NUL byte, and the original bytes, in manifest order. Per-file hashes also appear in the manifest.
 - A matching hash proves content identity, not author approval. Consumers pin the reviewed repository/tag or commit **and** digest in their own trusted policy.
 
@@ -68,8 +68,8 @@ Python 3.11+ standard library only. No package installation, cluster access or c
 python3 -m unittest discover -s contracts/log-correlation/tests -v
 
 python3 contracts/log-correlation/check_contract.py verify \
-  --version 0.3.1 \
-  --expected-digest 9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538
+  --version 0.3.2 \
+  --expected-digest 4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923
 ```
 
 `verify` checks integrity and case structure. It does **not** claim that a language implementation passed those cases.
@@ -94,8 +94,8 @@ Example result envelope (the real file must contain **all 66 results**):
 ```json
 {
   "adapter_protocol": 1,
-  "contract_version": "0.3.1",
-  "contract_sha256": "9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538",
+  "contract_version": "0.3.2",
+  "contract_sha256": "4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923",
   "results": [
     {"kind": "record", "id": "system_without_context", "errors": []},
     {
@@ -110,8 +110,8 @@ Example result envelope (the real file must contain **all 66 results**):
 
 ```bash
 python3 contracts/log-correlation/check_contract.py check-results \
-  --version 0.3.1 \
-  --expected-digest 9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538 \
+  --version 0.3.2 \
+  --expected-digest 4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923 \
   --results /path/to/package-test-results.json
 ```
 
@@ -123,46 +123,69 @@ python3 contracts/log-correlation/check_contract.py check-results \
 ## Release and consumption
 
 ```mermaid
-sequenceDiagram
-    participant O as SDK owner
-    participant CI as Contract CI
-    participant A as Release archive
-    participant P as Platform consumer
-    O->>CI: Review a new version and tests
-    CI->>CI: Check version, integrity and shared tests
-    O->>CI: Create matching release tag after approval
-    CI->>A: Build and publish archive without overwriting
-    P->>A: Fetch exact approved release
-    P->>P: Verify archive hash and contract digest
-    P->>P: Run package and live integration tests
+flowchart TD
+    S[Canonical JSON schema and shared cases] --> V[Verify version and digest]
+    V --> A[Language-neutral archive]
+    V --> W[Generated Python contract wheel]
+    A --> T[Install wheel and compare contents]
+    W --> T
+    T --> D[Upload draft release]
+    D --> C[Download and verify uploaded assets]
+    C --> R[Publish release]
+    R --> P[Python logging package pins wheel URL and hash]
+    P --> M[MLOps installs logging package and dependencies]
 ```
 
-- Tag format: `log-correlation-v<version>`. Tag publication is an explicit owner action; this PR does not publish a release.
-- The dedicated workflow verifies the tagged commit belongs to main and the tag matches `manifest.json`, tests the tools, builds the archive and refuses to overwrite an existing release.
-- Merge alone does not publish. Push `log-correlation-v0.3.1` after merge to trigger this contract-only workflow.
-- Archive files are at its root, matching the source layout. Extract the pinned archive, then run its own `check_contract.py` with the expected version and digest; no repository checkout is required.
-- Archive: schema, vectors, manifest, this guide, the design/validation report and the standalone checker. `SHA256SUMS` pins the complete archive, including checker code. Contract digest pins schema/vector bytes independently.
-- Build locally into a new output path; an existing file is never overwritten:
+| Artifact | Purpose | Version source |
+|---|---|---|
+| `log-correlation-0.3.2.tar.gz` | Go, TypeScript and standalone tools | Contract manifest |
+| `onenexus_log_contract-0.3.2-py3-none-any.whl` | Installable Python contract dependency | Same manifest; independent of SDK `VERSION` |
+| `SHA256SUMS` | Hashes both complete artifacts | Release build |
+
+- `0.3.2` adds Python packaging. Field rules and shared cases are unchanged from `0.3.1`.
+- Author schema/cases only in this directory. CI generates the wheel resources in a temporary directory; never edit a generated copy.
+- The wheel has no third-party runtime dependencies. It exposes verified data, not logging behavior.
+- The repository and release assets are public. GitHub Releases hosts the wheel; this is not a PyPI registry publication.
+- Python 3.11+; packaging uses `uv`. The standalone checker remains standard-library-only.
+
+```python
+from onenexus_log_contract import CONTRACT_VERSION, CONTRACT_DIGEST, load
+
+manifest, schema, cases = load()
+```
+
+**Consumer dependency** (replace the hash with the published wheel's SHA-256):
+
+```toml
+dependencies = [
+  "onenexus-log-contract @ https://github.com/onenexus-team/onenexus-sdks/releases/download/log-correlation-v0.3.2/onenexus_log_contract-0.3.2-py3-none-any.whl#sha256=<wheel-sha256>",
+]
+```
+
+- Run `uv lock`, review the dependency change, and commit the lockfile. CI uses `uv sync --frozen`.
+- A later upgrade changes the URL/version/hash and lockfile. Installation downloads the dependency automatically; no manual archive download or vendoring step.
+- Runtime reads installed local data. It never fetches a mutable `latest` schema.
+- Each logging package must still execute all 66 shared cases through its actual APIs. Installing the contract alone does not enforce logger behavior.
+
+| Release step | Gate | Failure / recovery |
+|---|---|---|
+| Update source and PR | Version identities, digest, shared tests, clean wheel installation on Python 3.11/3.14 | Fix before merging |
+| Tag merged commit | `log-correlation-v0.3.2`; version matches manifest and commit belongs to main | Wrong version/off-main tag fails |
+| Build archive and wheel | Verified snapshot; archive/wheel parity; installed identity; corruption rejection | Failed output is never uploaded; retry with fresh local output |
+| Upload draft | Existing releases refused; one job per tag | Interrupted upload remains draft; inspect before recovery |
+| Verify remote assets | Download, compare against local checksums, install downloaded wheel | Leave draft unpublished; never silently overwrite |
+| Publish | All gates passed | Retain assets/tag for pinned consumers and rollback |
 
 ```bash
-python3 contracts/log-correlation/check_contract.py build \
-  --version 0.3.1 \
-  --expected-digest 9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538 \
-  --output /tmp/log-correlation-0.3.1.tar.gz
+bash scripts/check-log-contracts.sh
+bash scripts/check-log-contract-package.sh
 ```
 
-| Migration stage | Authority and validation |
-|---|---|
-| This PR | SDK becomes the canonical authoring location after merge; original platform bytes remain a frozen compatibility snapshot |
-| Owner release | Publish reviewed archive; record exact tag/commit, archive checksum and contract digest |
-| Platform follow-up PR | Consume that pinned artifact in CI/build; verify byte parity, then remove editable schema/vector ownership from platform |
-| Language packages | Pin contract identity, execute shared cases, expose package version separately |
-| Service adoption | Pin installed packages and image digests; prove actual context propagation and Loki lookup |
-
-- Do not delete the platform snapshot before a published artifact and a validated consumer path exist.
-- Do not add a mutable `latest` download or require a runtime network fetch.
-- Retain old releases for rollback; never republish different bytes under an old tag. Administrative tag/release protection and mandatory CI are repository-owner settings, not established by source code alone.
-- Review details: [design and validation](design-and-validation.md).
+- Merge alone does not publish. The owner creates the matching release tag after CI passes.
+- Never move a published tag or replace its assets. Preserve `0.3.1` and earlier published releases.
+- If a draft upload or publication has an unknown outcome, inspect the release first. Resume publication only after verifying every expected asset against the original build; otherwise use a new version. Automatic reruns refuse existing drafts/releases.
+- Repository protection and administrator permissions are external controls, not enforced by this workflow. Main was unprotected when inspected; no repository settings are changed here.
+- [Design and validation](design-and-validation.md) records the lifecycle and remaining service-adoption gates.
 
 ## Live validation handoff
 
@@ -173,14 +196,14 @@ and MLOps adoption are separate follow-up changes.
 
 | Step | Implementation | Validation before proceeding |
 |---|---|---|
-| 1. Build shared Python package | Bundle the approved contract version and digest; implement record formatting and context helpers | Execute all 66 shared cases through actual package APIs; test concurrency and cleanup |
+| 1. Build shared Python package | Depend on the approved contract wheel; implement record formatting and context helpers | Execute all 66 shared cases through actual package APIs; test concurrency and cleanup |
 | 2. Connect MLOps logging | Pin the package in MLOps dependencies; initialize it in `src/core/observability/logging.py` | Capture real logger output and check required fields, custom fields and size limits |
 | 3. Supply field values | Read service, environment and region from trusted deployment configuration; supply timestamp, level and message from each log call | Reject invalid configuration; prevent custom fields overriding common fields |
 | 4. Connect request/job context | Create or restore trace context at trusted boundaries, propagate it, and clear it when work ends | Test HTTP calls, concurrent requests, exceptions, jobs and retries |
 | 5. Verify collection | Preserve the supported stdout/OTLP paths and validate their field mapping | Run development-cluster raw tests; query related MLOps logs by trace ID and environment |
 
 - Existing Python logger calls can use the shared handler/formatter. Lifecycle events still need explicit event and outcome values.
-- Package version and contract version are separate pins. Bundle the schema at build time; do not download it per request.
+- Package version and contract version are separate pins. Install the pinned contract dependency at build time; do not download it per request.
 - Existing OTel resource attributes do not by themselves prove that exported records satisfy the contract. Verify the final collected records.
 
 - Existing platform procedure: [raw log-correlation tests](https://github.com/onenexus-team/one-nexus-ai-platform/blob/main/platforms/mlops/backend/tests/raw_tests/observability/RUNNING.md).

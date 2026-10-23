@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:onenexus:log-correlation:0.3.1",
+  "$id": "urn:onenexus:log-correlation:0.3.2",
   "$defs": {
     "common": {
       "additionalProperties": true,
@@ -263,7 +263,7 @@
     }
   },
   "$ref": "#/$defs/common",
-  "x-contract-version": "0.3.1",
+  "x-contract-version": "0.3.2",
   "x-semantic-checks": {
     "message_max_utf8_bytes": 1024,
     "record_max_compact_utf8_bytes": 4096,
