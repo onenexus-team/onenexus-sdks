@@ -23,8 +23,8 @@ spec = importlib.util.spec_from_file_location(
 )
 gate = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gate)
-VERSION = "0.3.1"
-DIGEST = "9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538"
+VERSION = "0.3.2"
+DIGEST = "4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923"
 
 
 class ContractTests(unittest.TestCase):
@@ -74,9 +74,9 @@ class ContractTests(unittest.TestCase):
 
     def test_environment_is_required_in_each_current_profile(self):
         manifest, vectors, snapshots = gate.load_bundle(
-            "0.3.1",
+            "0.3.2",
             self.root,
-            "9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538",
+            "4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923",
         )
         schema = json.loads(snapshots[gate.ARTIFACTS[0]])
         for name, profile in schema["$defs"].items():
@@ -102,7 +102,7 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(manifest["record_cases"], 56)
 
     def test_current_results_reject_accepting_invalid_environment(self):
-        manifest, vectors, _ = gate.load_bundle("0.3.1", self.root)
+        manifest, vectors, _ = gate.load_bundle("0.3.2", self.root)
         result = copy.deepcopy(self.result)
         result["contract_version"] = manifest["version"]
         result["contract_sha256"] = manifest["sha256"]
@@ -134,7 +134,7 @@ class ContractTests(unittest.TestCase):
                     item["errors"] = ["schema_invalid"]
 
     def test_current_contract_is_packaged_and_explicitly_selected(self):
-        manifest, _, _ = gate.load_bundle("0.3.1", self.root)
+        manifest, _, _ = gate.load_bundle("0.3.2", self.root)
         output = self.work / "current.tgz"
         gate.build_archive(manifest["version"], manifest["sha256"], output, self.root)
         with tarfile.open(output) as archive:
@@ -156,12 +156,12 @@ class ContractTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(json.loads(result.stdout)["contract_version"], "0.3.1")
+        self.assertEqual(json.loads(result.stdout)["contract_version"], "0.3.2")
 
     def test_wrong_trusted_pin_or_version_rejected(self):
         with self.assertRaises(gate.ContractError):
             gate.load_bundle(VERSION, self.root, "0" * 64)
-        for value in ("../0.3.1", "", "/tmp", "latest"):
+        for value in ("../0.3.2", "", "/tmp", "latest"):
             with self.subTest(version=value), self.assertRaises(gate.ContractError):
                 gate.load_bundle(value, self.root)
 
@@ -399,21 +399,21 @@ class ContractTests(unittest.TestCase):
             )
             return result.returncode, output.read_text()
 
-        self.assertEqual(run("log-correlation-v0.3.1"), (0, "version=0.3.1\n"))
-        for tag in ("log-correlation-v0.3.2", "v0.3.1", "log-correlation-vlatest"):
+        self.assertEqual(run("log-correlation-v0.3.2"), (0, "version=0.3.2\n"))
+        for tag in ("log-correlation-v0.3.3", "v0.3.2", "log-correlation-vlatest"):
             with self.subTest(tag=tag):
                 code, emitted = run(tag)
                 self.assertNotEqual(code, 0)
                 self.assertEqual(emitted, "")
         git("commit", "--allow-empty", "-qm", "not merged")
-        code, emitted = run("log-correlation-v0.3.1")
+        code, emitted = run("log-correlation-v0.3.2")
         self.assertNotEqual(code, 0)
         self.assertEqual(emitted, "")
 
     def test_wrong_release_version_cannot_build(self):
         output = self.work / "wrong.tgz"
         with self.assertRaisesRegex(gate.ContractError, "contract_version_mismatch"):
-            gate.build_archive("0.3.2", DIGEST, output, self.root)
+            gate.build_archive("0.3.3", DIGEST, output, self.root)
         self.assertFalse(output.exists())
 
     def test_archive_verifies_independently_after_source_changes(self):

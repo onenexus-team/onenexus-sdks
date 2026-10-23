@@ -4,7 +4,7 @@
 
 **Source implementation is ready for review after the checks below pass. Publishing and service adoption remain separate gates.**
 
-- Mode: **Implement**, scoped to current contract files, adapter results and release archives.
+- Mode: **Implement**, scoped to current contract files, generated Python wheel, adapter results and release assets.
 - A source test pass is not evidence that any deployed service uses this contract.
 - Evidence uses function/test names in `check_contract.py` and `tests/test_contract.py`; paths are relative to this directory.
 
@@ -17,8 +17,8 @@
 | 3 · Test coverage | ⚠️ | QA1: shared checker tests do not prove future package or service behavior. |
 | 4 · Monitoring and alerts | ✅ | CLI emits fixed PASS/FAIL codes; CI failure is the operational signal. No runtime service is introduced. |
 | 5 · CI/CD | ⚠️ | CD1: actual release publication remains unexecuted. |
-| 6 · Security | ⚠️ | OPS1: remote branch/tag protection has not been verified. |
-| 7 · Operations | ⚠️ | OPS1: SDK owner must establish release ownership and retention controls. |
+| 6 · Security | ⚠️ | OPS1: main is unprotected; tag protection remains unverified. |
+| 7 · Operations | ⚠️ | OPS1: SDK owner retains release ownership and controls administrative rewrites. |
 
 | What holds | Why it is sound |
 |---|---|
@@ -29,12 +29,12 @@
 | Priority | Gap | Consequence | Finding |
 |---|---|---|---|
 | Before release | Publication and recovery have not run on GitHub | Local archive success is insufficient release evidence | CD1 |
-| Before release | Repository protections and release owner need confirmation | Source code cannot stop an administrator rewriting a tag | OPS1 |
+| Before release | Administrative release protections remain outside this code | Source code cannot stop an administrator rewriting a tag | OPS1 |
 | Before adoption | Language packages and services are not integrated | Common fields are not automatically added yet | QA1 |
 
-- Current contract: `0.3.1`; every profile requires `environment` equal to `development`, `staging`, or `prod`.
+- Current contract: `0.3.2`; every profile requires `environment` equal to `development`, `staging`, or `prod`.
 - New shared cases cover valid values and missing, null, empty, numeric, aliased and unknown environments in every profile.
-- Upgrade packages and test observations explicitly to 0.3.1. An earlier-version result is not evidence of 0.3.1 compliance; no deployed consumer is upgraded by this PR.
+- Upgrade packages and test observations explicitly to 0.3.2. An earlier-version result is not evidence of 0.3.2 compliance; no deployed consumer is upgraded by this PR.
 
 ## 2. System context
 
@@ -61,7 +61,7 @@ flowchart LR
 | Datastore / isolation | Git snapshots and local files; no relational database |
 | Work execution | Synchronous offline checks; GitHub schedules release jobs |
 | Deployment / regions | No deployed component or regional state |
-| Integrity | SHA-256 for exact bytes; protected release tags and archives |
+| Integrity | SHA-256 for exact bytes; release tags and archives |
 | Tenancy | No customer data; trace IDs never grant access |
 | Retention | Retain published tags and archives for pinned consumers |
 
@@ -192,7 +192,7 @@ sequenceDiagram
 |---|---|
 | Python 3.11.16 and Python 3.14.5 checker suite | 19 tests passed on each |
 | Original #795 implementation observations | Prior validation only; not rerun for this source layout |
-| Schema/vector parity | Files are byte-identical to the previously reviewed 0.3.1 files; filenames and digest change |
+| Schema/vector parity | Files are byte-identical to the previously reviewed 0.3.2 files; filenames and digest change |
 | Archive built with both Python versions | Identical SHA-256; extracted checker passed |
 | Ruff, ShellCheck, workflow YAML/shell syntax | Passed |
 | Mermaid diagrams | All six rendered |
@@ -203,8 +203,8 @@ sequenceDiagram
 ```bash
 bash scripts/check-log-contracts.sh
 python3 contracts/log-correlation/check_contract.py check-results \
-  --version 0.3.1 \
-  --expected-digest 9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538 \
+  --version 0.3.2 \
+  --expected-digest 4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923 \
   --results /path/to/actual-package-results.json
 ```
 
@@ -295,7 +295,7 @@ stateDiagram-v2
 |---|---|---|---|
 | Merge layout change | Candidate directories in source | One current bundle; no Git-base deletion gate | Schema/vector parity and archive tests; no runtime change |
 | Publish contract | Existing consumers unchanged | New immutable artifact available | CD1, OPS1; retain prior artifacts |
-| Adopt package/service | Existing deployed consumers remain unchanged | 0.3.1 consumers must configure environment and pass its expanded cases | QA1; revert consumer pin if needed |
+| Adopt package/service | Existing deployed consumers remain unchanged | 0.3.2 consumers must configure environment and pass its expanded cases | QA1; revert consumer pin if needed |
 
 | Contract area | Assessment |
 |---|---|
@@ -341,3 +341,63 @@ stateDiagram-v2
 | R26 | N/A: no tenant offboarding resource |
 | R27 | N/A: no leased credentials issued to consumers |
 | R28 | ✓ Verified snapshot bytes survive mutation after read; deterministic test |
+
+## 9. Python packaging extension — 0.3.2
+
+**Root cause:** the archive was not a Python dependency. The logging package copied JSON and checker files into its own source tree, so dependency upgrades required a custom download/copy script.
+
+**Solution:** generate `onenexus-log-contract` from the canonical source during release. The logging package pins the published wheel and hash. Its installer resolves the contract automatically.
+
+```mermaid
+sequenceDiagram
+    participant O as Maintainer
+    participant CI as Release job
+    participant G as GitHub release
+    participant P as Python consumer
+    O->>CI: Tag reviewed main commit
+    CI->>CI: Verify source, build archive and wheel
+    CI->>CI: Install wheel and reject corrupted data
+    CI->>G: Upload all assets to draft
+    CI->>G: Download assets
+    CI->>CI: Compare checksums and test downloaded wheel
+    CI->>G: Publish verified draft
+    P->>G: Install pinned wheel during dependency resolution
+    P->>P: Run shared cases through actual logging APIs
+```
+
+### Flow 3 · Generate, publish and install Python contract
+
+| Principle | Assessment / evidence |
+|---|---|
+| Extendability | ✓ One schema/case source; language wrappers can share this generation boundary |
+| Availability | ✓ Existing installed services require no release-server access; new builds fail if assets are unavailable |
+| Scalability | ✓ Static wheel distribution; no new runtime service |
+| Reliability | ✓ Source pin, exact installed version, archive parity and corruption negative control |
+| Performance | ✓ Offline verification at package initialization; no per-log network fetch |
+| Maintainability | ✓ Separate contract version; no copied resources committed in the logging package after its migration |
+| Security | ✓ Hash-pinned consumption; zero contract runtime dependencies; admin overwrite protection remains OPS1 |
+| Concurrency | ✓ Exclusive local output; existing-release refusal; one CI job per tag |
+| Failure tolerance | ✓ Failed builds never upload; failed remote verification leaves a draft; explicit recovery above |
+
+**What is already right:** existing tag/main and wrong-version tests remain active. The archive stays available to other languages. Contract field semantics remain unchanged.
+
+| New resource / dependency | Authority | Retention / failure |
+|---|---|---|
+| Python wheel → source snapshot | `scripts/build-log-contract-package.py:stage` | Verified schema/vector bytes and manifest; never overwrite local target |
+| Draft release → archive + wheel | GitHub release job | Download and verify before publication; interrupted drafts require inspection |
+| Logging package → published wheel | Exact URL/version/hash in consumer lockfile | Retain old assets for rollback; no automatic latest upgrade |
+
+| Validation | Concrete discriminator |
+|---|---|
+| `test_bad_version_digest_and_source_do_not_stage` | Wrong identity or corrupt source creates no staged package |
+| `test_stage_uses_verified_snapshot_after_source_mutation` | Source mutation after verification cannot change staged schema/manifest |
+| `test_failed_build_leaves_no_output` | Builder failure leaves no consumable output directory |
+| `test_completed_wheel_is_never_overwritten` | Second writer fails and original bytes remain |
+| `scripts/verify-log-contract-wheel.py` | Fresh environment imports site-packages; validates version/digest and 66 case definitions; corrupt installed schema is rejected |
+| Python 3.11/3.14 CI | Same generated package installs on both supported matrix endpoints |
+| Real release job | Downloaded assets match local checksums before draft publication; CD1 closes only after a successful run |
+
+- C1/C2/C4/C6/C7/C8/C11 extend to the wheel and draft-release states above; other contract/race assessments remain applicable.
+- R28 now also covers wheel staging. Local output contention follows exclusive creation; remote mutation remains under provider authority.
+- This package-only change needs no cluster deployment. MLOps raw tests remain QA1 and must run after the actual logger/context integration.
+- Local package checks prove data installation, not execution of logging cases. PR #12 must run all 66 cases using its actual installed logger APIs.

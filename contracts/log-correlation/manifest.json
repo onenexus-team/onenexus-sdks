@@ -1,23 +1,23 @@
 {
   "contract": "log-correlation",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "status": "release",
-  "sha256": "9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538",
+  "sha256": "4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923",
   "digest_algorithm": "SHA256(filename + NUL + file bytes), in files order",
   "files": [
     {
       "path": "schema.json",
-      "sha256": "e157541bb46a07f608a666f05c6d52ec420fda98707dbf0b75450697b08ee087"
+      "sha256": "a9f314bf74cf6b13329453c87a20f67414a90d5d181d889677275dbc82f7641c"
     },
     {
       "path": "vectors.json",
-      "sha256": "7cc6a759bc91ca6e5ac7f69d13bb246b26e521ef072168f7fec5a7fbda6e2ea4"
+      "sha256": "966d7f329b8ccb9236bc3e676615be33331bd18b89d699bce27104fd3bd09514"
     }
   ],
   "source": {
     "repository": "onenexus-team/onenexus-sdks",
     "path": "contracts/log-correlation",
-    "change": "Contract 0.3.1; one current source bundle, historical versions retained as tagged release artifacts"
+    "change": "Contract 0.3.2; generated Python package and language-neutral archive from the same source"
   },
   "profiles": [
     "common",
