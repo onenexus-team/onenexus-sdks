@@ -4,7 +4,7 @@
 
 **Source implementation is ready for review after the checks below pass. Publishing and service adoption remain separate gates.**
 
-- Mode: **Implement**, scoped to immutable contract files, adapter results and release archives.
+- Mode: **Implement**, scoped to current contract files, adapter results and release archives.
 - A source test pass is not evidence that any deployed service uses this contract.
 - Evidence uses function/test names in `check_contract.py` and `tests/test_contract.py`; paths are relative to this directory.
 
@@ -12,7 +12,7 @@
 
 | Discipline | Status | Reason |
 |---|---|---|
-| 1 · Technical design | ✅ | Trusted digest, immutable versions and exact case coverage are enforced. |
+| 1 · Technical design | ✅ | Trusted digest, explicit version pins and exact case coverage are enforced. |
 | 2 · Distributed systems | ✅ | Offline checker has no durable jobs, leases or business writes; release publication is gated separately. |
 | 3 · Test coverage | ⚠️ | QA1: shared checker tests do not prove future package or service behavior. |
 | 4 · Monitoring and alerts | ✅ | CLI emits fixed PASS/FAIL codes; CI failure is the operational signal. No runtime service is introduced. |
@@ -22,7 +22,7 @@
 
 | What holds | Why it is sound |
 |---|---|
-| Version compatibility | Both prior candidates remain immutable. Contract 0.3.1 keeps rc.2 rules and cases; version identity changes only. Select the approved version explicitly, not by version sorting. |
+| Version compatibility | One current source bundle; historical versions use tags and archives. Unpublished candidate folders are removed; schema rules and cases are unchanged. |
 | No production side effects | Checker is offline; no Kubernetes, database or logging configuration changes. |
 | Safe handoff boundary | README separates contract checks, package checks and live service validation. |
 
@@ -50,7 +50,7 @@ flowchart LR
 
 | Component | Execution | Authority |
 |---|---|---|
-| Version directory | Git files, one immutable version | SDK maintainers review changes |
+| Current bundle | Schema, vectors and manifest in one directory | SDK maintainers review changes |
 | Checker | Local process or CI job | Caller supplies trusted digest |
 | Adapter results | Bounded local JSON | Actual package tests must produce observations |
 | Release workflow | One job per tag; 10-minute timeout | Repository write token, owner-created tag |
@@ -61,9 +61,9 @@ flowchart LR
 | Datastore / isolation | Git snapshots and local files; no relational database |
 | Work execution | Synchronous offline checks; GitHub schedules release jobs |
 | Deployment / regions | No deployed component or regional state |
-| Integrity | SHA-256 for exact bytes; append-only version history |
+| Integrity | SHA-256 for exact bytes; protected release tags and archives |
 | Tenancy | No customer data; trace IDs never grant access |
-| Retention | Retain prior versions and published archives for pinned consumers |
+| Retention | Retain published tags and archives for pinned consumers |
 
 ## 3. Core flows
 
@@ -118,11 +118,11 @@ sequenceDiagram
 
 | Principle | Status | Evidence / limit |
 |---|---|---|
-| Extendability | ✅ | Tag version selects a directory; no per-version workflow edits. |
+| Extendability | ✅ | Tag must match manifest version; no per-version workflow edits. |
 | Availability | ⚠️ | CD1: GitHub outage blocks publication; deployed services do not depend on this workflow. |
 | Scalability | ✅ | Tag-scoped concurrency; small bounded archive; no application traffic. |
 | Reliability | ✅ | Reproducible bytes and no overwrite; source-mutation test retains verified bytes. |
-| Performance | ✅ | In-memory bounded artifact assembly; Git subprocesses have 10-second timeouts. |
+| Performance | ✅ | In-memory bounded artifact assembly; no Git subprocess in the checker. |
 | Maintainability | ✅ | One release workflow and one build function. |
 | Security | ⚠️ | OPS1: read-only checks, write token only in release job; remote protections need confirmation. |
 | Concurrency | ✅ | Barrier-controlled two-writer test proves one exclusive-create winner. |
@@ -143,16 +143,16 @@ sequenceDiagram
 |---|---|---|
 | Indexes, foreign keys, queries, connections | Not applicable: no database access or migration | None |
 | Locking / concurrent writes | `output.open("xb")`; actual two-writer test checks one winner | None |
-| Data identity | Manifest plus external trusted digest; existing-version edit/delete/add tests | None |
+| Data identity | Manifest plus external trusted digest; wrong-version and tamper tests | None |
 | N−1 compatibility | Original platform schema/vector bytes retained; old consumers remain pinned | QA1 |
 | Caching | No mutable latest lookup or runtime fetch; consumers pin archive checksum | None |
-| Retention | Keep old versions; no deletion workflow | OPS1 |
+| Retention | Keep published releases; source advances in place | OPS1 |
 
 ## 4. What is already right
 
 | Control | Evidence |
 |---|---|
-| No silent version drift | `test_existing_versions_cannot_be_changed_or_deleted` uses real Git history |
+| No silent version drift | Explicit version/digest pins; `test_wrong_release_version_cannot_build` |
 | No fabricated completeness | `test_missing_duplicate_unknown_or_skipped_cases_fail` |
 | No artifact overwrite | `test_concurrent_archive_creation_has_one_winner` |
 | No mixed source generation | `test_r28_build_uses_verified_bytes_when_source_changes` |
@@ -180,19 +180,19 @@ sequenceDiagram
 | Check | What it proves | What it does not prove |
 |---|---|---|
 | Shared checker unit tests | Bad results, tampering and invalid inputs fail | A producer actually called its SDK APIs |
-| Real Git immutability test | Accepted version edits/deletes/additions fail | Remote branch protection is configured |
+| Standalone archive test | Pinned archive verifies even after current source changes | Remote tag/release protection is configured |
 | Real filesystem concurrency test | One writer wins; output matches winning checksum | GitHub release API race behavior |
 | Source mutation test | Archive retains the already-verified schema/vector snapshot | An untrusted workspace is a secure publisher |
-| Existing #795 reference implementation | All 39 observed results match rc.1 only | Production MLOps or other services comply |
+| Historical #795 reference implementation | Prior observations matched the original candidate | Current package or service compliance |
 | Python-version CI matrix | Same offline suite passes on supported endpoints | All downstream language packages work |
 
 ### 6.1 Concrete validation
 
 | Local evidence, 23 October 2026 | Result |
 |---|---|
-| Python 3.11.16 and Python 3.14.5 checker suite | 18 tests passed on each |
-| Original #795 implementation observations | 29 record + 10 context cases passed for rc.1 (prior validation) |
-| Independent JSON Schema validator | All 27 environment cases passed for rc.2 (prior validation); 0.3.1 rules and cases are identical |
+| Python 3.11.16 and Python 3.14.5 checker suite | 19 tests passed on each |
+| Original #795 implementation observations | Prior validation only; not rerun for this source layout |
+| Schema/vector parity | Files are byte-identical to the previously reviewed 0.3.1 files; filenames and digest change |
 | Archive built with both Python versions | Identical SHA-256; extracted checker passed |
 | Ruff, ShellCheck, workflow YAML/shell syntax | Passed |
 | Mermaid diagrams | All six rendered |
@@ -201,10 +201,10 @@ sequenceDiagram
 
 
 ```bash
-bash scripts/check-log-contracts.sh origin/main
+bash scripts/check-log-contracts.sh
 python3 contracts/log-correlation/check_contract.py check-results \
   --version 0.3.1 \
-  --expected-digest 4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34 \
+  --expected-digest 9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538 \
   --results /path/to/actual-package-results.json
 ```
 
@@ -263,13 +263,13 @@ stateDiagram-v2
 
 | Resource | Tenant key | Natural key | Parent / dependents | Write authority |
 |---|---|---|---|---|
-| Version bundle | None | Contract + version | Schema/vector files; future packages | Reviewed Git commit |
+| Current bundle | None | Contract + version | Schema/vector files; future packages | Reviewed Git commit |
 | Archive | None | Version + archive checksum | Snapshot of bundle/checker/docs | Build process, exclusive create |
 | Published release | None | Version tag | Pinned downstream builds | SDK release owner / workflow |
 
 | Dependency edge | Authority / policy | Created / removed | Blocks / failure |
 |---|---|---|---|
-| Archive → bundle | Verified snapshot; retain source | Build / never automatically removed | Bad digest blocks build |
+| Archive → bundle | Verified snapshot; retain tagged commit | Build / source may advance after release | Bad digest blocks build |
 | Consumer → archive | Explicit approved pin; retain old release | Consumer PR / later reviewed upgrade | Missing artifact blocks build, not running services |
 
 | From | Operation / guard | Atomic write | To | Side effect / recovery |
@@ -282,20 +282,20 @@ stateDiagram-v2
 | Contention | Serialization point | Winner / loser | Test |
 |---|---|---|---|
 | Two local archive writers | Filesystem exclusive create | One success / FileExistsError | Barrier-controlled two-writer test |
-| Edit accepted version | Git-base byte comparison | New version allowed / edit rejected | Real Git history test |
+| Source changes after packaging | Independent archive and trusted pin | Archived bytes remain verifiable | Standalone archive test |
 | Mutation during snapshot build | Hash verified byte snapshots | Verified bytes retained / pre-read tampering fails | R28 source-mutation test |
 | Same tag publication | Workflow concurrency; existing-release guard | Owner must inspect remote outcome | CD1 remains unverified |
 
 | Busy state | Retry driver / budget | Deadline | Terminal outcome |
 |---|---|---|---|
-| Checking | One CI attempt | 5 minutes; local Git calls 10 seconds | PASS or failed job |
+| Checking | One CI attempt | 5 minutes | PASS or failed job |
 | Packaging / publication | One release job; no automatic overwrite retry | 10 minutes | Completed or failed job; owner follows recovery table |
 
 | Rollout phase | Old behavior | New behavior | Validation / rollback |
 |---|---|---|---|
-| Merge SDK files | Platform snapshot unchanged | Canonical authoring location added | Exact byte parity; no runtime change |
+| Merge layout change | Candidate directories in source | One current bundle; no Git-base deletion gate | Schema/vector parity and archive tests; no runtime change |
 | Publish contract | Existing consumers unchanged | New immutable artifact available | CD1, OPS1; retain prior artifacts |
-| Adopt package/service | Old rc.1 pins still work without required environment | 0.3.1 consumers must configure environment and pass its expanded cases | QA1; revert consumer pin if needed |
+| Adopt package/service | Existing deployed consumers remain unchanged | 0.3.1 consumers must configure environment and pass its expanded cases | QA1; revert consumer pin if needed |
 
 | Contract area | Assessment |
 |---|---|
@@ -309,7 +309,7 @@ stateDiagram-v2
 | C8 retries | ✓ No overwriting files/releases; explicit retry procedure |
 | C9 API / tenancy / client parity | N/A: offline CLI, no tenant API or UI |
 | C10 observability | ✓ Fixed CLI failure codes and CI run history |
-| C11 evolution | ✓ Immutable versions, pinned candidates and phased migration |
+| C11 evolution | ✓ Pinned release artifacts and phased migration |
 
 | Race row | Assessment / reason |
 |---|---|
@@ -329,7 +329,7 @@ stateDiagram-v2
 | R14 | N/A: no runtime state observer |
 | R15 | N/A: no partial teardown |
 | R16 | N/A: no lease heartbeat |
-| R17 | N/A: no natural-key delete/recreate; version reuse rejected |
+| R17 | N/A: no natural-key delete/recreate; existing release overwrite rejected |
 | R18 | N/A: no parent/child deletes |
 | R19 | N/A: no artifact deletion workflow |
 | R20 | N/A: no archive/restore/purge resource API |

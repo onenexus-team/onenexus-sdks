@@ -18,11 +18,13 @@ flowchart TD
 |---|---|
 | Current `0.3.1` schema, 56 record cases, 10 context cases | Shared logging packages and automatic enrichment |
 | Common adapter-result protocol and checker | Production service integration and deployed package inventory |
-| Digest checks, immutable-version CI and reproducible release archive | Package publication and platform consumption cutover |
+| Digest checks and reproducible release archive | Package publication and platform consumption cutover |
 
-- `versions/<version>/` is append-only after merge, including release candidates. Never edit or delete an existing version; create a successor.
-- Current contract: `0.3.1`, requiring `environment` in every profile. Its rules and cases are unchanged from `1.0.0-rc.2`; only version identity changes. Both earlier candidates remain immutable. Consumers select the explicit approved version; do not choose it by sorting versions.
-- The SHA-256 is `4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34`.
+- Source contains one current bundle: `schema.json`, `vectors.json` and `manifest.json`.
+- Current contract: `0.3.1`, requiring `environment` in every profile.
+- Historical versions live in protected Git tags and release archives, not copied source folders. The two unpublished candidates were removed from the working tree; Git history retains them.
+- For a new release, update version identities and hashes in the current bundle. Never move a published tag or replace its assets. Consumers pin an exact release and checksum.
+- The SHA-256 is `9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538`.
 - Compute it by hashing each filename, a NUL byte, and the original bytes, in manifest order. Per-file hashes also appear in the manifest.
 - A matching hash proves content identity, not author approval. Consumers pin the reviewed repository/tag or commit **and** digest in their own trusted policy.
 
@@ -67,9 +69,7 @@ python3 -m unittest discover -s contracts/log-correlation/tests -v
 
 python3 contracts/log-correlation/check_contract.py verify \
   --version 0.3.1 \
-  --expected-digest 4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34
-
-python3 contracts/log-correlation/check_contract.py immutable --base origin/main
+  --expected-digest 9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538
 ```
 
 `verify` checks integrity and case structure. It does **not** claim that a language implementation passed those cases.
@@ -95,7 +95,7 @@ Example result envelope (the real file must contain **all 66 results**):
 {
   "adapter_protocol": 1,
   "contract_version": "0.3.1",
-  "contract_sha256": "4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34",
+  "contract_sha256": "9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538",
   "results": [
     {"kind": "record", "id": "system_without_context", "errors": []},
     {
@@ -111,7 +111,7 @@ Example result envelope (the real file must contain **all 66 results**):
 ```bash
 python3 contracts/log-correlation/check_contract.py check-results \
   --version 0.3.1 \
-  --expected-digest 4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34 \
+  --expected-digest 9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538 \
   --results /path/to/package-test-results.json
 ```
 
@@ -129,7 +129,7 @@ sequenceDiagram
     participant A as Release archive
     participant P as Platform consumer
     O->>CI: Review a new version and tests
-    CI->>CI: Check immutable prior versions and integrity
+    CI->>CI: Check version, integrity and shared tests
     O->>CI: Create matching release tag after approval
     CI->>A: Build and publish archive without overwriting
     P->>A: Fetch exact approved release
@@ -138,14 +138,16 @@ sequenceDiagram
 ```
 
 - Tag format: `log-correlation-v<version>`. Tag publication is an explicit owner action; this PR does not publish a release.
-- The dedicated workflow verifies the tagged commit belongs to main, tests the tools, builds the archive and refuses to overwrite an existing release.
+- The dedicated workflow verifies the tagged commit belongs to main and the tag matches `manifest.json`, tests the tools, builds the archive and refuses to overwrite an existing release.
+- Merge alone does not publish. Push `log-correlation-v0.3.1` after merge to trigger this contract-only workflow.
+- Archive files are at its root, matching the source layout. Extract the pinned archive, then run its own `check_contract.py` with the expected version and digest; no repository checkout is required.
 - Archive: schema, vectors, manifest, this guide, the design/validation report and the standalone checker. `SHA256SUMS` pins the complete archive, including checker code. Contract digest pins schema/vector bytes independently.
 - Build locally into a new output path; an existing file is never overwritten:
 
 ```bash
 python3 contracts/log-correlation/check_contract.py build \
   --version 0.3.1 \
-  --expected-digest 4258f873dfa551013c4e3c64caa3768a8d9155d7091b6ed8fccbce5b590e9f34 \
+  --expected-digest 9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538 \
   --output /tmp/log-correlation-0.3.1.tar.gz
 ```
 

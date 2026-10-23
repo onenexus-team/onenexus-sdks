@@ -22,18 +22,8 @@ jobs:
         python: ['3.11', '3.14']
     steps:
       - uses: actions/checkout@v7.0.1
-        with:
-          fetch-depth: 0
       - uses: actions/setup-python@v7.0.0
         with:
           python-version: ${{ matrix.python }}
       - name: Validate contract and shared checks
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        shell: bash
-        run: |
-          if [[ -n "$BASE_SHA" && "$BASE_SHA" != 0000000000000000000000000000000000000000 ]]; then
-            bash scripts/check-log-contracts.sh "$BASE_SHA"
-          else
-            bash scripts/check-log-contracts.sh
-          fi
+        run: bash scripts/check-log-contracts.sh

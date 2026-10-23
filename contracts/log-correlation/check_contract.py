@@ -9,12 +9,11 @@ import io
 import json
 import math
 import re
-import subprocess
 import tarfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-ARTIFACTS = ("contract-v1.schema.json", "contract-v1.vectors.json")
+ARTIFACTS = ("schema.json", "vectors.json")
 MAX_BYTES = 1024 * 1024
 VERSION_PATTERN = r"[0-9]+\.[0-9]+\.[0-9]+(?:-[a-z0-9]+(?:\.[a-z0-9]+)*)?"
 ERRORS = {
@@ -67,7 +66,7 @@ def parse_json(data):
 
 def load_bundle(version, root=ROOT, expected_digest=None):
     require(re.fullmatch(VERSION_PATTERN, version) is not None, "invalid_version")
-    directory = root / "versions" / version
+    directory = root
     require(not directory.is_symlink(), "symlink_not_allowed")
     manifest = parse_json(read_bytes(directory / "manifest.json"))
     require(
@@ -194,51 +193,10 @@ def check_results(version, expected_digest, results_path, root=ROOT):
     return len(cases)
 
 
-def check_immutable(base, root=ROOT):
-    repo = root.parents[1]
-    prefix = root.relative_to(repo).as_posix() + "/versions/"
-
-    def git(*args):
-        return subprocess.check_output(
-            ["git", *args], cwd=repo, stderr=subprocess.DEVNULL, timeout=10
-        )
-
-    commit = (
-        git("rev-parse", "--verify", "--end-of-options", base + "^{commit}")
-        .decode()
-        .strip()
-    )
-    paths = (
-        git("ls-tree", "-r", "--name-only", commit, "--", prefix).decode().splitlines()
-    )
-    versions = {path[len(prefix) :].split("/")[0] for path in paths}
-    for version in versions:
-        old_paths = {path for path in paths if path.startswith(prefix + version + "/")}
-        directory = root / "versions" / version
-        require(
-            directory.is_dir() and not directory.is_symlink(),
-            "existing_version_changed",
-        )
-        current_paths = {
-            path.relative_to(repo).as_posix()
-            for path in directory.rglob("*")
-            if path.is_file() or path.is_symlink()
-        }
-        require(old_paths == current_paths, "existing_version_changed")
-        for path in sorted(old_paths):
-            require(
-                read_bytes(repo / path) == git("show", commit + ":" + path),
-                "existing_version_changed",
-            )
-    return len(versions)
-
-
 def build_archive(version, expected_digest, output, root=ROOT):
     manifest, _, snapshots = load_bundle(version, root, expected_digest)
-    files = {f"versions/{version}/{name}": data for name, data in snapshots.items()}
-    files[f"versions/{version}/manifest.json"] = (
-        json.dumps(manifest, indent=2) + "\n"
-    ).encode()
+    files = dict(snapshots)
+    files["manifest.json"] = (json.dumps(manifest, indent=2) + "\n").encode()
     for name in ("check_contract.py", "README.md", "design-and-validation.md"):
         files[name] = read_bytes(root / name)
     raw = io.BytesIO()
@@ -262,46 +220,35 @@ def build_archive(version, expected_digest, output, root=ROOT):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "command", choices=("verify", "check-results", "build", "immutable")
-    )
-    parser.add_argument("--version", default="0.3.1")
+    parser.add_argument("command", choices=("verify", "check-results", "build"))
+    parser.add_argument("--version", required=True)
     parser.add_argument("--expected-digest")
     parser.add_argument("--results", type=Path)
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--base")
     args = parser.parse_args(argv)
     report = {
         "gate": "FAIL",
         "scope": "contract artifacts and adapter results only; not package adoption or live-service proof",
     }
     try:
-        if args.command == "immutable":
-            require(bool(args.base), "base_required")
-            report["unchanged_versions"] = check_immutable(args.base)
+        require(bool(args.expected_digest), "trusted_contract_pin_required")
+        manifest, _, _ = load_bundle(args.version, expected_digest=args.expected_digest)
+        report.update(contract_version=args.version, contract_sha256=manifest["sha256"])
+        if args.command == "check-results":
+            require(args.results is not None, "results_required")
+            report["cases_passed"] = check_results(
+                args.version, args.expected_digest, args.results
+            )
+        elif args.command == "build":
+            require(args.output is not None, "output_required")
+            report["archive_sha256"] = build_archive(
+                args.version, args.expected_digest, args.output
+            )
         else:
-            require(bool(args.expected_digest), "trusted_contract_pin_required")
-            manifest, _, _ = load_bundle(
-                args.version, expected_digest=args.expected_digest
-            )
             report.update(
-                contract_version=args.version, contract_sha256=manifest["sha256"]
+                record_cases=manifest["record_cases"],
+                context_cases=manifest["context_cases"],
             )
-            if args.command == "check-results":
-                require(args.results is not None, "results_required")
-                report["cases_passed"] = check_results(
-                    args.version, args.expected_digest, args.results
-                )
-            elif args.command == "build":
-                require(args.output is not None, "output_required")
-                report["archive_sha256"] = build_archive(
-                    args.version, args.expected_digest, args.output
-                )
-            else:
-                report.update(
-                    record_cases=manifest["record_cases"],
-                    context_cases=manifest["context_cases"],
-                )
         report["gate"] = "PASS"
     except ContractError as exc:
         report["error"] = str(exc)
@@ -311,7 +258,6 @@ def main(argv=None):
         KeyError,
         TypeError,
         RecursionError,
-        subprocess.SubprocessError,
     ):
         report["error"] = "contract_check_failed"
     print(json.dumps(report, sort_keys=True))

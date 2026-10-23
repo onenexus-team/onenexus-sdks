@@ -31,7 +31,9 @@ jobs:
             || { echo 'Invalid contract tag'; exit 1; }
           version="${TAG#log-correlation-v}"
           git merge-base --is-ancestor HEAD origin/main
-          [[ -f "contracts/log-correlation/versions/$version/manifest.json" ]]
+          manifest_version="$(python3 -c 'import json; print(json.load(open("contracts/log-correlation/manifest.json"))["version"])')"
+          [[ "$version" == "$manifest_version" ]] \
+            || { echo 'Tag does not match contract version'; exit 1; }
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Validate before packaging
         run: bash scripts/check-log-contracts.sh
@@ -42,7 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p .artifacts/log-contract
-          digest="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "contracts/log-correlation/versions/$VERSION/manifest.json")"
+          digest="$(python3 -c 'import json; print(json.load(open("contracts/log-correlation/manifest.json"))["sha256"])')"
           python3 contracts/log-correlation/check_contract.py build \
             --version "$VERSION" --expected-digest "$digest" \
             --output ".artifacts/log-contract/log-correlation-$VERSION.tar.gz"
