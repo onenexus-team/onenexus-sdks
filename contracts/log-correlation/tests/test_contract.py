@@ -70,6 +70,100 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(self.manifest["context_cases"], 10)
         self.assertEqual(self.check(), 39)
 
+    def test_environment_is_required_in_each_current_profile(self):
+        manifest, vectors, snapshots = gate.load_bundle(
+            "1.0.0-rc.2",
+            self.root,
+            "5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64",
+        )
+        schema = json.loads(snapshots[gate.ARTIFACTS[0]])
+        for name, profile in schema["$defs"].items():
+            self.assertIn("environment", profile["required"])
+            self.assertEqual(
+                profile["properties"]["environment"],
+                {
+                    "type": "string",
+                    "enum": ["development", "staging", "prod"],
+                    "title": "Environment",
+                },
+            )
+            cases = [
+                case
+                for case in vectors["record_cases"]
+                if case["id"].startswith("environment_" + name + "_")
+            ]
+            self.assertEqual(len(cases), 9)
+            self.assertEqual(sum(case["errors"] == [] for case in cases), 3)
+            self.assertEqual(
+                sum(case["errors"] == ["schema_invalid"] for case in cases), 6
+            )
+        self.assertEqual(manifest["record_cases"], 56)
+        self.assertEqual(manifest["source"]["predecessor_sha256"], DIGEST)
+        # The predecessor still accepts records without environment.
+        self.assertNotIn(
+            "environment",
+            json.loads(
+                (self.root / "versions" / VERSION / gate.ARTIFACTS[0]).read_bytes()
+            )["$defs"]["common"]["required"],
+        )
+
+    def test_current_results_reject_accepting_invalid_environment(self):
+        manifest, vectors, _ = gate.load_bundle("1.0.0-rc.2", self.root)
+        result = copy.deepcopy(self.result)
+        result["contract_version"] = manifest["version"]
+        result["contract_sha256"] = manifest["sha256"]
+        result["results"] = [
+            {"kind": "record", "id": case["id"], "errors": case["errors"]}
+            for case in vectors["record_cases"]
+        ] + result["results"][29:]
+        self.path.write_text(json.dumps(result))
+        self.assertEqual(
+            gate.check_results(
+                manifest["version"], manifest["sha256"], self.path, self.root
+            ),
+            66,
+        )
+        for item in result["results"]:
+            if item["id"].startswith("environment_") and item.get("errors"):
+                with self.subTest(case=item["id"]):
+                    item["errors"] = []
+                    self.path.write_text(json.dumps(result))
+                    with self.assertRaisesRegex(
+                        gate.ContractError, "record_result_mismatch"
+                    ):
+                        gate.check_results(
+                            manifest["version"],
+                            manifest["sha256"],
+                            self.path,
+                            self.root,
+                        )
+                    item["errors"] = ["schema_invalid"]
+
+    def test_current_candidate_is_packaged_and_defaulted(self):
+        manifest, _, _ = gate.load_bundle("1.0.0-rc.2", self.root)
+        output = self.work / "current.tgz"
+        gate.build_archive(manifest["version"], manifest["sha256"], output, self.root)
+        with tarfile.open(output) as archive:
+            schema = json.load(
+                archive.extractfile("versions/1.0.0-rc.2/contract-v1.schema.json")
+            )
+            self.assertIn("environment", schema["$defs"]["common"]["required"])
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(self.root / "check_contract.py"),
+                "verify",
+                "--expected-digest",
+                manifest["sha256"],
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(json.loads(result.stdout)["contract_version"], "1.0.0-rc.2")
+
     def test_wrong_trusted_pin_or_version_rejected(self):
         with self.assertRaises(gate.ContractError):
             gate.load_bundle(VERSION, self.root, "0" * 64)
@@ -255,6 +349,8 @@ class ContractTests(unittest.TestCase):
                     sys.executable,
                     str(self.root / "check_contract.py"),
                     "check-results",
+                    "--version",
+                    VERSION,
                     "--results",
                     str(self.path),
                     *extra,
@@ -279,13 +375,14 @@ class ContractTests(unittest.TestCase):
                 .strip()
             )
 
+        accepted_count = len(list((self.root / "versions").iterdir()))
         git("init", "-q")
         git("config", "user.name", "Contract test")
         git("config", "user.email", "test@example.invalid")
         git("add", "contracts")
         git("commit", "-qm", "accepted contract")
         base = git("rev-parse", "HEAD")
-        self.assertEqual(gate.check_immutable(base, self.root), 1)
+        self.assertEqual(gate.check_immutable(base, self.root), accepted_count)
         path = self.root / "versions" / VERSION / "manifest.json"
         original = path.read_bytes()
         for mode in ("edit", "delete", "add"):
@@ -303,7 +400,7 @@ class ContractTests(unittest.TestCase):
         successor = self.root / "versions/1.0.0"
         successor.mkdir()
         (successor / "manifest.json").write_text("{}")
-        self.assertEqual(gate.check_immutable(base, self.root), 1)
+        self.assertEqual(gate.check_immutable(base, self.root), accepted_count)
         # Separate bundle verification must still reject an invalid new version.
         with self.assertRaises((gate.ContractError, KeyError)):
             gate.load_bundle("1.0.0", self.root)

@@ -265,7 +265,7 @@ def main(argv=None):
     parser.add_argument(
         "command", choices=("verify", "check-results", "build", "immutable")
     )
-    parser.add_argument("--version", default="1.0.0-rc.1")
+    parser.add_argument("--version", default="1.0.0-rc.2")
     parser.add_argument("--expected-digest")
     parser.add_argument("--results", type=Path)
     parser.add_argument("--output", type=Path)

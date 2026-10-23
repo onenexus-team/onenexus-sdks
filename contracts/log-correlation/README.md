@@ -16,13 +16,13 @@ flowchart TD
 
 | Delivered here | Separate follow-up |
 |---|---|
-| Unchanged `1.0.0-rc.1` schema, 29 record cases, 10 context cases | Shared logging packages and automatic enrichment |
+| Current `1.0.0-rc.2` schema, 56 record cases, 10 context cases | Shared logging packages and automatic enrichment |
 | Common adapter-result protocol and checker | Production service integration and deployed package inventory |
 | Digest checks, immutable-version CI and reproducible release archive | Package publication and platform consumption cutover |
 
 - `versions/<version>/` is append-only after merge, including release candidates. Never edit or delete an existing version; create a successor.
-- This candidate preserves the exact schema/vector bytes accepted in platform issue #795. Moving ownership does not change the contract or promote it to stable `1.0.0`.
-- The SHA-256 is `e514c4411aaf93e1a83c662c8e6b4dfdd99772b6d1c89ed7b586d475993a2274`.
+- Current candidate: `1.0.0-rc.2`, requiring `environment` in every profile. The original `1.0.0-rc.1` directory preserves the exact #795 bytes for compatibility; neither candidate is a stable `1.0.0` release.
+- The SHA-256 is `5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64`.
 - Compute it by hashing each filename, a NUL byte, and the original bytes, in manifest order. Per-file hashes also appear in the manifest.
 - A matching hash proves content identity, not author approval. Consumers pin the reviewed repository/tag or commit **and** digest in their own trusted policy.
 
@@ -30,15 +30,33 @@ flowchart TD
 
 | Profile | Required fields | Use |
 |---|---|---|
-| `common` | timestamp, level, service, region, message | Independent system logs |
+| `common` | timestamp, level, service, environment, region, message | Independent system logs |
 | `correlated` | Common fields + trace_id | Request/job-associated logs |
 | `lifecycle` | Correlated fields + event, outcome | Start/completion/failure events |
 
+- `environment` is required and must be exactly `development`, `staging`, or `prod`. Missing, null, empty, numeric, alias (`dev`) and unknown values fail with `schema_invalid`.
+- Future logging packages must read environment from deployment configuration, add it automatically, and prevent request/custom fields from overriding it. This PR defines and tests the contract; it does not install that runtime behavior.
 - Custom fields are allowed. They cannot override the common fields or exceed the record budget.
 - Profile is chosen by the test scenario, never by the producer being tested.
 - Timestamps are signed-64-bit-range, nonnegative integer nanoseconds. JavaScript adapters need lossless JSON handling; `JSON.parse` can round these integers. Do not silently convert timestamps to floats or strings.
 - Message limit: 1,024 UTF-8 bytes. Compact record limit: 4,096 UTF-8 bytes. Reject non-finite numbers. Follow the schema's `x-semantic-checks` as well as JSON Schema rules.
 - Schema-valid records do not prove that requests propagate context or that a service has installed a shared package.
+
+Example lifecycle record:
+
+```json
+{
+  "timestamp": 1792573200000000000,
+  "level": "INFO",
+  "service": "mlops-api",
+  "environment": "prod",
+  "region": "ric1",
+  "message": "Request completed",
+  "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "event": "request.completed",
+  "outcome": "success"
+}
+```
 
 ## Run the checks
 
@@ -48,8 +66,8 @@ Python 3.11+ standard library only. No package installation, cluster access or c
 python3 -m unittest discover -s contracts/log-correlation/tests -v
 
 python3 contracts/log-correlation/check_contract.py verify \
-  --version 1.0.0-rc.1 \
-  --expected-digest e514c4411aaf93e1a83c662c8e6b4dfdd99772b6d1c89ed7b586d475993a2274
+  --version 1.0.0-rc.2 \
+  --expected-digest 5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64
 
 python3 contracts/log-correlation/check_contract.py immutable --base origin/main
 ```
@@ -71,13 +89,13 @@ Each language's package tests consume the same immutable vector file and execute
 - Trusted valid input preserves its trace ID. Other cases create fresh, nonzero, unique trace IDs. Outgoing traceparent must be valid and agree with the active trace ID. After leaving scope, `after_trace_id` is null.
 - These cases check basic propagation and cleanup. Concurrent isolation, exceptions, async jobs/retries and live collection still require package/service-specific tests.
 
-Example result envelope (the real file must contain **all 39 results**):
+Example result envelope (the real file must contain **all 66 results**):
 
 ```json
 {
   "adapter_protocol": 1,
-  "contract_version": "1.0.0-rc.1",
-  "contract_sha256": "e514c4411aaf93e1a83c662c8e6b4dfdd99772b6d1c89ed7b586d475993a2274",
+  "contract_version": "1.0.0-rc.2",
+  "contract_sha256": "5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64",
   "results": [
     {"kind": "record", "id": "system_without_context", "errors": []},
     {
@@ -92,8 +110,8 @@ Example result envelope (the real file must contain **all 39 results**):
 
 ```bash
 python3 contracts/log-correlation/check_contract.py check-results \
-  --version 1.0.0-rc.1 \
-  --expected-digest e514c4411aaf93e1a83c662c8e6b4dfdd99772b6d1c89ed7b586d475993a2274 \
+  --version 1.0.0-rc.2 \
+  --expected-digest 5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64 \
   --results /path/to/package-test-results.json
 ```
 
@@ -126,9 +144,9 @@ sequenceDiagram
 
 ```bash
 python3 contracts/log-correlation/check_contract.py build \
-  --version 1.0.0-rc.1 \
-  --expected-digest e514c4411aaf93e1a83c662c8e6b4dfdd99772b6d1c89ed7b586d475993a2274 \
-  --output /tmp/log-correlation-1.0.0-rc.1.tar.gz
+  --version 1.0.0-rc.2 \
+  --expected-digest 5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64 \
+  --output /tmp/log-correlation-1.0.0-rc.2.tar.gz
 ```
 
 | Migration stage | Authority and validation |

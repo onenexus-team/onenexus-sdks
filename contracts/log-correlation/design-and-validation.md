@@ -22,7 +22,7 @@
 
 | What holds | Why it is sound |
 |---|---|
-| Existing contract behavior | Schema/vector bytes retain the #795 digest; no stable-version claim. |
+| Version compatibility | Original rc.1 bytes retain the #795 digest; rc.2 requires canonical environment in every profile. Neither is a stable release. |
 | No production side effects | Checker is offline; no Kubernetes, database or logging configuration changes. |
 | Safe handoff boundary | README separates contract checks, package checks and live service validation. |
 
@@ -31,6 +31,10 @@
 | Before release | Publication and recovery have not run on GitHub | Local archive success is insufficient release evidence | CD1 |
 | Before release | Repository protections and release owner need confirmation | Source code cannot stop an administrator rewriting a tag | OPS1 |
 | Before adoption | Language packages and services are not integrated | Common fields are not automatically added yet | QA1 |
+
+- Current contract: `1.0.0-rc.2`; every profile requires `environment` equal to `development`, `staging`, or `prod`.
+- New shared cases cover valid values and missing, null, empty, numeric, aliased and unknown environments in every profile.
+- Upgrade packages and test observations explicitly to rc.2. An rc.1 result is not evidence of rc.2 compliance; no deployed consumer is upgraded by this PR.
 
 ## 2. System context
 
@@ -179,15 +183,16 @@ sequenceDiagram
 | Real Git immutability test | Accepted version edits/deletes/additions fail | Remote branch protection is configured |
 | Real filesystem concurrency test | One writer wins; output matches winning checksum | GitHub release API race behavior |
 | Source mutation test | Archive retains the already-verified schema/vector snapshot | An untrusted workspace is a secure publisher |
-| Existing #795 reference implementation | All 39 observed results match the moved cases | Production MLOps or other services comply |
+| Existing #795 reference implementation | All 39 observed results match rc.1 only | Production MLOps or other services comply |
 | Python-version CI matrix | Same offline suite passes on supported endpoints | All downstream language packages work |
 
 ### 6.1 Concrete validation
 
-| Local evidence, 22 October 2026 | Result |
+| Local evidence, 23 October 2026 | Result |
 |---|---|
-| Python 3.11.16 and Python 3.14.5 checker suite | 14 tests passed on each |
-| Original #795 implementation observations | 29 record + 10 context cases passed |
+| Python 3.11.16 and Python 3.14.5 checker suite | 17 tests passed on each |
+| Original #795 implementation observations | 29 record + 10 context cases passed for rc.1 (prior validation) |
+| Independent JSON Schema validator | All 27 rc.2 environment cases passed |
 | Archive built with both Python versions | Identical SHA-256; extracted checker passed |
 | Ruff, ShellCheck, workflow YAML/shell syntax | Passed |
 | Mermaid diagrams | All six rendered |
@@ -198,8 +203,8 @@ sequenceDiagram
 ```bash
 bash scripts/check-log-contracts.sh origin/main
 python3 contracts/log-correlation/check_contract.py check-results \
-  --version 1.0.0-rc.1 \
-  --expected-digest e514c4411aaf93e1a83c662c8e6b4dfdd99772b6d1c89ed7b586d475993a2274 \
+  --version 1.0.0-rc.2 \
+  --expected-digest 5b8792d15c7cdf62624ea48045c79c78458dfd89f04846dc50c71b106629ba64 \
   --results /path/to/actual-package-results.json
 ```
 
@@ -290,7 +295,7 @@ stateDiagram-v2
 |---|---|---|---|
 | Merge SDK files | Platform snapshot unchanged | Canonical authoring location added | Exact byte parity; no runtime change |
 | Publish candidate | Existing consumers unchanged | New immutable artifact available | CD1, OPS1; retain prior artifacts |
-| Adopt package/service | Old pins still work | Explicitly upgraded consumers | QA1; revert consumer pin if needed |
+| Adopt package/service | Old rc.1 pins still work without required environment | rc.2 consumers must configure environment and pass its expanded cases | QA1; revert consumer pin if needed |
 
 | Contract area | Assessment |
 |---|---|
