@@ -20,6 +20,9 @@ jobs:
       - uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.11'
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: '0.11.21'
       - name: Require a version tag on main
         id: version
         env:
@@ -37,7 +40,7 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Validate before packaging
         run: bash scripts/check-log-contracts.sh
-      - name: Build versioned archive
+      - name: Build and verify archive and Python wheel
         env:
           VERSION: ${{ steps.version.outputs.version }}
         shell: bash
@@ -48,8 +51,14 @@ jobs:
           python3 contracts/log-correlation/check_contract.py build \
             --version "$VERSION" --expected-digest "$digest" \
             --output ".artifacts/log-contract/log-correlation-$VERSION.tar.gz"
+          python3 scripts/build-log-contract-package.py \
+            --version "$VERSION" --expected-digest "$digest" --out-dir .artifacts/log-contract
+          python3 scripts/verify-log-contract-wheel.py \
+            --wheel .artifacts/log-contract/*.whl \
+            --archive ".artifacts/log-contract/log-correlation-$VERSION.tar.gz" \
+            --version "$VERSION" --expected-digest "$digest"
           cd .artifacts/log-contract
-          sha256sum "log-correlation-$VERSION.tar.gz" > SHA256SUMS
+          sha256sum *.tar.gz *.whl > SHA256SUMS
       - name: Upload validation artifact
         uses: actions/upload-artifact@v7.0.2
         with:
@@ -70,8 +79,20 @@ jobs:
           fi
           flags=()
           [[ "$VERSION" != *-* ]] || flags+=(--prerelease)
-          gh release create "$TAG" --verify-tag "${flags[@]}" \
+          gh release create "$TAG" --draft --verify-tag "${flags[@]}" \
             --title "Log correlation contract $VERSION" \
-            --notes 'Versioned schema, shared test cases and offline result checker. No runtime language package or production adoption claim.' \
+            --notes 'Schema, shared test cases, offline checker and generated onenexus-log-contract Python wheel. No logging hooks or production adoption claim.' \
             ".artifacts/log-contract/log-correlation-$VERSION.tar.gz" \
+            .artifacts/log-contract/*.whl \
             .artifacts/log-contract/SHA256SUMS
+          # Keep an interrupted release in draft. Never replace its assets blindly.
+          downloaded="$(mktemp -d)"
+          trap 'rm -rf "$downloaded"' EXIT
+          gh release download "$TAG" --dir "$downloaded"
+          cmp .artifacts/log-contract/SHA256SUMS "$downloaded/SHA256SUMS"
+          (cd "$downloaded" && sha256sum --check SHA256SUMS)
+          digest="$(python3 -c 'import json; print(json.load(open("contracts/log-correlation/manifest.json"))["sha256"])')"
+          python3 scripts/verify-log-contract-wheel.py \
+            --wheel "$downloaded"/*.whl --archive "$downloaded/log-correlation-$VERSION.tar.gz" \
+            --version "$VERSION" --expected-digest "$digest"
+          gh release edit "$TAG" --draft=false --latest=false
