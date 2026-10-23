@@ -1,0 +1,985 @@
+{
+  "contract_version": "0.3.1",
+  "record_cases": [
+    {
+      "id": "system_without_context",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "correlated",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "lifecycle",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "extensions",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "example.operation.id": "op-1",
+        "custom": {
+          "nested": true
+        },
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "missing_timestamp",
+      "profile": "lifecycle",
+      "record": {
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "missing_level",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "missing_service",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "missing_region",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "missing_message",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_empty",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_blank",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "  ",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_number",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": 23,
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_null",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": null,
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_utf8_limit",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_utf8_boundary",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "timestamp_bool",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": true,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "timestamp_string",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": "1792573200000000000",
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "timestamp_negative",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": -1,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "timestamp_float",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1.5,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "timestamp_overflow",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 9223372036854775808,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "trace_zero",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "00000000000000000000000000000000",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "trace_uppercase",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "trace_short",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "abc",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "trace_null",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": null,
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "correlated_requires_trace",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "optional_trace_invalid",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "bad",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "lifecycle_requires_event_outcome",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "severity_requires_normalization",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "WARNING",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "oversized_extension",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "custom": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "environment": "development"
+      },
+      "errors": [
+        "record_too_large"
+      ]
+    },
+    {
+      "id": "environment_common_development",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_common_staging",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "staging"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_common_prod",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "prod"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_common_missing",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event."
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_common_null",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": null
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_common_empty",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": ""
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_common_number",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": 1
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_common_alias_dev",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "dev"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_common_unknown",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "preview"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_development",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_correlated_staging",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "staging"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_correlated_prod",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "prod"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_correlated_missing",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_null",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": null
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_empty",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": ""
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_number",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": 1
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_alias_dev",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "dev"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_unknown",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "preview"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_development",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_lifecycle_staging",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "staging"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_lifecycle_prod",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "prod"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_lifecycle_missing",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_null",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": null
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_empty",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": ""
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_number",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": 1
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_alias_dev",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "dev"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_unknown",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "preview"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    }
+  ],
+  "context_cases": [
+    {
+      "id": "public_missing",
+      "trusted": false,
+      "traceparent": "",
+      "preserve_trace": false
+    },
+    {
+      "id": "public_malformed",
+      "trusted": false,
+      "traceparent": "bad",
+      "preserve_trace": false
+    },
+    {
+      "id": "public_zero",
+      "trusted": false,
+      "traceparent": "00-00000000000000000000000000000000-2222222222222222-01",
+      "preserve_trace": false
+    },
+    {
+      "id": "public_valid",
+      "trusted": false,
+      "traceparent": "00-11111111111111111111111111111111-2222222222222222-01",
+      "preserve_trace": false
+    },
+    {
+      "id": "public_oversized",
+      "trusted": false,
+      "traceparent": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "preserve_trace": false
+    },
+    {
+      "id": "trusted_missing",
+      "trusted": true,
+      "traceparent": "",
+      "preserve_trace": false
+    },
+    {
+      "id": "trusted_malformed",
+      "trusted": true,
+      "traceparent": "bad",
+      "preserve_trace": false
+    },
+    {
+      "id": "trusted_zero",
+      "trusted": true,
+      "traceparent": "00-00000000000000000000000000000000-2222222222222222-01",
+      "preserve_trace": false
+    },
+    {
+      "id": "trusted_valid",
+      "trusted": true,
+      "traceparent": "00-11111111111111111111111111111111-2222222222222222-01",
+      "preserve_trace": true
+    },
+    {
+      "id": "trusted_oversized",
+      "trusted": true,
+      "traceparent": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "preserve_trace": false
+    }
+  ],
+  "required_behavior_scenarios": [
+    "concurrent_context_isolation",
+    "reset_after_exception",
+    "reset_after_cancellation",
+    "reused_worker_context",
+    "durable_metadata_roundtrip",
+    "phase2_recorded_child_compatibility"
+  ],
+  "scope": "Language-neutral vectors; Python test setup is the first consumer. Schema PASS alone is not behavior, deployed-service, or installed-package proof."
+}

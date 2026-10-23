@@ -1,0 +1,13 @@
+{
+  "repository": "onenexus-team/onenexus-sdks",
+  "tag": "log-correlation-v0.3.1",
+  "version": "0.3.1",
+  "archive_sha256": "752a95f6986359c604b35c99a19de943459dfcf8ab22a9916060818e07a4c21b",
+  "contract_sha256": "9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538",
+  "files": {
+    "check_contract.py": "8f09bcffae65adff544d6fab41e4d480c663ccf78e2e1c0a28f9f957b551cb8e",
+    "manifest.json": "a9ff11ee22c68bbc17fbb9e160d40c0bb2fe8298a673d3d2f96456ef48b48757",
+    "schema.json": "e157541bb46a07f608a666f05c6d52ec420fda98707dbf0b75450697b08ee087",
+    "vectors.json": "7cc6a759bc91ca6e5ac7f69d13bb246b26e521ef072168f7fec5a7fbda6e2ea4"
+  }
+}

@@ -3,9 +3,10 @@
 ## Shared observability contract
 
 The [log-correlation contract](contracts/log-correlation/README.md) defines common
-log fields and shared cases for future language packages. It includes an offline
+log fields and shared cases for language packages. The
+[Python logging package](python/packages/observability/README.md) is the first implementation. It includes an offline
 result checker and versioned release archive; it does not change application
-logging automatically. Run `bash scripts/check-log-contracts.sh origin/main`.
+logging automatically. Run `bash scripts/check-log-contracts.sh`.
 
 ## Install packages from GitHub Packages
 

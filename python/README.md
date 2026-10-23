@@ -15,6 +15,7 @@ timezone-aware `datetime`).
 | `onenexus-sdk-core` | Credential primitives (`AccessToken`, `Credentials`, `ClientContext`), `ClientBase`, an `httpx`-based async transport, RFC 9457 error mapping. |
 | `onenexus-cas-client` | Kiota-generated async client for the CAS Customer API, with a small facade wired to `onenexus-sdk-core` credentials. |
 | `onenexus-boto3` | boto3 credential bridge that exchanges OneNexus credentials for temporary S3 credentials through CAS. |
+| `onenexus-observability-python` | Contract-backed structured logs and W3C context; [usage and validation](packages/observability/README.md). |
 
 ## Prerequisites
 
@@ -67,6 +68,7 @@ builds wheels for:
 - `onenexus-sdk-core`
 - `onenexus-cas-client`
 - `onenexus-boto3`
+- `onenexus-observability-python`
 
 The workflow runs in parallel with the TypeScript release job, caches uv package
 restores, uploads the wheels as a workflow artifact, and attaches them to the

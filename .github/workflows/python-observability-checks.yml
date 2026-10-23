@@ -1,0 +1,43 @@
+name: Python observability checks
+on:
+  pull_request:
+    paths:
+      - 'python/packages/observability/**'
+      - 'python/pyproject.toml'
+      - 'python/uv.lock'
+      - 'VERSION'
+      - 'scripts/check-python-observability.sh'
+      - 'scripts/build-python-wheels.sh'
+      - 'scripts/vendor-observability-contract.py'
+      - '.github/workflows/python-observability-checks.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'python/packages/observability/**'
+      - 'python/pyproject.toml'
+      - 'python/uv.lock'
+      - 'VERSION'
+      - 'scripts/check-python-observability.sh'
+      - 'scripts/build-python-wheels.sh'
+      - 'scripts/vendor-observability-contract.py'
+      - '.github/workflows/python-observability-checks.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python: ['3.11', '3.14']
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          version: '0.11.21'
+      - run: bash scripts/check-python-observability.sh
+        env:
+          UV_PYTHON: ${{ matrix.python }}
