@@ -1,5 +1,5 @@
 {
-  "contract_version": "1.0.0-rc.2",
+  "contract_version": "0.3.1",
   "record_cases": [
     {
       "id": "system_without_context",

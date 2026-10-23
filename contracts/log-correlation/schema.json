@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:onenexus:log-correlation:1.0.0-rc.1",
+  "$id": "urn:onenexus:log-correlation:0.3.1",
   "$defs": {
     "common": {
       "additionalProperties": true,
@@ -65,12 +65,22 @@
           "pattern": "^[A-Za-z0-9._-]+$",
           "title": "Outcome",
           "type": "string"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "development",
+            "staging",
+            "prod"
+          ],
+          "title": "Environment"
         }
       },
       "required": [
         "timestamp",
         "level",
         "service",
+        "environment",
         "region",
         "message"
       ],
@@ -140,12 +150,22 @@
           "pattern": "^[A-Za-z0-9._-]+$",
           "title": "Outcome",
           "type": "string"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "development",
+            "staging",
+            "prod"
+          ],
+          "title": "Environment"
         }
       },
       "required": [
         "timestamp",
         "level",
         "service",
+        "environment",
         "region",
         "message",
         "trace_id"
@@ -216,12 +236,22 @@
           "pattern": "^[A-Za-z0-9._-]+$",
           "title": "Outcome",
           "type": "string"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "development",
+            "staging",
+            "prod"
+          ],
+          "title": "Environment"
         }
       },
       "required": [
         "timestamp",
         "level",
         "service",
+        "environment",
         "region",
         "message",
         "trace_id",
@@ -233,7 +263,7 @@
     }
   },
   "$ref": "#/$defs/common",
-  "x-contract-version": "1.0.0-rc.1",
+  "x-contract-version": "0.3.1",
   "x-semantic-checks": {
     "message_max_utf8_bytes": 1024,
     "record_max_compact_utf8_bytes": 4096,
