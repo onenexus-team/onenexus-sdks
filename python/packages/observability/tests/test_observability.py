@@ -36,7 +36,7 @@ def logger_for(stream):
 
 
 def adapter_results():
-    root = files("onenexus_observability").joinpath("_contract")
+    root = files("onenexus_log_contract")
     vectors = json.loads(root.joinpath("vectors.json").read_bytes())
     observations = []
     for case in vectors["record_cases"]:
@@ -72,7 +72,7 @@ def adapter_results():
 
 
 def test_all_shared_cases_through_real_package(tmp_path):
-    root = Path(str(files("onenexus_observability").joinpath("_contract")))
+    root = Path(str(files("onenexus_log_contract")))
     spec = importlib.util.spec_from_file_location("release_checker", root / "check_contract.py")
     checker = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(checker)
@@ -311,10 +311,10 @@ def test_tampered_installed_bundle_fails_before_logging(tmp_path):
     import subprocess
     import sys
 
-    package = Path(str(files("onenexus_observability")))
-    copied = tmp_path / "onenexus_observability"
+    package = Path(str(files("onenexus_log_contract")))
+    copied = tmp_path / "onenexus_log_contract"
     shutil.copytree(package, copied, ignore=shutil.ignore_patterns("__pycache__"))
-    schema = copied / "_contract/schema.json"
+    schema = copied / "schema.json"
     schema.write_bytes(schema.read_bytes() + b" ")
     result = subprocess.run(
         [sys.executable, "-c", "import onenexus_observability"],
@@ -325,4 +325,4 @@ def test_tampered_installed_bundle_fails_before_logging(tmp_path):
         timeout=10,
     )
     assert result.returncode != 0
-    assert "contract_integrity_failed" in result.stderr
+    assert "artifact_digest_mismatch" in result.stderr

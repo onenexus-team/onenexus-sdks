@@ -2,43 +2,15 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
-from importlib.resources import files
 from typing import Any
 
 from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
+from onenexus_log_contract import load
 
-CONTRACT_VERSION = "0.3.1"
-CONTRACT_DIGEST = "9be133120a0fc9baf286110131f70c9dc193ed14957f9461d431ca159b798538"
-ARCHIVE_DIGEST = "752a95f6986359c604b35c99a19de943459dfcf8ab22a9916060818e07a4c21b"
-
-
-def _load() -> dict[str, Any]:
-    root = files("onenexus_observability").joinpath("_contract")
-    manifest = json.loads(root.joinpath("manifest.json").read_bytes())
-    digest = hashlib.sha256()
-    data: dict[str, bytes] = {}
-    if manifest["version"] != CONTRACT_VERSION or [x["path"] for x in manifest["files"]] != [
-        "schema.json",
-        "vectors.json",
-    ]:
-        raise ValueError("contract_identity_mismatch")
-    for item in manifest["files"]:
-        name = item["path"]
-        data[name] = root.joinpath(name).read_bytes()
-        if hashlib.sha256(data[name]).hexdigest() != item["sha256"]:
-            raise ValueError("contract_integrity_failed")
-        digest.update(name.encode() + b"\0" + data[name])
-    if digest.hexdigest() != CONTRACT_DIGEST or manifest["sha256"] != CONTRACT_DIGEST:
-        raise ValueError("contract_integrity_failed")
-    schema: dict[str, Any] = json.loads(data["schema.json"])
-    if schema["x-contract-version"] != CONTRACT_VERSION:
-        raise ValueError("contract_identity_mismatch")
-    return schema
-
-
-_SCHEMA = _load()
+_MANIFEST, _SCHEMA, _ = load()
+CONTRACT_VERSION: str = _MANIFEST["version"]
+CONTRACT_DIGEST: str = _MANIFEST["sha256"]
 _VALIDATORS = {
     name: Draft202012Validator(definition) for name, definition in _SCHEMA["$defs"].items()
 }

@@ -2,7 +2,7 @@
 
 ## 1. Verdict
 
-- Mode: **Implement**. Scope: contract bundle, context scopes, log handler and wheel.
+- Mode: **Implement**. Scope: contract dependency, context scopes, log handler and wheel.
 - Package validation precedes MLOps integration #796; jobs/retries #797 waits for that service gate.
 - No deployed service, collector, provider, exporter or business protocol is changed.
 
@@ -40,7 +40,7 @@ stateDiagram-v2
 
 | Resource | Identity / owner | Lifetime / dependency |
 |---|---|---|
-| Contract bundle | Version + digest; package maintainers | Wheel lifetime; schema/vector/checker from approved archive |
+| Contract dependency | Version + digest; contract maintainers | Installed package lifetime; schema/vector/checker from approved wheel |
 | Context scope | OTel token; current execution | Enter to finally; no business authority |
 | Log handler | Logger + immutable config; service startup | Install to owner removal/close; shared stream not closed |
 | Record | Timestamp + active trace if present | Build, validate, write or discard |
@@ -51,7 +51,7 @@ stateDiagram-v2
 | Work execution | Synchronous formatting/write; async context cleanup in caller scope |
 | Regions / tenancy | Deployment config supplies region/environment; trace ID grants no access |
 | Retention | Release archives retained; emitted logs use existing collector retention |
-| Integrity | Pinned archive/file hashes; package validates contract digest at import |
+| Integrity | Pinned dependency URL/hash; package validates contract digest at import |
 
 | From | Action / guard | Serialization / write | To | Recovery |
 |---|---|---|---|---|
@@ -63,7 +63,7 @@ stateDiagram-v2
 
 | Dependency | Authority / policy | Outage or failure |
 |---|---|---|
-| Contract → release | Approved pin; bundle locally | Bad hashes block build/startup; no runtime network |
+| Contract → release | Approved wheel pin; install automatically | Bad hashes block build/startup; no runtime network |
 | Context → OTel API | Existing active context | No provider required; missing context means system log |
 | Handler → stdout | Service-owned stream | Exceptions counted; blocking writes inherit stream behavior |
 | Service → library | Pinned wheel | Roll back package pin/image; do not import SDK source |
@@ -134,7 +134,7 @@ sequenceDiagram
 | Extendability | ✅ | Independent package and contract identities |
 | Availability | ✅ | Vendored pinned release; no runtime fetch |
 | Scalability | ✅ | Small reusable wheel; no application traffic in CI |
-| Reliability | ✅ | Source tests plus installed-wheel tests and bundle hash check |
+| Reliability | ✅ | Source tests plus installed-wheel tests and installed contract integrity check |
 | Performance | ✅ | Contract loaded once; no per-call schema download |
 | Maintainability | ✅ | Existing uv/Hatch tooling and SDK release path |
 | Security | ⚠️ | OPS1: publication and repository protections remain release-owner work |
@@ -179,7 +179,7 @@ sequenceDiagram
 | Failure paths | Invalid config fails early; bad logs/sink failures do not leak or raise |
 | Context | Nested exception, cancellation, concurrency, worker reuse and retry identity |
 | Future tracing | Real recording child and sampled parent preserved |
-| Wheel | Installed artifact includes the pinned bundle and runs shared tests |
+| Wheel | Installed artifact resolves the pinned contract dependency and runs shared tests |
 | Raw probe | Four records; two attempts share ID; unrelated record has none |
 
 ```bash
@@ -188,7 +188,8 @@ bash scripts/check-python-observability.sh
 python/.venv/bin/python -m pytest python/packages -q
 ```
 
-- Source and installed-wheel package suite: 16 tests pass on Python 3.11; the package gate also runs on 3.14.
+- Source and clean installed-wheel suites: 16 tests pass on Python 3.11 and 3.14. The wheel automatically installs contract 0.3.2.
+- Full SDK regression: 221 tests and 38 subtests pass with the updated dependency.
 - All 66 shared cases passed; this is package behavior evidence, not just manifest integrity.
 - Local raw probe and missing-trace negative control passed. Live test-cluster/Loki lane **NOT RUN**; see raw_tests/README.md and QA1.
 
@@ -280,3 +281,27 @@ Only after #796 service gate passes may #797 jobs/retries proceed.
 | R26 | N/A: no resource delete/claim/lease or distributed worker mutation in this library |
 | R27 | N/A: no resource delete/claim/lease or distributed worker mutation in this library |
 | R28 | ✓ Bundle hashes and installed-wheel tests prevent accidental contract-generation drift |
+
+## Contract dependency migration
+
+```mermaid
+flowchart LR
+    C[Published contract wheel 0.3.2] --> I[Package installer]
+    L[Logging wheel dependency metadata] --> I
+    I --> V[Installed contract and logging packages]
+    V --> T[66 cases through real logging APIs]
+    T --> M[MLOps integration gate]
+```
+
+| Concern | Before | After |
+|---|---|---|
+| Schema ownership | Copied `_contract` folder inside logging package | Generated `onenexus-log-contract` dependency |
+| Upgrade | Download archive and run custom vendor script | Change dependency URL/version/hash; run `uv lock` |
+| Contract constants | Repeated in logger source | Read from verified contract manifest |
+| Tests | Read copied cases | Read installed dependency cases and checker |
+| Integrity failure | Logger rejects copied-data corruption | Logger import fails when installed dependency data is corrupted |
+| Runtime | Local files | Local installed files; no request-time download |
+
+- Contract release `log-correlation-v0.3.2` is published and verified. This closes only the contract-distribution prerequisite; OPS1 still covers publication of the logging wheel.
+- The clean installation test resolves dependencies from the logging wheel's metadata. It cannot succeed by relying on a source-tree `_contract` copy.
+- Existing context/lifecycle and service-adoption gates above still apply.

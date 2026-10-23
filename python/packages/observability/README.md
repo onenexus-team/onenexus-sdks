@@ -4,8 +4,8 @@
 
 ```mermaid
 flowchart TD
-    R[Contract release 0.3.1] --> V[Verify pinned archive and files]
-    V --> W[Build wheel with bundled contract]
+    R[Contract wheel 0.3.2] --> V[Install pinned dependency and verify data]
+    V --> W[Shared Python logging package]
     W --> S[Service initializes logging]
     D[Trusted deployment configuration] --> S
     C[Current OpenTelemetry context] --> S
@@ -84,7 +84,7 @@ sequenceDiagram
 
 | Condition | Behavior |
 |---|---|
-| Invalid config or bundled contract | Startup fails with fixed error |
+| Invalid config or installed contract | Startup fails with fixed error |
 | Invalid log, formatting or stream exception | Drop emission; increment `handler.dropped_records`; never echo rejected payload |
 | Valid log | At most 4,096 UTF-8 bytes excluding newline; message at most 1,024 bytes |
 | Slow/full stdout | Synchronous write may block; no queue or retry |
@@ -100,12 +100,14 @@ sequenceDiagram
 | Identity | Source |
 |---|---|
 | Distribution / import | `onenexus-observability-python` / `onenexus_observability` |
-| Contract version | `0.3.1` |
-| Contract provenance | `contract-release.json`: tag, archive hash, file hashes |
+| Contract version | `0.3.2` |
+| Contract provenance | `pyproject.toml` pins release-wheel URL/hash; `uv.lock` records the resolved dependency |
 | Package version | Existing SDK `VERSION`/release-tag mechanism; separate from contract version |
 
-- Bundle comes from the verified released archive. CI checks exact bundled bytes and an installed wheel; no runtime GitHub access.
-- To refresh: review a new pin and package constants/tests, download the exact archive, then run `python3 scripts/vendor-observability-contract.py --archive /path/to/archive.tar.gz`.
+- `onenexus-log-contract` supplies the schema, cases, checker and version/digest constants. The logging wheel contains no copied contract folder.
+- To upgrade: change the contract wheel URL/version/hash in `pyproject.toml`, run `uv lock`, then run the package gate. Review and commit both files. `uv sync --frozen` installs the selected contract automatically.
+- The contract is downloaded during installation, never while handling a request. The repository/release is public; this dependency uses GitHub Release assets.
+- CI installs the logging wheel in a fresh environment, resolves its declared contract dependency, and runs all shared cases. An archive download script is no longer needed.
 - Source merge does not publish a wheel. The SDK release build includes this package; publish an approved SDK release before MLOps consumes it.
 - MLOps must install a pinned wheel, not import SDK source paths.
 
@@ -119,7 +121,7 @@ bash scripts/check-python-observability.sh
 | Contract | 66 cases through real APIs; deliberately wrong observation fails |
 | Lifecycle | Nested scopes, threads, concurrent requests, cancellation, retries and exception cleanup |
 | Compatibility | Real recording child preserves IDs and sampling |
-| Packaging | Installed wheel includes JSON and shared checker |
+| Packaging | Installed logging wheel resolves the released contract dependency; both import from site-packages |
 | Raw probe | [Test-cluster procedure](raw_tests/README.md) |
 | Service acceptance | MLOps middleware, OTLP/stdout mapping and Loki lookup: separate #796 gate |
 

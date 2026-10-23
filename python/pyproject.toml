@@ -33,7 +33,6 @@ exclude = [
     "(?:^|/)build/",
     "(?:^|/)dist/",
     "(?:^|/)tests?/",
-    "packages/observability/src/onenexus_observability/_contract/",
 ]
 
 [[tool.mypy.overrides]]

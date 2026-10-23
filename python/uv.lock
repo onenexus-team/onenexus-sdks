@@ -683,10 +683,19 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [[package]]
+name = "onenexus-log-contract"
+version = "0.3.2"
+source = { url = "https://github.com/onenexus-team/onenexus-sdks/releases/download/log-correlation-v0.3.2/onenexus_log_contract-0.3.2-py3-none-any.whl" }
+wheels = [
+    { url = "https://github.com/onenexus-team/onenexus-sdks/releases/download/log-correlation-v0.3.2/onenexus_log_contract-0.3.2-py3-none-any.whl", hash = "sha256:70a19899bde6ee5551e8320d317d504b28a5435b0584bc5b6a6c5048e3d8caca" },
+]
+
+[[package]]
 name = "onenexus-observability-python"
 source = { editable = "packages/observability" }
 dependencies = [
     { name = "jsonschema" },
+    { name = "onenexus-log-contract" },
     { name = "opentelemetry-api" },
 ]
 
@@ -702,6 +711,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "jsonschema", specifier = ">=4.25,<5" },
+    { name = "onenexus-log-contract", url = "https://github.com/onenexus-team/onenexus-sdks/releases/download/log-correlation-v0.3.2/onenexus_log_contract-0.3.2-py3-none-any.whl" },
     { name = "opentelemetry-api", specifier = ">=1.42,<2" },
 ]
 
