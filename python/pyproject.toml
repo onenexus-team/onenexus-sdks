@@ -17,6 +17,7 @@ testpaths = ["packages"]
 [dependency-groups]
 dev = [
     "mypy>=1.11",
+    "opentelemetry-sdk>=1.42,<2",
     "pytest>=8.2",
     "pytest-asyncio>=0.24",
     "ruff>=0.6",

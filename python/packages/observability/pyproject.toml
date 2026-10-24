@@ -1,0 +1,42 @@
+[project]
+name = "onenexus-observability-python"
+dynamic = ["version"]
+description = "Contract-backed structured logging and W3C correlation context"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "jsonschema>=4.25,<5",
+    "opentelemetry-api>=1.42,<2",
+    "onenexus-log-contract @ https://github.com/onenexus-team/onenexus-sdks/releases/download/log-correlation-v0.3.2/onenexus_log_contract-0.3.2-py3-none-any.whl#sha256=70a19899bde6ee5551e8320d317d504b28a5435b0584bc5b6a6c5048e3d8caca",
+]
+
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.version]
+path = "../../../VERSION"
+pattern = "^(?P<version>.+)$"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/onenexus_observability"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[dependency-groups]
+dev = [
+    "mypy>=1.11",
+    "opentelemetry-sdk>=1.42,<2",
+    "pytest>=8.2",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+]

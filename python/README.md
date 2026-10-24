@@ -15,6 +15,7 @@ timezone-aware `datetime`).
 | `onenexus-sdk-core` | Credential primitives (`AccessToken`, `Credentials`, `ClientContext`), `ClientBase`, an `httpx`-based async transport, RFC 9457 error mapping. |
 | `onenexus-cas-client` | Kiota-generated async client for the CAS Customer API, with a small facade wired to `onenexus-sdk-core` credentials. |
 | `onenexus-boto3` | boto3 credential bridge that exchanges OneNexus credentials for temporary S3 credentials through CAS. |
+| `onenexus-observability-python` | Contract-backed structured logs and W3C context; [usage and validation](packages/observability/README.md). |
 
 ## Prerequisites
 
@@ -67,6 +68,7 @@ builds wheels for:
 - `onenexus-sdk-core`
 - `onenexus-cas-client`
 - `onenexus-boto3`
+- `onenexus-observability-python`
 
 The workflow runs in parallel with the TypeScript release job, caches uv package
 restores, uploads the wheels as a workflow artifact, and attaches them to the
@@ -84,3 +86,15 @@ onenexus-boto3 @ https://github.com/<owner>/<repo>/releases/download/v0.0.1/onen
 Include the internal OneNexus dependencies your selected package needs. For
 example, `onenexus-cas-client` needs `onenexus-sdk-core`, and `onenexus-boto3`
 needs both `onenexus-sdk-core` and `onenexus-cas-client`.
+
+### Shared logging package
+
+After the logging package is merged and included in a new SDK release, install
+its versioned wheel using the same URL pattern as the SDKs above.
+`onenexus-observability-python` declares its pinned `onenexus-log-contract`
+dependency, so normal pip/uv installation resolves that contract automatically.
+The consuming service only needs to declare the logging wheel; it does not need
+a separate contract requirement.
+
+See [logging release and consumption](packages/observability/README.md#release-and-consumption)
+for the requirements template, version boundaries and validation gates.

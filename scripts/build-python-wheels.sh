@@ -67,14 +67,15 @@ cd "$repo_root/python"
 for package_dir in \
     packages/sdk-core \
     packages/cas-client \
-    packages/boto3-bridge
+    packages/boto3-bridge \
+    packages/observability
 do
     uv build --wheel "$package_dir" --out-dir "$out_dir"
 done
 
 wheel_count="$(find "$out_dir" -maxdepth 1 -type f -name "*-$version-py3-none-any.whl" | wc -l | tr -d '[:space:]')"
-if [[ "$wheel_count" != "3" ]]; then
-    printf '%s\n' "Expected 3 Python wheels for version $version, found $wheel_count in $out_dir" >&2
+if [[ "$wheel_count" != "4" ]]; then
+    printf '%s\n' "Expected 4 Python wheels for version $version, found $wheel_count in $out_dir" >&2
     find "$out_dir" -maxdepth 1 -type f -name '*.whl' -print >&2
     exit 1
 fi
