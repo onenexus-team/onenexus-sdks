@@ -95,6 +95,38 @@ sequenceDiagram
 - Input objects can already be large before logging. Do not pass arbitrary request bodies.
 - OpenTelemetry API already exists in this workspace. Its SDK is test-only for this package.
 
+## Release and consumption
+
+The logging package follows the **existing Python SDK release process**: publish a GitHub release tagged `v<VERSION>` and the SDK workflow builds and attaches its Python wheel alongside the other SDK wheels.
+
+```mermaid
+flowchart TD
+    R[Publish SDK release after merge] --> W[Build and attach logging wheel]
+    W --> M[MLOps pins logging wheel URL and hash]
+    M --> I[Installer resolves dependencies]
+    I --> C[Install contract wheel 0.3.2 automatically]
+    C --> L[Service loads installed packages locally]
+```
+
+| Item | Release / consumption rule |
+|---|---|
+| Logging package | Uses the SDK release version; artifact is `onenexus_observability_python-<VERSION>-py3-none-any.whl` |
+| Contract package | Independently pinned to `log-correlation-v0.3.2` in the logging package dependency metadata |
+| MLOps dependency | Declare the logging wheel URL and SHA-256 in its requirements |
+| Contract installation | Resolved automatically by pip/uv; MLOps does not need a separate contract entry |
+| Future logging upgrade | Update the logging wheel URL/version/hash and run service validation |
+
+Consumer requirements template—replace `<VERSION>` and `<WHEEL_SHA256>` with the values from the published SDK release:
+
+```text
+onenexus-observability-python @ https://github.com/onenexus-team/onenexus-sdks/releases/download/v<VERSION>/onenexus_observability_python-<VERSION>-py3-none-any.whl#sha256=<WHEEL_SHA256>
+```
+
+- Use normal dependency installation; `--no-deps` would skip the required contract dependency.
+- The existing `v0.3.0` release predates this package. Consume a new SDK release containing the merged change.
+- Merge alone does not publish. The existing SDK workflow runs when a GitHub release is published.
+- Publication uses GitHub Release assets; no private Python registry setup is required.
+
 ## Version and validation
 
 | Identity | Source |

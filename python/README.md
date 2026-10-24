@@ -86,3 +86,15 @@ onenexus-boto3 @ https://github.com/<owner>/<repo>/releases/download/v0.0.1/onen
 Include the internal OneNexus dependencies your selected package needs. For
 example, `onenexus-cas-client` needs `onenexus-sdk-core`, and `onenexus-boto3`
 needs both `onenexus-sdk-core` and `onenexus-cas-client`.
+
+### Shared logging package
+
+After the logging package is merged and included in a new SDK release, install
+its versioned wheel using the same URL pattern as the SDKs above.
+`onenexus-observability-python` declares its pinned `onenexus-log-contract`
+dependency, so normal pip/uv installation resolves that contract automatically.
+The consuming service only needs to declare the logging wheel; it does not need
+a separate contract requirement.
+
+See [logging release and consumption](packages/observability/README.md#release-and-consumption)
+for the requirements template, version boundaries and validation gates.
