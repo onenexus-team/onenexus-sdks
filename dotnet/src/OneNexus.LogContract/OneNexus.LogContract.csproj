@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <PackageVersion>$(LogContractPackageVersion)</PackageVersion>
+    <AssemblyVersion>$(LogContractPackageVersion)</AssemblyVersion>
+    <FileVersion>$(LogContractPackageVersion)</FileVersion>
+    <InformationalVersion>$(LogContractPackageVersion)</InformationalVersion>
     <Description>Generated validators and embedded canonical OneNexus log contract.</Description>
     <ContractRoot>../../../contracts/log-correlation</ContractRoot>
     <CorvusJsonSchemaDefaultAccessibility>Internal</CorvusJsonSchemaDefaultAccessibility>

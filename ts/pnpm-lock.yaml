@@ -75,7 +75,7 @@ importers:
   packages/observability:
     dependencies:
       '@onenexus-team/log-contract':
-        specifier: workspace:*
+        specifier: workspace:0.3.3
         version: link:../log-contract
       '@opentelemetry/api':
         specifier: 1.10.0

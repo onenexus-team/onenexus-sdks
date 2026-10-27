@@ -6,7 +6,7 @@
 | Source | `contracts/log-correlation/` in this repository |
 | Build | Generates bundled schema, vectors and manifest; verifies canonical SHA-256 digests |
 | Runtime | AJV validates the bundled schema; no download or registry connection |
-| Version | SDK package version follows the release tag; embedded contract version/digest are separate |
+| Version | New contract packages follow `log-correlation-vX.Y.Z`; SDK releases preserve the reviewed dependency pin |
 
 - Usually installed automatically by `@onenexus-team/observability`.
 - Never edit `src/generated/`; builds regenerate it from the canonical contract.
@@ -30,3 +30,5 @@ const errors = validateRecord(record, 'correlated'); // [] or safe error codes
 - Use `bigint` for nanosecond timestamps created in JavaScript. Unsafe numeric timestamps are rejected; parse JSON with `parseRecord` to retain exact digits.
 - Plain JSON extensions are supported; getters, `toJSON`, cycles, non-finite numbers and malformed Unicode are rejected.
 - This Node.js package does not provide a browser logger or an application security boundary.
+
+- [Release and upgrade guide](../../../contracts/log-correlation/release-guide.md): one contract tag builds Python, npm and NuGet packages.

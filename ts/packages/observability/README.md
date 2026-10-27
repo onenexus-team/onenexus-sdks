@@ -17,7 +17,7 @@ flowchart LR
 | `@onenexus-team/log-contract` | Generated canonical schema and runtime validation |
 | `@onenexus-team/observability` | Context isolation, safe fields, JSON output and bounded pending writes |
 
-After an approved SDK release, install `@onenexus-team/observability@<released-sdk-version>` from the existing private GitHub npm registry. Its contract dependency has the same exact SDK version. Commit the consuming service's lockfile.
+After an approved SDK release, install `@onenexus-team/observability@<released-sdk-version>` from the existing private GitHub npm registry. Its contract dependency is an exact, independently reviewed version; an SDK release does not change it automatically. Commit the consuming service's lockfile.
 
 ## Use in a service
 
