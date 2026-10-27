@@ -45,7 +45,9 @@ vite = re.search(r'^  vite@([^:(]+)', lock, re.M).group(1)
 (consumer / 'consumer.mts').write_text('import { createLogger } from "@onenexus-team/observability"; void createLogger;\n')
 (consumer / 'consumer.cts').write_text('import { createLogger } from "@onenexus-team/observability"; void createLogger;\n')
 PY
-pnpm --dir "$consumer" install --offline --ignore-scripts
+# The temporary consumer adds two local tarballs to the copied toolchain lock.
+# Repository installation remains frozen; only this disposable lock is updated.
+pnpm --dir "$consumer" install --offline --ignore-scripts --no-frozen-lockfile
 pnpm --dir "$consumer" exec tsc --noEmit
 ONENEXUS_CONTRACT_RESULTS="$out/installed-results.json" pnpm --dir "$consumer" exec vitest run
 python3 "$checker" check-results --version "$version" --expected-digest "$digest" --results "$out/installed-results.json"
