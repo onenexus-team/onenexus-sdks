@@ -5,24 +5,36 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: log-contract-release-${{ github.ref }}
+  # Serialize different versions too: an older run must not move npm's latest tag backwards.
+  group: log-contract-publication
   cancel-in-progress: false
 jobs:
   release:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     permissions:
       contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v7.0.0
         with:
-          python-version: '3.11'
+          python-version: '3.14'
       - uses: astral-sh/setup-uv@v7
         with:
           version: '0.11.21'
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@v6.1.0
+        with:
+          package_json_file: ts/package.json
+          run_install: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
       - name: Require a version tag on main
         id: version
         env:
@@ -30,7 +42,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$TAG" =~ ^log-correlation-v([0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+(\.[a-z0-9]+)*)?)$ ]] \
+          [[ "$TAG" =~ ^log-correlation-v([0-9]+\.[0-9]+\.[0-9]+)$ ]] \
             || { echo 'Invalid contract tag'; exit 1; }
           version="${TAG#log-correlation-v}"
           git merge-base --is-ancestor HEAD origin/main
@@ -40,34 +52,25 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Validate before packaging
         run: bash scripts/check-log-contracts.sh
-      - name: Build and verify archive and Python wheel
+      - name: Restore TypeScript build dependencies
+        run: pnpm --dir ts install --frozen-lockfile
+      - name: Build and verify every contract package
         env:
-          VERSION: ${{ steps.version.outputs.version }}
-        shell: bash
+          CONTRACT_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          set -euo pipefail
-          mkdir -p .artifacts/log-contract
-          digest="$(python3 -c 'import json; print(json.load(open("contracts/log-correlation/manifest.json"))["sha256"])')"
-          python3 contracts/log-correlation/check_contract.py build \
-            --version "$VERSION" --expected-digest "$digest" \
-            --output ".artifacts/log-contract/log-correlation-$VERSION.tar.gz"
-          python3 scripts/build-log-contract-package.py \
-            --version "$VERSION" --expected-digest "$digest" --out-dir .artifacts/log-contract
-          python3 scripts/verify-log-contract-wheel.py \
-            --wheel .artifacts/log-contract/*.whl \
-            --archive ".artifacts/log-contract/log-correlation-$VERSION.tar.gz" \
-            --version "$VERSION" --expected-digest "$digest"
-          cd .artifacts/log-contract
-          sha256sum *.tar.gz *.whl > SHA256SUMS
+          python3 scripts/log-contract-release.py build \
+            --version "$CONTRACT_VERSION" --directory .artifacts/log-contract
       - name: Upload validation artifact
         uses: actions/upload-artifact@v7.0.2
         with:
           name: log-correlation-${{ steps.version.outputs.version }}
           path: .artifacts/log-contract/*
           if-no-files-found: error
-      - name: Publish a new release without overwriting
+      - name: Publish all contract packages without overwriting
         env:
           GH_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ github.token }}
+          NUGET_AUTH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
           VERSION: ${{ steps.version.outputs.version }}
         shell: bash
@@ -77,22 +80,28 @@ jobs:
             echo 'Release exists; refusing to overwrite.'
             exit 1
           fi
-          flags=()
-          [[ "$VERSION" != *-* ]] || flags+=(--prerelease)
-          gh release create "$TAG" --draft --verify-tag "${flags[@]}" \
+          npmrc="$RUNNER_TEMP/contract-release.npmrc"
+          trap 'rm -f "$npmrc"' EXIT
+          cat > "$npmrc" <<'EOF'
+          @onenexus-team:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          EOF
+          export NPM_CONFIG_USERCONFIG="$npmrc"
+          python3 scripts/log-contract-release.py preflight \
+            --version "$VERSION" --directory .artifacts/log-contract
+          gh release create "$TAG" --draft --verify-tag \
             --title "Log correlation contract $VERSION" \
-            --notes 'Schema, shared test cases, offline checker and generated onenexus-log-contract Python wheel. No logging hooks or production adoption claim.' \
-            ".artifacts/log-contract/log-correlation-$VERSION.tar.gz" \
-            .artifacts/log-contract/*.whl \
-            .artifacts/log-contract/SHA256SUMS
+            --notes 'Canonical contract archive, Python wheel, TypeScript npm package and .NET NuGet package. Logging libraries and applications upgrade separately.' \
+            .artifacts/log-contract/*
           # Keep an interrupted release in draft. Never replace its assets blindly.
           downloaded="$(mktemp -d)"
-          trap 'rm -rf "$downloaded"' EXIT
+          trap 'rm -f "$npmrc"; rm -rf "$downloaded"' EXIT
           gh release download "$TAG" --dir "$downloaded"
           cmp .artifacts/log-contract/SHA256SUMS "$downloaded/SHA256SUMS"
           (cd "$downloaded" && sha256sum --check SHA256SUMS)
-          digest="$(python3 -c 'import json; print(json.load(open("contracts/log-correlation/manifest.json"))["sha256"])')"
-          python3 scripts/verify-log-contract-wheel.py \
-            --wheel "$downloaded"/*.whl --archive "$downloaded/log-correlation-$VERSION.tar.gz" \
-            --version "$VERSION" --expected-digest "$digest"
+          python3 scripts/log-contract-release.py verify \
+            --version "$VERSION" --directory "$downloaded"
+          # Publish the exact bytes downloaded from the draft; mark complete only after both registries accept them.
+          python3 scripts/log-contract-release.py publish \
+            --version "$VERSION" --directory "$downloaded"
           gh release edit "$TAG" --draft=false --latest=false

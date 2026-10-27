@@ -18,7 +18,7 @@ flowchart TD
 |---|---|
 | Current `0.3.2` schema, 56 record cases, 10 context cases | Shared logging packages and automatic enrichment |
 | Common adapter-result protocol and checker | Production service integration and deployed package inventory |
-| Digest checks, release archive and generated Python wheel | Platform consumption cutover |
+| Digest checks, archive and Python/npm/NuGet contract artifacts | Platform consumption cutover |
 
 - Source contains one current bundle: `schema.json`, `vectors.json` and `manifest.json`.
 - Current contract: `0.3.2`, requiring `environment` in every profile.
@@ -124,23 +124,27 @@ python3 contracts/log-correlation/check_contract.py check-results \
 
 ```mermaid
 flowchart TD
-    S[Canonical JSON schema and shared cases] --> V[Verify version and digest]
-    V --> A[Language-neutral archive]
-    V --> W[Generated Python contract wheel]
-    A --> T[Install wheel and compare contents]
-    W --> T
-    T --> D[Upload draft release]
-    D --> C[Download and verify uploaded assets]
-    C --> R[Publish release]
-    R --> P[Python logging package pins wheel URL and hash]
-    P --> M[MLOps installs logging package and dependencies]
+    S[Canonical schema and shared cases] --> T[Push matching contract tag]
+    T --> B[Build and test every language]
+    B --> D[Draft release with verified artifacts]
+    D --> N[npm and NuGet registries]
+    N --> R[Publish release with Python wheel]
+    R --> P[Separate logging-library dependency upgrade]
+    P --> A[Application upgrade and validation]
 ```
 
-| Artifact | Purpose | Version source |
+| Artifact | Destination | Version source |
 |---|---|---|
-| `log-correlation-0.3.2.tar.gz` | Go, TypeScript and standalone tools | Contract manifest |
-| `onenexus_log_contract-0.3.2-py3-none-any.whl` | Installable Python contract dependency | Same manifest; independent of SDK `VERSION` |
-| `SHA256SUMS` | Hashes both complete artifacts | Release build |
+| Language-neutral archive | GitHub Release | Contract manifest/tag |
+| Python `onenexus-log-contract` wheel | GitHub Release | Contract manifest/tag |
+| npm `@onenexus-team/log-contract` | GitHub Packages + release asset | Contract manifest/tag |
+| NuGet `OneNexus.LogContract` | GitHub Packages + release asset | Contract manifest/tag |
+| `release-manifest.json`, `SHA256SUMS` | GitHub Release | Verified source commit + artifact hashes |
+
+- See the [release and upgrade guide](release-guide.md) for commands, version pins and recovery steps.
+- This flow applies to **new tags after the workflow is merged**. Existing tags/assets are preserved.
+- npm/NuGet `0.3.3` already contains schema `0.3.2`; the first new independent release must use an unused higher version, currently `0.3.4`.
+- Go has no generated contract package yet; it can use the language-neutral archive.
 
 - `0.3.2` adds Python packaging. Field rules and shared cases are unchanged from `0.3.1`.
 - Author schema/cases only in this directory. CI generates the wheel resources in a temporary directory; never edit a generated copy.
@@ -167,25 +171,10 @@ dependencies = [
 - Runtime reads installed local data. It never fetches a mutable `latest` schema.
 - Each logging package must still execute all 66 shared cases through its actual APIs. Installing the contract alone does not enforce logger behavior.
 
-| Release step | Gate | Failure / recovery |
-|---|---|---|
-| Update source and PR | Version identities, digest, shared tests, clean wheel installation on Python 3.11/3.14 | Fix before merging |
-| Tag merged commit | `log-correlation-v0.3.2`; version matches manifest and commit belongs to main | Wrong version/off-main tag fails |
-| Build archive and wheel | Verified snapshot; archive/wheel parity; installed identity; corruption rejection | Failed output is never uploaded; retry with fresh local output |
-| Upload draft | Existing releases refused; one job per tag | Interrupted upload remains draft; inspect before recovery |
-| Verify remote assets | Download, compare against local checksums, install downloaded wheel | Leave draft unpublished; never silently overwrite |
-| Publish | All gates passed | Retain assets/tag for pinned consumers and rollback |
-
-```bash
-bash scripts/check-log-contracts.sh
-bash scripts/check-log-contract-package.sh
-```
-
-- Merge alone does not publish. The owner creates the matching release tag after CI passes.
-- Never move a published tag or replace its assets. Preserve `0.3.1` and earlier published releases.
-- If a draft upload or publication has an unknown outcome, inspect the release first. Resume publication only after verifying every expected asset against the original build; otherwise use a new version. Automatic reruns refuse existing drafts/releases.
-- Repository protection and administrator permissions are external controls, not enforced by this workflow. Main was unprotected when inspected; no repository settings are changed here.
-- [Design and validation](design-and-validation.md) records the lifecycle and remaining service-adoption gates.
+- Merge alone does not publish. Push a matching `log-correlation-vMAJOR.MINOR.PATCH` tag on a merged contract commit after CI passes.
+- Every implemented language is built and tested before publication. Registry collisions fail; partial publication leaves a draft for inspection.
+- Never move published tags, overwrite artifacts, or delete accepted package versions to retry.
+- [Release lifecycle and validation gates](release-guide.md#lifecycle-and-readiness-review) cover the new multi-language workflow. The [original design](design-and-validation.md) records the initial contract implementation.
 
 ## Live validation handoff
 

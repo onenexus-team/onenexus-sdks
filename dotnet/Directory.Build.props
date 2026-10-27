@@ -6,6 +6,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- SDK releases keep this reviewed contract dependency; contract tags override it when building. -->
+    <LogContractPackageVersion Condition="'$(LogContractPackageVersion)' == ''">0.3.3</LogContractPackageVersion>
     <Version Condition="'$(Version)' == ''">$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../VERSION').Trim())</Version>
     <Authors>OneNexus</Authors>
     <RepositoryUrl>https://github.com/onenexus-team/onenexus-sdks</RepositoryUrl>

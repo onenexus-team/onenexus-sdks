@@ -14,10 +14,10 @@ flowchart LR
 ```
 
 - Target: **.NET 10**, matching CAS. Corvus schema generation and MSTest match CAS's existing tooling.
-- Package versions follow the SDK `vX.Y.Z` release. The embedded **contract version is independently `0.3.2`**.
+- `OneNexus.Observability` follows SDK `vX.Y.Z`. New `OneNexus.LogContract` packages follow `log-correlation-vX.Y.Z`; `LogContractPackageVersion` selects the reviewed dependency. The current canonical schema is `0.3.2`.
 - No hand-maintained schema copy: MSBuild reads `contracts/log-correlation/` directly and embeds the same data.
-- Both `.nupkg` files are generated, tested and published to GitHub Packages only on an approved SDK release. PR/main CI builds artifacts but does not publish.
-- Published package versions cannot be overwritten. If publication stops partway through, inspect registry state and use an approved new SDK version; the workflow fails on an existing version.
+- Contract tags publish the contract package; SDK releases publish the logging package. Both run installed-package tests before publication. PR/main CI builds artifacts without publishing.
+- Published package versions cannot be overwritten. If publication stops partway through, inspect registry state and use an approved new version in the affected release stream; the workflow fails on an existing version.
 - No service adoption, cluster rollout or span exporter is included here.
 
 ## Consume after release
@@ -94,3 +94,5 @@ bash scripts/check-dotnet-observability.sh
 - Lifecycle, readiness findings and rollout gates: [design-and-validation.md](design-and-validation.md).
 - Output is bounded to 4 KiB per record and 1 KiB per message. The provider writes synchronously and owns no growing queue; a blocked stdout writer can block the caller. CAS must measure its logging budget and expose the drop counter before production adoption.
 - Logs go to existing stdout collection. This package adds no OpenTelemetry exporter, collector, Loki client or new recording spans.
+
+- [Contract release and upgrade guide](../contracts/log-correlation/release-guide.md).

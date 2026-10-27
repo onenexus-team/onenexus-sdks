@@ -23,14 +23,18 @@ trap 'rm -rf "$consumer"' EXIT
 python3 - "$root" "$consumer" "$out" <<'PY'
 import json, pathlib, shutil, sys
 root, consumer, out = map(pathlib.Path, sys.argv[1:])
-version = (root / 'VERSION').read_text().strip()
+version = json.loads((root / 'ts/packages/observability/package.json').read_text())['version']
+contract_version = json.loads((root / 'ts/packages/log-contract/package.json').read_text())['version']
+import os
+published = os.environ.get('REQUIRE_PUBLISHED_LOG_CONTRACT') == '1'
 dev = json.loads((root / 'ts/package.json').read_text())['devDependencies']
 dev.update(json.loads((root / 'ts/packages/observability/package.json').read_text())['devDependencies'])
 # Reuse the complete locked test toolchain, not fresh transitive test-tool ranges.
 shutil.copy(root / 'ts/pnpm-lock.yaml', consumer / 'pnpm-lock.yaml')
 deps = {'@opentelemetry/api': '1.10.0'}
 for name in ('log-contract', 'observability'):
-    deps['@onenexus-team/' + name] = 'file:' + str(out / f'onenexus-team-{name}-{version}.tgz')
+    package_version = contract_version if name == 'log-contract' else version
+    deps['@onenexus-team/' + name] = contract_version if published and name == 'log-contract' else 'file:' + str(out / f'onenexus-team-{name}-{package_version}.tgz')
     shutil.copytree(root / f'ts/packages/{name}/test', consumer / f'test/{name}')
 shutil.copy(root / 'ts/packages/observability/raw_tests/log-probe.mjs', consumer / 'log-probe.mjs')
 (consumer / 'package.json').write_text(json.dumps({'private': True, 'type': 'module', 'dependencies': deps, 'devDependencies': dev}))
@@ -40,7 +44,9 @@ import re
 lock = (root / 'ts/pnpm-lock.yaml').read_text()
 # Use the workspace's already tested Vite version for this separate test harness.
 vite = re.search(r'^  vite@([^:(]+)', lock, re.M).group(1)
-overrides = {'@onenexus-team/log-contract@' + version: deps['@onenexus-team/log-contract'], 'vite': vite}
+overrides = {'vite': vite}
+if not published:
+    overrides['@onenexus-team/log-contract@' + contract_version] = deps['@onenexus-team/log-contract']
 (consumer / 'pnpm-workspace.yaml').write_text((root / 'ts/pnpm-workspace.yaml').read_text() + '\noverrides:\n' + ''.join('  ' + json.dumps(k) + ': ' + json.dumps(v) + '\n' for k, v in overrides.items()))
 (consumer / 'tsconfig.json').write_text(json.dumps({'compilerOptions': {'target':'ESNext', 'module':'NodeNext', 'moduleResolution':'NodeNext', 'types':['node'], 'strict':True, 'skipLibCheck':True, 'noEmit':True}, 'include':['test/**/*.ts', 'consumer.*']}))
 (consumer / 'consumer.mts').write_text('import { createLogger } from "@onenexus-team/observability"; void createLogger;\n')

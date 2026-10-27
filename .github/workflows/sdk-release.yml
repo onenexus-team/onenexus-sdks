@@ -38,21 +38,27 @@ jobs:
           git merge-base --is-ancestor HEAD origin/main
           echo "PACKAGE_VERSION=${RELEASE_TAG#v}" >> "$GITHUB_ENV"
       - name: Build and test the packages that will be published
+        env:
+          REQUIRE_PUBLISHED_LOG_CONTRACT: '1'
+          NUGET_AUTH_TOKEN: ${{ github.token }}
         run: bash scripts/check-dotnet-observability.sh
       - name: Publish to GitHub Packages
         env:
           NUGET_AUTH_TOKEN: ${{ github.token }}
         run: |
-          for package in .artifacts/dotnet/"$PACKAGE_VERSION"/*.nupkg; do
-            dotnet nuget push "$package" --api-key "$NUGET_AUTH_TOKEN" \
-              --source https://nuget.pkg.github.com/onenexus-team/index.json
-          done
+          package=".artifacts/dotnet/$PACKAGE_VERSION/OneNexus.Observability.$PACKAGE_VERSION.nupkg"
+          dotnet nuget push "$package" --api-key "$NUGET_AUTH_TOKEN" \
+            --source https://nuget.pkg.github.com/onenexus-team/index.json
+          mkdir -p .artifacts/dotnet/sdk-release
+          cp "$package" .artifacts/dotnet/sdk-release/
+          cd .artifacts/dotnet/sdk-release
+          sha256sum -- *.nupkg > SHA256SUMS
       - name: Attach packages and checksums to the SDK release
         uses: softprops/action-gh-release@v3.0.3
         with:
           files: |
-            .artifacts/dotnet/${{ env.PACKAGE_VERSION }}/*.nupkg
-            .artifacts/dotnet/${{ env.PACKAGE_VERSION }}/SHA256SUMS
+            .artifacts/dotnet/sdk-release/*.nupkg
+            .artifacts/dotnet/sdk-release/SHA256SUMS
           fail_on_unmatched_files: true
           overwrite_files: false
 
@@ -160,11 +166,23 @@ jobs:
         run: pnpm --dir ts install --frozen-lockfile
 
       - name: Build and package TypeScript SDKs
+        env:
+          REQUIRE_PUBLISHED_LOG_CONTRACT: '1'
+          NODE_AUTH_TOKEN: ${{ github.token }}
         run: |
+          npmrc="$RUNNER_TEMP/contract-consumer.npmrc"
+          trap 'rm -f "$npmrc"' EXIT
+          cat > "$npmrc" <<'EOF'
+          @onenexus-team:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          EOF
+          export NPM_CONFIG_USERCONFIG="$npmrc"
           pnpm --dir ts package
           bash scripts/check-typescript-observability.sh
           mkdir -p .artifacts/typescript-packages
-          cp ts/.local-packages/*.tgz .artifacts/typescript-packages/
+          for name in observability sdk-core cas-client cas-support-client; do
+            cp "ts/.local-packages/onenexus-team-$name-${{ steps.version.outputs.version }}.tgz" .artifacts/typescript-packages/
+          done
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v7.0.2
@@ -189,7 +207,7 @@ jobs:
           chmod 600 "$npmrc"
           export NPM_CONFIG_USERCONFIG="$npmrc"
 
-          for package_dir in packages/log-contract packages/observability packages/sdk-core packages/cas-client packages/cas-support-client; do
+          for package_dir in packages/observability packages/sdk-core packages/cas-client packages/cas-support-client; do
             package_name="$(node -p "require('./${package_dir}/package.json').name")"
             package_version="$(node -p "require('./${package_dir}/package.json').version")"
 

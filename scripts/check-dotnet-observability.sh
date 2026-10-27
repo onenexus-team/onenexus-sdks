@@ -9,6 +9,9 @@ export DOTNET_CLI_HOME="${DOTNET_CLI_HOME:-$root/.dotnet-home}"
 export NUGET_PACKAGES="${NUGET_PACKAGES:-$root/.nuget/packages}"
 version="${PACKAGE_VERSION:-$(cat VERSION)}"
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Invalid package version' >&2; exit 1; }
+contract_package_version="${LOG_CONTRACT_PACKAGE_VERSION:-$(python3 -c 'import xml.etree.ElementTree as E; print(E.parse("dotnet/Directory.Build.props").findtext(".//LogContractPackageVersion"))')}"
+[[ "$contract_package_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Invalid contract package version' >&2; exit 1; }
+export LogContractPackageVersion="$contract_package_version"
 out="$root/.artifacts/dotnet/$version"
 mkdir -p "$out"
 manifest=contracts/log-correlation/manifest.json
@@ -34,7 +37,32 @@ rm -rf "$consumer/tests/bin" "$consumer/tests/obj" "$consumer/tests/TestResults"
 cp -R dotnet/raw_tests/LogProbe "$consumer/probe"
 rm -rf "$consumer/probe/bin" "$consumer/probe/obj"
 cache="$consumer/packages"
-dotnet restore "$consumer/tests" -p:Version="$version" -p:PackageUnderTest="$version" --packages "$cache" --source "$out" --source https://api.nuget.org/v3/index.json --force-evaluate
+sources=(--source "$out" --source https://api.nuget.org/v3/index.json)
+if [[ "${REQUIRE_PUBLISHED_LOG_CONTRACT:-0}" == 1 ]]; then
+  : "${NUGET_AUTH_TOKEN:?Published contract restore requires a package read token}"
+  : "${GITHUB_ACTOR:?Published contract restore requires a GitHub username}"
+  mkdir "$consumer/feed"
+  cp "$out/OneNexus.Observability.$version.nupkg" "$consumer/feed/"
+  # Values are expanded by NuGet from the environment; no token is written to disk.
+  cat > "$consumer/NuGet.Config" <<'XML'
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="local" value="feed" />
+    <add key="nuget" value="https://api.nuget.org/v3/index.json" />
+    <add key="github" value="https://nuget.pkg.github.com/onenexus-team/index.json" />
+  </packageSources>
+  <packageSourceCredentials>
+    <github>
+      <add key="Username" value="%GITHUB_ACTOR%" />
+      <add key="ClearTextPassword" value="%NUGET_AUTH_TOKEN%" />
+    </github>
+  </packageSourceCredentials>
+</configuration>
+XML
+  sources=(--configfile "$consumer/NuGet.Config")
+fi
+dotnet restore "$consumer/tests" -p:Version="$version" -p:PackageUnderTest="$version" --packages "$cache" "${sources[@]}" --force-evaluate
 ONENEXUS_CONTRACT_RESULTS="$out/installed-results.json" dotnet run --project "$consumer/tests" --no-restore -c Release -p:Version="$version" -p:PackageUnderTest="$version" -- --timeout 2m
 python3 "$checker" check-results --version "$contract_version" --expected-digest "$digest" --results "$out/installed-results.json"
 # Deliberately wrong observation must fail the language-neutral checker.
@@ -48,7 +76,7 @@ PY
 if python3 "$checker" check-results --version "$contract_version" --expected-digest "$digest" --results "$out/rejected-results.json" > "$out/negative-check.log" 2>&1; then
   echo 'Negative control unexpectedly accepted' >&2; exit 1
 fi
-dotnet restore "$consumer/probe" -p:Version="$version" -p:PackageUnderTest="$version" --packages "$cache" --source "$out" --source https://api.nuget.org/v3/index.json
+dotnet restore "$consumer/probe" -p:Version="$version" -p:PackageUnderTest="$version" --packages "$cache" "${sources[@]}"
 dotnet build "$consumer/probe" --no-restore -c Release -p:Version="$version" -p:PackageUnderTest="$version"
 probe="$consumer/probe/bin/Release/net10.0/LogProbe.dll"
 dotnet "$probe" emit > "$out/probe.ndjson"
