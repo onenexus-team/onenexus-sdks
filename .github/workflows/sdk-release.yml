@@ -14,6 +14,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  release-dotnet-packages:
+    if: startsWith(github.event.release.tag_name, 'v')
+    name: Validate and publish .NET observability packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Validate release version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          git merge-base --is-ancestor HEAD origin/main
+          echo "PACKAGE_VERSION=${RELEASE_TAG#v}" >> "$GITHUB_ENV"
+      - name: Build and test the packages that will be published
+        run: bash scripts/check-dotnet-observability.sh
+      - name: Publish to GitHub Packages
+        env:
+          NUGET_AUTH_TOKEN: ${{ github.token }}
+        run: |
+          for package in .artifacts/dotnet/"$PACKAGE_VERSION"/*.nupkg; do
+            dotnet nuget push "$package" --api-key "$NUGET_AUTH_TOKEN" \
+              --source https://nuget.pkg.github.com/onenexus-team/index.json
+          done
+      - name: Attach packages and checksums to the SDK release
+        uses: softprops/action-gh-release@v3.0.3
+        with:
+          files: |
+            .artifacts/dotnet/${{ env.PACKAGE_VERSION }}/*.nupkg
+            .artifacts/dotnet/${{ env.PACKAGE_VERSION }}/SHA256SUMS
+          fail_on_unmatched_files: true
+          overwrite_files: false
+
   release-python-wheels:
     if: startsWith(github.event.release.tag_name, 'v')
     name: Build and release Python wheels

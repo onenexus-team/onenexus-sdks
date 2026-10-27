@@ -1,0 +1,41 @@
+name: .NET observability checks
+on:
+  pull_request:
+    paths:
+      - 'dotnet/**'
+      - 'contracts/log-correlation/**'
+      - 'scripts/check-dotnet-observability.sh'
+      - 'global.json'
+      - 'VERSION'
+      - '.github/workflows/dotnet-observability-checks.yml'
+      - '.github/workflows/sdk-release.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'dotnet/**'
+      - 'contracts/log-correlation/**'
+      - 'scripts/check-dotnet-observability.sh'
+      - 'global.json'
+      - 'VERSION'
+      - '.github/workflows/dotnet-observability-checks.yml'
+      - '.github/workflows/sdk-release.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.14'
+      - run: bash scripts/check-dotnet-observability.sh
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: dotnet-observability-packages-and-results
+          path: .artifacts/dotnet/
+          if-no-files-found: error

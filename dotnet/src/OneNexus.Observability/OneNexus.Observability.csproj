@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>OneNexus ILogger provider and W3C log correlation context.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../OneNexus.LogContract/OneNexus.LogContract.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="[10.0.13]" />
+  </ItemGroup>
+</Project>

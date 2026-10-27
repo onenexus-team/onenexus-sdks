@@ -1,0 +1,11 @@
+<Project Sdk="MSTest.Sdk/4.4.1">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' == ''">
+    <ProjectReference Include="../../src/OneNexus.Observability/OneNexus.Observability.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' != ''">
+    <PackageReference Include="OneNexus.Observability" Version="[$(PackageUnderTest)]" />
+  </ItemGroup>
+</Project>
