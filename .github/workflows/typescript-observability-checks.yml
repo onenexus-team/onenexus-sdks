@@ -1,0 +1,35 @@
+name: TypeScript observability checks
+on:
+  pull_request:
+    paths: ['ts/**', 'contracts/log-correlation/**', 'scripts/*ts*', 'scripts/check-typescript-observability.sh', '.node-version', 'VERSION', '.github/workflows/typescript-observability-checks.yml', '.github/workflows/sdk-release.yml']
+  push:
+    branches: [main]
+    paths: ['ts/**', 'contracts/log-correlation/**', 'scripts/*ts*', 'scripts/check-typescript-observability.sh', '.node-version', 'VERSION', '.github/workflows/typescript-observability-checks.yml', '.github/workflows/sdk-release.yml']
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@v6.1.0
+        with:
+          package_json_file: ts/package.json
+          run_install: false
+          cache: true
+          cache_dependency_path: ts/pnpm-lock.yaml
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.14'
+      - run: pnpm --dir ts install --frozen-lockfile
+      - run: pnpm --dir ts package
+      - run: bash scripts/check-typescript-observability.sh
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: typescript-observability-packages-and-results
+          path: .artifacts/typescript-observability/
+          if-no-files-found: error

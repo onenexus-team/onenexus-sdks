@@ -10,6 +10,8 @@ if (!version) {
 }
 
 const packagePaths = [
+    'ts/packages/log-contract/package.json',
+    'ts/packages/observability/package.json',
     'ts/packages/sdk-core/package.json',
     'ts/packages/cas-client/package.json',
     'ts/packages/cas-support-client/package.json',

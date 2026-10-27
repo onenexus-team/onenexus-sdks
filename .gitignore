@@ -28,6 +28,7 @@ htmlcov/
 coverage.xml
 coverage/
 .vitest-cache/
+ts/packages/log-contract/src/generated/
 
 # Type checking and linting
 .mypy_cache/
