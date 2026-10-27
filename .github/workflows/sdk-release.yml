@@ -162,6 +162,7 @@ jobs:
       - name: Build and package TypeScript SDKs
         run: |
           pnpm --dir ts package
+          bash scripts/check-typescript-observability.sh
           mkdir -p .artifacts/typescript-packages
           cp ts/.local-packages/*.tgz .artifacts/typescript-packages/
 
@@ -188,7 +189,7 @@ jobs:
           chmod 600 "$npmrc"
           export NPM_CONFIG_USERCONFIG="$npmrc"
 
-          for package_dir in packages/sdk-core packages/cas-client packages/cas-support-client; do
+          for package_dir in packages/log-contract packages/observability packages/sdk-core packages/cas-client packages/cas-support-client; do
             package_name="$(node -p "require('./${package_dir}/package.json').name")"
             package_version="$(node -p "require('./${package_dir}/package.json').version")"
 
