@@ -27,6 +27,6 @@ const errors = validateRecord(record, 'correlated'); // [] or safe error codes
 | `encodeRecord(record, profile)` | Validates, then emits compact JSON; exact numeric timestamp |
 | `loadContract()` | Fresh copies of manifest, schema and shared cases |
 
-- Use `bigint` for nanosecond timestamps created in JavaScript.
+- Use `bigint` for nanosecond timestamps created in JavaScript. Unsafe numeric timestamps are rejected; parse JSON with `parseRecord` to retain exact digits.
 - Plain JSON extensions are supported; getters, `toJSON`, cycles, non-finite numbers and malformed Unicode are rejected.
 - This Node.js package does not provide a browser logger or an application security boundary.

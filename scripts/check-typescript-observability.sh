@@ -40,14 +40,15 @@ import re
 lock = (root / 'ts/pnpm-lock.yaml').read_text()
 # Use the workspace's already tested Vite version for this separate test harness.
 vite = re.search(r'^  vite@([^:(]+)', lock, re.M).group(1)
-(consumer / 'pnpm-workspace.yaml').write_text(json.dumps({'overrides': {'@onenexus-team/log-contract@' + version: deps['@onenexus-team/log-contract'], 'vite': vite}}))
+overrides = {'@onenexus-team/log-contract@' + version: deps['@onenexus-team/log-contract'], 'vite': vite}
+(consumer / 'pnpm-workspace.yaml').write_text((root / 'ts/pnpm-workspace.yaml').read_text() + '\noverrides:\n' + ''.join('  ' + json.dumps(k) + ': ' + json.dumps(v) + '\n' for k, v in overrides.items()))
 (consumer / 'tsconfig.json').write_text(json.dumps({'compilerOptions': {'target':'ESNext', 'module':'NodeNext', 'moduleResolution':'NodeNext', 'types':['node'], 'strict':True, 'skipLibCheck':True, 'noEmit':True}, 'include':['test/**/*.ts', 'consumer.*']}))
 (consumer / 'consumer.mts').write_text('import { createLogger } from "@onenexus-team/observability"; void createLogger;\n')
 (consumer / 'consumer.cts').write_text('import { createLogger } from "@onenexus-team/observability"; void createLogger;\n')
 PY
 # The temporary consumer adds two local tarballs to the copied toolchain lock.
 # Repository installation remains frozen; only this disposable lock is updated.
-pnpm --dir "$consumer" install --offline --ignore-scripts --no-frozen-lockfile
+pnpm --dir "$consumer" install --prefer-offline --ignore-scripts --no-frozen-lockfile
 pnpm --dir "$consumer" exec tsc --noEmit
 ONENEXUS_CONTRACT_RESULTS="$out/installed-results.json" pnpm --dir "$consumer" exec vitest run
 python3 "$checker" check-results --version "$version" --expected-digest "$digest" --results "$out/installed-results.json"

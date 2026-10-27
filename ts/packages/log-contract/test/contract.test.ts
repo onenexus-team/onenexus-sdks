@@ -40,6 +40,9 @@ describe('canonical contract', () => {
         expect(validateRecord({ ...valid, timestamp: -1n })).toContain('schema_invalid');
         expect(validateRecord({ ...valid, timestamp: 0.5 })).toContain('schema_invalid');
         expect(validateRecord({ ...valid, timestamp: true })).toContain('schema_invalid');
+        expect(validateRecord({ ...valid, timestamp: Number(valid.timestamp) })).toContain(
+            'schema_invalid',
+        );
     });
     it('rejects unknown profiles and returns only stable error codes', () => {
         expect(validateRecord(valid, 'unknown')).toEqual(['unknown_profile']);
@@ -64,6 +67,15 @@ describe('canonical contract', () => {
         }
         const getter = Object.defineProperty({}, 'secret', { get: fail, enumerable: true });
         expect(validateRecord({ ...valid, extension: getter })).toEqual(['invalid_json_record']);
+        let getterCalled = false;
+        const array = Object.defineProperty([], '0', {
+            get() {
+                getterCalled = true;
+                return 1;
+            },
+        });
+        expect(validateRecord({ ...valid, extension: array })).toEqual(['invalid_json_record']);
+        expect(getterCalled).toBe(false);
         const cycle: Record<string, unknown> = {};
         cycle.self = cycle;
         expect(validateRecord({ ...valid, extension: cycle })).toEqual(['invalid_json_record']);

@@ -90,8 +90,15 @@ function jsonValue(value: unknown, depth = 0): string {
     }
     if (typeof value === 'number' && Number.isFinite(value)) return JSON.stringify(value);
     if (typeof value !== 'object' || value === null) throw Error('invalid_json_record');
-    if (Array.isArray(value))
-        return '[' + Array.from(value as unknown[], (v) => jsonValue(v, depth + 1)).join(',') + ']';
+    if (Array.isArray(value)) {
+        const items: string[] = [];
+        for (let index = 0; index < value.length; index++) {
+            const descriptor = Object.getOwnPropertyDescriptor(value, index);
+            if (!descriptor || !('value' in descriptor)) throw Error('invalid_json_record');
+            items.push(jsonValue(descriptor.value as unknown, depth + 1));
+        }
+        return '[' + items.join(',') + ']';
+    }
     const prototype: unknown = Object.getPrototypeOf(value);
     if (prototype !== Object.prototype && prototype !== null) throw Error('invalid_json_record');
     const entries = Object.getOwnPropertyDescriptors(value);
@@ -120,6 +127,9 @@ export function validateRecord(record: unknown, profile = 'common'): string[] {
         return ['schema_invalid'];
     const errors = new Set<string>();
     try {
+        const inputTimestamp: unknown = Object.getOwnPropertyDescriptor(record, 'timestamp')?.value;
+        if (typeof inputTimestamp === 'number' && !Number.isSafeInteger(inputTimestamp))
+            errors.add('schema_invalid');
         const encoded = jsonValue(record);
         const normalized = JSON.parse(encoded) as Record<string, unknown>;
         const exact = parseRecord(encoded) as Record<string, unknown>;
