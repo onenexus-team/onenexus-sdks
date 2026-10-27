@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -17,6 +18,9 @@ import xml.etree.ElementTree as ET
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+go_spec = importlib.util.spec_from_file_location("go_modules", ROOT / "scripts/go-module-release.py")
+go_modules = importlib.util.module_from_spec(go_spec)
+go_spec.loader.exec_module(go_modules)
 VERSION = re.compile(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)")
 
 
@@ -31,7 +35,8 @@ def names(version: str) -> list[str]:
     return [f"log-correlation-{version}.tar.gz",
             f"onenexus_log_contract-{version}-py3-none-any.whl",
             f"onenexus-team-log-contract-{version}.tgz",
-            f"OneNexus.LogContract.{version}.nupkg"]
+            f"OneNexus.LogContract.{version}.nupkg",
+            f"log-contract-go-v{version}.zip"]
 
 
 def verify(directory: Path, version: str) -> dict:
@@ -62,6 +67,7 @@ def verify(directory: Path, version: str) -> dict:
     identity = {node.tag.split("}")[-1]: node.text for node in nuspec.iter()}
     if identity.get("id") != "OneNexus.LogContract" or identity.get("version") != version:
         raise ValueError("nuget_identity_mismatch")
+    go_modules.verify("contract", version, directory / expected[4])
     checksums = "".join(f"{artifacts[name]}  {name}\n" for name in sorted(artifacts))
     if (directory / "SHA256SUMS").read_text() != checksums:
         raise ValueError("checksum_manifest_mismatch")
@@ -97,6 +103,8 @@ def build(directory: Path, version: str) -> None:
         run(["bash", "scripts/check-dotnet-observability.sh"], env=env)
         shutil.copyfile(ROOT / f".artifacts/dotnet/{version}/OneNexus.LogContract.{version}.nupkg",
                         directory / f"OneNexus.LogContract.{version}.nupkg")
+        run(["bash", "scripts/check-go-observability.sh"], env=env)
+        go_modules.build("contract", version, directory)
         artifacts = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                      for p in sorted(directory.iterdir()) if p.is_file()}
         metadata = {"version": version, "contract_sha256": digest,
@@ -113,6 +121,7 @@ def build(directory: Path, version: str) -> None:
 def ensure_available(version: str) -> None:
     """Check every registry before the first write; registries also reject races."""
     names(version)
+    go_modules.preflight("contract", version)
     npm = subprocess.run(["npm", "view", "@onenexus-team/log-contract",
                           "versions", "--json", "--registry=https://npm.pkg.github.com"],
                          cwd=ROOT, capture_output=True, text=True, timeout=60)
@@ -158,6 +167,7 @@ def publish(directory: Path, version: str) -> None:
          "--tag", "latest"])
     run(["dotnet", "nuget", "push", str(directory / f"OneNexus.LogContract.{version}.nupkg"),
          "--api-key", token, "--source", "https://nuget.pkg.github.com/onenexus-team/index.json"])
+    go_modules.publish("contract", version, directory / f"log-contract-go-v{version}.zip")
 
 
 if __name__ == "__main__":

@@ -378,3 +378,12 @@ Token exchange is not exposed as a credential type yet. Until CAS's RFC 8693
 surface is ready for SDK consumption, services that need on-behalf-of behavior
 should use the service-specific CAS API/flow documented by the auth platform
 team rather than constructing SDK credentials directly.
+
+
+### Shared Go logging
+
+- [Usage, package versions and raw checks](go/observability/README.md).
+- [Lifecycle and production-readiness assessment](go/observability/design-and-validation.md).
+- Go embeds the canonical contract directly; no generated schema copy is committed.
+- Contract tags publish `contracts/log-correlation/vX.Y.Z`; SDK releases publish `go/observability/vX.Y.Z`.
+- Service adoption is explicit and remains a separate change.

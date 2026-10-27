@@ -1,0 +1,40 @@
+name: Go observability checks
+on:
+  pull_request:
+    paths: ['go/**', 'contracts/log-correlation/**', 'scripts/*go*', 'scripts/log-contract-release.py', '.github/workflows/go-observability-checks.yml', '.github/workflows/log-contract-*.yml', '.github/workflows/sdk-release.yml', 'VERSION']
+  push:
+    branches: [main]
+    paths: ['go/**', 'contracts/log-correlation/**', 'scripts/*go*', 'scripts/log-contract-release.py', '.github/workflows/go-observability-checks.yml', '.github/workflows/log-contract-*.yml', '.github/workflows/sdk-release.yml', 'VERSION']
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        go: ['1.26.10', '1.27.3']
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go }}
+          cache-dependency-path: |
+            contracts/log-correlation/go.sum
+            go/observability/go.sum
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Release guards and module packaging
+        run: python3 scripts/test-go-module-release.py
+      - name: Install official Go vulnerability scanner
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+      - name: Source, installed modules, race tests and raw logs
+        env:
+          RUN_GO_VULNCHECK: '1'
+        run: bash scripts/check-go-observability.sh
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: go-observability-${{ matrix.go }}
+          path: .artifacts/go-observability/
+          if-no-files-found: error

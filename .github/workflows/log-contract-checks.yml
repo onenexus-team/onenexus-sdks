@@ -4,6 +4,8 @@ on:
     paths:
       - 'contracts/log-correlation/**'
       - 'scripts/*log-contract*'
+      - 'scripts/*go*'
+      - 'go/**'
       - '.github/workflows/log-contract-*.yml'
       - '.github/workflows/sdk-release.yml'
       - 'ts/packages/log-contract/**'
@@ -19,6 +21,8 @@ on:
     paths:
       - 'contracts/log-correlation/**'
       - 'scripts/*log-contract*'
+      - 'scripts/*go*'
+      - 'go/**'
       - '.github/workflows/log-contract-*.yml'
       - '.github/workflows/sdk-release.yml'
       - 'ts/packages/log-contract/**'
@@ -68,6 +72,12 @@ jobs:
         with:
           package_json_file: ts/package.json
           run_install: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.3'
+          cache-dependency-path: |
+            contracts/log-correlation/go.sum
+            go/observability/go.sum
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json

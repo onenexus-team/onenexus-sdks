@@ -32,6 +32,12 @@ jobs:
         with:
           package_json_file: ts/package.json
           run_install: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.3'
+          cache-dependency-path: |
+            contracts/log-correlation/go.sum
+            go/observability/go.sum
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
@@ -91,7 +97,7 @@ jobs:
             --version "$VERSION" --directory .artifacts/log-contract
           gh release create "$TAG" --draft --verify-tag \
             --title "Log correlation contract $VERSION" \
-            --notes 'Canonical contract archive, Python wheel, TypeScript npm package and .NET NuGet package. Logging libraries and applications upgrade separately.' \
+            --notes 'Canonical contract archive, Python wheel, TypeScript npm package, .NET NuGet package and Go module. Logging libraries and applications upgrade separately.' \
             .artifacts/log-contract/*
           # Keep an interrupted release in draft. Never replace its assets blindly.
           downloaded="$(mktemp -d)"
@@ -101,7 +107,7 @@ jobs:
           (cd "$downloaded" && sha256sum --check SHA256SUMS)
           python3 scripts/log-contract-release.py verify \
             --version "$VERSION" --directory "$downloaded"
-          # Publish the exact bytes downloaded from the draft; mark complete only after both registries accept them.
+          # Publish the exact bytes downloaded from the draft; mark complete only after both registries and the Go module tag succeed.
           python3 scripts/log-contract-release.py publish \
             --version "$VERSION" --directory "$downloaded"
           gh release edit "$TAG" --draft=false --latest=false

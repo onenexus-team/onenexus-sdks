@@ -14,6 +14,56 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  release-go-observability:
+    if: startsWith(github.event.release.tag_name, 'v')
+    name: Validate and publish Go observability module
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: go-observability-publication
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.3'
+          cache-dependency-path: |
+            contracts/log-correlation/go.sum
+            go/observability/go.sum
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Validate and authorize private module restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          git merge-base --is-ancestor HEAD origin/main
+          echo "SDK_PACKAGE_VERSION=${RELEASE_TAG#v}" >> "$GITHUB_ENV"
+          gh auth setup-git
+      - name: Require published contract and test installed Go packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUIRE_PUBLISHED_LOG_CONTRACT: '1'
+        run: bash scripts/check-go-observability.sh
+      - name: Publish immutable Go module tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/go-module-release.py publish --kind observability \
+            --version "$SDK_PACKAGE_VERSION" \
+            --archive ".artifacts/go-observability/observability-go-v$SDK_PACKAGE_VERSION.zip"
+      - name: Attach verified Go archive
+        uses: softprops/action-gh-release@v3.0.3
+        with:
+          files: .artifacts/go-observability/observability-go-*.zip
+          fail_on_unmatched_files: true
+          overwrite_files: false
+
   release-dotnet-packages:
     if: startsWith(github.event.release.tag_name, 'v')
     name: Validate and publish .NET observability packages

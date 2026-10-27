@@ -9,6 +9,7 @@ Guidance for AI coding agents working in the standalone OneNexus SDK repository.
 - `specs/` contains committed OpenAPI specifications used for code generation.
 - `python/` is a `uv` workspace for Python SDK packages.
 - `ts/` is a `pnpm` workspace for TypeScript SDK packages.
+- `go/observability/` is the opt-in Go `slog` and trace-context module; `contracts/log-correlation/` is also the Go contract module. Run `bash scripts/check-go-observability.sh`.
 - `dotnet/` contains the generated contract and shared `ILogger` packages; run `bash scripts/check-dotnet-observability.sh`.
 
 ## Core rules

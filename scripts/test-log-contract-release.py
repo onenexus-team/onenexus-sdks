@@ -30,6 +30,10 @@ class ReleaseTests(unittest.TestCase):
         canonical.mkdir(parents=True)
         (canonical / "manifest.json").write_text(json.dumps({"version": "1.2.3", "sha256": "d" * 64}))
         self.version = "1.2.3"
+        for method in ("verify", "preflight", "publish"):
+            mock = patch.object(release.go_modules, method)
+            mock.start()
+            self.addCleanup(mock.stop)
         self.patch = patch.object(release, "ROOT", self.root)
         self.patch.start()
         self.addCleanup(self.patch.stop)
@@ -38,6 +42,7 @@ class ReleaseTests(unittest.TestCase):
         (self.out / names[1]).write_bytes(b"wheel")
         self.npm_name = names[2]
         self.nuget_name = names[3]
+        (self.out / names[4]).write_bytes(b"go module archive")
         self.write_npm()
         with zipfile.ZipFile(self.out / self.nuget_name, "w") as package:
             package.writestr("OneNexus.LogContract.nuspec", '<package><metadata><id>OneNexus.LogContract</id><version>1.2.3</version></metadata></package>')
@@ -63,13 +68,27 @@ class ReleaseTests(unittest.TestCase):
             return release.verify(self.out, self.version)
 
     def test_complete_artifact_set(self):
-        self.assertEqual(len(self.verify()["artifacts"]), 4)
+        self.assertEqual(len(self.verify()["artifacts"]), 5)
 
     def test_missing_language_blocks_release(self):
         (self.out / self.nuget_name).unlink()
         self.checksums()
         with self.assertRaisesRegex(ValueError, "incomplete_language_artifacts"):
             self.verify()
+
+    def test_missing_go_module_blocks_release(self):
+        (self.out / release.names(self.version)[4]).unlink()
+        self.checksums()
+        with self.assertRaisesRegex(ValueError, "incomplete_language_artifacts"):
+            self.verify()
+
+    def test_go_failure_after_registry_writes_is_not_ignored(self):
+        with patch.dict(os.environ, {"NUGET_AUTH_TOKEN": "unit-test-placeholder"}):
+            with patch.object(release, "verify"), patch.object(release, "ensure_available"), patch.object(release, "run") as command:
+                with patch.object(release.go_modules, "publish", side_effect=ValueError("tag_race")):
+                    with self.assertRaisesRegex(ValueError, "tag_race"):
+                        release.publish(self.out, self.version)
+                    self.assertEqual(command.call_count, 2)
 
     def test_changed_bytes_block_release(self):
         (self.out / self.npm_name).write_bytes(b"changed")
