@@ -176,6 +176,10 @@ describe('context lifecycle', () => {
                 await Promise.resolve();
                 expect(currentTraceId()).toBe(traceA);
                 expect(outgoingHeaders().traceparent).toContain(child.spanContext().spanId);
+                withIncomingContext(headers, { trusted: true }, () => {
+                    expect(outgoingHeaders().traceparent).toContain(child.spanContext().spanId);
+                    expect(trace.getSpan(context.active())).toBe(child);
+                });
                 withUncorrelatedContext(() =>
                     context.with(trace.setSpan(ROOT_CONTEXT, child), () =>
                         expect(currentTraceId()).toBeUndefined(),

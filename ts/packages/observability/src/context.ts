@@ -41,7 +41,21 @@ function parse(headers: HeaderEntries, options: IncomingOptions): SpanContext | 
 function run<T>(value: SpanContext | undefined, fn: () => T): T {
     // OTel integration is active only if the application has installed a context manager.
     // ALS provides phase-1 isolation without installing global instrumentation.
-    const otel = value ? trace.setSpanContext(ROOT_CONTEXT, value) : ROOT_CONTEXT;
+    const existing = context.active();
+    const existingSpan = trace.getSpanContext(existing);
+    // Auto-instrumentation may have already created the server span before middleware.
+    // Keep that child only when it agrees with the trusted boundary and sampling policy.
+    const compatible =
+        value &&
+        existingSpan &&
+        isSpanContextValid(existingSpan) &&
+        existingSpan.traceId === value.traceId &&
+        (existingSpan.traceFlags & 1) === (value.traceFlags & 1);
+    const otel = compatible
+        ? existing
+        : value
+          ? trace.setSpanContext(ROOT_CONTEXT, value)
+          : ROOT_CONTEXT;
     return current.run(Object.freeze({ value }), () => context.with(otel, fn));
 }
 
