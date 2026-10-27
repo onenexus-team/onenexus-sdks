@@ -9,6 +9,7 @@ Guidance for AI coding agents working in the standalone OneNexus SDK repository.
 - `specs/` contains committed OpenAPI specifications used for code generation.
 - `python/` is a `uv` workspace for Python SDK packages.
 - `ts/` is a `pnpm` workspace for TypeScript SDK packages.
+- `dotnet/` contains the generated contract and shared `ILogger` packages; run `bash scripts/check-dotnet-observability.sh`.
 
 ## Core rules
 

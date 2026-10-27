@@ -8,6 +8,11 @@ log fields and shared cases for language packages. The
 result checker and versioned release archive; it does not change application
 logging automatically. Run `bash scripts/check-log-contracts.sh`.
 
+The [.NET logging packages](dotnet/README.md) provide the same contract for CAS:
+generated validators plus an `ILogger` provider. Run
+`bash scripts/check-dotnet-observability.sh` to validate source and installed NuGet
+packages. Service adoption and live cluster checks are separate gates.
+
 ## Install packages from GitHub Packages
 
 TypeScript SDK packages are published to the OneNexus GitHub Packages npm

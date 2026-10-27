@@ -57,3 +57,6 @@ Thumbs.db
 credentials.json
 secrets.yaml
 **/.artifacts/
+**/bin/
+**/obj/
+**/TestResults/
