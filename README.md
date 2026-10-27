@@ -185,14 +185,16 @@ can be overridden with `ONENEXUS_DOTNET_SDK_VERSION`, `ONENEXUS_NODE_VERSION`,
 
 ## Publishing SDK packages
 
-Local package versions are specified by the repository-level `VERSION` file.
-Publishing a GitHub release with a stable semantic-version tag such as `v0.0.6`
-triggers the SDK release workflow. The workflow derives `0.0.6` from the tag and
-uses it as the package version in separate Python and TypeScript jobs on
-`self-hosted` runners. It builds and tests both workspaces, attaches the Python
-wheels and TypeScript tarballs to the existing GitHub release, and publishes the
-TypeScript SDK packages to GitHub
-Packages' npm registry.
+Local SDK versions come from `VERSION`; contract dependencies have separate reviewed pins.
+
+| Trigger | Packages | Destinations |
+|---|---|---|
+| Publish GitHub Release `vX.Y.Z` | Python/TypeScript SDKs and .NET logging library | Release assets; TypeScript npm and .NET NuGet registries |
+| Push `log-correlation-vX.Y.Z` on a merged contract commit | Python, TypeScript and .NET contract packages | Release assets; npm and NuGet registries |
+
+Both flows build and test before publishing. Contract releases do not automatically
+upgrade logging libraries or applications. See the
+[contract release and upgrade guide](contracts/log-correlation/release-guide.md).
 
 For local builds and consumption examples, see [`python/README.md`](python/README.md)
 and [`ts/README.md`](ts/README.md).

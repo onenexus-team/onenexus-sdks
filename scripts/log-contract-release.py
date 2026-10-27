@@ -78,6 +78,8 @@ def build(directory: Path, version: str) -> None:
     # The existing language checks build source and independent installed consumers.
     # Restore tracked package metadata after their temporary release-version overrides.
     saved = {path: path.read_bytes() for path in (ROOT / "ts/packages").glob("*/package.json")}
+    lockfile = ROOT / "ts/pnpm-lock.yaml"
+    saved[lockfile] = lockfile.read_bytes()
     env = {**os.environ, "PACKAGE_VERSION": version, "SDK_PACKAGE_VERSION": version,
            "LOG_CONTRACT_PACKAGE_VERSION": version, "REQUIRE_PUBLISHED_LOG_CONTRACT": "0"}
     try:

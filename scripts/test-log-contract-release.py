@@ -172,14 +172,18 @@ class ReleaseTests(unittest.TestCase):
         package.parent.mkdir(parents=True)
         original = '{"version":"0.3.3"}'
         package.write_text(original)
+        lockfile = self.root / "ts/pnpm-lock.yaml"
+        lockfile.write_text("original lockfile")
         def fail_after_validation(args, **kwargs):
             if args[2] == "build":
                 package.write_text('{"version":"1.2.3"}')
+                lockfile.write_text("temporary release lockfile")
                 raise subprocess.CalledProcessError(1, args)
         with patch.object(release, "run", side_effect=fail_after_validation):
             with self.assertRaises(subprocess.CalledProcessError):
                 release.build(self.root / "failed-output", self.version)
         self.assertEqual(package.read_text(), original)
+        self.assertEqual(lockfile.read_text(), "original lockfile")
 
     def test_sdk_version_does_not_change_contract_pin(self):
         scripts = self.root / "scripts"
