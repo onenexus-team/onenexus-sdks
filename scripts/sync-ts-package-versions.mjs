@@ -33,10 +33,21 @@ if (process.env.LOG_CONTRACT_PACKAGE_VERSION) {
         throw new Error('Invalid contract package version');
     const contractPath = join(repoRoot, 'ts/packages/log-contract/package.json');
     const contract = JSON.parse(readFileSync(contractPath, 'utf8'));
-    contract.version = contractVersion;
-    writeFileSync(contractPath, `${JSON.stringify(contract, null, 4)}\n`);
     const loggingPath = join(repoRoot, 'ts/packages/observability/package.json');
     const logging = JSON.parse(readFileSync(loggingPath, 'utf8'));
+    const lockPath = join(repoRoot, 'ts/pnpm-lock.yaml');
+    const lock = readFileSync(lockPath, 'utf8');
+    // Change only this known local link. Do not re-resolve external dependencies
+    // or rely on registry metadata being cached on a clean release runner.
+    const prefix = "  packages/observability:\n    dependencies:\n      '@onenexus-team/log-contract':\n        specifier: ";
+    const suffix = '\n        version: link:../log-contract\n';
+    const previous = prefix + logging.dependencies['@onenexus-team/log-contract'] + suffix;
+    if (lock.split(previous).length !== 2)
+        throw new Error('Expected exactly one observability contract workspace link in pnpm-lock.yaml');
+    const updated = lock.replace(previous, prefix + `workspace:${contractVersion}` + suffix);
+    contract.version = contractVersion;
+    writeFileSync(contractPath, `${JSON.stringify(contract, null, 4)}\n`);
     logging.dependencies['@onenexus-team/log-contract'] = `workspace:${contractVersion}`;
     writeFileSync(loggingPath, `${JSON.stringify(logging, null, 4)}\n`);
+    writeFileSync(lockPath, updated);
 }

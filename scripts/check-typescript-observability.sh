@@ -12,8 +12,8 @@ python3 "$checker" verify --version "$version" --expected-digest "$digest"
 pnpm --dir ts sync-version
 if [[ -n "${LOG_CONTRACT_PACKAGE_VERSION:-}" ]]; then
     # The tag build temporarily changes only the local workspace contract pin.
-    # Reconcile that link using already restored dependencies, without network resolution.
-    pnpm --dir ts install --offline --ignore-scripts --no-frozen-lockfile
+    # sync-version updates that link in the lockfile; all external resolutions stay fixed.
+    pnpm --dir ts install --frozen-lockfile --ignore-scripts
 fi
 pnpm --dir ts --filter @onenexus-team/log-contract --filter @onenexus-team/observability build
 pnpm --dir ts --filter @onenexus-team/log-contract --filter @onenexus-team/observability typecheck

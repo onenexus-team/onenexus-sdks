@@ -64,7 +64,7 @@ git push origin log-correlation-v0.3.4
 | TypeScript | Update `ts/packages/log-contract/package.json` version and the exact `workspace:X.Y.Z` dependency in `ts/packages/observability/package.json`; refresh `ts/pnpm-lock.yaml`. |
 | .NET | Update `LogContractPackageVersion` in `dotnet/Directory.Build.props`. Applications retain their dependency lockfiles. |
 
-- The TypeScript package version in source is the reviewed consumer pin. After the initial frozen install, the contract-tag build temporarily sets the release version, refreshes the workspace link offline, builds, then restores package metadata and the lockfile.
+- The TypeScript package version in source is the reviewed consumer pin. The contract-tag build temporarily sets the release version and its one workspace lockfile link, runs a frozen install, builds, then restores package metadata and the lockfile. External dependency resolutions stay unchanged.
 - SDK releases preserve the reviewed pins and publish only logging/client packages. They do not publish another copy of the contract packages.
 - SDK release validation restores the real pinned contract from the registry. It fails if the installed contract's digest/cases disagree with the reviewed canonical source.
 - A required new field still needs logger code that supplies its value; schema generation cannot invent that value.

@@ -185,7 +185,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(package.read_text(), original)
         self.assertEqual(lockfile.read_text(), "original lockfile")
 
-    def test_sdk_version_does_not_change_contract_pin(self):
+    def version_sync_project(self, contract_version="0.3.3"):
         scripts = self.root / "scripts"
         scripts.mkdir()
         source = Path(__file__).with_name("sync-ts-package-versions.mjs")
@@ -194,14 +194,48 @@ class ReleaseTests(unittest.TestCase):
         for name in ["log-contract", "observability", "sdk-core", "cas-client", "cas-support-client"]:
             folder = self.root / "ts/packages" / name
             folder.mkdir(parents=True)
-            (folder / "package.json").write_text(json.dumps({"name": name, "version": "0.3.3", "dependencies": {"@onenexus-team/log-contract": "workspace:0.3.3"}}))
+            (folder / "package.json").write_text(json.dumps({"name": name, "version": contract_version, "dependencies": {"@onenexus-team/log-contract": "workspace:" + contract_version}}))
+        return scripts / source.name
+
+    def test_sdk_version_does_not_change_contract_pin(self):
+        script = self.version_sync_project()
         env = {k: v for k, v in os.environ.items() if k not in {"SDK_PACKAGE_VERSION", "LOG_CONTRACT_PACKAGE_VERSION"}}
-        subprocess.run(["node", str(scripts / source.name)], check=True, capture_output=True, env=env)
+        subprocess.run(["node", str(script)], check=True, capture_output=True, env=env)
         contract = json.loads((self.root / "ts/packages/log-contract/package.json").read_text())
         logging = json.loads((self.root / "ts/packages/observability/package.json").read_text())
         self.assertEqual(contract["version"], "0.3.3")
         self.assertEqual(logging["version"], "9.8.7")
         self.assertEqual(logging["dependencies"]["@onenexus-team/log-contract"], "workspace:0.3.3")
+
+
+    def test_contract_override_changes_only_local_lockfile_link(self):
+        source_root = Path(__file__).resolve().parents[1]
+        pin = json.loads((source_root / "ts/packages/log-contract/package.json").read_text())["version"]
+        script = self.version_sync_project(pin)
+        lockfile = self.root / "ts/pnpm-lock.yaml"
+        # Real checked-in lockfile: all external resolution/integrity data must survive byte-for-byte.
+        original = (source_root / "ts/pnpm-lock.yaml").read_text()
+        lockfile.write_text(original)
+        subprocess.run(["node", str(script)], check=True, capture_output=True,
+                       env={**os.environ, "LOG_CONTRACT_PACKAGE_VERSION": "1.2.3"})
+        expected = original.replace("specifier: workspace:" + pin, "specifier: workspace:1.2.3")
+        self.assertNotEqual(expected, original)
+        self.assertEqual(lockfile.read_text(), expected)
+        logging = json.loads((self.root / "ts/packages/observability/package.json").read_text())
+        self.assertEqual(logging["dependencies"]["@onenexus-team/log-contract"], "workspace:1.2.3")
+        contract = json.loads((self.root / "ts/packages/log-contract/package.json").read_text())
+        self.assertEqual(contract["version"], "1.2.3")
+
+    def test_unknown_workspace_lockfile_layout_fails_closed(self):
+        script = self.version_sync_project()
+        lockfile = self.root / "ts/pnpm-lock.yaml"
+        lockfile.write_text("unknown layout")
+        result = subprocess.run(["node", str(script)], capture_output=True,
+                                env={**os.environ, "LOG_CONTRACT_PACKAGE_VERSION": "1.2.3"})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(lockfile.read_text(), "unknown layout")
+        contract = json.loads((self.root / "ts/packages/log-contract/package.json").read_text())
+        self.assertEqual(contract["version"], "0.3.3")
 
 
 if __name__ == "__main__":
