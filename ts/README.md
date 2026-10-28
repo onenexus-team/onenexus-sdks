@@ -8,11 +8,10 @@ and service calls; server-side token validation belongs to the services.
 
 ## Packages
 
-Node.js logging packages use the canonical language-neutral contract:
+Node.js services use one self-contained logging package:
 
 | Package | Description |
 |---|---|
-| [`@onenexus-team/log-contract`](packages/log-contract/README.md) | Build-generated schema, shared cases and runtime validation |
 | [`@onenexus-team/observability`](packages/observability/README.md) | Opt-in context isolation and JSON logging; no runtime download or global logger replacement |
 
 Validate both source and installed logging packages with `bash scripts/check-typescript-observability.sh` from the repository root.

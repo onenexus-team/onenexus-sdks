@@ -5,12 +5,13 @@ Guidance for AI coding agents working in the standalone OneNexus SDK repository.
 ## Repository shape
 
 - `README.md` documents the language-agnostic SDK architecture and credential model.
-- `contracts/log-correlation/` owns the current schema and shared language-adapter cases.
+- `tests/logging/` owns shared behavior scenarios and the independent result checker.
+- Each language logging package owns its runtime validation rules. CI checks those rules and runs the same scenarios across languages.
 - `specs/` contains committed OpenAPI specifications used for code generation.
 - `python/` is a `uv` workspace for Python SDK packages.
 - `ts/` is a `pnpm` workspace for TypeScript SDK packages.
-- `go/observability/` is the opt-in Go `slog` and trace-context module; `contracts/log-correlation/` is also the Go contract module. Run `bash scripts/check-go-observability.sh`.
-- `dotnet/` contains the generated contract and shared `ILogger` packages; run `bash scripts/check-dotnet-observability.sh`.
+- `go/observability/` is the opt-in Go `slog` and trace-context module. Run `bash scripts/check-go-observability.sh`.
+- `dotnet/` contains the self-contained `ILogger` logging package; run `bash scripts/check-dotnet-observability.sh`.
 
 ## Core rules
 
@@ -39,14 +40,18 @@ pnpm install
 pnpm package
 ```
 
-## Log contract checks
+## Logging and SDK release checks
 
 ```sh
-bash scripts/check-log-contracts.sh
+python3 -m unittest discover -s tests/logging -p 'test_*.py'
+python3 scripts/test-sdk-release.py
+bash scripts/build-sdk-artifacts.sh python
+bash scripts/build-sdk-artifacts.sh typescript
+bash scripts/build-sdk-artifacts.sh dotnet
+bash scripts/build-sdk-artifacts.sh go
 ```
 
-Keep one current schema, vector file and manifest in source. Preserve historical
-versions through protected tags and release artifacts; never replace published
-assets. Bump the manifest/schema/vector version and recompute digests for a new
-contract release. A checker pass proves reported case agreement, not service
-adoption. Runtime packages must execute the shared cases through their actual APIs.
+Use fresh artifact output directories for a full build. Run language checks independently while iterating.
+SDK release `vX.Y.Z` assigns `X.Y.Z` to every logging package. Go also needs the automatically created `go/observability/vX.Y.Z` module tag at the same commit. There is no separate logging-contract release.
+Never delete or replace already published packages/tags. Publishing still requires explicit user authorization.
+Applications consume installed packages, never repository source overrides. Test source and installed artifacts before publication. Shared scenarios must call actual logging/context APIs; passing these checks does not prove live service adoption.

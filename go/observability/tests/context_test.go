@@ -10,7 +10,6 @@ import (
 	"sync"
 	"testing"
 
-	contract "github.com/onenexus-team/onenexus-sdks/contracts/log-correlation"
 	obs "github.com/onenexus-team/onenexus-sdks/go/observability"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
@@ -24,7 +23,11 @@ const parent = "00-" + traceA + "-2222222222222222-01"
 func headers(value string) http.Header { return http.Header{"Traceparent": []string{value}} }
 
 func TestSharedCases(t *testing.T) {
-	b, err := contract.Load()
+	path := os.Getenv("ONENEXUS_LOGGING_SCENARIOS")
+	if path == "" {
+		path = "../../../tests/logging/scenarios.json"
+	}
+	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,12 +43,12 @@ func TestSharedCases(t *testing.T) {
 			Preserve        bool `json:"preserve_trace"`
 		} `json:"context_cases"`
 	}
-	if err = json.Unmarshal(b.Vectors, &vectors); err != nil {
+	if err = json.Unmarshal(data, &vectors); err != nil {
 		t.Fatal(err)
 	}
 	results := make([]map[string]any, 0)
 	for _, c := range vectors.Records {
-		got := contract.ValidateJSON(c.Record, c.Profile)
+		got := obs.ValidateJSON(c.Record, c.Profile)
 		if !reflect.DeepEqual(got, c.Errors) {
 			t.Fatalf("%s: %v want %v", c.ID, got, c.Errors)
 		}
@@ -65,8 +68,8 @@ func TestSharedCases(t *testing.T) {
 		}
 		results = append(results, map[string]any{"kind": "context", "id": c.ID, "trace_id": id, "outgoing_traceparent": obs.OutgoingHeaders(ctx).Get("traceparent"), "after_trace_id": nil})
 	}
-	if path := os.Getenv("ONENEXUS_CONTRACT_RESULTS"); path != "" {
-		data, err := json.Marshal(map[string]any{"adapter_protocol": 1, "contract_version": b.Version, "contract_sha256": b.Digest, "results": results})
+	if path := os.Getenv("ONENEXUS_LOGGING_RESULTS"); path != "" {
+		data, err := json.Marshal(map[string]any{"adapter_protocol": 1, "results": results})
 		if err != nil {
 			t.Fatal(err)
 		}

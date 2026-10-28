@@ -8,13 +8,13 @@ import (
 	"io"
 	"log/slog"
 	"math"
+	"os"
 	"runtime"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	contract "github.com/onenexus-team/onenexus-sdks/contracts/log-correlation"
 	obs "github.com/onenexus-team/onenexus-sdks/go/observability"
 )
 
@@ -58,7 +58,7 @@ func TestHandlerSchemaLevelsAndImmutableClones(t *testing.T) {
 		if i > 0 && i < 7 {
 			profile = "lifecycle"
 		}
-		if got := contract.ValidateJSON(line, profile); len(got) != 0 {
+		if got := obs.ValidateJSON(line, profile); len(got) != 0 {
 			t.Fatal(got)
 		}
 		var row map[string]json.RawMessage
@@ -224,7 +224,7 @@ func TestConcurrentWritesAreCompleteLines(t *testing.T) {
 		t.Fatal(h.Stats())
 	}
 	for _, line := range bytes.Split(bytes.TrimSpace(output.Bytes()), []byte{'\n'}) {
-		if got := contract.ValidateJSON(line, "correlated"); len(got) != 0 {
+		if got := obs.ValidateJSON(line, "correlated"); len(got) != 0 {
 			t.Fatal(got)
 		}
 	}
@@ -266,5 +266,62 @@ func TestWaitingCapacityAndCloseWakeup(t *testing.T) {
 	}
 	if h.Stats().Closed != 127 {
 		t.Fatal(h.Stats())
+	}
+}
+
+func TestSharedEmissionScenarios(t *testing.T) {
+	path := os.Getenv("ONENEXUS_LOGGING_SCENARIOS")
+	if path == "" {
+		path = "../../../tests/logging/scenarios.json"
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var suite struct {
+		Cases []struct {
+			ID, Message string
+			Traceparent *string
+			Expected    map[string]any
+			Absent      []string
+		} `json:"emission_cases"`
+	}
+	if err = json.Unmarshal(data, &suite); err != nil {
+		t.Fatal(err)
+	}
+	if len(suite.Cases) == 0 {
+		t.Fatal("no shared emission scenarios")
+	}
+	for _, c := range suite.Cases {
+		t.Run(c.ID, func(t *testing.T) {
+			var output bytes.Buffer
+			h, err := obs.NewHandler(obs.Config{Service: "shared-test", Environment: "development", Region: "region-1"}, &output)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer h.Close()
+			ctx := context.Background()
+			if c.Traceparent != nil {
+				ctx = obs.IncomingContext(ctx, headers(*c.Traceparent), true)
+			}
+			slog.New(h).InfoContext(ctx, c.Message)
+			var row map[string]any
+			if err = json.Unmarshal(output.Bytes(), &row); err != nil {
+				t.Fatal(err)
+			}
+			for key, want := range c.Expected {
+				if row[key] != want {
+					t.Fatalf("%s: %v want %v", key, row[key], want)
+				}
+			}
+			for _, key := range c.Absent {
+				if _, ok := row[key]; ok {
+					t.Fatal("unexpected", key)
+				}
+			}
+			if len(obs.ValidateJSON(output.Bytes(), "common")) != 0 {
+				t.Fatal("invalid output")
+			}
+		})
 	}
 }

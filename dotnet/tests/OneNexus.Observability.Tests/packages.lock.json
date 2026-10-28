@@ -193,17 +193,11 @@
         "resolved": "3.3.1",
         "contentHash": "7zkTEqmakybTTuDuifpnzl5s8MkmpAdyvoqIPIO2+M2ThF8ixavPcPt1afPfFyCI+A6t3ySujgpGq/5iWc4/RQ=="
       },
-      "onenexus.logcontract": {
-        "type": "Project",
-        "dependencies": {
-          "Corvus.Json.ExtendedTypes": "[5.7.5, 5.7.5]"
-        }
-      },
       "onenexus.observability": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.Logging": "[10.0.13, 10.0.13]",
-          "OneNexus.LogContract": "[0.0.5, )"
+          "Corvus.Json.ExtendedTypes": "[5.7.5, 5.7.5]",
+          "Microsoft.Extensions.Logging": "[10.0.13, 10.0.13]"
         }
       }
     }

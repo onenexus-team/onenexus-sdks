@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using OneNexus.LogContract;
+using OneNexus.Observability.Rules;
 
 namespace OneNexus.Observability.Tests;
 
@@ -10,7 +10,7 @@ public sealed class ContractTests
     [TestMethod]
     public void AllSharedCasesThroughActualPackageApis()
     {
-        using var vectors = JsonDocument.Parse(Contract.ReadResource("vectors.json"));
+        using var vectors = JsonDocument.Parse(File.ReadAllBytes(Environment.GetEnvironmentVariable("ONENEXUS_LOGGING_SCENARIOS") ?? throw new InvalidOperationException("Set ONENEXUS_LOGGING_SCENARIOS to shared scenarios.json")));
         var observations = new List<Dictionary<string, object?>>();
         foreach (var test in vectors.RootElement.GetProperty("record_cases").EnumerateArray())
         {
@@ -32,7 +32,7 @@ public sealed class ContractTests
             observations.Add(observed);
         }
         var envelope = new { adapter_protocol = 1, contract_version = Contract.Version, contract_sha256 = Contract.Digest, results = observations };
-        var path = Environment.GetEnvironmentVariable("ONENEXUS_CONTRACT_RESULTS") ?? Path.Combine(AppContext.BaseDirectory, "contract-results.json");
+        var path = Environment.GetEnvironmentVariable("ONENEXUS_LOGGING_RESULTS") ?? Path.Combine(AppContext.BaseDirectory, "contract-results.json");
         File.WriteAllText(path, JsonSerializer.Serialize(envelope, Contract.JsonOptions));
         Assert.HasCount(66, observations);
     }

@@ -13,8 +13,6 @@ import (
 	"sync/atomic"
 	"time"
 	"unicode/utf8"
-
-	logcontract "github.com/onenexus-team/onenexus-sdks/contracts/log-correlation"
 )
 
 type Config struct {
@@ -71,7 +69,7 @@ func NewHandler(config Config, writer io.Writer) (*Handler, error) {
 	if config.MaxWait == 0 {
 		config.MaxWait = 100 * time.Millisecond
 	}
-	b, err := logcontract.Load()
+	b, err := Load()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +85,7 @@ func NewHandler(config Config, writer io.Writer) (*Handler, error) {
 		h.allowed[field] = true
 	}
 	data, _ := json.Marshal(map[string]any{"timestamp": 0, "level": "INFO", "message": "Startup validation", "service": config.Service, "region": config.Region, "environment": config.Environment})
-	if !utf8.ValidString(config.Service+config.Region+config.Environment) || len(logcontract.ValidateJSON(data, "common")) > 0 {
+	if !utf8.ValidString(config.Service+config.Region+config.Environment) || len(ValidateJSON(data, "common")) > 0 {
 		return nil, errors.New("invalid_log_config")
 	}
 	return h, nil
@@ -163,7 +161,7 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	var buf bytes.Buffer
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)
-	if encoder.Encode(attrs) != nil || buf.Len()-1 > h.recordLimit || len(logcontract.ValidateJSON(buf.Bytes(), profile)) > 0 {
+	if encoder.Encode(attrs) != nil || buf.Len()-1 > h.recordLimit || len(ValidateJSON(buf.Bytes(), profile)) > 0 {
 		s.counters.invalid.Add(1)
 		return errInvalid
 	}

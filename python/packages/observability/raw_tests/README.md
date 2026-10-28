@@ -14,7 +14,7 @@ Use a fresh UUID per live run. Stderr reports the run ID and canonical trace ID.
 
 | Step | Development-cluster action | Required result |
 |---|---|---|
-| 1 | Build approved test image with wheel, locked dependencies and probe | Record image digest, wheel version/hash and contract digest |
+| 1 | Build approved test image with wheel, locked dependencies and probe | Record image digest and SDK wheel version/hash |
 | 2 | Run command in an authorized disposable pod in `development-region-1`; use deployed region | Exit 0; four stdout NDJSON records |
 | 3 | Capture stdout; filter metadata if container logs merge stderr | `--verify` passes for selected run ID |
 | 4 | Query authorized Loki/Grafana by service `observability-package-probe` and emitted trace ID | Three lifecycle logs, correct environment/region/run ID, attempts 1 and 2 |

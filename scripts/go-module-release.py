@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import io
-import json
 from pathlib import Path
 import re
 import subprocess
@@ -12,7 +11,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PREFIX = "github.com/onenexus-team/onenexus-sdks/"
-MODULES = {"contract": "contracts/log-correlation", "observability": "go/observability"}
+MODULES = {"observability": "go/observability"}
 SEMVER = re.compile(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)")
 
 
@@ -30,7 +29,7 @@ def files(kind: str) -> dict[str, bytes]:
         relative = path.relative_to(root)
         if any(part.startswith(".") or part in {"node_modules", "__pycache__", "bin", "obj"} for part in relative.parts):
             continue
-        if path.is_file() and (path.suffix == ".go" or str(relative) in {"go.mod", "go.sum", "manifest.json", "schema.json", "vectors.json"}):
+        if path.is_file() and (path.suffix == ".go" or str(relative) in {"go.mod", "go.sum", "schema.json"}):
             if path.is_symlink():
                 raise ValueError("symlink_in_go_module")
             selected[str(relative)] = path.read_bytes()
@@ -67,7 +66,7 @@ def verify(kind: str, version: str, path: Path) -> None:
 def build(kind: str, version: str, directory: Path) -> Path:
     module, _ = identity(kind, version)
     directory.mkdir(parents=True, exist_ok=True)
-    name = ("log-contract-go" if kind == "contract" else "observability-go") + f"-v{version}.zip"
+    name = "observability-go" + f"-v{version}.zip"
     path = directory / name
     with path.open("xb") as f:
         f.write(archive(kind, version))
@@ -85,9 +84,6 @@ def preflight(kind: str, version: str) -> None:
     files(kind)
     if git("status", "--porcelain", "--", MODULES[kind]):
         raise ValueError("uncommitted_go_module")
-    if kind == "contract":
-        if json.loads((ROOT / MODULES[kind] / "manifest.json").read_text())["version"] != version:
-            raise ValueError("go_contract_version_mismatch")
     git("merge-base", "--is-ancestor", "HEAD", "origin/main")
     # Authentication/network failures raise; they are never interpreted as absence.
     refs = git("ls-remote", "--refs", "origin", "refs/tags/" + MODULES[kind] + "/v*")
@@ -108,6 +104,8 @@ def publish(kind: str, version: str, path: Path) -> None:
     # Atomic creation at GitHub rejects a racing publisher even at the same SHA.
     # No force update, tag deletion or 'skip duplicate'. No locally-generated code.
     sha = git("rev-parse", "HEAD")
+    if git("rev-parse", "refs/tags/v" + version + "^{commit}") != sha:
+        raise ValueError("go_tag_must_match_sdk_release")
     subprocess.run(["gh", "api", "repos/onenexus-team/onenexus-sdks/git/refs",
                     "--method", "POST", "-f", "ref=refs/tags/" + tag, "-f", "sha=" + sha],
                    cwd=ROOT, check=True, capture_output=True, text=True, timeout=60)

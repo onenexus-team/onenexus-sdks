@@ -1,4 +1,4 @@
-"""Read the pinned release, never fetch or generate a schema at runtime."""
+"""Validation rules bundled with the logger. No separate contract dependency."""
 
 from __future__ import annotations
 
@@ -6,11 +6,12 @@ import json
 from typing import Any
 
 from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
-from onenexus_log_contract import load
+from importlib.resources import files
 
-_MANIFEST, _SCHEMA, _ = load()
-CONTRACT_VERSION: str = _MANIFEST["version"]
-CONTRACT_DIGEST: str = _MANIFEST["sha256"]
+# Compatibility identifiers for the unchanged log format, not package versions.
+CONTRACT_VERSION = "0.3.2"
+CONTRACT_DIGEST = "4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923"
+_SCHEMA = json.loads(files("onenexus_observability").joinpath("schema.json").read_bytes())
 _VALIDATORS = {
     name: Draft202012Validator(definition) for name, definition in _SCHEMA["$defs"].items()
 }

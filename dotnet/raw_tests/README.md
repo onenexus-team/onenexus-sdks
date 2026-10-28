@@ -38,7 +38,7 @@ sequenceDiagram
 
 | Step | Action | Required evidence |
 |---|---|---|
-| 1 | Confirm `development-region-1`; verify CAS package/image and gateway deployment | Image digest, package version, contract version/digest and UTC test window |
+| 1 | Confirm `development-region-1`; verify CAS package/image and gateway deployment | Image digest, SDK package version and UTC test window |
 | 2 | Perform a real authorized CP request and a real regional DP request from #798 | HTTP/gRPC outcomes unchanged; record returned/canonical trace IDs |
 | 3 | Query Grafana using exact trace ID and actual permitted stream selector | Related CAS logs present; each hop uses the same ID |
 | 4 | Export log **bodies** as NDJSON, one record per line | No Grafana wrapper, timestamp prefix or silently filtered invalid rows |

@@ -1,10 +1,10 @@
 name: Go observability checks
 on:
   pull_request:
-    paths: ['go/**', 'contracts/log-correlation/**', 'scripts/*go*', 'scripts/log-contract-release.py', '.github/workflows/go-observability-checks.yml', '.github/workflows/log-contract-*.yml', '.github/workflows/sdk-release.yml', 'VERSION']
+    paths: ['go/**', 'tests/logging/**', 'scripts/*go*', '.github/workflows/go-observability-checks.yml', '.github/workflows/sdk-release.yml', 'VERSION']
   push:
     branches: [main]
-    paths: ['go/**', 'contracts/log-correlation/**', 'scripts/*go*', 'scripts/log-contract-release.py', '.github/workflows/go-observability-checks.yml', '.github/workflows/log-contract-*.yml', '.github/workflows/sdk-release.yml', 'VERSION']
+    paths: ['go/**', 'tests/logging/**', 'scripts/*go*', '.github/workflows/go-observability-checks.yml', '.github/workflows/sdk-release.yml', 'VERSION']
 permissions:
   contents: read
 jobs:
@@ -20,7 +20,6 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
           cache-dependency-path: |
-            contracts/log-correlation/go.sum
             go/observability/go.sum
       - uses: actions/setup-python@v7.0.0
         with:

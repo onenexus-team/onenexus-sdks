@@ -3,7 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using OneNexus.LogContract;
+using OneNexus.Observability.Rules;
 
 namespace OneNexus.Observability.Tests;
 
@@ -14,6 +14,30 @@ public sealed partial class LoggingTests
     private static readonly LogConfiguration Config = new("cas-test", "development", "region-1", ["operation_id", "attempt"]);
     private static KeyValuePair<string, string>[] Headers(string parent = Parent) => [new("traceparent", parent)];
     private static JsonElement[] Records(StringWriter writer) => writer.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(s => JsonDocument.Parse(s).RootElement.Clone()).ToArray();
+
+    [TestMethod]
+    public void SharedEmissionScenarios()
+    {
+        using var suite = JsonDocument.Parse(File.ReadAllBytes(Environment.GetEnvironmentVariable("ONENEXUS_LOGGING_SCENARIOS")!));
+        var cases = suite.RootElement.GetProperty("emission_cases");
+        Assert.IsTrue(cases.GetArrayLength() > 0);
+        foreach (var item in cases.EnumerateArray())
+        {
+            using var output = new StringWriter();
+            using var provider = new JsonLogProvider(new("shared-test", "development", "region-1"), output);
+            var logger = provider.CreateLogger("shared");
+            var parent = item.GetProperty("traceparent").GetString();
+            using (CorrelationContext.BindIncoming(parent is null ? [] : Headers(parent), true))
+                logger.Log(LogLevel.Information, new EventId(), item.GetProperty("message").GetString()!, null, (message, _) => message);
+            var rows = Records(output);
+            Assert.HasCount(1, rows);
+            foreach (var expected in item.GetProperty("expected").EnumerateObject())
+                Assert.AreEqual(expected.Value.GetString(), rows[0].GetProperty(expected.Name).GetString());
+            if (item.TryGetProperty("absent", out var absent))
+                foreach (var key in absent.EnumerateArray()) Assert.IsFalse(rows[0].TryGetProperty(key.GetString()!, out _));
+            Assert.IsEmpty(Contract.Validate(rows[0]));
+        }
+    }
 
     [TestMethod]
     public void CommonFieldsAndSafeCustomFields()

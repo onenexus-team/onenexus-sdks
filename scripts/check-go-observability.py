@@ -6,7 +6,6 @@ import importlib.util
 import json
 import os
 from pathlib import Path
-import re
 import shutil
 import subprocess
 import sys
@@ -28,68 +27,45 @@ def run(args, *, cwd=ROOT, env=None, capture=False, success=True):
 def main():
     out = ROOT / ".artifacts/go-observability"
     out.mkdir(parents=True, exist_ok=True)
-    manifest = json.loads((ROOT / "contracts/log-correlation/manifest.json").read_text())
-    canonical = manifest["version"]
     sdk = os.environ.get("SDK_PACKAGE_VERSION", (ROOT / "VERSION").read_text().strip())
-    module = release.PREFIX + release.MODULES["contract"]
-    modfile = (ROOT / "go/observability/go.mod").read_text()
-    pin, = re.findall(re.escape(module) + r" v([0-9]+\.[0-9]+\.[0-9]+)\b", modfile)
-    checker = [sys.executable, str(ROOT / "contracts/log-correlation/check_contract.py")]
-    contract_args = ["--version", canonical, "--expected-digest", manifest["sha256"]]
-    run(checker + ["verify"] + contract_args)
-    env = {**os.environ, "GOTOOLCHAIN": "local"}
+    checker = [sys.executable, str(ROOT / "tests/logging/check_results.py")]
+    env = {**os.environ, "GOTOOLCHAIN": "local", "ONENEXUS_LOGGING_SCENARIOS": str(ROOT / "tests/logging/scenarios.json")}
     with tempfile.TemporaryDirectory(prefix="onenexus-go-check-") as temp:
         temp = Path(temp)
-        source_env = {**env, "GOWORK": "off", "ONENEXUS_CONTRACT_RESULTS": str(out / "source-results.json")}
-        source_mod = temp / "source.mod"
-        shutil.copyfile(ROOT / "go/observability/go.mod", source_mod)
-        shutil.copyfile(ROOT / "go/observability/go.sum", temp / "source.sum")
-        run(["go", "mod", "edit", "-modfile=" + str(source_mod),
-             "-replace=" + module + "=" + str(ROOT / "contracts/log-correlation")],
-            cwd=ROOT / "go/observability", env=source_env)
+        source_env = {**env, "GOWORK": "off", "ONENEXUS_LOGGING_RESULTS": str(out / "source-results.json")}
         go_files = [str(p) for path in release.MODULES.values() for p in (ROOT / path).rglob("*.go")]
         if run(["gofmt", "-l", *go_files], capture=True).stdout.strip():
             raise ValueError("go_formatting_required")
         for path in release.MODULES.values():
             flags = ["-mod=readonly"]
-            if path == "go/observability": flags += ["-modfile=" + str(source_mod)]
             run(["go", "vet", *flags, "./..."], cwd=ROOT / path, env=source_env)
             run(["go", "test", *flags, "-race", "-count=1", "./..."], cwd=ROOT / path, env=source_env)
-        run(checker + ["check-results"] + contract_args + ["--results", str(out / "source-results.json")])
+        run(checker + [str(out / "source-results.json")])
         # A private local proxy serves real module ZIPs, not source replacements.
         proxy = temp / "proxy"
-        for kind, version in [("contract", pin), ("observability", sdk)]:
+        for kind, version in [("observability", sdk)]:
             module_path, _ = release.identity(kind, version)
             entry = proxy / module_path / "@v"
             entry.mkdir(parents=True)
-            published = kind == "contract" and os.environ.get("REQUIRE_PUBLISHED_LOG_CONTRACT") == "1"
-            if published:
-                fetched = run(["go", "mod", "download", "-json", module_path + "@v" + version], cwd=temp,
-                              env={**env, "GOWORK": "off", "GOPROXY": "direct", "GOPRIVATE": release.PREFIX + "*"}, capture=True)
-                metadata = json.loads(fetched.stdout)
-                for ext, key in [("zip", "Zip"), ("mod", "GoMod"), ("info", "Info")]:
-                    shutil.copyfile(metadata[key], entry / f"v{version}.{ext}")
-            else:
-                (entry / f"v{version}.zip").write_bytes(release.archive(kind, version))
-                (entry / f"v{version}.mod").write_bytes((ROOT / release.MODULES[kind] / "go.mod").read_bytes())
-                (entry / f"v{version}.info").write_text(json.dumps({"Version": "v" + version, "Time": "2000-01-01T00:00:00Z"}))
+            (entry / f"v{version}.zip").write_bytes(release.archive(kind, version))
+            (entry / f"v{version}.mod").write_bytes((ROOT / release.MODULES[kind] / "go.mod").read_bytes())
+            (entry / f"v{version}.info").write_text(json.dumps({"Version": "v" + version, "Time": "2000-01-01T00:00:00Z"}))
             (entry / "list").write_text("v" + version + "\n")
         consumer = temp / "consumer"
         consumer.mkdir()
         (consumer / "go.mod").write_text("module example.com/installed-consumer\n\ngo 1.26.0\nrequire " + release.PREFIX + "go/observability v" + sdk + "\n")
         shutil.copytree(ROOT / "go/observability/tests", consumer / "tests")
-        shutil.copytree(ROOT / "contracts/log-correlation/tests", consumer / "contract_tests")
         shutil.copytree(ROOT / "go/observability/raw_tests", consumer / "raw_tests")
         installed_env = {**env, "GOWORK": "off", "GOMODCACHE": str(temp / "module-cache"),
                          "GOPROXY": proxy.as_uri() + ",https://proxy.golang.org", "GONOPROXY": "none",
-                         "GONOSUMDB": release.PREFIX + "*", "ONENEXUS_CONTRACT_RESULTS": str(out / "installed-results.json")}
+                         "GONOSUMDB": release.PREFIX + "*", "ONENEXUS_LOGGING_RESULTS": str(out / "installed-results.json")}
         run(["go", "mod", "tidy"], cwd=consumer, env=installed_env)
         resolved = run(["go", "list", "-m", "-json", "all"], cwd=consumer, env=installed_env, capture=True).stdout
         if '"Replace"' in resolved:
             raise ValueError("installed_test_used_source_override")
         (out / "installed-modules.json").write_text(resolved)
         run(["go", "test", "-mod=readonly", "-race", "-count=1", "./..."], cwd=consumer, env=installed_env)
-        run(checker + ["check-results"] + contract_args + ["--results", str(out / "installed-results.json")])
+        run(checker + [str(out / "installed-results.json")])
         if os.environ.get("RUN_GO_VULNCHECK") == "1":
             scan = run(["govulncheck", "./..."], cwd=consumer, env=installed_env, capture=True)
             (out / "vulnerability-scan.txt").write_text(scan.stdout)
@@ -119,11 +95,11 @@ def main():
         next(row for row in result["results"] if row.get("errors"))["errors"] = []
         negative = out / "negative-results.json"
         negative.write_text(json.dumps(result))
-        run(checker + ["check-results"] + contract_args + ["--results", str(negative)], capture=True, success=False)
+        run(checker + [str(negative)], capture=True, success=False)
         benchmark = run(["go", "test", "-run=^$", "-bench=BenchmarkHandler", "-benchmem", "./tests"], cwd=consumer, env=installed_env, capture=True)
         (out / "benchmark.txt").write_text(benchmark.stdout)
-    for kind, version in [("contract", canonical), ("observability", sdk)]:
-        name = ("log-contract-go" if kind == "contract" else "observability-go") + f"-v{version}.zip"
+    for kind, version in [("observability", sdk)]:
+        name = "observability-go" + f"-v{version}.zip"
         (out / name).write_bytes(release.archive(kind, version))
         release.verify(kind, version, out / name)
     print("PASS: Go source, installed modules, race tests, shared cases and raw controls. " + str(out))

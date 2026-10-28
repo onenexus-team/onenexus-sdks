@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 
-	contract "github.com/onenexus-team/onenexus-sdks/contracts/log-correlation"
 	obs "github.com/onenexus-team/onenexus-sdks/go/observability"
 )
 
@@ -61,7 +60,7 @@ func verify(path, id, service string) error {
 	for scanner.Scan() {
 		count++
 		line := scanner.Bytes()
-		if codes := contract.ValidateJSON(line, "common"); len(codes) > 0 {
+		if codes := obs.ValidateJSON(line, "common"); len(codes) > 0 {
 			return fmt.Errorf("line_%d_invalid:%v", count, codes)
 		}
 		var row struct {

@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using OneNexus.LogContract;
+using OneNexus.Observability.Rules;
 
 namespace OneNexus.Observability;
 

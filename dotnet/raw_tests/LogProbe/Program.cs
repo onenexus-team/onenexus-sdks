@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using OneNexus.LogContract;
+using OneNexus.Observability.Rules;
 using OneNexus.Observability;
 
 try

@@ -6,7 +6,7 @@ import {
     ContractViolation,
     encodeRecord,
     validateRecord,
-} from '@onenexus-team/log-contract';
+} from './rules.js';
 import { currentTraceId } from './context.js';
 
 export type LogFields = Readonly<Record<string, string | number | boolean | null>>;

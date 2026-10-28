@@ -91,10 +91,8 @@ needs both `onenexus-sdk-core` and `onenexus-cas-client`.
 
 After the logging package is merged and included in a new SDK release, install
 its versioned wheel using the same URL pattern as the SDKs above.
-`onenexus-observability-python` declares its pinned `onenexus-log-contract`
-dependency, so normal pip/uv installation resolves that contract automatically.
-The consuming service only needs to declare the logging wheel; it does not need
-a separate contract requirement.
+`onenexus-observability-python` includes its logging rules and validators.
+The consuming service declares only that wheel and installs its ordinary public dependencies.
 
 See [logging release and consumption](packages/observability/README.md#release-and-consumption)
 for the requirements template, version boundaries and validation gates.

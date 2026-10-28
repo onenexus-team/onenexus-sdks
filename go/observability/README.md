@@ -1,30 +1,22 @@
 # Shared Go logging
 
-| Module | Responsibility | Published by |
-|---|---|---|
-| `github.com/onenexus-team/onenexus-sdks/contracts/log-correlation` | Embedded JSON schema, identity, shared cases, record validation | `log-correlation-vX.Y.Z` creates module tag `contracts/log-correlation/vX.Y.Z` |
-| `github.com/onenexus-team/onenexus-sdks/go/observability` | `slog` JSON handler and trace-context helpers | SDK release `vX.Y.Z` creates module tag `go/observability/vX.Y.Z` |
+One module contains the `slog` handler, validation rules and trace-context helpers.
+SDK release `vX.Y.Z` automatically creates Go module tag `go/observability/vX.Y.Z` at the same commit.
 
 ```mermaid
 flowchart LR
-    JSON[Canonical JSON files] --> Embed[Go embeds original files]
-    Embed --> Contract[Contract module]
-    Contract --> Logger[Go logging module]
     Envoy[Envoy creates trace ID] --> Context[Request context]
-    Context --> Logger
+    Context --> Logger[Self-contained logging module]
     Context --> HTTP[Outgoing HTTP or saved job context]
-    Logger --> Stdout[JSON stdout]
+    Logger --> Stdout[Validated JSON stdout]
     Stdout --> Collector[Existing collector]
 ```
 
-- One canonical schema at `contracts/log-correlation/`; Go's `embed` includes it during compilation.
-- No download during application startup or requests. A schema change requires a published version and reviewed dependency upgrade.
-- A new required field may also need logging code to supply its value.
-- No global logging replacement, span export or cluster changes.
+- Runtime rules are embedded from this module's `schema.json`.
+- Shared test data stays in `tests/logging/`; no separate Go contract module.
+- No runtime package downloads, global logger replacement, span exporter or cluster changes.
 
 ## Install after publication
-
-**First-release prerequisite:** the Go contract has not been published yet. The logging module pins **v0.3.4**, the next unused cross-language contract version. Publish the reviewed canonical contract 0.3.4 first, then an approved SDK release. PR tests use unpublished module archives and do not claim registry publication.
 
 ```bash
 export GOPRIVATE=github.com/onenexus-team/onenexus-sdks
@@ -34,7 +26,6 @@ go get github.com/onenexus-team/onenexus-sdks/go/observability@v<released-sdk-ve
 
 - Commit the application's `go.mod` and `go.sum`; do not add local `replace` entries.
 - Go uses versioned source modules from the private Git repository, not the npm/NuGet registry.
-- Go's minimum-version selection may choose a higher contract version when another dependency requires it. Review `go list -m all`, lock sums and rerun the shared tests on upgrades.
 
 ## Use in a service
 
@@ -99,14 +90,13 @@ Export `handler.Stats()` as service metrics. `slog` ignores handler return error
 ```bash
 bash scripts/check-go-observability.sh
 python3 scripts/test-go-module-release.py
-python3 scripts/test-log-contract-release.py
 ```
 
 | Check | What it proves |
 |---|---|
 | Source + `go test -race` | Shared cases, goroutine isolation, cancellation, retry, real recorded child, concurrent output and failure handling |
-| Separate installed consumer | Versioned module ZIPs install without source replacements; same tests pass |
-| Independent contract checker | Actual results agree with all 56 record and 10 edge-context cases |
+| Separate installed consumer | Versioned module ZIP install without source replacements; same tests pass |
+| Shared behavior checker | Actual results agree with all 56 record and 10 edge-context cases |
 | Raw probe | Four emitted SDK JSON lines; three share the same trace ID |
 | Negative controls | Wrong trace/service, missing field, plain-text output and falsified case result fail |
 
@@ -126,4 +116,4 @@ kubectl --context <test-context> logs -n <namespace> <pod> -c <container> \
 - No `kubectl --timestamps`: the captured lines must be raw JSON.
 - Compare real gateway/service/dependency logs in Loki separately. This package task has no deployed Go consumer and cannot prove cluster collection.
 
-See [design and validation](design-and-validation.md) and the [contract release guide](../../contracts/log-correlation/release-guide.md).
+See [design and validation](../../docs/logging-readiness.md) and the [SDK release guide](../../docs/logging.md).

@@ -1,6 +1,6 @@
 using System.Collections.Frozen;
 using System.Text.Json;
-using OneNexus.LogContract;
+using OneNexus.Observability.Rules;
 
 namespace OneNexus.Observability;
 

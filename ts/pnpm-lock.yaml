@@ -66,20 +66,14 @@ importers:
         specifier: workspace:^
         version: link:../sdk-core
 
-  packages/log-contract:
-    dependencies:
-      ajv:
-        specifier: 8.20.0
-        version: 8.20.0
-
   packages/observability:
     dependencies:
-      '@onenexus-team/log-contract':
-        specifier: workspace:0.3.3
-        version: link:../log-contract
       '@opentelemetry/api':
         specifier: 1.10.0
         version: 1.10.0
+      ajv:
+        specifier: 8.20.0
+        version: 8.20.0
     devDependencies:
       '@opentelemetry/context-async-hooks':
         specifier: 3.0.0

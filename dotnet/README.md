@@ -1,23 +1,18 @@
 # Shared .NET logging
 
-| Package | Responsibility |
-|---|---|
-| `OneNexus.LogContract` | Generated JSON Schema validators; embedded canonical schema, manifest and shared test cases |
-| `OneNexus.Observability` | `ILogger` JSON provider; common fields; W3C context helpers; depends on the contract package |
+`OneNexus.Observability` includes the `ILogger` provider, trace-context helpers and validation rules.
+It uses the same `X.Y.Z` version as SDK release `vX.Y.Z`.
 
 ```mermaid
 flowchart LR
-    JSON[Canonical JSON contract] --> Build[Build generates .NET validators]
-    Build --> Contract[OneNexus.LogContract]
-    Contract --> Logger[OneNexus.Observability]
-    Logger --> CAS[CAS integration in a later PR]
+    Source[Logger and schema.json] --> Build[Build and test one NuGet package]
+    Build --> Logger[OneNexus.Observability]
+    Logger --> CAS[Explicit CAS integration]
 ```
 
-- Target: **.NET 10**, matching CAS. Corvus schema generation and MSTest match CAS's existing tooling.
-- `OneNexus.Observability` follows SDK `vX.Y.Z`. New `OneNexus.LogContract` packages follow `log-correlation-vX.Y.Z`; `LogContractPackageVersion` selects the reviewed dependency. The current canonical schema is `0.3.2`.
-- No hand-maintained schema copy: MSBuild reads `contracts/log-correlation/` directly and embeds the same data.
-- Contract tags publish the contract package; SDK releases publish the logging package. Both run installed-package tests before publication. PR/main CI builds artifacts without publishing.
-- Published package versions cannot be overwritten. If publication stops partway through, inspect registry state and use an approved new version in the affected release stream; the workflow fails on an existing version.
+- Target: .NET 10, matching CAS. Schema validators are generated inside the logging assembly.
+- No separate schema package, release tag, dependency pin or request-time download.
+- Source and installed-package tests run against shared repository scenarios.
 - No service adoption, cluster rollout or span exporter is included here.
 
 ## Consume after release
@@ -30,7 +25,8 @@ Configure the organization's authenticated NuGet source in the consuming reposit
 <PackageReference Include="OneNexus.Observability" Version="[X.Y.Z]" />
 ```
 
-NuGet installs `OneNexus.LogContract` transitively. CAS does not import this repository's source or download a schema at request time. For an unreleased local build, use the two packages under `.artifacts/dotnet/<version>` as a local NuGet source.
+Install only `OneNexus.Observability`; its rules are included in the same assembly.
+For a local build, use `.artifacts/dotnet/<version>` as a NuGet source.
 
 ## Register at service startup
 
@@ -91,8 +87,8 @@ bash scripts/check-dotnet-observability.sh
 - All 66 shared cases through actual C# APIs; the independent Python checker rejects a deliberately wrong result.
 - Context isolation, cancellation, retry metadata, existing Activity compatibility, log fields and failure behavior.
 - Manual log checks: [raw_tests/README.md](raw_tests/README.md).
-- Lifecycle, readiness findings and rollout gates: [design-and-validation.md](design-and-validation.md).
+- Lifecycle, readiness findings and rollout gates: [SDK readiness](../docs/logging-readiness.md).
 - Output is bounded to 4 KiB per record and 1 KiB per message. The provider writes synchronously and owns no growing queue; a blocked stdout writer can block the caller. CAS must measure its logging budget and expose the drop counter before production adoption.
 - Logs go to existing stdout collection. This package adds no OpenTelemetry exporter, collector, Loki client or new recording spans.
 
-- [Contract release and upgrade guide](../contracts/log-correlation/release-guide.md).
+- [SDK release and upgrade guide](../docs/logging.md).
