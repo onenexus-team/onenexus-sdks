@@ -77,7 +77,7 @@ class SharedTests(unittest.TestCase):
             "python/packages/observability/src/onenexus_observability/schema.json",
             "ts/packages/observability/src/schema.json",
             "go/observability/schema.json",
-            "dotnet/src/OneNexus.Observability/schema.json",
+            "dotnet/packages/observability/src/schema.json",
         ]
         definitions = [json.loads((ROOT / p).read_text()) for p in paths]
         for definition in definitions[1:]:

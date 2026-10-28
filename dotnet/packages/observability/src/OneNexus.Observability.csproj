@@ -5,6 +5,7 @@
     <Description>OneNexus ILogger provider and W3C log correlation context.</Description>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="/" />
     <PackageReference Include="Corvus.Json.ExtendedTypes" Version="[5.7.5]" />
     <PackageReference Include="Corvus.Json.SourceGenerator" Version="[5.7.5]" PrivateAssets="all" />
     <AdditionalFiles Include="schema.json" />

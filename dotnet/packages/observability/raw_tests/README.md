@@ -11,9 +11,9 @@
 ```bash
 bash scripts/check-dotnet-observability.sh
 version="$(cat VERSION)"
-dotnet restore dotnet/raw_tests/LogProbe -p:PackageUnderTest="$version" \
+dotnet restore dotnet/packages/observability/raw_tests/LogProbe -p:PackageUnderTest="$version" \
   --source "$PWD/.artifacts/dotnet/$version" --source https://api.nuget.org/v3/index.json
-dotnet build dotnet/raw_tests/LogProbe --no-restore -c Release -p:PackageUnderTest="$version"
+dotnet build dotnet/packages/observability/raw_tests/LogProbe --no-restore -c Release -p:PackageUnderTest="$version"
 ```
 
 The validator consumes the actual `.nupkg` through `PackageReference`. It does not import SDK source or deploy a test service.
@@ -49,9 +49,9 @@ sequenceDiagram
 
 ```bash
 # Replace placeholders with observed deployment values; these service names are examples.
-dotnet dotnet/raw_tests/LogProbe/bin/Release/net10.0/LogProbe.dll \
+dotnet dotnet/packages/observability/raw_tests/LogProbe/bin/Release/net10.0/LogProbe.dll \
   verify cas-control.ndjson '<trace_id>' development global cas-control
-dotnet dotnet/raw_tests/LogProbe/bin/Release/net10.0/LogProbe.dll \
+dotnet dotnet/packages/observability/raw_tests/LogProbe/bin/Release/net10.0/LogProbe.dll \
   verify cas-regional.ndjson '<same_trace_id>' development region-1 cas-regional
 ```
 

@@ -13,21 +13,21 @@ out="$root/.artifacts/dotnet/$version"
 mkdir -p "$out"
 export ONENEXUS_LOGGING_SCENARIOS="$root/tests/logging/scenarios.json"
 checker=tests/logging/check_results.py
-project=dotnet/tests/OneNexus.Observability.Tests
+project=dotnet/packages/observability/tests
 dotnet restore "$project" --locked-mode
 ONENEXUS_LOGGING_RESULTS="$out/source-results.json" dotnet run --project "$project" --no-restore -c Release -- --timeout 2m
 python3 "$checker" "$out/source-results.json"
-dotnet pack dotnet/src/OneNexus.Observability --no-restore -c Release -p:Version="$version" -o "$out"
+dotnet pack dotnet/packages/observability/src --no-restore -c Release -p:Version="$version" -o "$out"
 
 # A separate consumer directory and package cache prove that .nupkg dependency metadata works.
 consumer="$(mktemp -d)"
 trap 'rm -rf "$consumer"' EXIT
 cp global.json "$consumer/global.json"
 cp dotnet/Directory.Build.props "$consumer/Directory.Build.props"
-cp dotnet/README.md "$consumer/README.md"
-cp -R dotnet/tests/OneNexus.Observability.Tests "$consumer/tests"
+cp dotnet/packages/observability/README.md "$consumer/README.md"
+cp -R dotnet/packages/observability/tests "$consumer/tests"
 rm -rf "$consumer/tests/bin" "$consumer/tests/obj" "$consumer/tests/TestResults"
-cp -R dotnet/raw_tests/LogProbe "$consumer/probe"
+cp -R dotnet/packages/observability/raw_tests/LogProbe "$consumer/probe"
 rm -rf "$consumer/probe/bin" "$consumer/probe/obj"
 cache="$consumer/packages"
 sources=(--source "$out" --source https://api.nuget.org/v3/index.json)

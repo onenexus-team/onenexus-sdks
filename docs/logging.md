@@ -88,6 +88,6 @@ bash scripts/build-sdk-artifacts.sh go
 | Python | [Probe and live-log verification](../python/packages/observability/raw_tests/README.md) |
 | TypeScript | [Probe and live-log verification](../ts/packages/observability/raw_tests/README.md) |
 | Go | [Service capture and probe](../go/observability/README.md#raw-logs-from-a-real-service-after-its-separate-integration) |
-| .NET | [Probe and CAS validation](../dotnet/raw_tests/README.md) |
+| .NET | [Probe and CAS validation](../dotnet/packages/observability/raw_tests/README.md) |
 
 Package tests prove logging behavior and installation. They do not prove that a deployed service uses the new package, or that its logs reached Loki. See [readiness evidence and remaining gates](logging-readiness.md).

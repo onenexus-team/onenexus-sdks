@@ -11,7 +11,4 @@
     <RepositoryUrl>https://github.com/onenexus-team/onenexus-sdks</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="/" />
-  </ItemGroup>
 </Project>
