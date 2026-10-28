@@ -1,10 +1,10 @@
 name: TypeScript observability checks
 on:
   pull_request:
-    paths: ['ts/**', 'contracts/log-correlation/**', 'scripts/*ts*', 'scripts/check-typescript-observability.sh', '.node-version', 'VERSION', '.github/workflows/typescript-observability-checks.yml', '.github/workflows/sdk-release.yml']
+    paths: ['ts/**', 'tests/logging/**', 'scripts/*ts*', 'scripts/check-typescript-observability.sh', '.node-version', 'VERSION', '.github/workflows/typescript-observability-checks.yml', '.github/workflows/sdk-release.yml']
   push:
     branches: [main]
-    paths: ['ts/**', 'contracts/log-correlation/**', 'scripts/*ts*', 'scripts/check-typescript-observability.sh', '.node-version', 'VERSION', '.github/workflows/typescript-observability-checks.yml', '.github/workflows/sdk-release.yml']
+    paths: ['ts/**', 'tests/logging/**', 'scripts/*ts*', 'scripts/check-typescript-observability.sh', '.node-version', 'VERSION', '.github/workflows/typescript-observability-checks.yml', '.github/workflows/sdk-release.yml']
 permissions:
   contents: read
 jobs:

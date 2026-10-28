@@ -1,0 +1,61 @@
+name: Build and validate SDK packages
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      version:
+        required: false
+        type: string
+        default: ''
+permissions:
+  contents: read
+jobs:
+  packages:
+    name: ${{ matrix.language }} packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, typescript, dotnet, go]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.14'
+      - uses: astral-sh/setup-uv@v10.3.0
+        if: matrix.language == 'python'
+        with:
+          version: '0.11.21'
+      - uses: actions/setup-node@v7.1.0
+        if: matrix.language == 'typescript'
+        with:
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@v6.1.0
+        if: matrix.language == 'typescript'
+        with:
+          package_json_file: ts/package.json
+          run_install: false
+      - uses: actions/setup-dotnet@v5
+        if: matrix.language == 'dotnet'
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-go@v6
+        if: matrix.language == 'go'
+        with:
+          go-version: '1.27.3'
+          cache-dependency-path: go/observability/go.sum
+      - name: Build and test source and installed packages
+        env:
+          SDK_LANGUAGE: ${{ matrix.language }}
+          SDK_VERSION: ${{ inputs.version }}
+        run: bash scripts/build-sdk-artifacts.sh "$SDK_LANGUAGE" "$SDK_VERSION"
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: sdk-${{ matrix.language }}
+          path: .artifacts/sdk/${{ matrix.language }}/
+          if-no-files-found: error

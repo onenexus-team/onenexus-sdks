@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Writable } from 'node:stream';
 import { setImmediate as nextTurn } from 'node:timers/promises';
 import { expect, it } from 'vitest';
@@ -140,3 +142,23 @@ it('sink callback errors fail closed without changing business flow or recursive
     expect(await logger.close()).toBe(false);
     await expect(logger.flush(-1)).rejects.toThrow('invalid_flush_timeout');
 });
+
+const scenarios = JSON.parse(readFileSync(process.env.ONENEXUS_LOGGING_SCENARIOS ?? resolve('../../../tests/logging/scenarios.json'), 'utf8')) as {
+    emission_cases: {id:string; traceparent:string|null; message:string; expected:Record<string,unknown>; absent?:string[]}[];
+};
+for (const scenario of scenarios.emission_cases) {
+    it('shared emission: ' + scenario.id, async () => {
+        const lines: string[] = [];
+        const stream = new Writable({write(chunk: Buffer, _encoding, cb) { lines.push(chunk.toString()); cb(); }});
+        const logger = createLogger({service:'shared-test', environment:'development', region:'region-1'}, stream);
+        withIncomingContext(scenario.traceparent ? [['traceparent', scenario.traceparent]] : [], {trusted:true}, () => {
+            expect(logger.log(scenario.message)).toBe(true);
+        });
+        await logger.close();
+        expect(lines).toHaveLength(1);
+        const row = parseRecord(lines[0]!) as Record<string,unknown>;
+        for (const [key,value] of Object.entries(scenario.expected)) expect(row[key]).toEqual(value);
+        for (const key of scenario.absent ?? []) expect(row).not.toHaveProperty(key);
+        expect(validateRecord(row)).toEqual([]);
+    });
+}

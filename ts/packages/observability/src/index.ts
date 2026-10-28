@@ -21,4 +21,4 @@ export {
     encodeRecord,
     parseRecord,
     ContractViolation,
-} from '@onenexus-team/log-contract';
+} from './rules.js';

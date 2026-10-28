@@ -6,13 +6,14 @@ import {
     SimpleSpanProcessor,
     InMemorySpanExporter,
 } from '@opentelemetry/sdk-trace';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
-    loadContract,
     validateRecord,
+    parseRecord,
     CONTRACT_VERSION,
     CONTRACT_DIGEST,
-} from '@onenexus-team/log-contract';
+} from '@onenexus-team/observability';
 import {
     currentTraceId,
     outgoingHeaders,
@@ -32,7 +33,7 @@ afterEach(() => {
 
 describe('context lifecycle', () => {
     it('runs all shared vectors through the actual runtime APIs', () => {
-        const { vectors } = loadContract();
+        const vectors = parseRecord(readFileSync(process.env.ONENEXUS_LOGGING_SCENARIOS ?? resolve("../../../tests/logging/scenarios.json"), "utf8")) as { record_cases: {id:string; record:unknown; profile:string}[]; context_cases: {id:string; traceparent:string; trusted:boolean; preserve_trace:boolean}[] };
         const results: object[] = vectors.record_cases.map(
             (c: { id: string; record: unknown; profile: string }) => ({
                 kind: 'record',
@@ -61,9 +62,9 @@ describe('context lifecycle', () => {
             });
         }
         expect(results).toHaveLength(66);
-        if (process.env.ONENEXUS_CONTRACT_RESULTS)
+        if (process.env.ONENEXUS_LOGGING_RESULTS)
             writeFileSync(
-                process.env.ONENEXUS_CONTRACT_RESULTS,
+                process.env.ONENEXUS_LOGGING_RESULTS,
                 JSON.stringify({
                     adapter_protocol: 1,
                     contract_version: CONTRACT_VERSION,

@@ -9,62 +9,31 @@ export DOTNET_CLI_HOME="${DOTNET_CLI_HOME:-$root/.dotnet-home}"
 export NUGET_PACKAGES="${NUGET_PACKAGES:-$root/.nuget/packages}"
 version="${PACKAGE_VERSION:-$(cat VERSION)}"
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Invalid package version' >&2; exit 1; }
-contract_package_version="${LOG_CONTRACT_PACKAGE_VERSION:-$(python3 -c 'import xml.etree.ElementTree as E; print(E.parse("dotnet/Directory.Build.props").findtext(".//LogContractPackageVersion"))')}"
-[[ "$contract_package_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Invalid contract package version' >&2; exit 1; }
-export LogContractPackageVersion="$contract_package_version"
 out="$root/.artifacts/dotnet/$version"
 mkdir -p "$out"
-manifest=contracts/log-correlation/manifest.json
-contract_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$manifest")"
-digest="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "$manifest")"
-checker=contracts/log-correlation/check_contract.py
-python3 "$checker" verify --version "$contract_version" --expected-digest "$digest"
-project=dotnet/tests/OneNexus.Observability.Tests
+export ONENEXUS_LOGGING_SCENARIOS="$root/tests/logging/scenarios.json"
+checker=tests/logging/check_results.py
+project=dotnet/packages/observability/tests/unit
 dotnet restore "$project" --locked-mode
-ONENEXUS_CONTRACT_RESULTS="$out/source-results.json" dotnet run --project "$project" --no-restore -c Release -- --timeout 2m
-python3 "$checker" check-results --version "$contract_version" --expected-digest "$digest" --results "$out/source-results.json"
-dotnet pack dotnet/src/OneNexus.LogContract --no-restore -c Release -p:Version="$version" -o "$out"
-dotnet pack dotnet/src/OneNexus.Observability --no-restore -c Release -p:Version="$version" -o "$out"
+ONENEXUS_LOGGING_RESULTS="$out/source-results.json" dotnet run --project "$project" --no-restore -c Release -- --timeout 2m
+python3 "$checker" "$out/source-results.json"
+dotnet pack dotnet/packages/observability/src --no-restore -c Release -p:Version="$version" -o "$out"
 
 # A separate consumer directory and package cache prove that .nupkg dependency metadata works.
 consumer="$(mktemp -d)"
 trap 'rm -rf "$consumer"' EXIT
 cp global.json "$consumer/global.json"
 cp dotnet/Directory.Build.props "$consumer/Directory.Build.props"
-cp dotnet/README.md "$consumer/README.md"
-cp -R dotnet/tests/OneNexus.Observability.Tests "$consumer/tests"
+cp dotnet/packages/observability/README.md "$consumer/README.md"
+cp -R dotnet/packages/observability/tests/unit "$consumer/tests"
 rm -rf "$consumer/tests/bin" "$consumer/tests/obj" "$consumer/tests/TestResults"
-cp -R dotnet/raw_tests/LogProbe "$consumer/probe"
+cp -R dotnet/packages/observability/tests/integration/LogProbe "$consumer/probe"
 rm -rf "$consumer/probe/bin" "$consumer/probe/obj"
 cache="$consumer/packages"
 sources=(--source "$out" --source https://api.nuget.org/v3/index.json)
-if [[ "${REQUIRE_PUBLISHED_LOG_CONTRACT:-0}" == 1 ]]; then
-  : "${NUGET_AUTH_TOKEN:?Published contract restore requires a package read token}"
-  : "${GITHUB_ACTOR:?Published contract restore requires a GitHub username}"
-  mkdir "$consumer/feed"
-  cp "$out/OneNexus.Observability.$version.nupkg" "$consumer/feed/"
-  # Values are expanded by NuGet from the environment; no token is written to disk.
-  cat > "$consumer/NuGet.Config" <<'XML'
-<configuration>
-  <packageSources>
-    <clear />
-    <add key="local" value="feed" />
-    <add key="nuget" value="https://api.nuget.org/v3/index.json" />
-    <add key="github" value="https://nuget.pkg.github.com/onenexus-team/index.json" />
-  </packageSources>
-  <packageSourceCredentials>
-    <github>
-      <add key="Username" value="%GITHUB_ACTOR%" />
-      <add key="ClearTextPassword" value="%NUGET_AUTH_TOKEN%" />
-    </github>
-  </packageSourceCredentials>
-</configuration>
-XML
-  sources=(--configfile "$consumer/NuGet.Config")
-fi
 dotnet restore "$consumer/tests" -p:Version="$version" -p:PackageUnderTest="$version" --packages "$cache" "${sources[@]}" --force-evaluate
-ONENEXUS_CONTRACT_RESULTS="$out/installed-results.json" dotnet run --project "$consumer/tests" --no-restore -c Release -p:Version="$version" -p:PackageUnderTest="$version" -- --timeout 2m
-python3 "$checker" check-results --version "$contract_version" --expected-digest "$digest" --results "$out/installed-results.json"
+ONENEXUS_LOGGING_RESULTS="$out/installed-results.json" dotnet run --project "$consumer/tests" --no-restore -c Release -p:Version="$version" -p:PackageUnderTest="$version" -- --timeout 2m
+python3 "$checker" "$out/installed-results.json"
 # Deliberately wrong observation must fail the language-neutral checker.
 python3 - "$out/installed-results.json" "$out/rejected-results.json" <<'PY'
 import json, sys
@@ -73,7 +42,7 @@ next(item for item in result['results'] if item.get('errors'))['errors'] = []
 with open(sys.argv[2], 'w') as stream:
     json.dump(result, stream)
 PY
-if python3 "$checker" check-results --version "$contract_version" --expected-digest "$digest" --results "$out/rejected-results.json" > "$out/negative-check.log" 2>&1; then
+if python3 "$checker" "$out/rejected-results.json" > "$out/negative-check.log" 2>&1; then
   echo 'Negative control unexpectedly accepted' >&2; exit 1
 fi
 dotnet restore "$consumer/probe" -p:Version="$version" -p:PackageUnderTest="$version" --packages "$cache" "${sources[@]}"
@@ -91,10 +60,10 @@ with open(sys.argv[2], 'w') as stream:
 PY
 trace=11111111111111111111111111111111
 dotnet "$probe" verify "$out/correlated.ndjson" "$trace" development region-1 dotnet-package-probe
-if dotnet "$probe" verify "$out/correlated.ndjson" 33333333333333333333333333333333 development region-1 dotnet-package-probe > "$out/raw-negative.log" 2>&1; then
+if dotnet "$probe" verify "$out/correlated.ndjson" 33333333333333333333333333333333 development region-1 dotnet-package-probe > "$out/probe-negative.log" 2>&1; then
   echo 'Wrong trace unexpectedly accepted' >&2; exit 1
 fi
-if dotnet "$probe" verify "$out/correlated.ndjson" "$trace" development region-1 missing-service > "$out/raw-missing-service.log" 2>&1; then
+if dotnet "$probe" verify "$out/correlated.ndjson" "$trace" development region-1 missing-service > "$out/probe-missing-service.log" 2>&1; then
   echo 'Missing service unexpectedly accepted' >&2; exit 1
 fi
 python3 - "$out" <<'PY'
@@ -104,4 +73,4 @@ with (root / 'SHA256SUMS').open('w') as stream:
     for path in sorted(root.glob('*.nupkg')):
         stream.write(f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n')
 PY
-echo "PASS: source, installed packages, shared contract, raw log checker and negative controls. Artifacts: $out"
+echo "PASS: source, installed packages, shared scenarios, integration probe and negative controls. Artifacts: $out"

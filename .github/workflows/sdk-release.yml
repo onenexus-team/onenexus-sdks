@@ -1,233 +1,116 @@
 name: SDK release
-
 on:
   release:
-    types:
-      - published
-
+    types: [published]
 permissions:
-  contents: write
-  packages: write
-
+  contents: read
 concurrency:
-  group: sdk-release-${{ github.event.release.tag_name }}
+  group: sdk-release
   cancel-in-progress: false
-
 jobs:
-  release-dotnet-packages:
+  prepare:
     if: startsWith(github.event.release.tag_name, 'v')
-    name: Validate and publish .NET observability packages
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event.release.tag_name }}
           fetch-depth: 0
-      - uses: actions/setup-dotnet@v5
-        with:
-          global-json-file: global.json
+      - id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || exit 1
+          git merge-base --is-ancestor HEAD origin/main
+          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.14'
-      - name: Validate release version
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: |
-          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
-          git merge-base --is-ancestor HEAD origin/main
-          echo "PACKAGE_VERSION=${RELEASE_TAG#v}" >> "$GITHUB_ENV"
-      - name: Build and test the packages that will be published
-        env:
-          REQUIRE_PUBLISHED_LOG_CONTRACT: '1'
-          NUGET_AUTH_TOKEN: ${{ github.token }}
-        run: bash scripts/check-dotnet-observability.sh
-      - name: Publish to GitHub Packages
-        env:
-          NUGET_AUTH_TOKEN: ${{ github.token }}
-        run: |
-          package=".artifacts/dotnet/$PACKAGE_VERSION/OneNexus.Observability.$PACKAGE_VERSION.nupkg"
-          dotnet nuget push "$package" --api-key "$NUGET_AUTH_TOKEN" \
-            --source https://nuget.pkg.github.com/onenexus-team/index.json
-          mkdir -p .artifacts/dotnet/sdk-release
-          cp "$package" .artifacts/dotnet/sdk-release/
-          cd .artifacts/dotnet/sdk-release
-          sha256sum -- *.nupkg > SHA256SUMS
-      - name: Attach packages and checksums to the SDK release
-        uses: softprops/action-gh-release@v3.0.3
-        with:
-          files: |
-            .artifacts/dotnet/sdk-release/*.nupkg
-            .artifacts/dotnet/sdk-release/SHA256SUMS
-          fail_on_unmatched_files: true
-          overwrite_files: false
-
-  release-python-wheels:
-    if: startsWith(github.event.release.tag_name, 'v')
-    name: Build and release Python wheels
-    runs-on: self-hosted
-
+      - run: python3 -m unittest discover -s tests/logging -p 'test_*.py'
+      - run: python3 scripts/test-go-module-release.py
+      - run: python3 scripts/test-sdk-release.py
+  build:
+    needs: prepare
+    uses: ./.github/workflows/sdk-build.yml
+    with:
+      ref: ${{ github.event.release.tag_name }}
+      version: ${{ needs.prepare.outputs.version }}
+  publish:
+    # The whole language matrix must pass before ANY package is published.
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, typescript, dotnet, go]
     steps:
-      - name: Check out release tag
-        uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event.release.tag_name }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v7.0.0
+          fetch-depth: 0
+      - uses: actions/download-artifact@v8
         with:
-          python-version: "3.14"
-
-      - name: Set up uv with cache
-        uses: astral-sh/setup-uv@v10.3.0
+          name: sdk-${{ matrix.language }}
+          path: .artifacts/publish
+      - uses: actions/setup-python@v7.0.0
         with:
-          version: "0.11.21"
-          python-version: "3.14"
-          enable-cache: true
-          cache-dependency-glob: python/uv.lock
-
-      - name: Compute package version from release tag
-        id: version
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-        shell: bash
-        run: |
-          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Release tag must match v<major>.<minor>.<patch>; got: $RELEASE_TAG" >&2
-            exit 1
-          fi
-
-          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
-
-      - name: Restore and test Python packages
-        working-directory: python
-        run: |
-          uv sync --all-extras --frozen
-          uv run pytest
-
-      - name: Build Python wheels
-        run: bash scripts/build-python-wheels.sh --version "${{ steps.version.outputs.version }}" --out-dir .artifacts/python-wheels
-
-      - name: Upload workflow artifact
-        uses: actions/upload-artifact@v7.0.2
-        with:
-          name: python-wheels-${{ steps.version.outputs.version }}
-          path: .artifacts/python-wheels/*.whl
-          if-no-files-found: error
-
-      - name: Attach Python wheels to GitHub release
-        uses: softprops/action-gh-release@v3.0.3
-        with:
-          tag_name: ${{ github.event.release.tag_name }}
-          files: .artifacts/python-wheels/*.whl
-          fail_on_unmatched_files: true
-          overwrite_files: true
-
-  release-typescript-packages:
-    if: startsWith(github.event.release.tag_name, 'v')
-    name: Build and publish TypeScript packages
-    runs-on: self-hosted
-
-    steps:
-      - name: Check out release tag
-        uses: actions/checkout@v7.0.1
-        with:
-          ref: ${{ github.event.release.tag_name }}
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7.1.0
+          python-version: '3.14'
+      - uses: actions/setup-node@v7.1.0
+        if: matrix.language == 'typescript'
         with:
           node-version-file: .node-version
-
-      - name: Set up pnpm with cache
-        uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-dotnet@v5
+        if: matrix.language == 'dotnet'
         with:
-          package_json_file: ts/package.json
-          run_install: false
-          cache: true
-          cache_dependency_path: ts/pnpm-lock.yaml
-
-      - name: Set package version from release tag
-        id: version
+          global-json-file: global.json
+      - name: Verify artifact versions and dependency inventory
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-        shell: bash
-        run: |
-          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Release tag must match v<major>.<minor>.<patch>; got: $RELEASE_TAG" >&2
-            exit 1
-          fi
-
-          version="${RELEASE_TAG#v}"
-          printf '%s\n' "$version" > VERSION
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-
-      - name: Restore TypeScript packages
-        run: pnpm --dir ts install --frozen-lockfile
-
-      - name: Build and package TypeScript SDKs
+          SDK_LANGUAGE: ${{ matrix.language }}
+          SDK_VERSION: ${{ needs.prepare.outputs.version }}
+        run: python3 scripts/verify-sdk-artifacts.py "$SDK_LANGUAGE" "$SDK_VERSION" .artifacts/publish
+      - name: Publish npm packages
+        if: matrix.language == 'typescript'
         env:
-          REQUIRE_PUBLISHED_LOG_CONTRACT: '1'
           NODE_AUTH_TOKEN: ${{ github.token }}
+          SDK_VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          npmrc="$RUNNER_TEMP/contract-consumer.npmrc"
+          npmrc="$RUNNER_TEMP/sdk.npmrc"
           trap 'rm -f "$npmrc"' EXIT
           cat > "$npmrc" <<'EOF'
           @onenexus-team:registry=https://npm.pkg.github.com
           //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
           EOF
-          export NPM_CONFIG_USERCONFIG="$npmrc"
-          pnpm --dir ts package
-          bash scripts/check-typescript-observability.sh
-          mkdir -p .artifacts/typescript-packages
-          for name in observability sdk-core cas-client cas-support-client; do
-            cp "ts/.local-packages/onenexus-team-$name-${{ steps.version.outputs.version }}.tgz" .artifacts/typescript-packages/
-          done
-
-      - name: Upload workflow artifact
-        uses: actions/upload-artifact@v7.0.2
-        with:
-          name: typescript-packages-${{ steps.version.outputs.version }}
-          path: .artifacts/typescript-packages/*.tgz
-          if-no-files-found: error
-
-      - name: Publish TypeScript packages to GitHub Packages
-        env:
-          NODE_AUTH_TOKEN: ${{ github.token }}
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        shell: bash
-        working-directory: ts
-        run: |
-          npmrc="${RUNNER_TEMP:-$PWD}/onenexus-npmrc"
-          cat > "$npmrc" <<EOF
-          @onenexus-team:registry=https://npm.pkg.github.com
-          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
-          always-auth=true
-          EOF
           chmod 600 "$npmrc"
           export NPM_CONFIG_USERCONFIG="$npmrc"
-
-          for package_dir in packages/observability packages/sdk-core packages/cas-client packages/cas-support-client; do
-            package_name="$(node -p "require('./${package_dir}/package.json').name")"
-            package_version="$(node -p "require('./${package_dir}/package.json').version")"
-
-            if [[ "$package_version" != "$RELEASE_VERSION" ]]; then
-              echo "Expected ${package_name} version ${RELEASE_VERSION}, got ${package_version}" >&2
-              exit 1
-            fi
-
-            if npm view "${package_name}@${package_version}" version --registry=https://npm.pkg.github.com >/dev/null 2>&1; then
-              echo "${package_name}@${package_version} already exists in GitHub Packages; skipping publish."
-              continue
-            fi
-
-            pnpm --dir "$package_dir" publish --no-git-checks --registry=https://npm.pkg.github.com
+          for name in sdk-core cas-client cas-support-client observability; do
+            npm publish ".artifacts/publish/onenexus-team-$name-$SDK_VERSION.tgz" --registry=https://npm.pkg.github.com
           done
-
-      - name: Attach TypeScript packages to GitHub release
+      - name: Publish NuGet package
+        if: matrix.language == 'dotnet'
+        env:
+          NUGET_AUTH_TOKEN: ${{ github.token }}
+          SDK_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          dotnet nuget push ".artifacts/publish/OneNexus.Observability.$SDK_VERSION.nupkg" \
+            --api-key "$NUGET_AUTH_TOKEN" --source https://nuget.pkg.github.com/onenexus-team/index.json
+      - name: Create Go module tag at the SDK release commit
+        if: matrix.language == 'go'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SDK_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          python3 scripts/go-module-release.py publish \
+            --version "$SDK_VERSION" --archive ".artifacts/publish/observability-go-v$SDK_VERSION.zip"
+      - name: Attach the tested artifacts to the SDK release
         uses: softprops/action-gh-release@v3.0.3
         with:
-          tag_name: ${{ github.event.release.tag_name }}
-          files: .artifacts/typescript-packages/*.tgz
+          files: .artifacts/publish/*
           fail_on_unmatched_files: true
-          overwrite_files: true
+          overwrite_files: false

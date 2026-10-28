@@ -1,23 +1,21 @@
 # OneNexus TypeScript logging
 
-**Opt-in structured logging for Node.js services.** Uses the same contract as Python and .NET.
+**Opt-in structured logging for Node.js services.** Runs the same behavior scenarios as Python, Go and .NET.
 
 ```mermaid
 flowchart LR
     E[Envoy traceparent] --> C[Request context]
     C --> L[Shared logger]
     C --> H[HTTP or job metadata]
-    L --> V[Versioned contract]
-    V --> O[JSON stdout]
+    L --> O[Validated JSON stdout]
     O --> P[Existing collection pipeline]
 ```
 
 | Package | Responsibility |
 |---|---|
-| `@onenexus-team/log-contract` | Generated canonical schema and runtime validation |
 | `@onenexus-team/observability` | Context isolation, safe fields, JSON output and bounded pending writes |
 
-After an approved SDK release, install `@onenexus-team/observability@<released-sdk-version>` from the existing private GitHub npm registry. Its contract dependency is an exact, independently reviewed version; an SDK release does not change it automatically. Commit the consuming service's lockfile.
+After an approved SDK release, install `@onenexus-team/observability@<released-sdk-version>` from the existing private GitHub npm registry. Validation rules are included in this package. Commit the consuming service's lockfile.
 
 ## Use in a service
 
@@ -77,4 +75,4 @@ pnpm --dir ts install --frozen-lockfile
 bash scripts/check-typescript-observability.sh
 ```
 
-See [raw tests](raw_tests/README.md) and [design and validation](design-and-validation.md). These package checks do not prove Utility adoption or live collection.
+See [validation and releases](../../../docs/logging.md). Live service checks belong in the consuming repository.

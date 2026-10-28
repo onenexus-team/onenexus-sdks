@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <CorvusJsonSchemaDefaultAccessibility>Internal</CorvusJsonSchemaDefaultAccessibility>
+    <CorvusJsonSchemaAddExplicitUsings>true</CorvusJsonSchemaAddExplicitUsings>
+    <Description>OneNexus ILogger provider and W3C log correlation context.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+    <PackageReference Include="Corvus.Json.ExtendedTypes" Version="[5.7.5]" />
+    <PackageReference Include="Corvus.Json.SourceGenerator" Version="[5.7.5]" PrivateAssets="all" />
+    <AdditionalFiles Include="schema.json" />
+    <EmbeddedResource Include="schema.json" LogicalName="Contract.schema.json" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="[10.0.13]" />
+  </ItemGroup>
+</Project>

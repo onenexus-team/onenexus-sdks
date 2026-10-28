@@ -38,8 +38,8 @@ def test_manual_dispatch_does_not_publish_a_release() -> None:
 def test_shared_sdk_release_jobs_ignore_nexusai_tags() -> None:
     workflow = WORKFLOW.with_name("sdk-release.yml").read_text()
 
-    for job in ("release-python-wheels", "release-typescript-packages"):
-        assert (
-            f"  {job}:\n"
-            "    if: startsWith(github.event.release.tag_name, 'v')\n"
-        ) in workflow
+    # Only the prepare job can start an SDK release. All publication depends on
+    # its guarded version output and on the complete language build matrix.
+    assert "  prepare:\n    if: startsWith(github.event.release.tag_name, 'v')\n" in workflow
+    assert "  build:\n    needs: prepare\n" in workflow
+    assert "needs: [prepare, build]" in workflow

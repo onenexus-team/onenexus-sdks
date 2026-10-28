@@ -1,17 +1,20 @@
 # OneNexus SDKs
 
-## Shared observability contract
+## Shared logging
 
-The [log-correlation contract](contracts/log-correlation/README.md) defines common
-log fields and shared cases for language packages. The
-[Python logging package](python/packages/observability/README.md) is the first implementation. It includes an offline
-result checker and versioned release archive; it does not change application
-logging automatically. Run `bash scripts/check-log-contracts.sh`.
+Each language has one self-contained logging package: Python, TypeScript, Go and .NET.
+All use SDK release `vX.Y.Z`; no separate contract release or dependency is needed.
 
-The [.NET logging packages](dotnet/README.md) provide the same contract for CAS:
-generated validators plus an `ILogger` provider. Run
-`bash scripts/check-dotnet-observability.sh` to validate source and installed NuGet
-packages. Service adoption and live cluster checks are separate gates.
+| Language | Logging package |
+|---|---|
+| Python | `onenexus-observability-python` |
+| TypeScript | `@onenexus-team/observability` |
+| Go | `github.com/onenexus-team/onenexus-sdks/go/observability` |
+| .NET | `OneNexus.Observability` |
+
+[Release, upgrade and validation guide](docs/logging.md).
+Shared inputs and expected results live in `tests/logging/scenarios.json`.
+Each language tests its real implementation against those cases, both from source and as an installed package.
 
 ## Install packages from GitHub Packages
 
@@ -185,16 +188,18 @@ can be overridden with `ONENEXUS_DOTNET_SDK_VERSION`, `ONENEXUS_NODE_VERSION`,
 
 ## Publishing SDK packages
 
-Local SDK versions come from `VERSION`; contract dependencies have separate reviewed pins.
+Local SDK versions come from `VERSION`. Publishing a GitHub Release `vX.Y.Z`
+builds and tests every language before any SDK package is published.
 
-| Trigger | Packages | Destinations |
-|---|---|---|
-| Publish GitHub Release `vX.Y.Z` | Python/TypeScript SDKs and .NET logging library | Release assets; TypeScript npm and .NET NuGet registries |
-| Push `log-correlation-vX.Y.Z` on a merged contract commit | Python, TypeScript and .NET contract packages | Release assets; npm and NuGet registries |
+| Package | Destination |
+|---|---|
+| Python SDKs and logging wheel | GitHub Release assets |
+| TypeScript SDKs and logging package | GitHub npm registry and Release assets |
+| .NET logging package | GitHub NuGet registry and Release asset |
+| Go logging module | Automatic `go/observability/vX.Y.Z` tag at the SDK commit and Release ZIP |
 
-Both flows build and test before publishing. Contract releases do not automatically
-upgrade logging libraries or applications. See the
-[contract release and upgrade guide](contracts/log-correlation/release-guide.md).
+PR/main checks use the same build workflow without publishing. Existing releases are retained.
+See the [release guide](docs/logging.md) for failure recovery and service validation.
 
 For local builds and consumption examples, see [`python/README.md`](python/README.md)
 and [`ts/README.md`](ts/README.md).
@@ -378,3 +383,9 @@ Token exchange is not exposed as a credential type yet. Until CAS's RFC 8693
 surface is ready for SDK consumption, services that need on-behalf-of behavior
 should use the service-specific CAS API/flow documented by the auth platform
 team rather than constructing SDK credentials directly.
+
+
+### Shared logging
+
+Python, TypeScript, Go and .NET logging packages share the SDK release version.
+See [usage, validation and releases](docs/logging.md).

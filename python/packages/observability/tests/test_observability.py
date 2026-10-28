@@ -6,8 +6,8 @@ import importlib.util
 import io
 import json
 import logging
+import os
 import threading
-from importlib.resources import files
 from pathlib import Path
 
 import pytest
@@ -26,6 +26,8 @@ from onenexus_observability import (
     validate_record,
 )
 
+SCENARIOS = Path(os.environ.get("ONENEXUS_LOGGING_SCENARIOS", Path(__file__).resolve().parents[4] / "tests/logging/scenarios.json"))
+
 CONFIG = LogConfig("test-api", "development", "region-1", frozenset({"operation_id", "attempt"}))
 
 
@@ -36,8 +38,7 @@ def logger_for(stream):
 
 
 def adapter_results():
-    root = files("onenexus_log_contract")
-    vectors = json.loads(root.joinpath("vectors.json").read_bytes())
+    vectors = json.loads(SCENARIOS.read_bytes())
     observations = []
     for case in vectors["record_cases"]:
         observations.append(
@@ -72,20 +73,19 @@ def adapter_results():
 
 
 def test_all_shared_cases_through_real_package(tmp_path):
-    root = Path(str(files("onenexus_log_contract")))
-    spec = importlib.util.spec_from_file_location("release_checker", root / "check_contract.py")
+    spec = importlib.util.spec_from_file_location("logging_checker", SCENARIOS.parent / "check_results.py")
     checker = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(checker)
     output = tmp_path / "observed.json"
     result = adapter_results()
     output.write_text(json.dumps(result))
-    assert checker.check_results(CONTRACT_VERSION, CONTRACT_DIGEST, output, root) == 66
+    assert checker.check_results(output, SCENARIOS) == 66
     # Negative control: accepting one invalid input must fail the shared checker.
     invalid = next(x for x in result["results"] if x.get("errors"))
     invalid["errors"] = []
     output.write_text(json.dumps(result))
-    with pytest.raises(checker.ContractError, match="record_result_mismatch"):
-        checker.check_results(CONTRACT_VERSION, CONTRACT_DIGEST, output, root)
+    with pytest.raises(checker.BehaviorMismatch, match="record_result_mismatch"):
+        checker.check_results(output, SCENARIOS)
 
 
 def test_actual_logger_fields_and_custom_fields():
@@ -279,11 +279,11 @@ def test_malformed_and_duplicate_header_boundaries():
         assert current_trace_id() != "1" * 32
 
 
-def test_raw_probe_negative_control(tmp_path):
+def test_integration_probe_negative_control(tmp_path):
     import subprocess
     import sys
 
-    probe = Path(__file__).resolve().parents[1] / "raw_tests/log_probe.py"
+    probe = Path(__file__).resolve().parent / "integration/log_probe.py"
     capture = tmp_path / "logs.ndjson"
     args = [
         sys.executable,
@@ -305,24 +305,25 @@ def test_raw_probe_negative_control(tmp_path):
     assert result.returncode != 0
 
 
-def test_tampered_installed_bundle_fails_before_logging(tmp_path):
-    import os
-    import shutil
-    import subprocess
-    import sys
+def test_single_distribution_has_no_contract_dependency():
+    from importlib.metadata import requires
+    assert not any("onenexus-log-contract" in item for item in requires("onenexus-observability-python") or [])
 
-    package = Path(str(files("onenexus_log_contract")))
-    copied = tmp_path / "onenexus_log_contract"
-    shutil.copytree(package, copied, ignore=shutil.ignore_patterns("__pycache__"))
-    schema = copied / "schema.json"
-    schema.write_bytes(schema.read_bytes() + b" ")
-    result = subprocess.run(
-        [sys.executable, "-c", "import onenexus_observability"],
-        cwd=tmp_path,
-        env={**os.environ, "PYTHONPATH": str(tmp_path)},
-        capture_output=True,
-        text=True,
-        timeout=10,
-    )
-    assert result.returncode != 0
-    assert "artifact_digest_mismatch" in result.stderr
+
+@pytest.mark.parametrize("case", json.loads(SCENARIOS.read_bytes())["emission_cases"], ids=lambda c: c["id"])
+def test_shared_emission_scenarios(case):
+    from opentelemetry.context import Context
+    output = io.StringIO()
+    logger = logging.Logger("shared", logging.DEBUG)
+    handler = install_handler(logger, LogConfig("shared-test", "development", "region-1"), stream=output)
+    ctx = incoming_context({"traceparent": case["traceparent"]}, trusted=True) if case["traceparent"] else Context()
+    with bound_context(ctx):
+        logger.info(case["message"])
+    rows = output.getvalue().splitlines()
+    assert len(rows) == 1
+    row = json.loads(rows[0])
+    for key, value in case["expected"].items():
+        assert row[key] == value
+    assert all(key not in row for key in case.get("absent", []))
+    assert validate_record(row) == []
+    handler.close()
