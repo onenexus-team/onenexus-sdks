@@ -81,13 +81,23 @@ bash scripts/build-sdk-artifacts.sh go
 - Existing logging behavior is retained. No exporter, collector, database or service deployment changes are included.
 - Consumer minimum-version deadlines and scheduled upgrade audits require separate service/repository enforcement; this PR does not silently enable those policies.
 
-## Manual raw tests
+## Test ownership
 
-| Language | Procedure |
+| Test | Owner |
 |---|---|
-| Python | [Probe and live-log verification](../python/packages/observability/raw_tests/README.md) |
-| TypeScript | [Probe and live-log verification](../ts/packages/observability/raw_tests/README.md) |
-| Go | [Service capture and probe](../go/observability/README.md#raw-logs-from-a-real-service-after-its-separate-integration) |
-| .NET | [Probe and CAS validation](../dotnet/packages/observability/raw_tests/README.md) |
+| Common fields, validation and context isolation | SDK unit tests |
+| Equivalent behavior across languages | SDK shared JSON scenarios |
+| Clean package installation and emitted JSON | SDK local integration tests |
+| Real Envoy → API → worker → Loki/Grafana | Consuming service `raw_tests` |
+| Business retries, cancellation, permissions and deployment behavior | Consuming service tests |
 
-Package tests prove logging behavior and installation. They do not prove that a deployed service uses the new package, or that its logs reached Loki. See [readiness evidence and remaining gates](logging-readiness.md).
+SDK integration probes use synthetic data and run locally. They require no cluster, service credentials or monitoring backend; normal build-time dependency downloads still apply. The existing language check scripts run them automatically.
+
+| Language | Local package integration checks |
+|---|---|
+| Python | [Installed wheel](../python/packages/observability/tests/integration/README.md) |
+| TypeScript | [Installed npm package](../ts/packages/observability/test/integration/README.md) |
+| Go | [Installed module](../go/observability/tests/integration/README.md) |
+| .NET | [Installed NuGet package](../dotnet/packages/observability/tests/integration/README.md) |
+
+Live end-to-end procedures belong in MLOps, CAS and other consuming service repositories. Package test success does not establish deployed service adoption or delivery to Loki. See [readiness evidence and remaining gates](logging-readiness.md).

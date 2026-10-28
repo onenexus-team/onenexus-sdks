@@ -97,23 +97,11 @@ python3 scripts/test-go-module-release.py
 | Source + `go test -race` | Shared cases, goroutine isolation, cancellation, retry, real recorded child, concurrent output and failure handling |
 | Separate installed consumer | Versioned module ZIP install without source replacements; same tests pass |
 | Shared behavior checker | Actual results agree with all 56 record and 10 edge-context cases |
-| Raw probe | Four emitted SDK JSON lines; three share the same trace ID |
+| Integration probe | Four emitted SDK JSON lines; three share the same trace ID |
 | Negative controls | Wrong trace/service, missing field, plain-text output and falsified case result fail |
 
-Artifacts: `.artifacts/go-observability/` (results, module archives, raw logs, benchmark).
+Artifacts: `.artifacts/go-observability/` (results, module archives, captured logs, benchmark).
 
-### Raw logs from a real service, after its separate integration
-
-```bash
-# Build from the adopted, released module version in the service checkout.
-go build -o /tmp/log-probe github.com/onenexus-team/onenexus-sdks/go/observability/raw_tests/log-probe
-kubectl --context <test-context> logs -n <namespace> <pod> -c <container> \
-  --since=5m > /tmp/service.ndjson
-/tmp/log-probe verify /tmp/service.ndjson <trace-id> <service-name>
-```
-
-- Capture a dedicated test time window containing that trace and uncorrelated system logs; another request's trace intentionally fails this narrow probe.
-- No `kubectl --timestamps`: the captured lines must be raw JSON.
-- Compare real gateway/service/dependency logs in Loki separately. This package task has no deployed Go consumer and cannot prove cluster collection.
+Local installed-module probes live in [tests/integration/](tests/integration/README.md). End-to-end `raw_tests` belong to consuming service repositories.
 
 See [design and validation](../../docs/logging-readiness.md) and the [SDK release guide](../../docs/logging.md).

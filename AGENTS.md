@@ -11,7 +11,7 @@ Guidance for AI coding agents working in the standalone OneNexus SDK repository.
 - `python/` is a `uv` workspace for Python SDK packages.
 - `ts/` is a `pnpm` workspace for TypeScript SDK packages.
 - `go/observability/` is the opt-in Go `slog` and trace-context module. Run `bash scripts/check-go-observability.sh`.
-- `dotnet/packages/observability/` contains the self-contained `ILogger` package, source, tests and raw tests; run `bash scripts/check-dotnet-observability.sh`.
+- `dotnet/packages/observability/` contains the self-contained `ILogger` package, source, unit tests and local integration probes; run `bash scripts/check-dotnet-observability.sh`.
 
 ## Core rules
 
@@ -55,3 +55,4 @@ Use fresh artifact output directories for a full build. Run language checks inde
 SDK release `vX.Y.Z` assigns `X.Y.Z` to every logging package. Go also needs the automatically created `go/observability/vX.Y.Z` module tag at the same commit. There is no separate logging-contract release.
 Never delete or replace already published packages/tags. Publishing still requires explicit user authorization.
 Applications consume installed packages, never repository source overrides. Test source and installed artifacts before publication. Shared scenarios must call actual logging/context APIs; passing these checks does not prove live service adoption.
+Keep package probes under the language's test/integration directory. SDK checks run locally without service credentials or clusters; live end-to-end raw_tests belong in consuming service repositories.

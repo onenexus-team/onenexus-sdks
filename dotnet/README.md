@@ -11,11 +11,12 @@ dotnet/
     └── observability/
         ├── README.md
         ├── src/
-        ├── tests/
-        └── raw_tests/
+        └── tests/
+            ├── unit/
+            └── integration/
 ```
 
-Run source, installed-package and raw-log checks from the repository root:
+Run source, installed-package and local integration checks from the repository root:
 
 ```bash
 bash scripts/check-dotnet-observability.sh

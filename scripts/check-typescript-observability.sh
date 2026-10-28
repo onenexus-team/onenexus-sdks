@@ -30,7 +30,7 @@ for name in ('observability',):
     package_version = version
     deps['@onenexus-team/' + name] = 'file:' + str(out / f'onenexus-team-{name}-{package_version}.tgz')
     shutil.copytree(root / f'ts/packages/{name}/test', consumer / f'test/{name}')
-shutil.copy(root / 'ts/packages/observability/raw_tests/log-probe.mjs', consumer / 'log-probe.mjs')
+shutil.copy(root / 'ts/packages/observability/test/integration/log-probe.mjs', consumer / 'log-probe.mjs')
 (consumer / 'package.json').write_text(json.dumps({'private': True, 'type': 'module', 'dependencies': deps, 'devDependencies': dev}))
 # Substitute only the exact expected version with its unpublished local artifact.
 # A wrong dependency version still fails resolution instead of being hidden.
@@ -77,4 +77,4 @@ PY
 if python3 "$checker" "$out/negative-results.json" > "$out/negative-check.log" 2>&1; then
     echo 'False contract observation unexpectedly accepted' >&2; exit 1
 fi
-echo "PASS: source, installed packages, shared cases, raw probe and negative controls. Artifacts: $out"
+echo "PASS: source, installed packages, shared cases, integration probe and negative controls. Artifacts: $out"

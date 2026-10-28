@@ -279,11 +279,11 @@ def test_malformed_and_duplicate_header_boundaries():
         assert current_trace_id() != "1" * 32
 
 
-def test_raw_probe_negative_control(tmp_path):
+def test_integration_probe_negative_control(tmp_path):
     import subprocess
     import sys
 
-    probe = Path(__file__).resolve().parents[1] / "raw_tests/log_probe.py"
+    probe = Path(__file__).resolve().parent / "integration/log_probe.py"
     capture = tmp_path / "logs.ndjson"
     args = [
         sys.executable,

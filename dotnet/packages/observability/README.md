@@ -86,7 +86,7 @@ bash scripts/check-dotnet-observability.sh
 - Source tests and the same tests against installed `.nupkg` files in a separate consumer/cache.
 - All 66 shared cases through actual C# APIs; the independent Python checker rejects a deliberately wrong result.
 - Context isolation, cancellation, retry metadata, existing Activity compatibility, log fields and failure behavior.
-- Manual log checks: [raw_tests/README.md](raw_tests/README.md).
+- Local integration checks: [tests/integration/README.md](tests/integration/README.md).
 - Lifecycle, readiness findings and rollout gates: [SDK readiness](../../../docs/logging-readiness.md).
 - Output is bounded to 4 KiB per record and 1 KiB per message. The provider writes synchronously and owns no growing queue; a blocked stdout writer can block the caller. CAS must measure its logging budget and expose the drop counter before production adoption.
 - Logs go to existing stdout collection. This package adds no OpenTelemetry exporter, collector, Loki client or new recording spans.

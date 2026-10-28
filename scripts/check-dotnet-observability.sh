@@ -13,7 +13,7 @@ out="$root/.artifacts/dotnet/$version"
 mkdir -p "$out"
 export ONENEXUS_LOGGING_SCENARIOS="$root/tests/logging/scenarios.json"
 checker=tests/logging/check_results.py
-project=dotnet/packages/observability/tests
+project=dotnet/packages/observability/tests/unit
 dotnet restore "$project" --locked-mode
 ONENEXUS_LOGGING_RESULTS="$out/source-results.json" dotnet run --project "$project" --no-restore -c Release -- --timeout 2m
 python3 "$checker" "$out/source-results.json"
@@ -25,9 +25,9 @@ trap 'rm -rf "$consumer"' EXIT
 cp global.json "$consumer/global.json"
 cp dotnet/Directory.Build.props "$consumer/Directory.Build.props"
 cp dotnet/packages/observability/README.md "$consumer/README.md"
-cp -R dotnet/packages/observability/tests "$consumer/tests"
+cp -R dotnet/packages/observability/tests/unit "$consumer/tests"
 rm -rf "$consumer/tests/bin" "$consumer/tests/obj" "$consumer/tests/TestResults"
-cp -R dotnet/packages/observability/raw_tests/LogProbe "$consumer/probe"
+cp -R dotnet/packages/observability/tests/integration/LogProbe "$consumer/probe"
 rm -rf "$consumer/probe/bin" "$consumer/probe/obj"
 cache="$consumer/packages"
 sources=(--source "$out" --source https://api.nuget.org/v3/index.json)
@@ -60,10 +60,10 @@ with open(sys.argv[2], 'w') as stream:
 PY
 trace=11111111111111111111111111111111
 dotnet "$probe" verify "$out/correlated.ndjson" "$trace" development region-1 dotnet-package-probe
-if dotnet "$probe" verify "$out/correlated.ndjson" 33333333333333333333333333333333 development region-1 dotnet-package-probe > "$out/raw-negative.log" 2>&1; then
+if dotnet "$probe" verify "$out/correlated.ndjson" 33333333333333333333333333333333 development region-1 dotnet-package-probe > "$out/probe-negative.log" 2>&1; then
   echo 'Wrong trace unexpectedly accepted' >&2; exit 1
 fi
-if dotnet "$probe" verify "$out/correlated.ndjson" "$trace" development region-1 missing-service > "$out/raw-missing-service.log" 2>&1; then
+if dotnet "$probe" verify "$out/correlated.ndjson" "$trace" development region-1 missing-service > "$out/probe-missing-service.log" 2>&1; then
   echo 'Missing service unexpectedly accepted' >&2; exit 1
 fi
 python3 - "$out" <<'PY'
@@ -73,4 +73,4 @@ with (root / 'SHA256SUMS').open('w') as stream:
     for path in sorted(root.glob('*.nupkg')):
         stream.write(f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n')
 PY
-echo "PASS: source, installed packages, shared contract, raw log checker and negative controls. Artifacts: $out"
+echo "PASS: source, installed packages, shared scenarios, integration probe and negative controls. Artifacts: $out"

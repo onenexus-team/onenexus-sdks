@@ -15,7 +15,7 @@ Source and installed-package validation do not prove deployment or monitoring in
 |---|---|---|
 | 1 · Technical design | ✅ | One package per language; bounded fields; runtime-local rules |
 | 2 · Distributed-systems principles | ✅ | No business-state writes; immutable package identities; release recovery below |
-| 3 · Test coverage | ⚠️ | OPS1: source/installed/shared/raw package checks; service adoption is separate |
+| 3 · Test coverage | ⚠️ | OPS1: source/installed/shared/integration checks; service adoption is separate |
 | 4 · Monitoring + alerts | ⚠️ | OPS1: packages expose drop counters; services must export and alert |
 | 5 · CI/CD | ⚠️ | REL1: all-language build gate; real publication not exercised |
 | 6 · Security | ✅ | Private release credentials only in publisher; no runtime schema download |
@@ -192,10 +192,10 @@ Cost: no new cluster workload, collector, database or background process. Runtim
 | Check | Evidence |
 |---|---|
 | Shared behavior | 56 record + 10 edge-context scenarios; 3 shared emitted-log scenarios per language |
-| Python | Source/installed wheel, thread/async cleanup, raw-probe negative controls |
+| Python | Source/installed wheel, thread/async cleanup, integration-probe negative controls |
 | TypeScript | Source/installed npm, ESM/CommonJS shared context, exact int64, backpressure/close |
-| .NET | Source/installed NuGet, Activity/AsyncLocal, cancellation, raw-probe negatives |
-| Go | Source/installed module, race detector, barriers, partial writes, recorded child, raw probe |
+| .NET | Source/installed NuGet, Activity/AsyncLocal, cancellation, integration-probe negatives |
+| Go | Source/installed module, race detector, barriers, partial writes, recorded child, integration probe |
 | Release | Version/name/inventory guards; no separate dependency; Go SDK-tag/source identity |
 | Remaining live proof | REL1 package publication; OPS1/PERF1 consumer cluster checks |
 
@@ -265,7 +265,7 @@ Distributed-systems protocol — not applicable: these packages do not coordinat
 | C7 | ✓ Bounded CI jobs and waiters; PERF1 limits entered I/O |
 | C8 | ✓ No logger retry loop; explicit partial-publication recovery |
 | C9 | ✓ No authorization changes; frontend action parity N/A, no UI |
-| C10 | ✓ Drop counters/raw probes; OPS1 service monitoring gate |
+| C10 | ✓ Drop counters/integration probes; OPS1 service monitoring gate |
 | C11 | ✓ Unchanged log format; old pins retained; service rollback by pin |
 
 | Race rows | Result / reason |
@@ -296,7 +296,7 @@ Distributed-systems protocol — not applicable: these packages do not coordinat
 
 | Gate | Required evidence |
 |---|---|
-| Merge | Shared/source/installed/raw package tests and release guards pass; PR CI green |
+| Merge | Shared/source/installed/integration package tests and release guards pass; PR CI green |
 | Publish | REL1: explicit release approval; unused stable version; all languages pass |
 | Test-cluster adoption | OPS1: real service version and trace queries; no stand-in service |
 | Production | PERF1: latency/loss budget, drop alerts, drain and rollback verified |

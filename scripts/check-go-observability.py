@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Source/race checks, independently installed Go modules and raw output controls."""
+"""Source/race checks, independently installed Go modules and local integration probes."""
 from __future__ import annotations
 
 import importlib.util
@@ -55,7 +55,6 @@ def main():
         consumer.mkdir()
         (consumer / "go.mod").write_text("module example.com/installed-consumer\n\ngo 1.26.0\nrequire " + release.PREFIX + "go/observability v" + sdk + "\n")
         shutil.copytree(ROOT / "go/observability/tests", consumer / "tests")
-        shutil.copytree(ROOT / "go/observability/raw_tests", consumer / "raw_tests")
         installed_env = {**env, "GOWORK": "off", "GOMODCACHE": str(temp / "module-cache"),
                          "GOPROXY": proxy.as_uri() + ",https://proxy.golang.org", "GONOPROXY": "none",
                          "GONOSUMDB": release.PREFIX + "*", "ONENEXUS_LOGGING_RESULTS": str(out / "installed-results.json")}
@@ -69,7 +68,7 @@ def main():
         if os.environ.get("RUN_GO_VULNCHECK") == "1":
             scan = run(["govulncheck", "./..."], cwd=consumer, env=installed_env, capture=True)
             (out / "vulnerability-scan.txt").write_text(scan.stdout)
-        run(["go", "build", "-mod=readonly", "-o", str(temp / "log-probe"), "./raw_tests/log-probe"], cwd=consumer, env=installed_env)
+        run(["go", "build", "-mod=readonly", "-o", str(temp / "log-probe"), "./tests/integration/log-probe"], cwd=consumer, env=installed_env)
         probe = str(temp / "log-probe")
         emitted = run([probe, "emit"], capture=True).stdout
         capture = out / "probe.ndjson"
@@ -77,7 +76,7 @@ def main():
         trace = "1" * 32
         run([probe, "verify", str(capture), trace, "go-log-probe"])
         if len(emitted.splitlines()) != 4:
-            raise ValueError("missing_raw_probe_events")
+            raise ValueError("missing_integration_probe_events")
         for name, target, expected, service in [
             ("wrong-trace", capture, "3" * 32, "go-log-probe"),
             ("wrong-service", capture, trace, "missing-service"),
@@ -102,7 +101,7 @@ def main():
         name = "observability-go" + f"-v{version}.zip"
         (out / name).write_bytes(release.archive(kind, version))
         release.verify(kind, version, out / name)
-    print("PASS: Go source, installed modules, race tests, shared cases and raw controls. " + str(out))
+    print("PASS: Go source, installed modules, race tests, shared cases and integration probes. " + str(out))
 
 
 if __name__ == "__main__":

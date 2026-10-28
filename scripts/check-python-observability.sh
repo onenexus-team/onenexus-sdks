@@ -21,7 +21,7 @@ uv pip install --python "$out/venv/bin/python" "$out"/*.whl 'pytest>=8.2' 'pytes
 "$out/venv/bin/python" -c 'import importlib.util, onenexus_observability; assert "site-packages" in onenexus_observability.__file__; assert importlib.util.find_spec("onenexus_log_contract") is None'
 "$out/venv/bin/python" -m pytest packages/observability/tests -q
 run_id=51386ccb-5346-4e7a-a040-bc32bf742cc1
-"$out/venv/bin/python" packages/observability/raw_tests/log_probe.py \
+"$out/venv/bin/python" packages/observability/tests/integration/log_probe.py \
   --environment development --region test --run-id "$run_id" > "$out/logs.ndjson"
-"$out/venv/bin/python" packages/observability/raw_tests/log_probe.py \
+"$out/venv/bin/python" packages/observability/tests/integration/log_probe.py \
   --environment development --region test --run-id "$run_id" --verify "$out/logs.ndjson"
