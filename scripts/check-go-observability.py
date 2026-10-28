@@ -28,33 +28,31 @@ def main():
     out = ROOT / ".artifacts/go-observability"
     out.mkdir(parents=True, exist_ok=True)
     sdk = os.environ.get("SDK_PACKAGE_VERSION", (ROOT / "VERSION").read_text().strip())
+    module_root = ROOT / release.MODULE_PATH
     checker = [sys.executable, str(ROOT / "tests/logging/check_results.py")]
     env = {**os.environ, "GOTOOLCHAIN": "local", "ONENEXUS_LOGGING_SCENARIOS": str(ROOT / "tests/logging/scenarios.json")}
     with tempfile.TemporaryDirectory(prefix="onenexus-go-check-") as temp:
         temp = Path(temp)
         source_env = {**env, "GOWORK": "off", "ONENEXUS_LOGGING_RESULTS": str(out / "source-results.json")}
-        go_files = [str(p) for path in release.MODULES.values() for p in (ROOT / path).rglob("*.go")]
+        go_files = [str(p) for p in module_root.rglob("*.go")]
         if run(["gofmt", "-l", *go_files], capture=True).stdout.strip():
             raise ValueError("go_formatting_required")
-        for path in release.MODULES.values():
-            flags = ["-mod=readonly"]
-            run(["go", "vet", *flags, "./..."], cwd=ROOT / path, env=source_env)
-            run(["go", "test", *flags, "-race", "-count=1", "./..."], cwd=ROOT / path, env=source_env)
+        run(["go", "vet", "-mod=readonly", "./..."], cwd=module_root, env=source_env)
+        run(["go", "test", "-mod=readonly", "-race", "-count=1", "./..."], cwd=module_root, env=source_env)
         run(checker + [str(out / "source-results.json")])
         # A private local proxy serves real module ZIPs, not source replacements.
         proxy = temp / "proxy"
-        for kind, version in [("observability", sdk)]:
-            module_path, _ = release.identity(kind, version)
-            entry = proxy / module_path / "@v"
-            entry.mkdir(parents=True)
-            (entry / f"v{version}.zip").write_bytes(release.archive(kind, version))
-            (entry / f"v{version}.mod").write_bytes((ROOT / release.MODULES[kind] / "go.mod").read_bytes())
-            (entry / f"v{version}.info").write_text(json.dumps({"Version": "v" + version, "Time": "2000-01-01T00:00:00Z"}))
-            (entry / "list").write_text("v" + version + "\n")
+        module_path, _ = release.identity(sdk)
+        entry = proxy / module_path / "@v"
+        entry.mkdir(parents=True)
+        (entry / f"v{sdk}.zip").write_bytes(release.archive(sdk))
+        (entry / f"v{sdk}.mod").write_bytes((module_root / "go.mod").read_bytes())
+        (entry / f"v{sdk}.info").write_text(json.dumps({"Version": "v" + sdk, "Time": "2000-01-01T00:00:00Z"}))
+        (entry / "list").write_text("v" + sdk + "\n")
         consumer = temp / "consumer"
         consumer.mkdir()
-        (consumer / "go.mod").write_text("module example.com/installed-consumer\n\ngo 1.26.0\nrequire " + release.PREFIX + "go/observability v" + sdk + "\n")
-        shutil.copytree(ROOT / "go/observability/tests", consumer / "tests")
+        (consumer / "go.mod").write_text("module example.com/installed-consumer\n\ngo 1.26.0\nrequire " + module_path + " v" + sdk + "\n")
+        shutil.copytree(module_root / "tests", consumer / "tests")
         installed_env = {**env, "GOWORK": "off", "GOMODCACHE": str(temp / "module-cache"),
                          "GOPROXY": proxy.as_uri() + ",https://proxy.golang.org", "GONOPROXY": "none",
                          "GONOSUMDB": release.PREFIX + "*", "ONENEXUS_LOGGING_RESULTS": str(out / "installed-results.json")}
@@ -97,10 +95,9 @@ def main():
         run(checker + [str(negative)], capture=True, success=False)
         benchmark = run(["go", "test", "-run=^$", "-bench=BenchmarkHandler", "-benchmem", "./tests"], cwd=consumer, env=installed_env, capture=True)
         (out / "benchmark.txt").write_text(benchmark.stdout)
-    for kind, version in [("observability", sdk)]:
-        name = "observability-go" + f"-v{version}.zip"
-        (out / name).write_bytes(release.archive(kind, version))
-        release.verify(kind, version, out / name)
+    archive = out / f"observability-go-v{sdk}.zip"
+    archive.write_bytes(release.archive(sdk))
+    release.verify(sdk, archive)
     print("PASS: Go source, installed modules, race tests, shared cases and integration probes. " + str(out))
 
 

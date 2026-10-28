@@ -385,9 +385,7 @@ should use the service-specific CAS API/flow documented by the auth platform
 team rather than constructing SDK credentials directly.
 
 
-### Shared Go logging
+### Shared logging
 
-- [Usage and raw checks](go/observability/README.md).
-- [Lifecycle and production-readiness assessment](docs/logging-readiness.md).
-- One self-contained module; the SDK release creates its matching Go module tag.
-- Service adoption is explicit and remains a separate change.
+Python, TypeScript, Go and .NET logging packages share the SDK release version.
+See [usage, validation and releases](docs/logging.md).

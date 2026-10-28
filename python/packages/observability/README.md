@@ -119,5 +119,4 @@ bash scripts/check-python-observability.sh
 | Shared behavior | JSON record, context and emitted-log cases through real APIs |
 | Context lifecycle | Nested scopes, threads, concurrent requests, cancellation, retries and cleanup |
 | Packaging | Source and installed wheel tested; no standalone contract distribution installed |
-| Package integration | [Local installed-package probe](tests/integration/README.md) |
-| Release / readiness | [SDK guide](../../../docs/logging.md), [assessment](../../../docs/logging-readiness.md) |
+| Validation / releases | [SDK guide](../../../docs/logging.md) |

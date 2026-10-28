@@ -12,9 +12,7 @@ pnpm --dir ts --filter @onenexus-team/observability typecheck
 pnpm --dir ts exec eslint packages/observability
 ONENEXUS_LOGGING_RESULTS="$out/source-results.json" pnpm --dir ts --filter @onenexus-team/observability test
 python3 "$checker" "$out/source-results.json"
-for package in observability; do
-    pnpm --dir "ts/packages/$package" pack --pack-destination "$out"
-done
+pnpm --dir ts/packages/observability pack --pack-destination "$out"
 consumer="$(mktemp -d)"
 trap 'rm -rf "$consumer"' EXIT
 python3 - "$root" "$consumer" "$out" <<'PY'
@@ -25,15 +23,13 @@ dev = json.loads((root / 'ts/package.json').read_text())['devDependencies']
 dev.update(json.loads((root / 'ts/packages/observability/package.json').read_text())['devDependencies'])
 # Reuse the complete locked test toolchain, not fresh transitive test-tool ranges.
 shutil.copy(root / 'ts/pnpm-lock.yaml', consumer / 'pnpm-lock.yaml')
-deps = {'@opentelemetry/api': '1.10.0'}
-for name in ('observability',):
-    package_version = version
-    deps['@onenexus-team/' + name] = 'file:' + str(out / f'onenexus-team-{name}-{package_version}.tgz')
-    shutil.copytree(root / f'ts/packages/{name}/test', consumer / f'test/{name}')
+deps = {
+    '@opentelemetry/api': '1.10.0',
+    '@onenexus-team/observability': 'file:' + str(out / f'onenexus-team-observability-{version}.tgz'),
+}
+shutil.copytree(root / 'ts/packages/observability/test', consumer / 'test/observability')
 shutil.copy(root / 'ts/packages/observability/test/integration/log-probe.mjs', consumer / 'log-probe.mjs')
 (consumer / 'package.json').write_text(json.dumps({'private': True, 'type': 'module', 'dependencies': deps, 'devDependencies': dev}))
-# Substitute only the exact expected version with its unpublished local artifact.
-# A wrong dependency version still fails resolution instead of being hidden.
 import re
 lock = (root / 'ts/pnpm-lock.yaml').read_text()
 # Use the workspace's already tested Vite version for this separate test harness.

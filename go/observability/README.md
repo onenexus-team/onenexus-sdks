@@ -102,6 +102,4 @@ python3 scripts/test-go-module-release.py
 
 Artifacts: `.artifacts/go-observability/` (results, module archives, captured logs, benchmark).
 
-Local installed-module probes live in [tests/integration/](tests/integration/README.md). End-to-end `raw_tests` belong to consuming service repositories.
-
-See [design and validation](../../docs/logging-readiness.md) and the [SDK release guide](../../docs/logging.md).
+See [validation and releases](../../docs/logging.md). Live service checks belong in the consuming repository.

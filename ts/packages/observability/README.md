@@ -75,4 +75,4 @@ pnpm --dir ts install --frozen-lockfile
 bash scripts/check-typescript-observability.sh
 ```
 
-See [local integration tests](test/integration/README.md) and [design and validation](../../../docs/logging-readiness.md). These package checks do not prove Utility adoption or live collection.
+See [validation and releases](../../../docs/logging.md). Live service checks belong in the consuming repository.

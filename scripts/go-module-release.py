@@ -11,19 +11,19 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PREFIX = "github.com/onenexus-team/onenexus-sdks/"
-MODULES = {"observability": "go/observability"}
+MODULE_PATH = "go/observability"
 SEMVER = re.compile(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)")
 
 
-def identity(kind: str, version: str) -> tuple[str, str]:
-    if kind not in MODULES or not SEMVER.fullmatch(version) or version.split(".")[0] not in {"0", "1"}:
+def identity(version: str) -> tuple[str, str]:
+    if not SEMVER.fullmatch(version) or version.split(".")[0] not in {"0", "1"}:
         raise ValueError("invalid_go_module_version")
-    path = MODULES[kind]
+    path = MODULE_PATH
     return PREFIX + path, path + "/v" + version
 
 
-def files(kind: str) -> dict[str, bytes]:
-    root = ROOT / MODULES[kind]
+def files() -> dict[str, bytes]:
+    root = ROOT / MODULE_PATH
     selected = {}
     for path in sorted(root.rglob("*")):
         relative = path.relative_to(root)
@@ -35,16 +35,16 @@ def files(kind: str) -> dict[str, bytes]:
             selected[str(relative)] = path.read_bytes()
     if b"replace " in selected["go.mod"] or b"\nexclude " in selected["go.mod"]:
         raise ValueError("source_override_in_release")
-    if not selected["go.mod"].startswith(("module " + PREFIX + MODULES[kind] + "\n").encode()):
+    if not selected["go.mod"].startswith(("module " + PREFIX + MODULE_PATH + "\n").encode()):
         raise ValueError("wrong_go_module_identity")
     return selected
 
 
-def archive(kind: str, version: str) -> bytes:
-    module, _ = identity(kind, version)
+def archive(version: str) -> bytes:
+    module, _ = identity(version)
     out = io.BytesIO()
     with zipfile.ZipFile(out, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        for name, data in files(kind).items():
+        for name, data in files().items():
             info = zipfile.ZipInfo(f"{module}@v{version}/{name}", (1980, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
@@ -52,10 +52,10 @@ def archive(kind: str, version: str) -> bytes:
     return out.getvalue()
 
 
-def verify(kind: str, version: str, path: Path) -> None:
+def verify(version: str, path: Path) -> None:
     # Compare file contents too: a checksum alone can authenticate the wrong module.
-    module, _ = identity(kind, version)
-    expected = {f"{module}@v{version}/{name}": data for name, data in files(kind).items()}
+    module, _ = identity(version)
+    expected = {f"{module}@v{version}/{name}": data for name, data in files().items()}
     with zipfile.ZipFile(path) as z:
         if len(z.namelist()) != len(expected) or set(z.namelist()) != set(expected):
             raise ValueError("go_archive_inventory_mismatch")
@@ -63,14 +63,14 @@ def verify(kind: str, version: str, path: Path) -> None:
             raise ValueError("go_archive_source_mismatch")
 
 
-def build(kind: str, version: str, directory: Path) -> Path:
-    module, _ = identity(kind, version)
+def build(version: str, directory: Path) -> Path:
+    identity(version)
     directory.mkdir(parents=True, exist_ok=True)
-    name = "observability-go" + f"-v{version}.zip"
+    name = f"observability-go-v{version}.zip"
     path = directory / name
     with path.open("xb") as f:
-        f.write(archive(kind, version))
-    verify(kind, version, path)
+        f.write(archive(version))
+    verify(version, path)
     return path
 
 
@@ -79,28 +79,28 @@ def git(*args: str) -> str:
                           check=True, timeout=60).stdout.strip()
 
 
-def preflight(kind: str, version: str) -> None:
-    _, tag = identity(kind, version)
-    files(kind)
-    if git("status", "--porcelain", "--", MODULES[kind]):
+def preflight(version: str) -> None:
+    _, tag = identity(version)
+    files()
+    if git("status", "--porcelain", "--", MODULE_PATH):
         raise ValueError("uncommitted_go_module")
     git("merge-base", "--is-ancestor", "HEAD", "origin/main")
     # Authentication/network failures raise; they are never interpreted as absence.
-    refs = git("ls-remote", "--refs", "origin", "refs/tags/" + MODULES[kind] + "/v*")
+    refs = git("ls-remote", "--refs", "origin", "refs/tags/" + MODULE_PATH + "/v*")
     requested = tuple(map(int, version.split(".")))
     for line in refs.splitlines():
         ref = line.split()[1]
-        published = ref.removeprefix("refs/tags/" + MODULES[kind] + "/v")
+        published = ref.removeprefix("refs/tags/" + MODULE_PATH + "/v")
         if ref == "refs/tags/" + tag:
             raise ValueError("go_module_tag_exists")
         if SEMVER.fullmatch(published) and tuple(map(int, published.split("."))) > requested:
             raise ValueError("newer_go_module_exists")
 
 
-def publish(kind: str, version: str, path: Path) -> None:
-    verify(kind, version, path)
-    preflight(kind, version)
-    _, tag = identity(kind, version)
+def publish(version: str, path: Path) -> None:
+    verify(version, path)
+    preflight(version)
+    _, tag = identity(version)
     # Atomic creation at GitHub rejects a racing publisher even at the same SHA.
     # No force update, tag deletion or 'skip duplicate'. No locally-generated code.
     sha = git("rev-parse", "HEAD")
@@ -114,7 +114,6 @@ def publish(kind: str, version: str, path: Path) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=["build", "verify", "preflight", "publish"])
-    parser.add_argument("--kind", required=True, choices=MODULES)
     parser.add_argument("--version", required=True)
     parser.add_argument("--directory", type=Path)
     parser.add_argument("--archive", type=Path)
@@ -122,11 +121,14 @@ if __name__ == "__main__":
     try:
         if args.command == "build":
             if args.directory is None: parser.error("--directory required")
-            print(build(args.kind, args.version, args.directory.resolve()))
+            print(build(args.version, args.directory.resolve()))
         elif args.command == "preflight":
-            preflight(args.kind, args.version)
+            preflight(args.version)
         else:
             if args.archive is None: parser.error("--archive required")
-            globals()[args.command](args.kind, args.version, args.archive.resolve())
+            if args.command == "verify":
+                verify(args.version, args.archive.resolve())
+            else:
+                publish(args.version, args.archive.resolve())
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         raise SystemExit("Go release operation failed; inspect tag before retrying") from None

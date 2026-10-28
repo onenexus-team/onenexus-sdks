@@ -2,102 +2,58 @@
 
 ```mermaid
 flowchart TD
-    T[Shared JSON scenarios] --> P[Python tests]
-    T --> N[TypeScript tests]
-    T --> G[Go tests]
-    T --> D[.NET tests]
-    P --> Gate[All source and installed-package checks pass]
-    N --> Gate
-    G --> Gate
-    D --> Gate
-    Gate --> R[SDK release vX.Y.Z]
-    R --> A[Every logging package uses version X.Y.Z]
+    Cases[Shared JSON scenarios] --> Tests[Python, TypeScript, Go and .NET tests]
+    Tests --> Gate[Source and installed packages pass]
+    Gate --> Release[SDK Release vX.Y.Z]
+    Release --> Packages[All logging packages use X.Y.Z]
+    Packages --> Service[Explicit service upgrade and live tests]
 ```
 
-| Language | Service installs | Distribution |
+| Language | Package / usage | Distribution |
 |---|---|---|
-| Python | `onenexus-observability-python` | Wheel attached to SDK Release |
-| TypeScript | `@onenexus-team/observability` | GitHub npm registry |
-| Go | `github.com/onenexus-team/onenexus-sdks/go/observability` | Go module tag created by SDK release |
-| .NET | `OneNexus.Observability` | GitHub NuGet registry |
+| Python | [onenexus-observability-python](../python/packages/observability/README.md) | SDK Release wheel |
+| TypeScript | [@onenexus-team/observability](../ts/packages/observability/README.md) | GitHub npm registry |
+| Go | [go/observability](../go/observability/README.md) | Go module tag |
+| .NET | [OneNexus.Observability](../dotnet/packages/observability/README.md) | GitHub NuGet registry |
 
-- Each package contains its logger, runtime rules and context helpers.
-- Shared inputs and expected results are in `tests/logging/scenarios.json`.
-- Language tests call the actual package APIs and compare observations with those expectations.
-- CI also checks that the language-owned schemas remain equivalent. Update all affected implementations when a rule changes.
-- There is no contract-package build/download dependency and no independent contract-release workflow.
-- Standard third-party dependencies remain; “self-contained” means no separate OneNexus schema package.
+- Each logger includes its runtime rules and context helpers; no separate OneNexus contract package.
+- To change a rule, update the affected language implementations and `tests/logging/scenarios.json`. CI checks equivalent schemas and behavior through the actual APIs.
 
-## Publish a release
+## Release
 
-| Step | Action | Required result |
-|---|---|---|
-| 1 | Merge the SDK PR | SDK release checks and language checks pass |
-| 2 | Publish a GitHub Release with an unused stable `vX.Y.Z` tag on main | Starts `sdk-release.yml`; pushing a tag alone does not start it |
-| 3 | Wait for `prepare` and the entire `build` matrix | Source tests, shared scenarios, installed artifacts and version checks pass |
-| 4 | Wait for every `publish` job | Python wheels attached; npm/NuGet uploaded; Go tag created |
-| 5 | Verify installs from the real release destinations | Install each adopted language package in a clean consumer |
-
-- `sdk-build.yml` is also used by PR/main checks, without publication permissions.
-- The release tag supplies the package version. Local builds default to root `VERSION`.
-- Go requires `go/observability/vX.Y.Z` because the module lives in a subdirectory. The workflow creates it at the SDK release commit; it is not a separate version decision.
-- Registries cannot publish atomically across languages. A failed publication can leave a partial release; do not upgrade services until all destinations are verified.
-- Existing versions are never overwritten. If publication partially succeeds, inspect the failed run and accepted versions. Retry only after inspection; use a new SDK version when a destination already contains a package that cannot be completed safely. Never delete/reuse a published version.
-- A tag created successfully before a Release-asset upload failure remains valid. Attach only the exact verified artifact from the successful build after checking the tag target.
-
-## Validate without publishing
-
-```bash
-python3 -m unittest discover -s tests/logging -p 'test_*.py'
-python3 scripts/test-sdk-release.py
-python3 scripts/test-go-module-release.py
-
-# Run from repo root with the language toolchain installed.
-bash scripts/build-sdk-artifacts.sh python
-bash scripts/build-sdk-artifacts.sh typescript
-bash scripts/build-sdk-artifacts.sh dotnet
-bash scripts/build-sdk-artifacts.sh go
-```
-
-- Full builds require fresh `.artifacts/sdk/<language>` output directories and fail if stale artifacts are present.
-- For an alternate local test version, add it as the second argument, for example `0.4.0`. This builds artifacts only; it does not create a tag or publish.
-- For routine edits, use `scripts/check-<language>-observability.sh`.
-- Go checks use `go test -race`; all languages test installed artifacts separately from repository imports.
-- Shared edge-policy cases deliberately generate IDs. Business services must keep their existing trusted-ingress policy; Envoy owns new business-request IDs.
-
-## Upgrade existing services
-
-| Stage | Behavior | Validation |
-|---|---|---|
-| Merge SDK source | Running services remain unchanged | CI and package checks |
-| Publish SDK release | New packages become available | All release jobs and clean registry installs |
-| Upgrade service pin/lock | New logger includes its own rules | Service unit/integration tests; remove stale transitive contract lock entries |
-| Deploy to test | Existing logging APIs and log format retained | Real gateway → service → worker/dependency; query matching trace in monitoring |
-| Promote | Follow service rollout policy | Log completeness, drop counters, latency and rollback checks |
-
-- Keep historical packages and tags: existing pinned services still need them.
-- Python and TypeScript retain their exported `CONTRACT_VERSION`/`CONTRACT_DIGEST` constants as legacy log-format metadata. They are not package-version pins and require no release action.
-- Services using a standalone contract package directly must move validation calls to their logging package before removing that direct dependency. .NET's validator is under `OneNexus.Observability.Rules` in the logging assembly.
-- Existing logging behavior is retained. No exporter, collector, database or service deployment changes are included.
-- Consumer minimum-version deadlines and scheduled upgrade audits require separate service/repository enforcement; this PR does not silently enable those policies.
-
-## Test ownership
-
-| Test | Owner |
+| Step | Required result |
 |---|---|
-| Common fields, validation and context isolation | SDK unit tests |
-| Equivalent behavior across languages | SDK shared JSON scenarios |
-| Clean package installation and emitted JSON | SDK local integration tests |
-| Real Envoy → API → worker → Loki/Grafana | Consuming service `raw_tests` |
-| Business retries, cancellation, permissions and deployment behavior | Consuming service tests |
+| Merge the SDK change | PR checks pass |
+| Publish a GitHub Release with an unused stable `vX.Y.Z` tag on main | Starts `sdk-release.yml`; pushing a tag alone does not |
+| Build all languages | Source tests, shared scenarios, installed-package tests and artifact checks pass before any publisher starts |
+| Publish tested artifacts | Wheels attached, npm/NuGet uploaded, Go tag created |
+| Verify remote installs | Clean consumers can install each adopted package by version |
 
-SDK integration probes use synthetic data and run locally. They require no cluster, service credentials or monitoring backend; normal build-time dependency downloads still apply. The existing language check scripts run them automatically.
+- Go requires `go/observability/vX.Y.Z` for its subdirectory. The workflow creates it at the same SDK commit and version.
+- Publication across registries is not atomic. After failure, inspect accepted versions before retrying; keep service upgrades blocked until all destinations are verified.
+- Never overwrite/delete published versions. Use a new SDK version if safe completion is impossible. If only a Release attachment failed, attach the exact tested artifact after verifying its tag and source commit.
 
-| Language | Local package integration checks |
+## Validation
+
+| Scope | Command from repository root |
 |---|---|
-| Python | [Installed wheel](../python/packages/observability/tests/integration/README.md) |
-| TypeScript | [Installed npm package](../ts/packages/observability/test/integration/README.md) |
-| Go | [Installed module](../go/observability/tests/integration/README.md) |
-| .NET | [Installed NuGet package](../dotnet/packages/observability/tests/integration/README.md) |
+| Shared rules and checker | `python3 -m unittest discover -s tests/logging -p 'test_*.py'` |
+| Release guards | `python3 scripts/test-sdk-release.py` and `python3 scripts/test-go-module-release.py` |
+| Python source + installed wheel | `bash scripts/check-python-observability.sh` |
+| TypeScript source + installed npm | `bash scripts/check-typescript-observability.sh` |
+| Go source + installed module + race detector | `bash scripts/check-go-observability.sh` |
+| .NET source + installed NuGet | `bash scripts/check-dotnet-observability.sh` |
+| Full SDK build | `bash scripts/build-sdk-artifacts.sh <language> [version]` |
 
-Live end-to-end procedures belong in MLOps, CAS and other consuming service repositories. Package test success does not establish deployed service adoption or delivery to Loki. See [readiness evidence and remaining gates](logging-readiness.md).
+- Full builds use `python`, `typescript`, `go` or `dotnet` and require a fresh `.artifacts/sdk/<language>` directory. Local version defaults to root `VERSION`; specifying another version does not publish it.
+- Integration probes live under each package's `tests/integration/` (`test/integration/` for TypeScript). The check scripts run them automatically against installed artifacts and verify emitted JSON plus deliberate failures.
+- SDK checks use synthetic data without cluster credentials. Real gateway → service → worker → monitoring `raw_tests` belong to consuming repositories; package success does not prove service adoption or log delivery.
+
+## Service upgrade
+
+- Publish and verify the SDK release, update the service pin/lockfile, then run service tests and live raw tests before promotion. Validate log completeness, drop counters, latency and rollback.
+- Existing logger APIs and log format remain. Keep old packages/tags available for pinned consumers; roll back a service through its previous pin/image.
+- Direct users of standalone contract packages must move validation calls to their logger. .NET validation is under `OneNexus.Observability.Rules`.
+- Legacy exported format constants remain for compatibility; they are not package versions or release controls.
+- Shared edge-policy cases generate IDs explicitly. Business services retain their trusted-ingress policy; Envoy owns new business-request IDs. Python's existing `incoming_context` API is edge-style and must not replace service ingress checks.
+- Consumer upgrade deadlines, collectors and service deployments remain separate work.

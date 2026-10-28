@@ -106,7 +106,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SDK_VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          python3 scripts/go-module-release.py publish --kind observability \
+          python3 scripts/go-module-release.py publish \
             --version "$SDK_VERSION" --archive ".artifacts/publish/observability-go-v$SDK_VERSION.zip"
       - name: Attach the tested artifacts to the SDK release
         uses: softprops/action-gh-release@v3.0.3
