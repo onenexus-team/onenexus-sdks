@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	obs "github.com/onenexus-team/onenexus-sdks/go/observability"
+	obs "github.com/onenexus-team/onenexus-sdks/go/packages/observability"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -25,7 +25,7 @@ func headers(value string) http.Header { return http.Header{"Traceparent": []str
 func TestSharedCases(t *testing.T) {
 	path := os.Getenv("ONENEXUS_LOGGING_SCENARIOS")
 	if path == "" {
-		path = "../../../tests/logging/scenarios.json"
+		path = "../../../../tests/logging/scenarios.json"
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {

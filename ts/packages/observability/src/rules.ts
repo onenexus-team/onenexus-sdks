@@ -8,24 +8,25 @@ interface Definition {
     properties: Record<string, Record<string, unknown>>;
 }
 interface Schema {
-    $defs: Record<string, Definition> & { common: Definition };
+    $schema: string;
+    $defs: Record<string, object> & { common: Definition };
+    'x-protected-fields': string[];
     'x-semantic-checks': { message_max_utf8_bytes: number; record_max_compact_utf8_bytes: number };
 }
 const schema = JSON.parse(schemaText) as Schema;
 const ajv = new Ajv2020({ allErrors: true, strict: true });
 const validators = new Map(
-    Object.entries(schema.$defs).map(([name, definition]) => [
+    Object.keys(schema.$defs).map((name) => [
         name,
-        ajv.compile(definition as object),
+        ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: `#/$defs/${name}` }),
     ]),
 );
 export const CONTRACT_VERSION = "0.3.2"; // Legacy format identifier, not SDK version.
 export const CONTRACT_DIGEST = "4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923";
 export const MAX_MESSAGE_BYTES: number = schema['x-semantic-checks'].message_max_utf8_bytes;
 export const MAX_RECORD_BYTES: number = schema['x-semantic-checks'].record_max_compact_utf8_bytes;
-export const COMMON_FIELDS: readonly string[] = Object.freeze(
-    Object.keys(schema.$defs.common.properties),
-);
+// Logger-owned fields stay protected when optional shared fields are added.
+export const COMMON_FIELDS: readonly string[] = Object.freeze(schema['x-protected-fields']);
 
 /** Parse integer timestamps without rounding int64 values through a JS number. */
 export function parseRecord(text: string): unknown {

@@ -1,7 +1,12 @@
 # Shared logging: one SDK release
 
+See [shared HTTP request logging](request-logging.md) for the request profile,
+verified identity attribution, response-status semantics and service adoption steps.
+
 ```mermaid
 flowchart TD
+    Schemas[Package-owned schemas] --> Equality[Shared schema equality test]
+    Equality --> Gate
     Cases[Shared JSON scenarios] --> Tests[Python, TypeScript, Go and .NET tests]
     Tests --> Gate[Source and installed packages pass]
     Gate --> Release[SDK Release vX.Y.Z]
@@ -13,11 +18,13 @@ flowchart TD
 |---|---|---|
 | Python | [onenexus-observability-python](../python/packages/observability/README.md) | SDK Release wheel |
 | TypeScript | [@onenexus-team/observability](../ts/packages/observability/README.md) | GitHub npm registry |
-| Go | [go/observability](../go/observability/README.md) | Go module tag |
+| Go | [go/packages/observability](../go/packages/observability/README.md) | Go module tag |
 | .NET | [OneNexus.Observability](../dotnet/packages/observability/README.md) | GitHub NuGet registry |
 
 - Each logger includes its runtime rules and context helpers; no separate OneNexus contract package.
-- To change a rule, update the affected language implementations and `tests/logging/scenarios.json`. CI checks equivalent schemas and behavior through the actual APIs.
+- Each language package owns its `schema.json`. Update all four schemas, `tests/logging/scenarios.json` and any affected language helpers together.
+- [`test_language_rules_remain_equivalent`](../tests/logging/test_shared_tests.py) compares the four schemas as parsed JSON. CI runs this test for every pull request and main-branch push; any schema mismatch fails the check. Shared scenarios also check behavior through each language's real APIs.
+- Each published package embeds its own schema, including Go through `go:embed`. Consumers need no repository path, network schema lookup or separate contract package.
 
 ## Release
 
@@ -29,7 +36,8 @@ flowchart TD
 | Publish tested artifacts | Wheels attached, npm/NuGet uploaded, Go tag created |
 | Verify remote installs | Clean consumers can install each adopted package by version |
 
-- Go requires `go/observability/vX.Y.Z` for its subdirectory. The workflow creates it at the same SDK commit and version.
+- Go consumers upgrading from the previous `go/observability` module must update imports and the `go.mod` requirement to `github.com/onenexus-team/onenexus-sdks/go/packages/observability`. Existing published versions remain available at their original path.
+- Go requires `go/packages/observability/vX.Y.Z` for its subdirectory. The workflow creates it at the same SDK commit and version.
 - Publication across registries is not atomic. After failure, inspect accepted versions before retrying; keep service upgrades blocked until all destinations are verified.
 - Never overwrite/delete published versions. Use a new SDK version if safe completion is impossible. If only a Release attachment failed, attach the exact tested artifact after verifying its tag and source commit.
 

@@ -53,9 +53,10 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
             if (CorrelationContext.TraceId is { } trace) record["trace_id"] = trace;
             scopes.ForEachScope((scope, target) => AddFields(scope, target), record);
             AddFields(state, record);
+            foreach (var (key, value) in RequestLogContext.CurrentFields()) record[key] = value;
             var json = JsonSerializer.SerializeToElement(record, Contract.JsonOptions);
             if (record.ContainsKey("event") != record.ContainsKey("outcome")) throw new ArgumentException("incomplete_event");
-            var profile = !record.ContainsKey("trace_id") ? "common" : record.ContainsKey("event") ? "lifecycle" : "correlated";
+            var profile = record.ContainsKey("request_event") ? "request" : !record.ContainsKey("trace_id") ? "common" : record.ContainsKey("event") ? "lifecycle" : "correlated";
             if (Contract.Validate(json, profile).Count != 0) throw new ArgumentException("invalid_log_record");
             var line = json.GetRawText();
             if (Encoding.UTF8.GetByteCount(line) > Contract.MaxRecordBytes) throw new ArgumentException("record_too_large");
@@ -77,7 +78,7 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
         if (source is not IEnumerable<KeyValuePair<string, object?>> fields) return;
         foreach (var (key, value) in fields)
         {
-            if (key is "event" or "outcome" || configuration.AllowedFields.Contains(key)) target[key] = value;
+            if (key is "event" or "outcome" || RequestLogContext.FieldNames.Contains(key) || configuration.AllowedFields.Contains(key)) target[key] = value;
             // Arbitrary ILogger template/scope fields are ignored unless approved; common identity is protected.
         }
     }

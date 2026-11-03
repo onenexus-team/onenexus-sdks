@@ -8,6 +8,7 @@ import {
     validateRecord,
 } from './rules.js';
 import { currentTraceId } from './context.js';
+import { REQUEST_FIELDS, currentRequestFields } from './request.js';
 
 export type LogFields = Readonly<Record<string, string | number | boolean | null>>;
 export interface LogConfig {
@@ -64,7 +65,8 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
     ) {
         throw new Error('invalid_allowed_fields');
     }
-    const allowed = new Set(names);
+    const allowed = new Set<string>(REQUEST_FIELDS);
+    for (const name of config.allowedFields ?? []) allowed.add(name);
     const counts = { written: 0, invalid: 0, backpressure: 0, io: 0, closed: 0 };
     const pending = new Set<object>();
     let blocked = stream.writableNeedDrain;
@@ -173,15 +175,18 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
                         record[key] = value;
                     }
                 }
+                Object.assign(record, currentRequestFields());
                 if (typeof message !== 'string' || message.length > MAX_MESSAGE_BYTES)
                     throw Error('invalid_message');
                 // Independent/system events remain valid common records without a fabricated trace ID.
                 const profile =
-                    traceId && (options.event !== undefined || options.outcome !== undefined)
-                        ? 'lifecycle'
-                        : traceId
-                          ? 'correlated'
-                          : 'common';
+                    'request_event' in record
+                        ? 'request'
+                        : traceId && (options.event !== undefined || options.outcome !== undefined)
+                          ? 'lifecycle'
+                          : traceId
+                            ? 'correlated'
+                            : 'common';
                 const line = encodeRecord(record, profile) + '\n';
                 const token = {};
                 pending.add(token);

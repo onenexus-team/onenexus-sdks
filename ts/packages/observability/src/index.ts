@@ -22,3 +22,4 @@ export {
     parseRecord,
     ContractViolation,
 } from './rules.js';
+export { RequestLogContext, withRequestLogContext, currentRequestFields } from './request.js';

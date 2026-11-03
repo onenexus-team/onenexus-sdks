@@ -23,9 +23,11 @@ dev = json.loads((root / 'ts/package.json').read_text())['devDependencies']
 dev.update(json.loads((root / 'ts/packages/observability/package.json').read_text())['devDependencies'])
 # Reuse the complete locked test toolchain, not fresh transitive test-tool ranges.
 shutil.copy(root / 'ts/pnpm-lock.yaml', consumer / 'pnpm-lock.yaml')
+# A short consumer-relative path avoids pnpm store filenames exceeding macOS limits.
+shutil.copy(out / f'onenexus-team-observability-{version}.tgz', consumer / 'observability.tgz')
 deps = {
     '@opentelemetry/api': '1.10.0',
-    '@onenexus-team/observability': 'file:' + str(out / f'onenexus-team-observability-{version}.tgz'),
+    '@onenexus-team/observability': 'file:./observability.tgz',
 }
 shutil.copytree(root / 'ts/packages/observability/test', consumer / 'test/observability')
 shutil.copy(root / 'ts/packages/observability/test/integration/log-probe.mjs', consumer / 'log-probe.mjs')

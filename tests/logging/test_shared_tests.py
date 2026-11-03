@@ -76,14 +76,17 @@ class SharedTests(unittest.TestCase):
         paths = [
             "python/packages/observability/src/onenexus_observability/schema.json",
             "ts/packages/observability/src/schema.json",
-            "go/observability/schema.json",
+            "go/packages/observability/schema.json",
             "dotnet/packages/observability/src/schema.json",
         ]
-        definitions = [json.loads((ROOT / p).read_text()) for p in paths]
-        for definition in definitions[1:]:
-            self.assertEqual(definitions[0], definition)
-        self.assertIn("environment", definitions[0]["$defs"]["common"]["required"])
+        definitions = [json.loads((ROOT / path).read_text()) for path in paths]
+        definition = definitions[0]
+        for path, other in zip(paths[1:], definitions[1:]):
+            self.assertEqual(definition, other, path)
+        self.assertIn("environment", definition["$defs"]["common"]["required"])
         self.assertTrue(self.suite["emission_cases"])
+        self.assertTrue(self.suite["request_emission_cases"])
+        self.assertIn("request", definition["$defs"])
 
     def test_no_standalone_contract_distribution_remains(self):
         for path in [

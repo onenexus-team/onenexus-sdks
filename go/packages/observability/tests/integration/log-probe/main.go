@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"os"
 
-	obs "github.com/onenexus-team/onenexus-sdks/go/observability"
+	obs "github.com/onenexus-team/onenexus-sdks/go/packages/observability"
 )
 
 func main() {

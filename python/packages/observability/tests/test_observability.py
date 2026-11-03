@@ -79,7 +79,7 @@ def test_all_shared_cases_through_real_package(tmp_path):
     output = tmp_path / "observed.json"
     result = adapter_results()
     output.write_text(json.dumps(result))
-    assert checker.check_results(output, SCENARIOS) == 66
+    assert checker.check_results(output, SCENARIOS) == len(result["results"])
     # Negative control: accepting one invalid input must fail the shared checker.
     invalid = next(x for x in result["results"] if x.get("errors"))
     invalid["errors"] = []

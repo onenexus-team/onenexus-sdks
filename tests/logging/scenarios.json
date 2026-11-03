@@ -908,6 +908,837 @@
       "errors": [
         "schema_invalid"
       ]
+    },
+    {
+      "id": "request_anonymous",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": []
+    },
+    {
+      "id": "request_uncorrelated",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": []
+    },
+    {
+      "id": "request_forbidden",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "POLICY_DENIED",
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 403
+      },
+      "errors": []
+    },
+    {
+      "id": "request_interrupted_before_headers",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "interrupted",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": null
+      },
+      "errors": []
+    },
+    {
+      "id": "request_interrupted_stream",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "interrupted",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": []
+    },
+    {
+      "id": "request_missing_principal_id",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_tenant_id",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_error_code",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_request_event",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_http_request_method",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_http_route",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_http_response_status_code",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_duration_ms",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_null_error_for_500",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 500
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_completed_unknown_status",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": null
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_bad_status",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 600
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_fractional_status",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200.5
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_negative_duration",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": -1,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_raw_message_error",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "contains a secret",
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 400
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_zero_tenant",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": "00000000000000000000000000000000",
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_space",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GET POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_tab",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GET\t",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_newline",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GET\n",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_empty",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_non_ascii",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GÉT",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_too_long",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_separator",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GET/POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "optional_shared_fields_common",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "http.request.method": "GET",
+        "http.route": "/items",
+        "http.response.status_code": 200,
+        "duration_ms": 1
+      },
+      "errors": []
+    },
+    {
+      "id": "optional_shared_fields_correlated",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "http.request.method": "GET",
+        "http.route": "/items",
+        "http.response.status_code": 200,
+        "duration_ms": 1
+      },
+      "errors": []
+    },
+    {
+      "id": "optional_shared_fields_lifecycle",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "http.request.method": "GET",
+        "http.route": "/items",
+        "http.response.status_code": 200,
+        "duration_ms": 1
+      },
+      "errors": []
+    },
+    {
+      "id": "common_invalid_principal_id",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "principal_id": "username"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_tenant_id",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "tenant_id": "00000000000000000000000000000000"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_error_code",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "error_code": "secret text"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_request_event",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "request_event": "unknown"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_http_request_method",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "http.request.method": "GET POST"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_http_route",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "http.route": "/items\n"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_http_response_status_code",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "http.response.status_code": "403"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_duration_ms",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "duration_ms": -1
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "correlated_invalid_shared_principal",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development",
+        "principal_id": "username"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "lifecycle_invalid_shared_principal",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development",
+        "principal_id": "username"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
     }
   ],
   "context_cases": [
@@ -1024,6 +1855,259 @@
       "absent": [
         "trace_id"
       ]
+    }
+  ],
+  "request_emission_cases": [
+    {
+      "id": "anonymous_401",
+      "status": 401,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 401,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "verified_403",
+      "status": 403,
+      "interrupted": false,
+      "principal": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+      "tenant": "11111111111111111111111111111111",
+      "error": "POLICY_DENIED",
+      "expected": {
+        "principal_id": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+        "tenant_id": "11111111111111111111111111111111",
+        "error_code": "POLICY_DENIED",
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 403,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000002"
+      },
+      "traceparent": "00-00000000000000000000000000000002-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "verified_429",
+      "status": 429,
+      "interrupted": false,
+      "principal": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+      "tenant": "11111111111111111111111111111111",
+      "error": "QUOTA_EXCEEDED",
+      "expected": {
+        "principal_id": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+        "tenant_id": "11111111111111111111111111111111",
+        "error_code": "QUOTA_EXCEEDED",
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 429,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000003"
+      },
+      "traceparent": "00-00000000000000000000000000000003-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "legacy_key",
+      "status": 200,
+      "interrupted": false,
+      "principal": null,
+      "tenant": "11111111111111111111111111111111",
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": "11111111111111111111111111111111",
+        "error_code": null,
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000004"
+      },
+      "traceparent": "00-00000000000000000000000000000004-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "interrupted_before_headers",
+      "status": null,
+      "interrupted": true,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "interrupted",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": null,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000005"
+      },
+      "traceparent": "00-00000000000000000000000000000005-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "interrupted_stream",
+      "status": 200,
+      "interrupted": true,
+      "principal": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+      "tenant": "11111111111111111111111111111111",
+      "error": null,
+      "expected": {
+        "principal_id": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+        "tenant_id": "11111111111111111111111111111111",
+        "error_code": null,
+        "request_event": "interrupted",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000006"
+      },
+      "traceparent": "00-00000000000000000000000000000006-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "uncorrelated_401",
+      "status": 401,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 401,
+        "duration_ms": 1.5
+      },
+      "traceparent": null,
+      "method": "POST"
+    },
+    {
+      "id": "method_extension_405",
+      "status": 405,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "M-SEARCH",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 405,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "M-SEARCH"
+    },
+    {
+      "id": "method_lowercase_405",
+      "status": 405,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "get",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 405,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "get"
+    },
+    {
+      "id": "method_digit_405",
+      "status": 405,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "GET3",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 405,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "GET3"
+    },
+    {
+      "id": "method_sentinel_405",
+      "status": 405,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "_OTHER",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 405,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "_OTHER"
+    },
+    {
+      "id": "method_tchar_405",
+      "status": 405,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "!#$%&'*+-.^_`|~",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 405,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "!#$%&'*+-.^_`|~"
     }
   ]
 }

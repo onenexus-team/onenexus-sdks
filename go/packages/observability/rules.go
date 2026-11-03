@@ -40,9 +40,10 @@ func (noNetwork) Load(string) (any, error) { return nil, errors.New("external_sc
 func initialize() {
 	schema, _ := source.ReadFile("schema.json")
 	var details struct {
-		Version string                                         `json:"x-contract-version"`
-		Defs    map[string]struct{ Properties map[string]any } `json:"$defs"`
-		Limits  struct {
+		Version   string                     `json:"x-contract-version"`
+		Defs      map[string]json.RawMessage `json:"$defs"`
+		Protected []string                   `json:"x-protected-fields"`
+		Limits    struct {
 			Message int `json:"message_max_utf8_bytes"`
 			Record  int `json:"record_max_compact_utf8_bytes"`
 		} `json:"x-semantic-checks"`
@@ -72,10 +73,8 @@ func initialize() {
 		}
 		validators[name] = v
 	}
-	fields := make([]string, 0, len(details.Defs["common"].Properties))
-	for name := range details.Defs["common"].Properties {
-		fields = append(fields, name)
-	}
+	// Preserve logger-owned fields independently of optional shared properties.
+	fields := append([]string(nil), details.Protected...)
 	sort.Strings(fields)
 	bundle = Bundle{Schema: schema, CommonFields: fields, MaxMessageBytes: details.Limits.Message, MaxRecordBytes: details.Limits.Record}
 }

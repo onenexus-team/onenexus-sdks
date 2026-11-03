@@ -11,7 +11,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PREFIX = "github.com/onenexus-team/onenexus-sdks/"
-MODULE_PATH = "go/observability"
+MODULE_PATH = "go/packages/observability"
 SEMVER = re.compile(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)")
 
 

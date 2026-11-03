@@ -77,6 +77,19 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "invalid_sdk_version"):
                 artifacts.verify("go", version, self.root)
 
+    def test_go_artifact_requires_relocated_module_path(self):
+        for module_path in ["go/packages/observability", "go/observability"]:
+            module = "github.com/onenexus-team/onenexus-sdks/" + module_path
+            with zipfile.ZipFile(self.root / "observability-go-v0.4.0.zip", "w") as z:
+                prefix = module + "@v0.4.0/"
+                z.writestr(prefix + "go.mod", "module " + module + "\n")
+                z.writestr(prefix + "schema.json", "{}")
+            if module_path == "go/packages/observability":
+                self.assertEqual(artifacts.verify("go", "0.4.0", self.root), 1)
+            else:
+                with self.assertRaisesRegex(ValueError, "go_sdk_version_mismatch"):
+                    artifacts.verify("go", "0.4.0", self.root)
+
 
 if __name__ == "__main__":
     unittest.main()

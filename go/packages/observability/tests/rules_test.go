@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	obs "github.com/onenexus-team/onenexus-sdks/go/observability"
+	obs "github.com/onenexus-team/onenexus-sdks/go/packages/observability"
 )
 
 func TestLoadReturnsIndependentData(t *testing.T) {
