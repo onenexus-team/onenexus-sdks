@@ -1,4 +1,4 @@
-module github.com/onenexus-team/onenexus-sdks/go/observability
+module github.com/onenexus-team/onenexus-sdks/go/packages/observability
 
 go 1.26.0
 

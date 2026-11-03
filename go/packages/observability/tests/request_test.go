@@ -11,7 +11,7 @@ import (
 	"sync"
 	"testing"
 
-	obs "github.com/onenexus-team/onenexus-sdks/go/observability"
+	obs "github.com/onenexus-team/onenexus-sdks/go/packages/observability"
 )
 
 var requestTenant = strings.Repeat("1", 32)
@@ -20,7 +20,7 @@ var requestOwner = "nx1://test/" + requestTenant + "/CAS/global/User/" + strings
 func TestSharedRequestEmissions(t *testing.T) {
 	path := os.Getenv("ONENEXUS_LOGGING_SCENARIOS")
 	if path == "" {
-		path = "../../../tests/logging/scenarios.json"
+		path = "../../../../tests/logging/scenarios.json"
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {

@@ -1,7 +1,7 @@
 # Shared Go logging
 
 One module contains the `slog` handler, validation rules and trace-context helpers.
-SDK release `vX.Y.Z` automatically creates Go module tag `go/observability/vX.Y.Z` at the same commit.
+SDK release `vX.Y.Z` automatically creates Go module tag `go/packages/observability/vX.Y.Z` at the same commit.
 
 ```mermaid
 flowchart LR
@@ -12,7 +12,7 @@ flowchart LR
     Stdout --> Collector[Existing collector]
 ```
 
-- Runtime rules are embedded from this module's `schema.json`.
+- Runtime rules are embedded from this module's generated `schema.json`; the canonical source is [`schemas/logging.schema.json`](../../../schemas/logging.schema.json).
 - Shared test data stays in `tests/logging/`; no separate Go contract module.
 - No runtime package downloads, global logger replacement, span exporter or cluster changes.
 
@@ -21,9 +21,10 @@ flowchart LR
 ```bash
 export GOPRIVATE=github.com/onenexus-team/onenexus-sdks
 # Configure authenticated Git access using your normal protected credential method.
-go get github.com/onenexus-team/onenexus-sdks/go/observability@v<released-sdk-version>
+go get github.com/onenexus-team/onenexus-sdks/go/packages/observability@v<released-sdk-version>
 ```
 
+- Upgrading from `github.com/onenexus-team/onenexus-sdks/go/observability` requires changing imports and the `go.mod` requirement to `github.com/onenexus-team/onenexus-sdks/go/packages/observability`. Earlier releases and their existing module tags remain valid.
 - Commit the application's `go.mod` and `go.sum`; do not add local `replace` entries.
 - Go uses versioned source modules from the private Git repository, not the npm/NuGet registry.
 
@@ -96,10 +97,10 @@ python3 scripts/test-go-module-release.py
 |---|---|
 | Source + `go test -race` | Shared cases, goroutine isolation, cancellation, retry, real recorded child, concurrent output and failure handling |
 | Separate installed consumer | Versioned module ZIP install without source replacements; same tests pass |
-| Shared behavior checker | Actual results agree with all 56 record and 10 edge-context cases |
+| Shared behavior checker | Actual results agree with shared record, edge-context and request-emission cases |
 | Integration probe | Four emitted SDK JSON lines; three share the same trace ID |
 | Negative controls | Wrong trace/service, missing field, plain-text output and falsified case result fail |
 
 Artifacts: `.artifacts/go-observability/` (results, module archives, captured logs, benchmark).
 
-See [validation and releases](../../docs/logging.md). Live service checks belong in the consuming repository.
+See [validation and releases](../../../docs/logging.md). Live service checks belong in the consuming repository.

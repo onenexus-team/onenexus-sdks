@@ -9,7 +9,7 @@ SOURCE = Path("schemas/logging.schema.json")
 TARGETS = (
     Path("python/packages/observability/src/onenexus_observability/schema.json"),
     Path("ts/packages/observability/src/schema.json"),
-    Path("go/observability/schema.json"),
+    Path("go/packages/observability/schema.json"),
     Path("dotnet/packages/observability/src/schema.json"),
 )
 

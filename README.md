@@ -9,7 +9,7 @@ All use SDK release `vX.Y.Z`; no separate contract release or dependency is need
 |---|---|
 | Python | `onenexus-observability-python` |
 | TypeScript | `@onenexus-team/observability` |
-| Go | `github.com/onenexus-team/onenexus-sdks/go/observability` |
+| Go | `github.com/onenexus-team/onenexus-sdks/go/packages/observability` |
 | .NET | `OneNexus.Observability` |
 
 [Release, upgrade and validation guide](docs/logging.md).
@@ -196,7 +196,7 @@ builds and tests every language before any SDK package is published.
 | Python SDKs and logging wheel | GitHub Release assets |
 | TypeScript SDKs and logging package | GitHub npm registry and Release assets |
 | .NET logging package | GitHub NuGet registry and Release asset |
-| Go logging module | Automatic `go/observability/vX.Y.Z` tag at the SDK commit and Release ZIP |
+| Go logging module | Automatic `go/packages/observability/vX.Y.Z` tag at the SDK commit and Release ZIP |
 
 PR/main checks use the same build workflow without publishing. Existing releases are retained.
 See the [release guide](docs/logging.md) for failure recovery and service validation.

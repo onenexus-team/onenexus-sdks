@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	obs "github.com/onenexus-team/onenexus-sdks/go/observability"
+	obs "github.com/onenexus-team/onenexus-sdks/go/packages/observability"
 )
 
 func config() obs.Config {
@@ -272,7 +272,7 @@ func TestWaitingCapacityAndCloseWakeup(t *testing.T) {
 func TestSharedEmissionScenarios(t *testing.T) {
 	path := os.Getenv("ONENEXUS_LOGGING_SCENARIOS")
 	if path == "" {
-		path = "../../../tests/logging/scenarios.json"
+		path = "../../../../tests/logging/scenarios.json"
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {

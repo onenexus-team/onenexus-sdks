@@ -20,7 +20,7 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
           cache-dependency-path: |
-            go/observability/go.sum
+            go/packages/observability/go.sum
       - uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.14'

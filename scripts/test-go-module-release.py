@@ -31,7 +31,7 @@ class GoReleaseTests(unittest.TestCase):
         self.assertEqual(a, release.archive("0.3.4"))
         path = release.build("0.3.4", self.out)
         release.verify("0.3.4", path)
-        (self.root / "go/observability/package.go").write_text("changed")
+        (self.root / "go/packages/observability/package.go").write_text("changed")
         with self.assertRaisesRegex(ValueError, "source_mismatch"):
             release.verify("0.3.4", path)
 
@@ -43,7 +43,7 @@ class GoReleaseTests(unittest.TestCase):
             release.verify("0.3.4", path)
 
     def test_local_replace_or_wrong_module_not_publishable(self):
-        p = self.root / "go/observability/go.mod"
+        p = self.root / "go/packages/observability/go.mod"
         for value in ["module bad\n", p.read_text()+"\nreplace x => ../x\n"]:
             p.write_text(value)
             with self.assertRaises(ValueError): release.archive("0.3.4")
@@ -56,7 +56,7 @@ class GoReleaseTests(unittest.TestCase):
         with patch.object(release, "git", return_value="dirty"):
             with self.assertRaisesRegex(ValueError,"uncommitted"): release.preflight("0.3.4")
         for suffix, error in [("0.3.4","tag_exists"),("0.3.5","newer_go_module")]:
-            with patch.object(release,"git",side_effect=["","","a"*40+"\trefs/tags/go/observability/v"+suffix]):
+            with patch.object(release,"git",side_effect=["","","a"*40+"\trefs/tags/go/packages/observability/v"+suffix]):
                 with self.assertRaisesRegex(ValueError,error): release.preflight("0.3.4")
 
     def test_missing_tag_is_not_auth_failure(self):
@@ -70,7 +70,7 @@ class GoReleaseTests(unittest.TestCase):
             gate.assert_called_once_with("0.3.4")
             args=command.call_args.args[0]
             self.assertIn("POST",args)
-            self.assertIn("ref=refs/tags/go/observability/v0.3.4",args)
+            self.assertIn("ref=refs/tags/go/packages/observability/v0.3.4",args)
             self.assertIn("sha="+"c"*40,args)
             self.assertNotIn("--force",args)
 

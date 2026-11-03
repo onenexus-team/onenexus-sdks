@@ -77,7 +77,7 @@ class SharedTests(unittest.TestCase):
         paths = [
             "python/packages/observability/src/onenexus_observability/schema.json",
             "ts/packages/observability/src/schema.json",
-            "go/observability/schema.json",
+            "go/packages/observability/schema.json",
             "dotnet/packages/observability/src/schema.json",
         ]
         for path in paths:

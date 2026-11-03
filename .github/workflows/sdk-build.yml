@@ -48,7 +48,7 @@ jobs:
         if: matrix.language == 'go'
         with:
           go-version: '1.27.3'
-          cache-dependency-path: go/observability/go.sum
+          cache-dependency-path: go/packages/observability/go.sum
       - name: Build and test source and installed packages
         env:
           SDK_LANGUAGE: ${{ matrix.language }}

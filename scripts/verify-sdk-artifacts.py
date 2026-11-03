@@ -87,7 +87,7 @@ def verify(language, version, directory):
                 raise ValueError("separate_contract_dependency")
         else:
             prefix = (
-                f"github.com/onenexus-team/onenexus-sdks/go/observability@v{version}/"
+                f"github.com/onenexus-team/onenexus-sdks/go/packages/observability@v{version}/"
             )
             with zipfile.ZipFile(path) as z:
                 if any(not n.startswith(prefix) for n in z.namelist()):
