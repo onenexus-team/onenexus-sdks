@@ -28,6 +28,7 @@ func TestSharedRequestEmissions(t *testing.T) {
 	}
 	var suite struct {
 		Cases []struct {
+			Traceparent string         `json:"traceparent"`
 			ID          string         `json:"id"`
 			Principal   string         `json:"principal"`
 			Tenant      string         `json:"tenant"`
@@ -52,10 +53,7 @@ func TestSharedRequestEmissions(t *testing.T) {
 			}
 			defer h.Close()
 			logger := slog.New(h)
-			ctx, r, err := obs.WithRequestLogContext(context.Background(), c.ID)
-			if err != nil {
-				t.Fatal(err)
-			}
+			ctx, r := obs.WithRequestLogContext(obs.IncomingContext(context.Background(), headers(c.Traceparent), true))
 			r.BindVerifiedIdentity(c.Principal, c.Tenant)
 			if c.Error != "" {
 				if err = r.SetError(c.Error); err != nil {
@@ -99,8 +97,13 @@ func TestSharedRequestEmissions(t *testing.T) {
 			if _, ok := after["principal_id"]; ok {
 				t.Fatal("identity survived close")
 			}
-			if _, ok := terminal["trace_id"]; ok {
+			if _, ok := terminal["trace_id"]; c.Traceparent == "" && ok {
 				t.Fatal("fabricated trace")
+			}
+			for _, row := range []map[string]any{application, terminal, after} {
+				if _, ok := row["request_id"]; ok {
+					t.Fatal("unexpected request identifier")
+				}
 			}
 			if errors := obs.ValidateJSON(lines[1], "request"); len(errors) != 0 {
 				t.Fatal(errors)
@@ -116,7 +119,7 @@ func TestRequestEmissionEnforcesProfile(t *testing.T) {
 	if err := h.Handle(context.Background(), record("Missing fields", slog.String("request_event", "completed"))); err == nil {
 		t.Fatal("accepted incomplete request")
 	}
-	ctx, r, _ := obs.WithRequestLogContext(context.Background(), "request-1")
+	ctx, r := obs.WithRequestLogContext(context.Background())
 	defer r.Close()
 	fields, _ := r.TerminalFields("GET", "/", nil, 1, false)
 	attrs := []slog.Attr{}
@@ -132,14 +135,9 @@ func TestRequestEmissionEnforcesProfile(t *testing.T) {
 }
 
 func TestRequestAttributionValidationAndClose(t *testing.T) {
-	for _, id := range []string{"", "x\n", strings.Repeat("x", 129)} {
-		if _, _, err := obs.WithRequestLogContext(context.Background(), id); err == nil {
-			t.Fatal("invalid ID accepted")
-		}
-	}
-	ctx, r, _ := obs.WithRequestLogContext(context.Background(), "outer")
+	ctx, r := obs.WithRequestLogContext(context.Background())
 	r.BindVerifiedIdentity(requestOwner, requestTenant)
-	innerCtx, inner, _ := obs.WithRequestLogContext(ctx, "inner")
+	innerCtx, inner := obs.WithRequestLogContext(ctx)
 	defer inner.Close()
 	if obs.CurrentRequestFields(innerCtx)["principal_id"] != nil || obs.CurrentRequestFields(ctx)["principal_id"] != requestOwner {
 		t.Fatal("nested identity leaked")
@@ -173,7 +171,7 @@ func TestConcurrentRequestAttribution(t *testing.T) {
 		group.Add(1)
 		go func() {
 			defer group.Done()
-			ctx, r, _ := obs.WithRequestLogContext(context.Background(), "concurrent")
+			ctx, r := obs.WithRequestLogContext(context.Background())
 			r.BindVerifiedIdentity(requestOwner, requestTenant)
 			if obs.CurrentRequestFields(ctx)["principal_id"] != requestOwner {
 				t.Error("missing identity")

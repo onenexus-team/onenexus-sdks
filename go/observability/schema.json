@@ -334,16 +334,6 @@
           ],
           "title": "Environment"
         },
-        "request_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128,
-          "pattern": "^[A-Za-z0-9._:-]+$",
-          "not": {
-            "pattern": "[\\r\\n]",
-            "type": "string"
-          }
-        },
         "principal_id": {
           "type": [
             "string",
@@ -428,7 +418,6 @@
         "environment",
         "region",
         "message",
-        "request_id",
         "principal_id",
         "tenant_id",
         "error_code",

@@ -11,7 +11,6 @@ from typing import Any
 
 REQUEST_FIELDS = frozenset(
     {
-        "request_id",
         "principal_id",
         "tenant_id",
         "error_code",
@@ -22,7 +21,7 @@ REQUEST_FIELDS = frozenset(
         "duration_ms",
     }
 )
-_ID = re.compile(r"[A-Za-z0-9._:-]{1,128}")
+_ERROR_CODE = re.compile(r"[A-Za-z0-9._:-]{1,128}")
 _TENANT = re.compile(r"[0-9a-f]{32}")
 _PRINCIPAL = re.compile(
     r"nx1://[A-Za-z0-9._:-]+/([0-9a-f]{32})/[A-Za-z0-9._:-]+/[A-Za-z0-9._:-]+/(User|ServiceClient|Workload)/[A-Za-z0-9._:-]+"
@@ -33,13 +32,10 @@ _current: ContextVar[RequestLogContext | None] = ContextVar("request_log_context
 class RequestLogContext:
     """Mutable, request-local attribution; never use this object as authorization."""
 
-    def __init__(self, request_id: str) -> None:
-        if not isinstance(request_id, str) or not _ID.fullmatch(request_id):
-            raise ValueError("invalid_request_id")
+    def __init__(self) -> None:
         self._lock = RLock()
         self._closed = False
         self._fields: dict[str, Any] = {
-            "request_id": request_id,
             "principal_id": None,
             "tenant_id": None,
         }
@@ -66,7 +62,7 @@ class RequestLogContext:
                 self._fields.update(principal_id=principal, tenant_id=tenant)
 
     def set_error(self, code: str) -> None:
-        if not isinstance(code, str) or not _ID.fullmatch(code):
+        if not isinstance(code, str) or not _ERROR_CODE.fullmatch(code):
             raise ValueError("invalid_error_code")
         with self._lock:
             if not self._closed:
@@ -111,9 +107,9 @@ class RequestLogContext:
 
 
 @contextmanager
-def request_log_context(request_id: str) -> Iterator[RequestLogContext]:
+def request_log_context() -> Iterator[RequestLogContext]:
     """Clear shared state at exit, including references inherited by child tasks."""
-    receipt = RequestLogContext(request_id)
+    receipt = RequestLogContext()
     token = _current.set(receipt)
     try:
         yield receipt

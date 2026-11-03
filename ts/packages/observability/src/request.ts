@@ -2,7 +2,6 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import type { LogFields } from './logging.js';
 
 export const REQUEST_FIELDS: readonly string[] = Object.freeze([
-    'request_id',
     'principal_id',
     'tenant_id',
     'error_code',
@@ -12,7 +11,7 @@ export const REQUEST_FIELDS: readonly string[] = Object.freeze([
     'http.response.status_code',
     'duration_ms',
 ]);
-const id = /^[A-Za-z0-9._:-]{1,128}$(?![\s\S])/;
+const errorCode = /^[A-Za-z0-9._:-]{1,128}$(?![\s\S])/;
 const tenant = /^[0-9a-f]{32}$(?![\s\S])/;
 const principal =
     /^nx1:\/\/[A-Za-z0-9._:-]+\/([0-9a-f]{32})\/[A-Za-z0-9._:-]+\/[A-Za-z0-9._:-]+\/(User|ServiceClient|Workload)\/[A-Za-z0-9._:-]+$(?![\s\S])/;
@@ -20,13 +19,8 @@ const requests = new AsyncLocalStorage<RequestLogContext>();
 
 /** Attribution only. Callers own authentication, policy and response observation. */
 export class RequestLogContext {
-    private values: Record<string, string | null>;
+    private values: Record<string, string | null> = { principal_id: null, tenant_id: null };
     private closed = false;
-
-    constructor(requestId: string) {
-        if (typeof requestId !== 'string' || !id.test(requestId)) throw Error('invalid_request_id');
-        this.values = { request_id: requestId, principal_id: null, tenant_id: null };
-    }
 
     /** Call only after credential verification, before policy/quota checks. */
     bindVerifiedIdentity(principalId: string | null, tenantId: string | null): void {
@@ -45,7 +39,7 @@ export class RequestLogContext {
     }
 
     setError(code: string): void {
-        if (typeof code !== 'string' || !id.test(code)) throw Error('invalid_error_code');
+        if (typeof code !== 'string' || !errorCode.test(code)) throw Error('invalid_error_code');
         if (!this.closed) this.values.error_code = code;
     }
 

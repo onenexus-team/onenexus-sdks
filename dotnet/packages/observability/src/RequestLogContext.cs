@@ -7,10 +7,10 @@ namespace OneNexus.Observability;
 public sealed class RequestLogContext : IDisposable
 {
     internal static readonly FrozenSet<string> FieldNames = new[] {
-        "request_id", "principal_id", "tenant_id", "error_code", "request_event",
+        "principal_id", "tenant_id", "error_code", "request_event",
         "http.request.method", "http.route", "http.response.status_code", "duration_ms",
     }.ToFrozenSet(StringComparer.Ordinal);
-    private static readonly Regex Id = new(@"\A[A-Za-z0-9._:-]{1,128}\z", RegexOptions.CultureInvariant);
+    private static readonly Regex ErrorCode = new(@"\A[A-Za-z0-9._:-]{1,128}\z", RegexOptions.CultureInvariant);
     private static readonly Regex Tenant = new(@"\A[0-9a-f]{32}\z", RegexOptions.CultureInvariant);
     private static readonly Regex Principal = new(@"\Anx1://[A-Za-z0-9._:-]+/([0-9a-f]{32})/[A-Za-z0-9._:-]+/[A-Za-z0-9._:-]+/(User|ServiceClient|Workload)/[A-Za-z0-9._:-]+\z", RegexOptions.CultureInvariant);
     private static readonly AsyncLocal<RequestLogContext?> Current = new();
@@ -19,15 +19,14 @@ public sealed class RequestLogContext : IDisposable
     private readonly Dictionary<string, object?> values;
     private bool closed;
 
-    private RequestLogContext(string requestId)
+    private RequestLogContext()
     {
-        if (!Id.IsMatch(requestId)) throw new ArgumentException("invalid_request_id", nameof(requestId));
-        values = new() { ["request_id"] = requestId, ["principal_id"] = null, ["tenant_id"] = null };
+        values = new() { ["principal_id"] = null, ["tenant_id"] = null };
         previous = Current.Value;
         Current.Value = this;
     }
 
-    public static RequestLogContext Begin(string requestId) => new(requestId);
+    public static RequestLogContext Begin() => new();
 
     /// <summary>Call after credential verification, before policy/quota decisions. Tenant uses lowercase UUID-N.</summary>
     public void BindVerifiedIdentity(string? principalId, string? tenantId)
@@ -45,7 +44,7 @@ public sealed class RequestLogContext : IDisposable
 
     public void SetError(string code)
     {
-        if (!Id.IsMatch(code)) throw new ArgumentException("invalid_error_code", nameof(code));
+        if (!ErrorCode.IsMatch(code)) throw new ArgumentException("invalid_error_code", nameof(code));
         lock (gate) { if (!closed) values["error_code"] = code; }
     }
 

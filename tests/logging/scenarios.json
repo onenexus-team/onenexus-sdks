@@ -919,7 +919,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -941,7 +940,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -963,7 +961,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": "POLICY_DENIED",
@@ -985,7 +982,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1007,7 +1003,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1020,29 +1015,6 @@
       "errors": []
     },
     {
-      "id": "request_missing_request_id",
-      "profile": "request",
-      "record": {
-        "timestamp": 1792573200000000000,
-        "level": "INFO",
-        "service": "test-service",
-        "region": "test",
-        "message": "Request completed",
-        "environment": "development",
-        "principal_id": null,
-        "tenant_id": null,
-        "error_code": null,
-        "request_event": "completed",
-        "duration_ms": 1.5,
-        "http.request.method": "POST",
-        "http.route": "/items/{id}",
-        "http.response.status_code": 200
-      },
-      "errors": [
-        "schema_invalid"
-      ]
-    },
-    {
       "id": "request_missing_principal_id",
       "profile": "request",
       "record": {
@@ -1052,7 +1024,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "tenant_id": null,
         "error_code": null,
         "request_event": "completed",
@@ -1075,7 +1046,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "error_code": null,
         "request_event": "completed",
@@ -1098,7 +1068,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "request_event": "completed",
@@ -1121,7 +1090,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1144,7 +1112,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1167,7 +1134,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1190,7 +1156,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1213,7 +1178,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1236,7 +1200,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1260,7 +1223,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1284,7 +1246,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1308,7 +1269,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1332,36 +1292,11 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
         "request_event": "completed",
         "duration_ms": -1,
-        "http.request.method": "POST",
-        "http.route": "/items/{id}",
-        "http.response.status_code": 200
-      },
-      "errors": [
-        "schema_invalid"
-      ]
-    },
-    {
-      "id": "request_request_id_newline",
-      "profile": "request",
-      "record": {
-        "timestamp": 1792573200000000000,
-        "level": "INFO",
-        "service": "test-service",
-        "region": "test",
-        "message": "Request completed",
-        "environment": "development",
-        "request_id": "request-1\n",
-        "principal_id": null,
-        "tenant_id": null,
-        "error_code": null,
-        "request_event": "completed",
-        "duration_ms": 1.5,
         "http.request.method": "POST",
         "http.route": "/items/{id}",
         "http.response.status_code": 200
@@ -1380,7 +1315,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": null,
         "error_code": "contains a secret",
@@ -1404,7 +1338,6 @@
         "region": "test",
         "message": "Request completed",
         "environment": "development",
-        "request_id": "request-1",
         "principal_id": null,
         "tenant_id": "00000000000000000000000000000000",
         "error_code": null,
@@ -1544,7 +1477,6 @@
       "tenant": null,
       "error": null,
       "expected": {
-        "request_id": "anonymous_401",
         "principal_id": null,
         "tenant_id": null,
         "error_code": "UNCLASSIFIED",
@@ -1552,8 +1484,10 @@
         "http.request.method": "POST",
         "http.route": "/items/{id}",
         "http.response.status_code": 401,
-        "duration_ms": 1.5
-      }
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01"
     },
     {
       "id": "verified_403",
@@ -1563,7 +1497,6 @@
       "tenant": "11111111111111111111111111111111",
       "error": "POLICY_DENIED",
       "expected": {
-        "request_id": "verified_403",
         "principal_id": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
         "tenant_id": "11111111111111111111111111111111",
         "error_code": "POLICY_DENIED",
@@ -1571,8 +1504,10 @@
         "http.request.method": "POST",
         "http.route": "/items/{id}",
         "http.response.status_code": 403,
-        "duration_ms": 1.5
-      }
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000002"
+      },
+      "traceparent": "00-00000000000000000000000000000002-2222222222222222-01"
     },
     {
       "id": "verified_429",
@@ -1582,7 +1517,6 @@
       "tenant": "11111111111111111111111111111111",
       "error": "QUOTA_EXCEEDED",
       "expected": {
-        "request_id": "verified_429",
         "principal_id": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
         "tenant_id": "11111111111111111111111111111111",
         "error_code": "QUOTA_EXCEEDED",
@@ -1590,8 +1524,10 @@
         "http.request.method": "POST",
         "http.route": "/items/{id}",
         "http.response.status_code": 429,
-        "duration_ms": 1.5
-      }
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000003"
+      },
+      "traceparent": "00-00000000000000000000000000000003-2222222222222222-01"
     },
     {
       "id": "legacy_key",
@@ -1601,7 +1537,6 @@
       "tenant": "11111111111111111111111111111111",
       "error": null,
       "expected": {
-        "request_id": "legacy_key",
         "principal_id": null,
         "tenant_id": "11111111111111111111111111111111",
         "error_code": null,
@@ -1609,8 +1544,10 @@
         "http.request.method": "POST",
         "http.route": "/items/{id}",
         "http.response.status_code": 200,
-        "duration_ms": 1.5
-      }
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000004"
+      },
+      "traceparent": "00-00000000000000000000000000000004-2222222222222222-01"
     },
     {
       "id": "interrupted_before_headers",
@@ -1620,7 +1557,6 @@
       "tenant": null,
       "error": null,
       "expected": {
-        "request_id": "interrupted_before_headers",
         "principal_id": null,
         "tenant_id": null,
         "error_code": null,
@@ -1628,8 +1564,10 @@
         "http.request.method": "POST",
         "http.route": "/items/{id}",
         "http.response.status_code": null,
-        "duration_ms": 1.5
-      }
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000005"
+      },
+      "traceparent": "00-00000000000000000000000000000005-2222222222222222-01"
     },
     {
       "id": "interrupted_stream",
@@ -1639,7 +1577,6 @@
       "tenant": "11111111111111111111111111111111",
       "error": null,
       "expected": {
-        "request_id": "interrupted_stream",
         "principal_id": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
         "tenant_id": "11111111111111111111111111111111",
         "error_code": null,
@@ -1647,8 +1584,29 @@
         "http.request.method": "POST",
         "http.route": "/items/{id}",
         "http.response.status_code": 200,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000006"
+      },
+      "traceparent": "00-00000000000000000000000000000006-2222222222222222-01"
+    },
+    {
+      "id": "uncorrelated_401",
+      "status": 401,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 401,
         "duration_ms": 1.5
-      }
+      },
+      "traceparent": null
     }
   ]
 }

@@ -7,8 +7,8 @@ import (
 	"sync"
 )
 
-var requestFieldNames = []string{"request_id", "principal_id", "tenant_id", "error_code", "request_event", "http.request.method", "http.route", "http.response.status_code", "duration_ms"}
-var requestIDPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]{1,128}$`)
+var requestFieldNames = []string{"principal_id", "tenant_id", "error_code", "request_event", "http.request.method", "http.route", "http.response.status_code", "duration_ms"}
+var errorCodePattern = regexp.MustCompile(`^[A-Za-z0-9._:-]{1,128}$`)
 var tenantPattern = regexp.MustCompile(`^[0-9a-f]{32}$`)
 var principalPattern = regexp.MustCompile(`^nx1://[A-Za-z0-9._:-]+/([0-9a-f]{32})/[A-Za-z0-9._:-]+/[A-Za-z0-9._:-]+/(User|ServiceClient|Workload)/[A-Za-z0-9._:-]+$`)
 
@@ -22,12 +22,9 @@ type RequestLogContext struct {
 	values map[string]any
 }
 
-func WithRequestLogContext(ctx context.Context, requestID string) (context.Context, *RequestLogContext, error) {
-	if !requestIDPattern.MatchString(requestID) {
-		return ctx, nil, errors.New("invalid_request_id")
-	}
-	receipt := &RequestLogContext{values: map[string]any{"request_id": requestID, "principal_id": nil, "tenant_id": nil}}
-	return context.WithValue(ctx, requestContextKey{}, receipt), receipt, nil
+func WithRequestLogContext(ctx context.Context) (context.Context, *RequestLogContext) {
+	receipt := &RequestLogContext{values: map[string]any{"principal_id": nil, "tenant_id": nil}}
+	return context.WithValue(ctx, requestContextKey{}, receipt), receipt
 }
 
 // BindVerifiedIdentity must only follow credential verification, before policy/quota checks.
@@ -51,7 +48,7 @@ func (r *RequestLogContext) BindVerifiedIdentity(principalID, tenantID string) {
 }
 
 func (r *RequestLogContext) SetError(code string) error {
-	if !requestIDPattern.MatchString(code) {
+	if !errorCodePattern.MatchString(code) {
 		return errors.New("invalid_error_code")
 	}
 	r.mu.Lock()

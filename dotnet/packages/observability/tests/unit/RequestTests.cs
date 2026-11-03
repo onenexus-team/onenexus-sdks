@@ -20,7 +20,9 @@ public sealed class RequestTests
             using var output = new StringWriter();
             using var provider = new JsonLogProvider(new("request-test","development","test"),output);
             var logger = provider.CreateLogger("request");
-            using (var receipt = RequestLogContext.Begin(item.GetProperty("id").GetString()!))
+            var parent = item.GetProperty("traceparent").GetString();
+            using (CorrelationContext.BindIncoming(parent is null ? [] : [new("traceparent", parent)], true))
+            using (var receipt = RequestLogContext.Begin())
             {
                 receipt.BindVerifiedIdentity(item.GetProperty("principal").GetString(),item.GetProperty("tenant").GetString());
                 if (item.GetProperty("error").GetString() is { } error) receipt.SetError(error);
@@ -36,7 +38,8 @@ public sealed class RequestTests
             foreach(var expected in item.GetProperty("expected").EnumerateObject())
                 Assert.IsTrue(JsonElement.DeepEquals(expected.Value, rows[1].GetProperty(expected.Name)),expected.Name);
             Assert.IsEmpty(Contract.Validate(rows[1],"request"));
-            Assert.IsFalse(rows[1].TryGetProperty("trace_id",out _));
+            if (parent is null) Assert.IsFalse(rows[1].TryGetProperty("trace_id",out _));
+            foreach (var row in rows) Assert.IsFalse(row.TryGetProperty("request_id",out _));
             Assert.IsFalse(rows[2].TryGetProperty("principal_id",out _));
             Assert.AreEqual(0L,provider.DroppedRecords);
         }
@@ -49,7 +52,7 @@ public sealed class RequestTests
         using var provider=new JsonLogProvider(new("request-test","development","test"),output);
         var logger=provider.CreateLogger("request");
         logger.Log(LogLevel.Information,new EventId(),new Dictionary<string,object?>{["request_event"]="completed"},null,(_,_)=>"Missing fields");
-        using var receipt=RequestLogContext.Begin("request-1");
+        using var receipt=RequestLogContext.Begin();
         logger.Log(LogLevel.Information,new EventId(),receipt.TerminalFields("GET","/",null,1),null,(_,_)=>"No observed status");
         Assert.AreEqual("",output.ToString());
         Assert.AreEqual(2L,provider.DroppedRecords);
@@ -58,11 +61,9 @@ public sealed class RequestTests
     [TestMethod]
     public void ValidatesIdentityAndClearsNestedContexts()
     {
-        foreach(var invalid in new[]{"","x\n",new string('x',129)})
-            Assert.Throws<ArgumentException>(()=>RequestLogContext.Begin(invalid));
-        var outer=RequestLogContext.Begin("outer");
+        var outer=RequestLogContext.Begin();
         outer.BindVerifiedIdentity(Owner,Tenant);
-        using(var inner=RequestLogContext.Begin("inner")) Assert.IsNull(RequestLogContext.CurrentFields()["principal_id"]);
+        using(var inner=RequestLogContext.Begin()) Assert.IsNull(RequestLogContext.CurrentFields()["principal_id"]);
         Assert.AreEqual(Owner,RequestLogContext.CurrentFields()["principal_id"]);
         foreach(var pair in new[]{(Owner,new string('3',32)),("username",Tenant),(Owner,new string('0',32))})
         {
@@ -79,21 +80,22 @@ public sealed class RequestTests
     public async Task ConcurrentAndDetachedTasksCannotLeakIdentity()
     {
         await Task.WhenAll(Enumerable.Range(0,20).Select(async i=> {
-            using var receipt=RequestLogContext.Begin($"request-{i}");
-            receipt.BindVerifiedIdentity(Owner,Tenant);
+            using var receipt=RequestLogContext.Begin();
+            var principal = Owner[..(Owner.LastIndexOf('/') + 1)] + (i + 1).ToString("x32");
+            receipt.BindVerifiedIdentity(principal,Tenant);
             await Task.Yield();
-            Assert.AreEqual($"request-{i}",RequestLogContext.CurrentFields()["request_id"]);
+            Assert.AreEqual(principal,RequestLogContext.CurrentFields()["principal_id"]);
         }));
         var resume=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Task<IReadOnlyDictionary<string,object?>> child;
-        using(var receipt=RequestLogContext.Begin("detached"))
+        using(var receipt=RequestLogContext.Begin())
         {
             receipt.BindVerifiedIdentity(Owner,Tenant);
             child=Task.Run(async ()=> {await resume.Task;receipt.BindVerifiedIdentity(Owner,Tenant);return RequestLogContext.CurrentFields();});
         }
         resume.SetResult();
         Assert.IsEmpty(await child);
-        try {using var receipt=RequestLogContext.Begin("failure");await Task.Yield();throw new OperationCanceledException();}
+        try {using var receipt=RequestLogContext.Begin();await Task.Yield();throw new OperationCanceledException();}
         catch(OperationCanceledException) { }
         Assert.IsEmpty(RequestLogContext.CurrentFields());
     }
