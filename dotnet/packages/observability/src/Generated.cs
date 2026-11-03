@@ -11,6 +11,9 @@ internal readonly partial struct CorrelatedRecord;
 [JsonSchemaTypeGenerator("schema.json#/$defs/lifecycle")]
 internal readonly partial struct LifecycleRecord;
 
+[JsonSchemaTypeGenerator("schema.json#/$defs/request")]
+internal readonly partial struct RequestRecord;
+
 [JsonSchemaTypeGenerator("schema.json#/$defs/common/properties/message")]
 internal readonly partial struct MessageValue;
 

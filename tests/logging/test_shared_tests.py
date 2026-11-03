@@ -84,6 +84,8 @@ class SharedTests(unittest.TestCase):
             self.assertEqual(definitions[0], definition)
         self.assertIn("environment", definitions[0]["$defs"]["common"]["required"])
         self.assertTrue(self.suite["emission_cases"])
+        self.assertTrue(self.suite["request_emission_cases"])
+        self.assertIn("request", definitions[0]["$defs"])
 
     def test_no_standalone_contract_distribution_remains(self):
         for path in [

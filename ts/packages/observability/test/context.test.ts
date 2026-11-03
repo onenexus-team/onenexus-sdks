@@ -61,7 +61,7 @@ describe('context lifecycle', () => {
                 after_trace_id: currentTraceId() ?? null,
             });
         }
-        expect(results).toHaveLength(66);
+        expect(results).toHaveLength(vectors.record_cases.length + vectors.context_cases.length);
         if (process.env.ONENEXUS_LOGGING_RESULTS)
             writeFileSync(
                 process.env.ONENEXUS_LOGGING_RESULTS,

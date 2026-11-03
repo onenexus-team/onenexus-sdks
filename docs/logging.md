@@ -1,5 +1,8 @@
 # Shared logging: one SDK release
 
+See [shared HTTP request logging](request-logging.md) for the request profile,
+verified identity attribution, response-status semantics and service adoption steps.
+
 ```mermaid
 flowchart TD
     Cases[Shared JSON scenarios] --> Tests[Python, TypeScript, Go and .NET tests]

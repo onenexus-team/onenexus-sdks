@@ -48,7 +48,7 @@ public static class Contract
     /// <summary>Stable codes only, never input values or schema error payloads.</summary>
     public static IReadOnlyList<string> Validate(JsonElement record, string profile = "common")
     {
-        if (profile is not ("common" or "correlated" or "lifecycle")) return ["unknown_profile"];
+        if (profile is not ("common" or "correlated" or "lifecycle" or "request")) return ["unknown_profile"];
         var errors = new SortedSet<string>(StringComparer.Ordinal);
         if (record.ValueKind != JsonValueKind.Object) return ["schema_invalid"];
         try
@@ -68,7 +68,7 @@ public static class Contract
                     corrected["trace_id"] = "11111111111111111111111111111111";
                 }
             }
-            else if (profile != "common")
+            else if (profile is "correlated" or "lifecycle")
             {
                 errors.Add("missing_or_invalid_trace_id");
                 corrected["trace_id"] = "11111111111111111111111111111111";
@@ -78,6 +78,7 @@ public static class Contract
             {
                 "common" => new CommonRecord(normalized).Validate(ValidationContext.ValidContext).IsValid,
                 "correlated" => new CorrelatedRecord(normalized).Validate(ValidationContext.ValidContext).IsValid,
+                "request" => new RequestRecord(normalized).Validate(ValidationContext.ValidContext).IsValid,
                 _ => new LifecycleRecord(normalized).Validate(ValidationContext.ValidContext).IsValid,
             };
             if (!valid || !record.TryGetProperty("timestamp", out var timestamp) || timestamp.ValueKind != JsonValueKind.Number || !timestamp.TryGetInt64(out _))

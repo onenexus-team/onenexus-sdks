@@ -3,6 +3,7 @@
 from .context import bound_context, current_trace_id, incoming_context, outgoing_headers
 from .contract import CONTRACT_DIGEST, CONTRACT_VERSION, ContractViolation, validate_record
 from .logging import JsonLogHandler, LogConfig, build_record, install_handler
+from .request import RequestLogContext, current_request_fields, request_log_context
 
 __all__ = [
     "CONTRACT_DIGEST",
@@ -17,4 +18,7 @@ __all__ = [
     "install_handler",
     "outgoing_headers",
     "validate_record",
+    "RequestLogContext",
+    "current_request_fields",
+    "request_log_context",
 ]

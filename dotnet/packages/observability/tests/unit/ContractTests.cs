@@ -34,7 +34,7 @@ public sealed class ContractTests
         var envelope = new { adapter_protocol = 1, contract_version = Contract.Version, contract_sha256 = Contract.Digest, results = observations };
         var path = Environment.GetEnvironmentVariable("ONENEXUS_LOGGING_RESULTS") ?? Path.Combine(AppContext.BaseDirectory, "contract-results.json");
         File.WriteAllText(path, JsonSerializer.Serialize(envelope, Contract.JsonOptions));
-        Assert.HasCount(66, observations);
+        Assert.HasCount(vectors.RootElement.GetProperty("record_cases").GetArrayLength() + vectors.RootElement.GetProperty("context_cases").GetArrayLength(), observations);
     }
 
     [TestMethod]

@@ -12,6 +12,7 @@ from typing import Any, TextIO
 
 from .context import current_trace_id
 from .contract import COMMON_FIELDS, ContractViolation, encode_record, validate_record
+from .request import REQUEST_FIELDS, current_request_fields
 
 
 @dataclass(frozen=True)
@@ -66,14 +67,16 @@ def build_record(
     if event is not None or outcome is not None:
         record.update(event=event, outcome=outcome)
     if fields is not None:
-        if not isinstance(fields, Mapping) or any(k not in config.allowed_fields for k in fields):
+        if not isinstance(fields, Mapping) or any(k not in config.allowed_fields | REQUEST_FIELDS for k in fields):
             raise ContractViolation(["unapproved_custom_field"])
         record.update(fields)
-    profile = (
-        "lifecycle"
-        if event is not None or outcome is not None
-        else ("correlated" if "trace_id" in record else "common")
-    )
+    record.update(current_request_fields())
+    if "request_event" in record:
+        profile = "request"
+    elif event is not None or outcome is not None:
+        profile = "lifecycle"
+    else:
+        profile = "correlated" if "trace_id" in record else "common"
     errors = validate_record(record, profile)
     if errors:
         raise ContractViolation(errors)

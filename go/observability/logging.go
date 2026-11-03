@@ -85,6 +85,9 @@ func NewHandler(config Config, writer io.Writer) (*Handler, error) {
 		h.allowed[field] = true
 	}
 	data, _ := json.Marshal(map[string]any{"timestamp": 0, "level": "INFO", "message": "Startup validation", "service": config.Service, "region": config.Region, "environment": config.Environment})
+	for _, field := range requestFieldNames {
+		h.allowed[field] = true
+	}
 	if !utf8.ValidString(config.Service+config.Region+config.Environment) || len(ValidateJSON(data, "common")) > 0 {
 		return nil, errors.New("invalid_log_config")
 	}
@@ -130,6 +133,9 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	}
 	valid := true
 	record.Attrs(func(a slog.Attr) bool { valid = h.add(attrs, h.group, a, 0); return valid })
+	for k, v := range CurrentRequestFields(ctx) {
+		attrs[k] = v
+	}
 	_, hasEvent := attrs["event"]
 	_, hasOutcome := attrs["outcome"]
 	if !valid || hasEvent != hasOutcome {
@@ -159,6 +165,9 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 		}
 	}
 	var buf bytes.Buffer
+	if _, ok := attrs["request_event"]; ok {
+		profile = "request"
+	}
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)
 	if encoder.Encode(attrs) != nil || buf.Len()-1 > h.recordLimit || len(ValidateJSON(buf.Bytes(), profile)) > 0 {
