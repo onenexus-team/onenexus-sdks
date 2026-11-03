@@ -32,8 +32,9 @@ public static class Contract
         var limits = schema.RootElement.GetProperty("x-semantic-checks");
         MaxMessageBytes = limits.GetProperty("message_max_utf8_bytes").GetInt32();
         MaxRecordBytes = limits.GetProperty("record_max_compact_utf8_bytes").GetInt32();
-        ReservedFields = schema.RootElement.GetProperty("$defs").GetProperty("common")
-            .GetProperty("properties").EnumerateObject().Select(p => p.Name).ToFrozenSet(StringComparer.Ordinal);
+        // Preserve logger-owned fields independently of optional shared properties.
+        ReservedFields = schema.RootElement.GetProperty("x-protected-fields")
+            .EnumerateArray().Select(p => p.GetString()!).ToFrozenSet(StringComparer.Ordinal);
     }
 
     public static byte[] ReadResource(string name)

@@ -13,11 +13,13 @@ CONTRACT_VERSION = "0.3.2"
 CONTRACT_DIGEST = "4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923"
 _SCHEMA = json.loads(files("onenexus_observability").joinpath("schema.json").read_bytes())
 _VALIDATORS = {
-    name: Draft202012Validator(definition) for name, definition in _SCHEMA["$defs"].items()
+    name: Draft202012Validator({"$defs": _SCHEMA["$defs"], "$ref": f"#/$defs/{name}"})
+    for name in _SCHEMA["$defs"]
 }
 MAX_MESSAGE_BYTES = _SCHEMA["x-semantic-checks"]["message_max_utf8_bytes"]
 MAX_RECORD_BYTES = _SCHEMA["x-semantic-checks"]["record_max_compact_utf8_bytes"]
-COMMON_FIELDS = frozenset(_SCHEMA["$defs"]["common"]["properties"])
+# Logger-owned fields stay protected when optional shared fields are added.
+COMMON_FIELDS = frozenset(_SCHEMA["x-protected-fields"])
 
 
 def _code(field: object) -> str:

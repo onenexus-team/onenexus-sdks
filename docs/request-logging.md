@@ -2,14 +2,33 @@
 
 The observability packages provide a `request` record profile and request-local
 attribution helpers for Python, TypeScript, Go and .NET. This is an additive SDK
-change. Existing common/correlated/lifecycle records keep their existing rules;
-services adopt the request profile explicitly through `request_event`.
+change. Existing profiles keep their required-field rules. Shared fields are now
+validated in every profile when present; services adopt terminal HTTP validation
+through `request_event`.
+
+A **terminal log** is the final request log: one record emitted when the HTTP
+response finishes or the connection is interrupted. Application logs written
+during processing remain separate entries sharing the same trace.
 
 ## Contract
 
 The canonical definition is [`schemas/logging.schema.json`](../schemas/logging.schema.json),
-under `$defs.request`. The language packages embed generated copies;
+under `$defs.common.properties`. Every field is defined once. The `correlated`,
+`lifecycle` and `request` profiles reference `common` and add required-field or
+conditional rules. The language packages embed generated copies;
 [logging.md](logging.md) describes generation and CI checks.
+
+| Profile | Additional requirements beyond common base fields |
+| --- | --- |
+| `common` | None. Shared identity, trace and HTTP fields are optional but validated when present. |
+| `correlated` | A valid `trace_id`. |
+| `lifecycle` | A valid `trace_id`, `event` and `outcome`. |
+| `request` | Terminal HTTP fields listed below. Missing trusted trace still permits a diagnostic record. |
+
+The profile name is used internally for validation; emitted logs remain flat JSON.
+`x-protected-fields` preserves the existing logger-owned field set (base fields,
+trace, event and outcome), so adding optional properties to `common` does not
+accidentally block the request helper's fields or allow overriding logger identity.
 
 Every terminal HTTP record includes the normal common log fields and these fields:
 
@@ -38,6 +57,36 @@ and HTTP errors with a null error code are rejected using the existing invalid/d
 counter behavior. No per-service custom-field allowlist is needed for these fields.
 The new profile does not change the legacy exported base-format version constants;
 the SDK release version identifies availability of these APIs.
+
+## Example terminal record
+
+A completed 403 response with a verified owner produces one flat JSON record:
+
+```json
+{
+  "timestamp": 1793682535000000000,
+  "level": "INFO",
+  "service": "mlops-api",
+  "environment": "prod",
+  "region": "ric1",
+  "message": "Request completed",
+  "trace_id": "11111111111111111111111111111111",
+  "principal_id": "nx1://test/22222222222222222222222222222222/CAS/global/User/33333333333333333333333333333333",
+  "tenant_id": "22222222222222222222222222222222",
+  "request_event": "completed",
+  "http.request.method": "POST",
+  "http.route": "/deployments",
+  "http.response.status_code": 403,
+  "duration_ms": 42.5,
+  "error_code": "POLICY_DENIED"
+}
+```
+
+`completed` means the HTTP response finished, including error responses. Anonymous
+requests carry null identity fields. A successful response may have a null error
+code. Application logs during the request inherit identity and trace without
+requiring terminal HTTP fields. These examples require service middleware adoption;
+installing the package alone does not observe HTTP responses.
 
 ## Ownership and lifecycle
 

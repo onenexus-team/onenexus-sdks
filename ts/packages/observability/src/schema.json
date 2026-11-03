@@ -75,265 +75,6 @@
             "prod"
           ],
           "title": "Environment"
-        }
-      },
-      "required": [
-        "timestamp",
-        "level",
-        "service",
-        "environment",
-        "region",
-        "message"
-      ],
-      "title": "CommonRecord",
-      "type": "object"
-    },
-    "correlated": {
-      "additionalProperties": true,
-      "properties": {
-        "timestamp": {
-          "maximum": 9223372036854775807,
-          "minimum": 0,
-          "title": "Timestamp",
-          "type": "integer"
-        },
-        "level": {
-          "enum": [
-            "TRACE",
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR",
-            "FATAL"
-          ],
-          "title": "Level",
-          "type": "string"
-        },
-        "service": {
-          "maxLength": 128,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Service",
-          "type": "string"
-        },
-        "region": {
-          "maxLength": 64,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Region",
-          "type": "string"
-        },
-        "message": {
-          "maxLength": 1024,
-          "minLength": 1,
-          "pattern": "\\S",
-          "title": "Message",
-          "type": "string"
-        },
-        "trace_id": {
-          "not": {
-            "const": "00000000000000000000000000000000"
-          },
-          "pattern": "^[0-9a-f]{32}$",
-          "title": "Trace Id",
-          "type": "string"
-        },
-        "event": {
-          "maxLength": 128,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Event",
-          "type": "string"
-        },
-        "outcome": {
-          "maxLength": 128,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Outcome",
-          "type": "string"
-        },
-        "environment": {
-          "type": "string",
-          "enum": [
-            "development",
-            "staging",
-            "prod"
-          ],
-          "title": "Environment"
-        }
-      },
-      "required": [
-        "timestamp",
-        "level",
-        "service",
-        "environment",
-        "region",
-        "message",
-        "trace_id"
-      ],
-      "title": "CorrelatedRecord",
-      "type": "object"
-    },
-    "lifecycle": {
-      "additionalProperties": true,
-      "properties": {
-        "timestamp": {
-          "maximum": 9223372036854775807,
-          "minimum": 0,
-          "title": "Timestamp",
-          "type": "integer"
-        },
-        "level": {
-          "enum": [
-            "TRACE",
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR",
-            "FATAL"
-          ],
-          "title": "Level",
-          "type": "string"
-        },
-        "service": {
-          "maxLength": 128,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Service",
-          "type": "string"
-        },
-        "region": {
-          "maxLength": 64,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Region",
-          "type": "string"
-        },
-        "message": {
-          "maxLength": 1024,
-          "minLength": 1,
-          "pattern": "\\S",
-          "title": "Message",
-          "type": "string"
-        },
-        "trace_id": {
-          "not": {
-            "const": "00000000000000000000000000000000"
-          },
-          "pattern": "^[0-9a-f]{32}$",
-          "title": "Trace Id",
-          "type": "string"
-        },
-        "event": {
-          "maxLength": 128,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Event",
-          "type": "string"
-        },
-        "outcome": {
-          "maxLength": 128,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Outcome",
-          "type": "string"
-        },
-        "environment": {
-          "type": "string",
-          "enum": [
-            "development",
-            "staging",
-            "prod"
-          ],
-          "title": "Environment"
-        }
-      },
-      "required": [
-        "timestamp",
-        "level",
-        "service",
-        "environment",
-        "region",
-        "message",
-        "trace_id",
-        "event",
-        "outcome"
-      ],
-      "title": "LifecycleRecord",
-      "type": "object"
-    },
-    "request": {
-      "additionalProperties": true,
-      "properties": {
-        "timestamp": {
-          "maximum": 9223372036854775807,
-          "minimum": 0,
-          "title": "Timestamp",
-          "type": "integer"
-        },
-        "level": {
-          "enum": [
-            "TRACE",
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR",
-            "FATAL"
-          ],
-          "title": "Level",
-          "type": "string"
-        },
-        "service": {
-          "maxLength": 128,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Service",
-          "type": "string"
-        },
-        "region": {
-          "maxLength": 64,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Region",
-          "type": "string"
-        },
-        "message": {
-          "maxLength": 1024,
-          "minLength": 1,
-          "pattern": "\\S",
-          "title": "Message",
-          "type": "string"
-        },
-        "trace_id": {
-          "not": {
-            "const": "00000000000000000000000000000000"
-          },
-          "pattern": "^[0-9a-f]{32}$",
-          "title": "Trace Id",
-          "type": "string"
-        },
-        "event": {
-          "maxLength": 128,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Event",
-          "type": "string"
-        },
-        "outcome": {
-          "maxLength": 128,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9._-]+$",
-          "title": "Outcome",
-          "type": "string"
-        },
-        "environment": {
-          "type": "string",
-          "enum": [
-            "development",
-            "staging",
-            "prod"
-          ],
-          "title": "Environment"
         },
         "principal_id": {
           "type": [
@@ -418,7 +159,34 @@
         "service",
         "environment",
         "region",
-        "message",
+        "message"
+      ],
+      "title": "CommonRecord",
+      "type": "object"
+    },
+    "correlated": {
+      "$ref": "#/$defs/common",
+      "type": "object",
+      "title": "CorrelatedRecord",
+      "required": [
+        "trace_id"
+      ]
+    },
+    "lifecycle": {
+      "$ref": "#/$defs/common",
+      "type": "object",
+      "title": "LifecycleRecord",
+      "required": [
+        "trace_id",
+        "event",
+        "outcome"
+      ]
+    },
+    "request": {
+      "$ref": "#/$defs/common",
+      "type": "object",
+      "title": "RequestRecord",
+      "required": [
         "principal_id",
         "tenant_id",
         "error_code",
@@ -428,8 +196,6 @@
         "http.response.status_code",
         "duration_ms"
       ],
-      "title": "RequestRecord",
-      "type": "object",
       "allOf": [
         {
           "if": {
@@ -490,5 +256,16 @@
     "record_max_compact_utf8_bytes": 4096,
     "serialization": "UTF-8 JSON, ensure_ascii=false, compact separators; reject non-finite numbers",
     "profile_selection": "Chosen by the test scenario, never by the producer"
-  }
+  },
+  "x-protected-fields": [
+    "timestamp",
+    "level",
+    "service",
+    "region",
+    "message",
+    "trace_id",
+    "event",
+    "outcome",
+    "environment"
+  ]
 }

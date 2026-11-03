@@ -1511,6 +1511,234 @@
       "errors": [
         "schema_invalid"
       ]
+    },
+    {
+      "id": "optional_shared_fields_common",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "http.request.method": "GET",
+        "http.route": "/items",
+        "http.response.status_code": 200,
+        "duration_ms": 1
+      },
+      "errors": []
+    },
+    {
+      "id": "optional_shared_fields_correlated",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "http.request.method": "GET",
+        "http.route": "/items",
+        "http.response.status_code": 200,
+        "duration_ms": 1
+      },
+      "errors": []
+    },
+    {
+      "id": "optional_shared_fields_lifecycle",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "http.request.method": "GET",
+        "http.route": "/items",
+        "http.response.status_code": 200,
+        "duration_ms": 1
+      },
+      "errors": []
+    },
+    {
+      "id": "common_invalid_principal_id",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "principal_id": "username"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_tenant_id",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "tenant_id": "00000000000000000000000000000000"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_error_code",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "error_code": "secret text"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_request_event",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "request_event": "unknown"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_http_request_method",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "http.request.method": "GET POST"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_http_route",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "http.route": "/items\n"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_http_response_status_code",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "http.response.status_code": "403"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_duration_ms",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "duration_ms": -1
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "correlated_invalid_shared_principal",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development",
+        "principal_id": "username"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "lifecycle_invalid_shared_principal",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development",
+        "principal_id": "username"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
     }
   ],
   "context_cases": [
