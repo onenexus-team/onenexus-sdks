@@ -5,9 +5,8 @@ verified identity attribution, response-status semantics and service adoption st
 
 ```mermaid
 flowchart TD
-    Schema[schemas/logging.schema.json] --> Generate[sync-logging-schema.py]
-    Generate --> Copies[Generated schema in each package]
-    Copies --> Tests
+    Schemas[Package-owned schemas] --> Equality[Shared schema equality test]
+    Equality --> Gate
     Cases[Shared JSON scenarios] --> Tests[Python, TypeScript, Go and .NET tests]
     Tests --> Gate[Source and installed packages pass]
     Gate --> Release[SDK Release vX.Y.Z]
@@ -23,9 +22,9 @@ flowchart TD
 | .NET | [OneNexus.Observability](../dotnet/packages/observability/README.md) | GitHub NuGet registry |
 
 - Each logger includes its runtime rules and context helpers; no separate OneNexus contract package.
-- Author schema rules only in [`schemas/logging.schema.json`](../schemas/logging.schema.json), then run `python3 scripts/sync-logging-schema.py` and commit the generated copies. Update `tests/logging/scenarios.json` and any affected language helpers together.
-- CI and package build/check scripts run `python3 scripts/sync-logging-schema.py --check` (or the equivalent shared test). They reject missing or stale copies without rewriting them. All four copies must match the canonical source byte for byte.
-- Generated copies stay committed so direct Go module installs can use `go:embed` and source checkouts can build with their native tools. Each published package embeds its copy; consumers need no repository path, network schema lookup or separate contract package.
+- Each language package owns its `schema.json`. Update all four schemas, `tests/logging/scenarios.json` and any affected language helpers together.
+- [`test_language_rules_remain_equivalent`](../tests/logging/test_shared_tests.py) compares the four schemas as parsed JSON. CI runs this test for every pull request and main-branch push; any schema mismatch fails the check. Shared scenarios also check behavior through each language's real APIs.
+- Each published package embeds its own schema, including Go through `go:embed`. Consumers need no repository path, network schema lookup or separate contract package.
 
 ## Release
 
@@ -46,7 +45,6 @@ flowchart TD
 
 | Scope | Command from repository root |
 |---|---|
-| Generated schema freshness | `python3 scripts/sync-logging-schema.py --check` |
 | Shared rules and checker | `python3 -m unittest discover -s tests/logging -p 'test_*.py'` |
 | Release guards | `python3 scripts/test-sdk-release.py` and `python3 scripts/test-go-module-release.py` |
 | Python source + installed wheel | `bash scripts/check-python-observability.sh` |

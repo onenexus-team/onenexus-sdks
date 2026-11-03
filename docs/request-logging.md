@@ -12,11 +12,11 @@ during processing remain separate entries sharing the same trace.
 
 ## Contract
 
-The canonical definition is [`schemas/logging.schema.json`](../schemas/logging.schema.json),
-under `$defs.common.properties`. Every field is defined once. The `correlated`,
+Each language package owns and embeds its `schema.json`. Within each schema,
+fields are defined once under `$defs.common.properties`. The `correlated`,
 `lifecycle` and `request` profiles reference `common` and add required-field or
-conditional rules. The language packages embed generated copies;
-[logging.md](logging.md) describes generation and CI checks.
+conditional rules. Shared tests require all four schemas to match as parsed JSON
+and verify their behavior; [logging.md](logging.md) describes these CI checks.
 
 | Profile | Additional requirements beyond common base fields |
 | --- | --- |

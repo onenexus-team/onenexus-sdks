@@ -14,7 +14,6 @@ jobs:
       - uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.14'
-      - run: python3 scripts/sync-logging-schema.py --check
       - run: python3 -m unittest discover -s tests/logging -p 'test_*.py'
       - run: python3 scripts/test-go-module-release.py
       - run: python3 scripts/test-sdk-release.py

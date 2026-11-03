@@ -2,7 +2,6 @@
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
-python3 scripts/sync-logging-schema.py --check
 if [[ -x "$root/.dotnet/dotnet" ]]; then export PATH="$root/.dotnet:$PATH"; fi
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1

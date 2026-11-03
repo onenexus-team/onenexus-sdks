@@ -3,7 +3,6 @@
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
-python3 scripts/sync-logging-schema.py --check
 language="${1:?language required}"
 version="${2:-$(cat VERSION)}"
 [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || exit 1

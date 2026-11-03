@@ -12,7 +12,7 @@ flowchart LR
     Stdout --> Collector[Existing collector]
 ```
 
-- Runtime rules are embedded from this module's generated `schema.json`; the canonical source is [`schemas/logging.schema.json`](../../../schemas/logging.schema.json).
+- Runtime rules are embedded from this module's own [`schema.json`](schema.json). Shared tests require it to match the Python, TypeScript and .NET schemas.
 - Shared test data stays in `tests/logging/`; no separate Go contract module.
 - No runtime package downloads, global logger replacement, span exporter or cluster changes.
 

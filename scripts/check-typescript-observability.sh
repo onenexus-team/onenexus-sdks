@@ -2,7 +2,6 @@
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
-python3 scripts/sync-logging-schema.py --check
 out="$root/.artifacts/typescript-observability"
 mkdir -p "$out"
 export ONENEXUS_LOGGING_SCENARIOS="$root/tests/logging/scenarios.json"

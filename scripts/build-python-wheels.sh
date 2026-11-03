@@ -2,7 +2,6 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-python3 "$repo_root/scripts/sync-logging-schema.py" --check
 version_file="$repo_root/VERSION"
 version=""
 out_dir=""

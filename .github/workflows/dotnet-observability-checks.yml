@@ -4,8 +4,6 @@ on:
     paths:
       - 'dotnet/**'
       - 'tests/logging/**'
-      - 'schemas/**'
-      - 'scripts/sync-logging-schema.py'
       - 'scripts/check-dotnet-observability.sh'
       - 'global.json'
       - 'VERSION'
@@ -16,8 +14,6 @@ on:
     paths:
       - 'dotnet/**'
       - 'tests/logging/**'
-      - 'schemas/**'
-      - 'scripts/sync-logging-schema.py'
       - 'scripts/check-dotnet-observability.sh'
       - 'global.json'
       - 'VERSION'
