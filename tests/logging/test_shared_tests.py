@@ -73,19 +73,20 @@ class SharedTests(unittest.TestCase):
                 self.check(result)
 
     def test_language_rules_remain_equivalent(self):
+        canonical = (ROOT / "schemas/logging.schema.json").read_bytes()
         paths = [
             "python/packages/observability/src/onenexus_observability/schema.json",
             "ts/packages/observability/src/schema.json",
             "go/observability/schema.json",
             "dotnet/packages/observability/src/schema.json",
         ]
-        definitions = [json.loads((ROOT / p).read_text()) for p in paths]
-        for definition in definitions[1:]:
-            self.assertEqual(definitions[0], definition)
-        self.assertIn("environment", definitions[0]["$defs"]["common"]["required"])
+        for path in paths:
+            self.assertEqual(canonical, (ROOT / path).read_bytes(), path)
+        definition = json.loads(canonical)
+        self.assertIn("environment", definition["$defs"]["common"]["required"])
         self.assertTrue(self.suite["emission_cases"])
         self.assertTrue(self.suite["request_emission_cases"])
-        self.assertIn("request", definitions[0]["$defs"])
+        self.assertIn("request", definition["$defs"])
 
     def test_no_standalone_contract_distribution_remains(self):
         for path in [

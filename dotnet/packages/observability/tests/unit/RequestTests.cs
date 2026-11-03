@@ -28,7 +28,7 @@ public sealed class RequestTests
                 if (item.GetProperty("error").GetString() is { } error) receipt.SetError(error);
                 logger.Log(LogLevel.Information, new EventId(), new Dictionary<string,object?> { ["principal_id"]="spoofed" }, null, (_,_)=>"Application event");
                 var status = item.GetProperty("status");
-                var fields=receipt.TerminalFields("POST","/items/{id}",status.ValueKind==JsonValueKind.Null?null:status.GetInt32(),1.5,item.GetProperty("interrupted").GetBoolean());
+                var fields=receipt.TerminalFields(item.GetProperty("method").GetString()!,"/items/{id}",status.ValueKind==JsonValueKind.Null?null:status.GetInt32(),1.5,item.GetProperty("interrupted").GetBoolean());
                 logger.Log(LogLevel.Information,new EventId(),fields,null,(_,_)=>"Request finished");
             }
             logger.LogInformation("Outside request");

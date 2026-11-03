@@ -6,7 +6,7 @@ Guidance for AI coding agents working in the standalone OneNexus SDK repository.
 
 - `README.md` documents the language-agnostic SDK architecture and credential model.
 - `tests/logging/` owns shared behavior scenarios and the independent result checker.
-- Each language logging package owns its runtime validation rules. CI checks those rules and runs the same scenarios across languages.
+- `schemas/logging.schema.json` is the canonical logging schema. Run `python3 scripts/sync-logging-schema.py` after editing it; commit the generated package copies. CI rejects stale copies and runs the same scenarios across languages.
 - `specs/` contains committed OpenAPI specifications used for code generation.
 - `python/` is a `uv` workspace for Python SDK packages.
 - `ts/` is a `pnpm` workspace for TypeScript SDK packages.

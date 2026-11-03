@@ -4,6 +4,8 @@ on:
     paths:
       - 'python/packages/observability/**'
       - 'tests/logging/**'
+      - 'schemas/**'
+      - 'scripts/sync-logging-schema.py'
       - 'python/pyproject.toml'
       - 'python/uv.lock'
       - 'VERSION'
@@ -15,6 +17,8 @@ on:
     paths:
       - 'python/packages/observability/**'
       - 'tests/logging/**'
+      - 'schemas/**'
+      - 'scripts/sync-logging-schema.py'
       - 'python/pyproject.toml'
       - 'python/uv.lock'
       - 'VERSION'

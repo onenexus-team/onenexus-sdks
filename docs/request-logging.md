@@ -7,6 +7,10 @@ services adopt the request profile explicitly through `request_event`.
 
 ## Contract
 
+The canonical definition is [`schemas/logging.schema.json`](../schemas/logging.schema.json),
+under `$defs.request`. The language packages embed generated copies;
+[logging.md](logging.md) describes generation and CI checks.
+
 Every terminal HTTP record includes the normal common log fields and these fields:
 
 | Field | Meaning |
@@ -14,7 +18,7 @@ Every terminal HTTP record includes the normal common log fields and these field
 | `request_event` | `completed` or `interrupted`; identifies terminal HTTP records. |
 | `principal_id` | Verified canonical `nx1://` User, ServiceClient or Workload subject; otherwise JSON null. |
 | `tenant_id` | Verified tenant as 32 lowercase UUID hex digits, excluding the zero UUID; otherwise JSON null. |
-| `http.request.method` | Uppercase HTTP method, at most 32 letters. |
+| `http.request.method` | Observed HTTP method token, preserving case, at most 32 ASCII token characters (including extension methods such as `M-SEARCH`). |
 | `http.route` | Registered route template, at most 512 printable ASCII characters. Use `_unmatched` when unavailable. Never use raw URLs or query strings. |
 | `http.response.status_code` | Observed HTTP status, 100–599. Null is permitted only for an interrupted request before response headers. |
 | `duration_ms` | Finite, nonnegative elapsed milliseconds. |

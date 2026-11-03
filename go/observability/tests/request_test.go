@@ -33,6 +33,7 @@ func TestSharedRequestEmissions(t *testing.T) {
 			Principal   string         `json:"principal"`
 			Tenant      string         `json:"tenant"`
 			Error       string         `json:"error"`
+			Method      string         `json:"method"`
 			Status      *int           `json:"status"`
 			Interrupted bool           `json:"interrupted"`
 			Expected    map[string]any `json:"expected"`
@@ -61,7 +62,7 @@ func TestSharedRequestEmissions(t *testing.T) {
 				}
 			}
 			logger.InfoContext(ctx, "Application event", slog.String("principal_id", "spoofed"))
-			fields, err := r.TerminalFields("POST", "/items/{id}", c.Status, 1.5, c.Interrupted)
+			fields, err := r.TerminalFields(c.Method, "/items/{id}", c.Status, 1.5, c.Interrupted)
 			if err != nil {
 				t.Fatal(err)
 			}

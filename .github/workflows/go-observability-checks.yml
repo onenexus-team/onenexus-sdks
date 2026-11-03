@@ -1,10 +1,10 @@
 name: Go observability checks
 on:
   pull_request:
-    paths: ['go/**', 'tests/logging/**', 'scripts/*go*', '.github/workflows/go-observability-checks.yml', '.github/workflows/sdk-release.yml', 'VERSION']
+    paths: ['go/**', 'tests/logging/**', 'schemas/**', 'scripts/sync-logging-schema.py', 'scripts/*go*', '.github/workflows/go-observability-checks.yml', '.github/workflows/sdk-release.yml', 'VERSION']
   push:
     branches: [main]
-    paths: ['go/**', 'tests/logging/**', 'scripts/*go*', '.github/workflows/go-observability-checks.yml', '.github/workflows/sdk-release.yml', 'VERSION']
+    paths: ['go/**', 'tests/logging/**', 'schemas/**', 'scripts/sync-logging-schema.py', 'scripts/*go*', '.github/workflows/go-observability-checks.yml', '.github/workflows/sdk-release.yml', 'VERSION']
 permissions:
   contents: read
 jobs:

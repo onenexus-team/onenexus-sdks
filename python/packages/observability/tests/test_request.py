@@ -50,7 +50,7 @@ def test_shared_request_emissions_and_ambient_application_logs():
                 "Request finished",
                 extra={
                     "fields": receipt.terminal_fields(
-                        "POST",
+                        case["method"],
                         "/items/{id}",
                         case["status"],
                         1.5,

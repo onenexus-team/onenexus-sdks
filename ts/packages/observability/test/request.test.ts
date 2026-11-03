@@ -45,6 +45,7 @@ describe('request contract', () => {
                 tenant: string | null;
                 error: string | null;
                 status: number | null;
+                method: string;
                 interrupted: boolean;
                 expected: Record<string, unknown>;
             }[];
@@ -65,7 +66,7 @@ describe('request contract', () => {
                         expect(
                             log.log('Request finished', {
                                 fields: receipt.terminalFields(
-                                    'POST',
+                                    c.method,
                                     '/items/{id}',
                                     c.status,
                                     1.5,

@@ -2,6 +2,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
+python3 scripts/sync-logging-schema.py --check
 export ONENEXUS_LOGGING_SCENARIOS="$root/tests/logging/scenarios.json"
 cd python
 uv sync --package onenexus-observability-python --group dev --frozen
