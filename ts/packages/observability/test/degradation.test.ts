@@ -250,10 +250,13 @@ describe('degradation details', () => {
             }
         }
         const error = capture(() => new Widget());
-        (error as Error).stack = (error as Error).stack!.replace(
-            /\n/,
-            '\n    at Foo.bar [as baz] (file:///srv/app/x.ts?v=1:3:4)\n',
-        );
+        // Insert one frame right after the header line.
+        const stack = (error as Error).stack!;
+        const header = stack.indexOf('\n');
+        (error as Error).stack =
+            stack.slice(0, header) +
+            '\n    at Foo.bar [as baz] (file:///srv/app/x.ts?v=1:3:4)' +
+            stack.slice(header);
         const { lines, logger } = sink(shared);
         logger.log('Failed', { error });
         await logger.close();

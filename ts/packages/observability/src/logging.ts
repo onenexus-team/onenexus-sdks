@@ -84,12 +84,20 @@ function frames(lines: string[]): [string, boolean] {
 
 /** `new Foo` → `Foo`, `x [as y]` → `x`; other whitespace → `_` (one token per frame). */
 function functionName(fn: string): string {
-    return (
-        fn
-            .replace(/^(?:new |async )+/, '')
-            .replace(/ \[as [^\]]*\]$/, '')
-            .replace(/\s+/g, '_') || '<anonymous>'
-    );
+    let name = fn.replace(/^(?:new |async )+/, '');
+    // String search, not a regex: the frame text is caller-controlled (no ReDoS).
+    const alias = name.lastIndexOf(' [as ');
+    if (alias >= 0 && name.endsWith(']') && !name.slice(alias + 5, -1).includes(']'))
+        name = name.slice(0, alias);
+    return name.replace(/\s+/g, '_') || '<anonymous>';
+}
+
+/** `file:///srv/a.ts?v=1` → `a.ts`. */
+function baseName(path: string): string | undefined {
+    let file = path.startsWith('file://') ? path.slice(7) : path;
+    const query = file.search(/[?#]/);
+    if (query >= 0) file = file.slice(0, query);
+    return file.split(/[\\/]/).pop();
 }
 
 /** Type and frames of an Error; never its message. Non-errors yield nothing. */
@@ -132,11 +140,7 @@ function errorFields(error: unknown): [Record<string, string>, boolean] {
             const [fn, path, lineNo] = named
                 ? [functionName(match[1] ?? ''), match[2], match[3]]
                 : ['<anonymous>', match[1], match[2]];
-            const file = (path ?? '')
-                .replace(/^file:\/\//, '')
-                .replace(/[?#].*$/, '')
-                .split(/[\\/]/)
-                .pop();
+            const file = baseName(path ?? '');
             lines.push(`at ${fn} (${file}:${lineNo})`);
         }
         if (!lines.length) return [fields, false];
