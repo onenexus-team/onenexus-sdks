@@ -93,29 +93,62 @@ func TestInvalidRecordsAndConfigNeverLeak(t *testing.T) {
 	}
 	var output bytes.Buffer
 	h, _ := obs.NewHandler(config(), &output)
+	// Only records that break a base-field rule are still dropped.
 	cases := []slog.Record{
-		slog.NewRecord(time.Date(3000, 1, 1, 0, 0, 0, 0, time.UTC), slog.LevelInfo, "invalid timestamp", 0), record(""), record(strings.Repeat("x", 1025)), record(string([]byte{0xff})),
-		record("safe", slog.String("authorization", "private-sentinel")),
-		record("safe", slog.String("trace_id", traceB)),
+		slog.NewRecord(time.Date(3000, 1, 1, 0, 0, 0, 0, time.UTC), slog.LevelInfo, "invalid timestamp", 0), record(""), record(string([]byte{0xff})),
 		record("safe", slog.String("event", "work.completed")),
-		record("safe", slog.Float64("attempt", math.NaN())),
-		record("safe", slog.Any("attempt", unsafeValue{})),
-		record("safe", slog.Any("attempt", map[string]string{"secret": "private-sentinel"})),
-		record("safe", slog.Int("attempt", 1), slog.Int("attempt", 2)),
-		record("safe", slog.String("attempt", strings.Repeat("x", 1025))),
 	}
 	for _, r := range cases {
-		if err := h.Handle(context.Background(), r); err == nil || strings.Contains(err.Error(), "sentinel") {
-			t.Fatal("unsafe log accepted")
+		if err := h.Handle(context.Background(), r); err == nil {
+			t.Fatal("invalid record accepted")
 		}
 	}
 	if output.Len() != 0 || h.Stats().Invalid != uint64(len(cases)) {
 		t.Fatal("invalid records leaked")
 	}
-	for _, handler := range []slog.Handler{h.WithAttrs([]slog.Attr{slog.String("service", "override")}), h.WithGroup(strings.Repeat("x", 129))} {
-		if err := handler.Handle(context.Background(), record("invalid clone")); err == nil {
-			t.Fatal("invalid clone accepted")
+	// Everything else keeps the line, without the offending value.
+	kept := []struct {
+		record    slog.Record
+		truncated bool
+		dropped   float64
+		attempt   any
+	}{
+		{record(strings.Repeat("x", 1025)), true, 0, nil},
+		{record("safe", slog.String("authorization", "private-sentinel")), false, 1, nil},
+		{record("safe", slog.String("trace_id", traceB)), false, 1, nil},
+		{record("safe", slog.Float64("attempt", math.NaN())), false, 1, nil},
+		{record("safe", slog.Any("attempt", unsafeValue{})), false, 1, nil},
+		{record("safe", slog.Any("attempt", map[string]string{"secret": "private-sentinel"})), false, 1, nil},
+		{record("safe", slog.Int("attempt", 1), slog.Int("attempt", 2)), false, 1, float64(1)},
+		{record("safe", slog.String("attempt", strings.Repeat("x", 1025))), true, 0, strings.Repeat("x", 1021) + "…"},
+	}
+	for _, c := range kept {
+		output.Reset()
+		if err := h.Handle(context.Background(), c.record); err != nil {
+			t.Fatal(err)
 		}
+		row := keptRow(t, output.Bytes(), "common")
+		if strings.Contains(output.String(), "sentinel") || row["trace_id"] != nil || row["attempt"] != c.attempt {
+			t.Fatal("unsafe value emitted", output.String())
+		}
+		if (row["logging.truncated"] == true) != c.truncated || flagCount(row) != c.dropped {
+			t.Fatal("missing degradation flags", output.String())
+		}
+	}
+	// A bad clone attribute or group name never disables the derived logger.
+	for _, handler := range []slog.Handler{h.WithAttrs([]slog.Attr{slog.String("service", "override")}), h.WithGroup(strings.Repeat("x", 129)).WithAttrs([]slog.Attr{slog.Int("attempt", 1)})} {
+		for range 2 {
+			output.Reset()
+			if err := handler.Handle(context.Background(), record("clone")); err != nil {
+				t.Fatal(err)
+			}
+			if row := keptRow(t, output.Bytes(), "common"); row["service"] != "go-service" || flagCount(row) != 1 {
+				t.Fatal("bad clone attribute emitted", output.String())
+			}
+		}
+	}
+	if h.Stats().Invalid != uint64(len(cases)) {
+		t.Fatal("kept records counted as invalid", h.Stats())
 	}
 	if !h.Enabled(context.Background(), slog.Level(-8)) || h.Enabled(context.Background(), slog.Level(-9)) {
 		t.Fatal("level filter")

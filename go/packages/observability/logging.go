@@ -5,13 +5,20 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"math"
+	"path/filepath"
 	"regexp"
+	"runtime"
+	"slices"
+	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -52,9 +59,43 @@ type Handler struct {
 	sink                      *sink
 	attrs                     map[string]any
 	group                     string
-	invalid                   bool
+	badGroup                  bool
+	state                     fieldState
 	messageLimit, recordLimit int
+	fieldLimit, stackLimit    int
+	errorTypeLimit, maxDrops  int
 }
+
+// fieldState records what was shortened, removed or recognised as an error.
+type fieldState struct {
+	dropped   int
+	truncated bool
+	errorType string
+}
+
+func (f *fieldState) merge(later fieldState) {
+	f.dropped += later.dropped
+	f.truncated = f.truncated || later.truncated
+	if later.errorType != "" {
+		f.errorType = later.errorType
+	}
+}
+
+const (
+	errorTypeField  = "error.type"
+	stacktraceField = "exception.stacktrace"
+	truncatedField  = "logging.truncated"
+	droppedField    = "logging.dropped_field_count"
+	truncationMark  = "\u2026"
+)
+
+// packagePrefix identifies this package's frames, which call-site stacks skip.
+var packagePrefix = func() string {
+	pc, _, _, _ := runtime.Caller(0)
+	name := runtime.FuncForPC(pc).Name()
+	slash := strings.LastIndexByte(name, '/') + 1
+	return name[:slash+strings.IndexByte(name[slash:], '.')+1]
+}()
 
 var fieldName = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9._-]{0,127}$`)
 var errInvalid = errors.New("invalid_log_record")
@@ -73,7 +114,7 @@ func NewHandler(config Config, writer io.Writer) (*Handler, error) {
 	if err != nil {
 		return nil, err
 	}
-	h := &Handler{config: config, allowed: make(map[string]bool), reserved: make(map[string]bool), sink: &sink{writer: writer, gate: make(chan struct{}, 1), slots: make(chan struct{}, 128), done: make(chan struct{})}, attrs: make(map[string]any), messageLimit: b.MaxMessageBytes, recordLimit: b.MaxRecordBytes}
+	h := &Handler{config: config, allowed: make(map[string]bool), reserved: make(map[string]bool), sink: &sink{writer: writer, gate: make(chan struct{}, 1), slots: make(chan struct{}, 128), done: make(chan struct{})}, attrs: make(map[string]any), messageLimit: b.MaxMessageBytes, recordLimit: b.MaxRecordBytes, fieldLimit: b.MaxFieldBytes, stackLimit: b.MaxStacktraceBytes, errorTypeLimit: b.MaxErrorTypeChars, maxDrops: b.MaxDroppedFieldCount}
 	h.config.AllowedFields = nil
 	for _, field := range b.CommonFields {
 		h.reserved[field] = true
@@ -115,32 +156,58 @@ func levelName(level slog.Level) string {
 	}
 }
 
-// Handle drops bad records and returns only stable errors; it never echoes values.
-// slog ignores handler errors. Operators should export Stats through their metrics.
+// Handle keeps the line: a long message or string is shortened, a field that
+// cannot be emitted is removed and counted, and an error attr adds its type and
+// call-site frames. Only a record that still breaks the contract is dropped; it
+// returns only stable errors and never echoes values. slog ignores handler errors.
+// Operators should export Stats through their metrics.
 func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	s := h.sink
 	if s.closed.Load() {
 		s.counters.closed.Add(1)
 		return nil
 	}
-	if h.invalid || len(record.Message) > h.messageLimit || !utf8.ValidString(record.Message) {
+	if !utf8.ValidString(record.Message) {
 		s.counters.invalid.Add(1)
 		return errInvalid
 	}
+	message, cut := shorten(record.Message, h.messageLimit)
 	attrs := make(map[string]any, len(h.attrs)+min(record.NumAttrs(), 34))
 	for k, v := range h.attrs {
 		attrs[k] = v
 	}
-	valid := true
-	record.Attrs(func(a slog.Attr) bool { valid = h.add(attrs, h.group, a, 0); return valid })
+	state := h.state
+	var own fieldState
+	own.truncated = cut
+	record.Attrs(func(a slog.Attr) bool { h.add(attrs, &own, h.group, a, 0); return true })
+	state.merge(own)
+	// Only caller attributes may be removed to fit; base and request fields stay.
+	removable := make([]string, 0, len(attrs))
+	for k := range attrs {
+		if k != "event" && k != "outcome" && !slices.Contains(requestFieldNames, k) {
+			removable = append(removable, k)
+		}
+	}
 	for k, v := range CurrentRequestFields(ctx) {
 		attrs[k] = v
 	}
 	_, hasEvent := attrs["event"]
 	_, hasOutcome := attrs["outcome"]
-	if !valid || hasEvent != hasOutcome {
+	if hasEvent != hasOutcome {
 		s.counters.invalid.Add(1)
 		return errInvalid
+	}
+	if state.errorType != "" {
+		// A caller-supplied value wins.
+		if _, ok := attrs[errorTypeField]; !ok {
+			attrs[errorTypeField] = state.errorType
+		}
+		if _, ok := attrs[stacktraceField]; !ok {
+			if stack, cut := callStack(h.stackLimit); stack != "" {
+				attrs[stacktraceField] = stack
+				state.truncated = state.truncated || cut
+			}
+		}
 	}
 	t := record.Time
 	if t.IsZero() {
@@ -152,7 +219,7 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	}
 	attrs["timestamp"] = t.UnixNano()
 	attrs["level"] = levelName(record.Level)
-	attrs["message"] = record.Message
+	attrs["message"] = message
 	attrs["service"] = h.config.Service
 	attrs["environment"] = h.config.Environment
 	attrs["region"] = h.config.Region
@@ -164,13 +231,11 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 			profile = "lifecycle"
 		}
 	}
-	var buf bytes.Buffer
 	if _, ok := attrs["request_event"]; ok {
 		profile = "request"
 	}
-	encoder := json.NewEncoder(&buf)
-	encoder.SetEscapeHTML(false)
-	if encoder.Encode(attrs) != nil || buf.Len()-1 > h.recordLimit || len(ValidateJSON(buf.Bytes(), profile)) > 0 {
+	buf, err := h.fit(attrs, removable, state)
+	if err != nil || buf.Len()-1 > h.recordLimit || len(ValidateJSON(buf.Bytes(), profile)) > 0 {
 		s.counters.invalid.Add(1)
 		return errInvalid
 	}
@@ -220,15 +285,23 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	return nil
 }
 
-func (h *Handler) add(dst map[string]any, prefix string, attr slog.Attr, depth int) bool {
-	if depth > 8 {
-		return false
-	}
+// add copies one attribute. A value that cannot be emitted is removed and
+// counted; an error value is reported through error.type instead.
+func (h *Handler) add(dst map[string]any, state *fieldState, prefix string, attr slog.Attr, depth int) {
 	if attr.Equal(slog.Attr{}) {
-		return true
+		return
 	}
-	if len(attr.Key) > 128 || !utf8.ValidString(attr.Key) {
-		return false
+	if kind := attr.Value.Kind(); kind == slog.KindAny || kind == slog.KindLogValuer {
+		if err, ok := attr.Value.Any().(error); ok {
+			if state.errorType == "" {
+				state.errorType = errorType(err, h.errorTypeLimit)
+			}
+			return
+		}
+	}
+	if depth > 8 || (depth == 0 && h.badGroup) || len(attr.Key) > 128 || !utf8.ValidString(attr.Key) {
+		state.dropped++
+		return
 	}
 	key := prefix + attr.Key
 	if attr.Value.Kind() == slog.KindGroup {
@@ -236,25 +309,33 @@ func (h *Handler) add(dst map[string]any, prefix string, attr slog.Attr, depth i
 			prefix = key + "."
 		}
 		for _, a := range attr.Value.Group() {
-			if !h.add(dst, prefix, a, depth+1) {
-				return false
-			}
+			h.add(dst, state, prefix, a, depth+1)
 		}
-		return true
+		return
 	}
-	if _, ok := dst[key]; ok {
-		return false
+	if _, ok := dst[key]; ok || len(dst) >= 34 || (!h.allowed[key] && key != "event" && key != "outcome") {
+		state.dropped++
+		return
 	}
-	if len(dst) >= 34 || (!h.allowed[key] && key != "event" && key != "outcome") {
-		return false
+	if (key == errorTypeField || key == stacktraceField) && attr.Value.Kind() != slog.KindString {
+		state.dropped++
+		return
 	}
 	var value any
 	switch attr.Value.Kind() {
 	case slog.KindString:
-		value = attr.Value.String()
-		if len(value.(string)) > h.messageLimit || !utf8.ValidString(value.(string)) {
-			return false
+		text := attr.Value.String()
+		if !utf8.ValidString(text) || !h.validErrorField(key, text) {
+			state.dropped++
+			return
 		}
+		limit := h.fieldLimit
+		if key == stacktraceField {
+			limit = h.stackLimit
+		}
+		var cut bool
+		value, cut = shorten(text, limit)
+		state.truncated = state.truncated || cut
 	case slog.KindBool:
 		value = attr.Value.Bool()
 	case slog.KindInt64:
@@ -264,17 +345,144 @@ func (h *Handler) add(dst map[string]any, prefix string, attr slog.Attr, depth i
 	case slog.KindFloat64:
 		value = attr.Value.Float64()
 		if math.IsNaN(value.(float64)) || math.IsInf(value.(float64), 0) {
-			return false
+			state.dropped++
+			return
 		}
 	case slog.KindAny:
 		if attr.Value.Any() != nil {
-			return false
+			state.dropped++
+			return
 		}
 	default:
-		return false // Never call user LogValuer, Stringer or JSON methods.
+		state.dropped++ // Never call user LogValuer, Stringer or JSON methods.
+		return
 	}
 	dst[key] = value
+}
+
+// shorten cuts at a rune boundary so the text plus the mark fits limit bytes.
+func shorten(text string, limit int) (string, bool) {
+	if len(text) <= limit {
+		return text, false
+	}
+	i := max(limit-len(truncationMark), 0)
+	for i > 0 && !utf8.RuneStart(text[i]) {
+		i--
+	}
+	return text[:i] + truncationMark, true
+}
+
+// errorType names the dynamic type only; it never calls the error's methods.
+func errorType(err error, limit int) string {
+	name := fmt.Sprintf("%T", err)
+	if strings.IndexFunc(name, unicode.IsSpace) >= 0 {
+		name = strings.Join(strings.Fields(name), "")
+	}
+	if runes := []rune(name); len(runes) > limit {
+		name = string(runes[:limit])
+	}
+	return name
+}
+
+// validErrorField applies the schema rule of a caller-supplied error field, so
+// a bad value is removed at intake and the SDK value can apply instead.
+func (h *Handler) validErrorField(key, text string) bool {
+	switch key {
+	case errorTypeField:
+		return text != "" && utf8.RuneCountInString(text) <= h.errorTypeLimit && strings.IndexFunc(text, unicode.IsSpace) < 0
+	case stacktraceField:
+		return text != ""
+	}
 	return true
+}
+
+// callStack formats the logging call site, innermost first, as whole frames
+// within limit bytes. Inside a deferred recover it includes the panicking frames.
+func callStack(limit int) (string, bool) {
+	pcs := make([]uintptr, 64)
+	n := runtime.Callers(2, pcs)
+	frames := runtime.CallersFrames(pcs[:n])
+	var b strings.Builder
+	for more := n > 0; more; {
+		var frame runtime.Frame
+		frame, more = frames.Next()
+		if frame.Function == "" || strings.HasPrefix(frame.Function, packagePrefix) || strings.HasPrefix(frame.Function, "log/slog.") {
+			continue
+		}
+		line := "at " + frame.Function
+		if frame.File != "" {
+			line += " (" + filepath.Base(frame.File) + ":" + strconv.Itoa(frame.Line) + ")"
+		}
+		line, cut := shorten(line, limit)
+		cost := len(line)
+		if b.Len() > 0 {
+			cost++
+		}
+		if cut || b.Len()+cost > limit {
+			if b.Len() == 0 {
+				return line, true
+			}
+			return b.String(), true
+		}
+		if b.Len() > 0 {
+			b.WriteByte('\n')
+		}
+		b.WriteString(line)
+	}
+	return b.String(), n == len(pcs)
+}
+
+func encode(v any) (*bytes.Buffer, error) {
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	return &buf, encoder.Encode(v)
+}
+
+// fit encodes the record with its degradation flags. Over the record limit it
+// drops the outermost stack frame first, then the largest caller attribute
+// (ties: key name descending), counting each, until the line fits.
+func (h *Handler) fit(attrs map[string]any, removable []string, state fieldState) (*bytes.Buffer, error) {
+	for {
+		if state.truncated {
+			attrs[truncatedField] = true
+		}
+		if state.dropped > 0 {
+			attrs[droppedField] = min(state.dropped, h.maxDrops)
+		}
+		buf, err := encode(attrs)
+		if err != nil || buf.Len()-1 <= h.recordLimit {
+			return buf, err
+		}
+		if stack, ok := attrs[stacktraceField].(string); ok {
+			if i := strings.LastIndexByte(stack, '\n'); i >= 0 {
+				attrs[stacktraceField] = stack[:i]
+			} else {
+				delete(attrs, stacktraceField)
+			}
+			state.truncated = true
+			continue
+		}
+		largest, largestSize := "", -1
+		for _, k := range removable {
+			v, ok := attrs[k]
+			if !ok {
+				continue
+			}
+			field, err := encode(map[string]any{k: v})
+			if err != nil {
+				return nil, err
+			}
+			if size := field.Len(); size > largestSize || size == largestSize && k > largest {
+				largest, largestSize = k, size
+			}
+		}
+		if largestSize < 0 {
+			return buf, nil // Still too large: the caller drops it as Invalid.
+		}
+		delete(attrs, largest)
+		state.dropped++
+	}
 }
 
 func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
@@ -283,21 +491,23 @@ func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	for k, v := range h.attrs {
 		clone.attrs[k] = v
 	}
+	var own fieldState
 	for _, attr := range attrs {
-		if !clone.add(clone.attrs, clone.group, attr, 0) {
-			clone.invalid = true
-		}
+		clone.add(clone.attrs, &own, clone.group, attr, 0)
 	}
+	clone.state.merge(own)
 	return &clone
 }
 
+// WithGroup never disables the logger: under an invalid group name every
+// attribute is removed and counted on each record.
 func (h *Handler) WithGroup(name string) slog.Handler {
 	if name == "" {
 		return h
 	}
 	clone := *h
 	if !fieldName.MatchString(name) || len(clone.group)+len(name) > 128 {
-		clone.invalid = true
+		clone.badGroup = true
 	} else {
 		clone.group += name + "."
 	}

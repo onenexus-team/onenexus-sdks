@@ -8,9 +8,10 @@ from typing import Any
 from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
 from importlib.resources import files
 
-# Compatibility identifiers for the unchanged log format, not package versions.
-CONTRACT_VERSION = "0.3.2"
-CONTRACT_DIGEST = "4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923"
+# Log-format identity, not the package version.
+CONTRACT_VERSION = "0.4.0"
+# sha256 of the bundled schema.json; equal in every language (tests/logging).
+CONTRACT_DIGEST = "298e185da5305c57450b26434ea859ddb768c82623ddb60ad5c7af72c0a68df4"
 _SCHEMA = json.loads(files("onenexus_observability").joinpath("schema.json").read_bytes())
 _VALIDATORS = {
     name: Draft202012Validator({"$defs": _SCHEMA["$defs"], "$ref": f"#/$defs/{name}"})
@@ -18,6 +19,11 @@ _VALIDATORS = {
 }
 MAX_MESSAGE_BYTES = _SCHEMA["x-semantic-checks"]["message_max_utf8_bytes"]
 MAX_RECORD_BYTES = _SCHEMA["x-semantic-checks"]["record_max_compact_utf8_bytes"]
+MAX_FIELD_BYTES = _SCHEMA["x-semantic-checks"]["field_max_utf8_bytes"]
+MAX_STACKTRACE_BYTES = _SCHEMA["x-semantic-checks"]["stacktrace_max_utf8_bytes"]
+_COMMON = _SCHEMA["$defs"]["common"]["properties"]
+MAX_DROPPED_FIELD_COUNT = _COMMON["logging.dropped_field_count"]["maximum"]
+MAX_ERROR_TYPE_CHARS = _COMMON["error.type"]["maxLength"]
 # Logger-owned fields stay protected when optional shared fields are added.
 COMMON_FIELDS = frozenset(_SCHEMA["x-protected-fields"])
 

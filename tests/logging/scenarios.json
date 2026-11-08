@@ -2109,5 +2109,252 @@
       "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
       "method": "!#$%&'*+-.^_`|~"
     }
-  ]
+  ],
+  "degradation_allowed_fields": [
+    "shared.note",
+    "shared.a",
+    "shared.b",
+    "shared.c",
+    "error.type",
+    "exception.stacktrace"
+  ],
+  "degradation_error_type": {
+    "python": "ValueError",
+    "typescript": "TypeError",
+    "go": "*errors.errorString",
+    "dotnet": "System.InvalidOperationException"
+  },
+  "degradation_cases": [
+    {
+      "id": "long_message",
+      "level": "ERROR",
+      "message": {
+        "repeat": "x",
+        "count": 1100
+      },
+      "fields": {},
+      "expect": {
+        "message_max_bytes": 1024,
+        "message_prefix": "xxxxxxxx",
+        "message_suffix": "…",
+        "truncated": true,
+        "dropped_field_count": null
+      }
+    },
+    {
+      "id": "long_multibyte_message",
+      "level": "ERROR",
+      "message": {
+        "repeat": "é",
+        "count": 600
+      },
+      "fields": {},
+      "expect": {
+        "message_max_bytes": 1024,
+        "message_prefix": "éééé",
+        "message_suffix": "…",
+        "truncated": true,
+        "dropped_field_count": null
+      }
+    },
+    {
+      "id": "message_at_limit",
+      "level": "INFO",
+      "message": {
+        "repeat": "x",
+        "count": 1024
+      },
+      "fields": {},
+      "expect": {
+        "message": {
+          "repeat": "x",
+          "count": 1024
+        },
+        "truncated": null,
+        "dropped_field_count": null
+      }
+    },
+    {
+      "id": "unknown_field",
+      "level": "WARN",
+      "message": "Retry scheduled",
+      "fields": {
+        "tenant": "t1",
+        "shared.note": "kept"
+      },
+      "expect": {
+        "message": "Retry scheduled",
+        "fields": {
+          "shared.note": "kept"
+        },
+        "absent": [
+          "tenant"
+        ],
+        "truncated": null,
+        "dropped_field_count": 1
+      }
+    },
+    {
+      "id": "large_unknown_field",
+      "level": "WARN",
+      "message": "Retry scheduled",
+      "fields": {
+        "tenant": {
+          "repeat": "q",
+          "count": 5000
+        }
+      },
+      "expect": {
+        "message": "Retry scheduled",
+        "absent": [
+          "tenant"
+        ],
+        "truncated": null,
+        "dropped_field_count": 1
+      }
+    },
+    {
+      "id": "long_field",
+      "level": "ERROR",
+      "message": "Dependency failed",
+      "fields": {
+        "shared.note": {
+          "repeat": "y",
+          "count": 1100
+        }
+      },
+      "expect": {
+        "message": "Dependency failed",
+        "field_bounds": {
+          "shared.note": {
+            "max_bytes": 1024,
+            "prefix": "yyyyyyyy",
+            "suffix": "…"
+          }
+        },
+        "truncated": true,
+        "dropped_field_count": null
+      }
+    },
+    {
+      "id": "oversize_record",
+      "level": "ERROR",
+      "message": {
+        "repeat": "m",
+        "count": 1000
+      },
+      "fields": {
+        "shared.a": {
+          "repeat": "a",
+          "count": 1000
+        },
+        "shared.b": {
+          "repeat": "b",
+          "count": 1000
+        },
+        "shared.c": {
+          "repeat": "c",
+          "count": 1000
+        }
+      },
+      "expect": {
+        "message": {
+          "repeat": "m",
+          "count": 1000
+        },
+        "fields": {
+          "shared.a": {
+            "repeat": "a",
+            "count": 1000
+          },
+          "shared.b": {
+            "repeat": "b",
+            "count": 1000
+          }
+        },
+        "absent": [
+          "shared.c"
+        ],
+        "record_max_bytes": 4096,
+        "truncated": null,
+        "dropped_field_count": 1
+      }
+    },
+    {
+      "id": "error_with_stack",
+      "level": "ERROR",
+      "message": "Operation failed",
+      "fields": {},
+      "error": {
+        "message": "secret-detail",
+        "nested_calls": 2
+      },
+      "expect": {
+        "message": "Operation failed",
+        "error_type": true,
+        "stacktrace_line_pattern": "^at \\S+( \\([^/\\\\()]+:[0-9]+\\))?$",
+        "stacktrace_max_bytes": 2048,
+        "stacktrace_excludes": [
+          "secret-detail"
+        ],
+        "truncated": null,
+        "dropped_field_count": null
+      }
+    },
+    {
+      "id": "invalid_caller_error_fields",
+      "level": "ERROR",
+      "message": "Operation failed",
+      "fields": {
+        "error.type": "Not Found",
+        "exception.stacktrace": "",
+        "shared.note": "kept"
+      },
+      "expect": {
+        "message": "Operation failed",
+        "fields": {
+          "shared.note": "kept"
+        },
+        "absent": [
+          "error.type",
+          "exception.stacktrace"
+        ],
+        "truncated": null,
+        "dropped_field_count": 2
+      }
+    },
+    {
+      "id": "caller_error_fields_win",
+      "level": "ERROR",
+      "message": "Operation failed",
+      "fields": {
+        "error.type": "CallerError",
+        "exception.stacktrace": "at caller (app.src:1)"
+      },
+      "error": {
+        "message": "secret-detail",
+        "nested_calls": 2
+      },
+      "expect": {
+        "message": "Operation failed",
+        "fields": {
+          "error.type": "CallerError",
+          "exception.stacktrace": "at caller (app.src:1)"
+        },
+        "stacktrace_excludes": [
+          "secret-detail"
+        ],
+        "truncated": null,
+        "dropped_field_count": null
+      }
+    }
+  ],
+  "degradation_rules": {
+    "message": "Over 1,024 UTF-8 bytes: cut at a character boundary so that the text plus a trailing U+2026 fits 1,024 bytes; set logging.truncated=true.",
+    "string_field": "Over 1,024 UTF-8 bytes (exception.stacktrace: 2,048): cut the same way; set logging.truncated=true.",
+    "unknown_or_unsupported_field": "Remove the field, keep the record; logging.dropped_field_count = number removed. Unsupported = not JSON-encodable, non-finite number, or a string that is not valid Unicode.",
+    "record": "Over 4,096 bytes: shorten exception.stacktrace by whole frames, then remove custom fields, largest encoded size first (ties: key name descending), each counted, until it fits.",
+    "error": "error.type = the error's type name; exception.stacktrace = one 'at <function> (<file basename>:<line>)' per frame, innermost first; never the error message or argument values. A caller-supplied value for either field wins. A caller value that breaks its field rule (error.type: 1-128 chars, no whitespace; exception.stacktrace: non-empty) is removed and counted, and the SDK value applies.",
+    "drop": "Only a record that cannot be serialised, breaks a base-field rule (empty or unformattable message, event without outcome), or still exceeds 4,096 bytes after the steps above is dropped and counted."
+  }
 }

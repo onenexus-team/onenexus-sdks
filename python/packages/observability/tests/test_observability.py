@@ -7,6 +7,7 @@ import io
 import json
 import logging
 import os
+import re
 import threading
 from pathlib import Path
 
@@ -121,12 +122,16 @@ def test_actual_logger_fields_and_custom_fields():
 @pytest.mark.parametrize(
     "fields", [{"environment": "prod"}, {"Authorization": "private"}, {"prompt": "private"}]
 )
-def test_unapproved_or_reserved_fields_fail_without_echo(fields, capsys):
+def test_unapproved_or_reserved_fields_are_removed_and_counted(fields, capsys):
     output = io.StringIO()
     logger, handler = logger_for(output)
-    logger.info("private marker", extra={"fields": fields})
-    assert handler.dropped_records == 1
-    assert output.getvalue() == ""
+    logger.info("Marker line", extra={"fields": fields})
+    value = json.loads(output.getvalue())
+    assert value["message"] == "Marker line"
+    assert value["environment"] == "development"
+    assert value["logging.dropped_field_count"] == 1
+    assert "private" not in output.getvalue()
+    assert handler.dropped_records == 0
     assert capsys.readouterr().err == ""
 
 
@@ -144,15 +149,86 @@ def test_message_limits_json_and_error_safety(capsys):
     logger.info("界" * 400)
     logger.info("safe", extra={"fields": {"operation_id": float("nan")}})
     logger.info("safe", extra={"fields": {"operation_id": "x" * 4096}})
+    rows = [json.loads(line) for line in output.getvalue().splitlines()]
+    assert [r["message"][-1] for r in rows] == ["\u2026", "e", "e"]
+    assert len(rows[0]["message"].encode()) <= 1024 and rows[0]["logging.truncated"] is True
+    assert "operation_id" not in rows[1] and rows[1]["logging.dropped_field_count"] == 1
+    assert len(rows[2]["operation_id"].encode()) <= 1024 and rows[2]["logging.truncated"] is True
+    # A message that cannot be formatted has no text to keep: dropped and counted.
     logger.info("bad %s %s", "argument")
-    assert handler.dropped_records == 4
-    assert output.getvalue() == ""
+    assert handler.dropped_records == 1
     try:
         raise RuntimeError("private-exception-marker")
     except RuntimeError:
         logger.exception("Operation failed")
     assert "private-exception-marker" not in output.getvalue()
+    assert json.loads(output.getvalue().splitlines()[-1])["error.type"] == "RuntimeError"
     assert capsys.readouterr().err == ""
+
+
+def _expand(value):
+    if isinstance(value, dict) and set(value) == {"repeat", "count"}:
+        return value["repeat"] * value["count"]
+    if isinstance(value, dict):
+        return {k: _expand(v) for k, v in value.items()}
+    return value
+
+
+def _raise_nested(message, depth):
+    if depth > 1:
+        _raise_nested(message, depth - 1)
+    raise ValueError(message)
+
+
+_LEVELS = {"INFO": logging.INFO, "WARN": logging.WARNING, "ERROR": logging.ERROR}
+_SUITE = json.loads(SCENARIOS.read_bytes())
+
+
+@pytest.mark.parametrize("case", _SUITE["degradation_cases"], ids=lambda c: c["id"])
+def test_shared_degradation_scenarios(case):
+    """The line still arrives: shortened, stripped or with its error, never dropped."""
+    output = io.StringIO()
+    logger = logging.Logger("degradation", logging.DEBUG)
+    config = LogConfig("shared-test", "development", "region-1", frozenset(_SUITE["degradation_allowed_fields"]))
+    handler = install_handler(logger, config, stream=output)
+    message = _expand(case["message"])
+    extra = {"fields": _expand(case["fields"])}
+    if "error" in case:
+        try:
+            _raise_nested(case["error"]["message"], case["error"]["nested_calls"])
+        except ValueError:
+            logger.log(_LEVELS[case["level"]], "%s", message, extra=extra, exc_info=True)
+    else:
+        logger.log(_LEVELS[case["level"]], "%s", message, extra=extra)
+    assert handler.dropped_records == 0
+    (line,) = output.getvalue().splitlines()
+    row = json.loads(line)
+    assert validate_record(row) == []
+    expect = case["expect"]
+    assert row.get("logging.truncated") is expect["truncated"]
+    assert row.get("logging.dropped_field_count") == expect["dropped_field_count"]
+    if "message" in expect:
+        assert row["message"] == _expand(expect["message"])
+    else:
+        assert len(row["message"].encode()) <= expect["message_max_bytes"]
+        assert row["message"].startswith(expect["message_prefix"])
+        assert row["message"].endswith(expect["message_suffix"])
+    for key, value in _expand(expect.get("fields", {})).items():
+        assert row[key] == value
+    assert all(key not in row for key in expect.get("absent", []))
+    for key, bound in expect.get("field_bounds", {}).items():
+        assert len(row[key].encode()) <= bound["max_bytes"]
+        assert row[key].startswith(bound["prefix"]) and row[key].endswith(bound["suffix"])
+    if "record_max_bytes" in expect:
+        assert len(line.encode()) <= expect["record_max_bytes"]
+    if expect.get("error_type"):
+        assert row["error.type"] == _SUITE["degradation_error_type"]["python"]
+        stack = row["exception.stacktrace"]
+        assert len(stack.encode()) <= expect["stacktrace_max_bytes"]
+        assert all(re.fullmatch(expect["stacktrace_line_pattern"], frame) for frame in stack.split("\n"))
+        assert stack.split("\n")[0].startswith("at _raise_nested (test_observability.py:")
+        assert not any(marker in line for marker in expect["stacktrace_excludes"])
+    handler.close()
 
 
 def test_failed_sink_does_not_change_application_result(capsys):
@@ -327,3 +403,111 @@ def test_shared_emission_scenarios(case):
     assert all(key not in row for key in case.get("absent", []))
     assert validate_record(row) == []
     handler.close()
+
+
+def _recurse(depth):
+    if depth:
+        _recurse(depth - 1)
+    raise KeyError("private-key-marker")
+
+
+def test_caller_error_fields_win_and_exception_text_never_logged():
+    output = io.StringIO()
+    logger = logging.Logger("caller-error", logging.DEBUG)
+    config = LogConfig("test-api", "development", "region-1", frozenset({"error.type"}))
+    install_handler(logger, config, stream=output)
+    try:
+        _recurse(0)
+    except KeyError:
+        logger.exception("Lookup failed", extra={"fields": {"error.type": "LookupFailed"}})
+    row = json.loads(output.getvalue())
+    assert row["error.type"] == "LookupFailed"
+    assert row["exception.stacktrace"].startswith("at _recurse (test_observability.py:")
+    assert "private-key-marker" not in output.getvalue()
+
+
+def test_deep_stack_keeps_innermost_frames_within_budget():
+    output = io.StringIO()
+    logger, handler = logger_for(output)
+    try:
+        _recurse(200)
+    except KeyError:
+        logger.exception("Lookup failed")
+    row = json.loads(output.getvalue())
+    frames = row["exception.stacktrace"].split("\n")
+    assert len(row["exception.stacktrace"].encode()) <= 2048
+    assert row["logging.truncated"] is True
+    assert frames[0].startswith("at _recurse (") and len(frames) < 200
+    assert handler.dropped_records == 0
+
+
+def test_stack_is_shortened_before_any_field_is_removed():
+    output = io.StringIO()
+    logger = logging.Logger("fit", logging.DEBUG)
+    config = LogConfig("test-api", "development", "region-1", frozenset({"a", "b"}))
+    install_handler(logger, config, stream=output)
+    try:
+        _recurse(200)
+    except KeyError:
+        logger.exception("m" * 900, extra={"fields": {"a": "x" * 900, "b": "y" * 900}})
+    line = output.getvalue().strip()
+    row = json.loads(line)
+    assert len(line.encode()) <= 4096
+    assert row["a"] == "x" * 900 and row["b"] == "y" * 900
+    assert "logging.dropped_field_count" not in row
+    assert row["logging.truncated"] is True and row["exception.stacktrace"].startswith("at _recurse")
+
+
+def test_build_record_strips_unknown_fields_instead_of_raising():
+    record = build_record(CONFIG, "Ready", fields={"operation_id": "op-1", "unknown": "x"})
+    assert record["operation_id"] == "op-1" and "unknown" not in record
+    assert record["logging.dropped_field_count"] == 1
+    assert validate_record(record) == []
+
+
+def test_dropped_field_count_is_capped_so_the_line_stays_valid():
+    output = io.StringIO()
+    logger, handler = logger_for(output)
+    logger.info("Many fields", extra={"fields": {f"unknown{i}": i for i in range(100)}})
+    row = json.loads(output.getvalue())
+    assert row["logging.dropped_field_count"] == 64
+    assert handler.dropped_records == 0
+
+
+def test_malformed_unicode_field_is_removed_not_the_record():
+    output = io.StringIO()
+    logger, handler = logger_for(output)
+    logger.info("Ready", extra={"fields": {"operation_id": "ok\udc80x", "attempt": 1}})
+    row = json.loads(output.getvalue())
+    assert "operation_id" not in row and row["attempt"] == 1
+    assert row["logging.dropped_field_count"] == 1 and handler.dropped_records == 0
+
+
+def test_a_caller_stack_that_wins_never_inherits_the_sdk_cut_flag():
+    output = io.StringIO()
+    logger = logging.Logger("caller-stack", logging.DEBUG)
+    config = LogConfig("test-api", "development", "region-1", frozenset({"exception.stacktrace"}))
+    install_handler(logger, config, stream=output)
+    try:
+        _recurse(200)
+    except KeyError:
+        logger.exception("Lookup failed", extra={"fields": {"exception.stacktrace": "at caller (app.py:1)"}})
+    row = json.loads(output.getvalue())
+    assert row["exception.stacktrace"] == "at caller (app.py:1)"
+    assert "logging.truncated" not in row and row["error.type"] == "KeyError"
+
+
+def test_request_fields_are_never_removed_to_fit_a_record():
+    output = io.StringIO()
+    logger = logging.Logger("fit-request", logging.DEBUG)
+    names = [f"f{i}" for i in range(8)]
+    config = LogConfig("test-api", "development", "region-1", frozenset(names))
+    install_handler(logger, config, stream=output)
+    route = "/items/" + "r" * 500  # the largest field, and a request field
+    fields = {"http.route": route, **{name: "x" * 400 for name in names}}
+    logger.info("m" * 1000, extra={"fields": fields})
+    line = output.getvalue().strip()
+    row = json.loads(line)
+    assert len(line.encode()) <= 4096
+    assert row["http.route"] == route
+    assert row["logging.dropped_field_count"] >= 1

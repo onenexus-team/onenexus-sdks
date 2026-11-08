@@ -1,6 +1,8 @@
 import copy
+import hashlib
 import json
 from pathlib import Path
+import re
 import tempfile
 import unittest
 
@@ -87,6 +89,36 @@ class SharedTests(unittest.TestCase):
         self.assertTrue(self.suite["emission_cases"])
         self.assertTrue(self.suite["request_emission_cases"])
         self.assertIn("request", definition["$defs"])
+
+    def test_degradation_cases_cover_every_rule(self):
+        cases = {c["id"]: c for c in self.suite["degradation_cases"]}
+        self.assertEqual(len(cases), len(self.suite["degradation_cases"]))
+        expects = [c["expect"] for c in cases.values()]
+        self.assertTrue(any(e["truncated"] for e in expects))
+        self.assertTrue(any(e["dropped_field_count"] for e in expects))
+        self.assertTrue(any(e.get("error_type") for e in expects))
+        self.assertTrue(any("record_max_bytes" in e for e in expects))
+        languages = {"python", "typescript", "go", "dotnet"}
+        self.assertEqual(set(self.suite["degradation_error_type"]), languages)
+        schema = json.loads(
+            (ROOT / "go/packages/observability/schema.json").read_text()
+        )
+        protected = set(schema["x-protected-fields"])
+        self.assertTrue({"logging.truncated", "logging.dropped_field_count"} <= protected)
+        # Callers (e.g. MLOps) may still set their own error fields.
+        self.assertFalse({"error.type", "exception.stacktrace"} & protected)
+
+    def test_contract_digest_is_the_schema_hash_in_every_language(self):
+        schema = ROOT / "go/packages/observability/schema.json"
+        digest = hashlib.sha256(schema.read_bytes()).hexdigest()
+        for path, pattern in [
+            ("python/packages/observability/src/onenexus_observability/contract.py", r'CONTRACT_DIGEST = "([0-9a-f]{64})"'),
+            ("ts/packages/observability/src/rules.ts", r'CONTRACT_DIGEST = "([0-9a-f]{64})"'),
+            ("dotnet/packages/observability/src/Contract.cs", r'Digest = "([0-9a-f]{64})"'),
+        ]:
+            found = re.search(pattern, (ROOT / path).read_text())
+            self.assertIsNotNone(found, path)
+            self.assertEqual(found.group(1), digest, path)
 
     def test_no_standalone_contract_distribution_remains(self):
         for path in [
