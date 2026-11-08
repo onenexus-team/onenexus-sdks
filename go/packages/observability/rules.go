@@ -22,10 +22,15 @@ var source embed.FS
 
 // Bundle contains independent copies. Mutating it cannot alter validation.
 type Bundle struct {
-	Schema          json.RawMessage
-	CommonFields    []string
-	MaxMessageBytes int
-	MaxRecordBytes  int
+	Schema             json.RawMessage
+	CommonFields       []string
+	MaxMessageBytes    int
+	MaxRecordBytes     int
+	MaxFieldBytes      int
+	MaxStacktraceBytes int
+	// Bounds of the SDK-owned degradation fields, from $defs.common.properties.
+	MaxErrorTypeChars    int
+	MaxDroppedFieldCount int
 }
 
 var loadOnce sync.Once
@@ -44,11 +49,27 @@ func initialize() {
 		Defs      map[string]json.RawMessage `json:"$defs"`
 		Protected []string                   `json:"x-protected-fields"`
 		Limits    struct {
-			Message int `json:"message_max_utf8_bytes"`
-			Record  int `json:"record_max_compact_utf8_bytes"`
+			Message    int `json:"message_max_utf8_bytes"`
+			Record     int `json:"record_max_compact_utf8_bytes"`
+			Field      int `json:"field_max_utf8_bytes"`
+			Stacktrace int `json:"stacktrace_max_utf8_bytes"`
 		} `json:"x-semantic-checks"`
 	}
-	if json.Unmarshal(schema, &details) != nil || details.Limits.Message <= 0 || details.Limits.Record <= 0 {
+	if json.Unmarshal(schema, &details) != nil || details.Limits.Message <= 0 || details.Limits.Record <= 0 || details.Limits.Field <= 0 || details.Limits.Stacktrace <= 0 {
+		loadError = errors.New("invalid_logging_rules")
+		return
+	}
+	var common struct {
+		Properties struct {
+			ErrorType struct {
+				MaxLength int `json:"maxLength"`
+			} `json:"error.type"`
+			Dropped struct {
+				Maximum int `json:"maximum"`
+			} `json:"logging.dropped_field_count"`
+		} `json:"properties"`
+	}
+	if json.Unmarshal(details.Defs["common"], &common) != nil || common.Properties.ErrorType.MaxLength <= 0 || common.Properties.Dropped.Maximum <= 0 {
 		loadError = errors.New("invalid_logging_rules")
 		return
 	}
@@ -76,7 +97,7 @@ func initialize() {
 	// Preserve logger-owned fields independently of optional shared properties.
 	fields := append([]string(nil), details.Protected...)
 	sort.Strings(fields)
-	bundle = Bundle{Schema: schema, CommonFields: fields, MaxMessageBytes: details.Limits.Message, MaxRecordBytes: details.Limits.Record}
+	bundle = Bundle{Schema: schema, CommonFields: fields, MaxMessageBytes: details.Limits.Message, MaxRecordBytes: details.Limits.Record, MaxFieldBytes: details.Limits.Field, MaxStacktraceBytes: details.Limits.Stacktrace, MaxErrorTypeChars: common.Properties.ErrorType.MaxLength, MaxDroppedFieldCount: common.Properties.Dropped.Maximum}
 }
 
 // Load returns independent rules and compiles validators once, without network access.

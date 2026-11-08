@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:onenexus:log-correlation:0.3.2",
+  "$id": "urn:onenexus:log-correlation:0.4.0",
   "$defs": {
     "common": {
       "additionalProperties": true,
@@ -150,6 +150,26 @@
         "duration_ms": {
           "type": "number",
           "minimum": 0
+        },
+        "error.type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^\\S+$"
+        },
+        "exception.stacktrace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "logging.truncated": {
+          "type": "boolean",
+          "const": true
+        },
+        "logging.dropped_field_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
         }
       },
       "required": [
@@ -249,12 +269,14 @@
     }
   },
   "$ref": "#/$defs/common",
-  "x-contract-version": "0.3.2",
+  "x-contract-version": "0.4.0",
   "x-semantic-checks": {
     "message_max_utf8_bytes": 1024,
     "record_max_compact_utf8_bytes": 4096,
     "serialization": "UTF-8 JSON, ensure_ascii=false, compact separators; reject non-finite numbers",
-    "profile_selection": "Chosen by the test scenario, never by the producer"
+    "profile_selection": "Chosen by the test scenario, never by the producer",
+    "field_max_utf8_bytes": 1024,
+    "stacktrace_max_utf8_bytes": 2048
   },
   "x-protected-fields": [
     "timestamp",
@@ -265,6 +287,8 @@
     "trace_id",
     "event",
     "outcome",
-    "environment"
+    "environment",
+    "logging.truncated",
+    "logging.dropped_field_count"
   ]
 }

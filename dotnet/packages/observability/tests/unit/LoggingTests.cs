@@ -59,7 +59,12 @@ public sealed partial class LoggingTests
         Assert.AreEqual("op-1", rows[0].GetProperty("operation_id").GetString());
         Assert.AreEqual(2, rows[0].GetProperty("attempt").GetInt32());
         Assert.AreEqual("11111111111111111111111111111111", rows[0].GetProperty("trace_id").GetString());
+        // The protected "environment" and unapproved "Authorization" scope fields are removed and counted.
+        Assert.IsTrue(rows[..2].All(r => r.GetProperty("logging.dropped_field_count").GetInt32() == 2));
+        Assert.AreEqual("System.InvalidOperationException", rows[1].GetProperty("error.type").GetString());
+        Assert.IsFalse(rows[1].TryGetProperty("exception.stacktrace", out _)); // Never thrown: no frames.
         Assert.IsFalse(rows[2].TryGetProperty("trace_id", out _));
+        Assert.IsFalse(rows[2].TryGetProperty("logging.dropped_field_count", out _));
         Assert.IsFalse(output.ToString().Contains("private", StringComparison.Ordinal));
         Assert.IsTrue(rows.All(r => Contract.Validate(r).Count == 0));
         Assert.AreEqual(0L, provider.DroppedRecords);
@@ -175,19 +180,25 @@ public sealed partial class LoggingTests
         using var output = new StringWriter();
         using var provider = new JsonLogProvider(Config, output);
         var logger = provider.CreateLogger("test");
-        logger.LogInformation(new string('界', 400));
-        logger.LogInformation("Invalid {attempt}", double.NaN);
+        logger.LogInformation(new string('界', 400)); // Shortened, not dropped.
+        logger.LogInformation("Invalid {attempt}", double.NaN); // Field removed and counted, not dropped.
         logger.Log(LogLevel.Information, default, "safe", null, (_, _) => throw new InvalidOperationException("private"));
         using (logger.BeginScope(new Dictionary<string, object?> { ["event"] = "request.done" }))
             logger.LogInformation("Incomplete event");
-        Assert.AreEqual(4L, provider.DroppedRecords);
-        Assert.AreEqual("", output.ToString());
+        logger.LogInformation("");
+        Assert.AreEqual(3L, provider.DroppedRecords);
+        var kept = Records(output);
+        Assert.HasCount(2, kept);
+        Assert.IsTrue(kept[0].GetProperty("logging.truncated").GetBoolean());
+        Assert.AreEqual(new string('界', 340) + "\u2026", kept[0].GetProperty("message").GetString());
+        Assert.IsFalse(kept[1].TryGetProperty("attempt", out _));
+        Assert.AreEqual(1, kept[1].GetProperty("logging.dropped_field_count").GetInt32());
         using var broken = new JsonLogProvider(Config, new BrokenWriter());
         broken.CreateLogger("test").LogInformation("safe");
         Assert.AreEqual(1L, broken.DroppedRecords);
         provider.Dispose();
         logger.LogInformation("After dispose");
-        Assert.AreEqual(5L, provider.DroppedRecords);
+        Assert.AreEqual(4L, provider.DroppedRecords);
         output.Write("Writer still owned by caller");
     }
 
@@ -208,6 +219,7 @@ public sealed partial class LoggingTests
         var record = Records(output).Single();
         Assert.IsEmpty(Contract.Validate(record, "correlated"));
         Assert.AreEqual(2, record.GetProperty("attempt").GetInt32());
+        Assert.IsFalse(record.TryGetProperty("logging.dropped_field_count", out _)); // {OriginalFormat} is not a caller field.
         Assert.AreEqual("Attempt 2 completed", record.GetProperty("message").GetString());
     }
 
@@ -244,8 +256,12 @@ public sealed partial class LoggingTests
         CollectionAssert.AreEqual(new[] { "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL" }, Records(output).Select(r => r.GetProperty("level").GetString()).ToArray());
         using (logger.BeginScope(new Dictionary<string, object?> { ["operation_id"] = new string('x', 4096) }))
             logger.LogInformation("Large custom field");
-        Assert.AreEqual(1L, provider.DroppedRecords);
-        Assert.HasCount(6, Records(output));
+        Assert.AreEqual(0L, provider.DroppedRecords);
+        var rows = Records(output);
+        Assert.HasCount(7, rows);
+        Assert.AreEqual(new string('x', 1021) + "\u2026", rows[6].GetProperty("operation_id").GetString());
+        Assert.IsTrue(rows[6].GetProperty("logging.truncated").GetBoolean());
+        Assert.IsTrue(rows.All(r => System.Text.Encoding.UTF8.GetByteCount(r.GetRawText()) <= Contract.MaxRecordBytes));
     }
 
     [TestMethod]

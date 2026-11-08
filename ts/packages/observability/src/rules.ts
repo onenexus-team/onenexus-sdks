@@ -11,7 +11,12 @@ interface Schema {
     $schema: string;
     $defs: Record<string, object> & { common: Definition };
     'x-protected-fields': string[];
-    'x-semantic-checks': { message_max_utf8_bytes: number; record_max_compact_utf8_bytes: number };
+    'x-semantic-checks': {
+        message_max_utf8_bytes: number;
+        record_max_compact_utf8_bytes: number;
+        field_max_utf8_bytes: number;
+        stacktrace_max_utf8_bytes: number;
+    };
 }
 const schema = JSON.parse(schemaText) as Schema;
 const ajv = new Ajv2020({ allErrors: true, strict: true });
@@ -21,10 +26,15 @@ const validators = new Map(
         ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: `#/$defs/${name}` }),
     ]),
 );
-export const CONTRACT_VERSION = "0.3.2"; // Legacy format identifier, not SDK version.
-export const CONTRACT_DIGEST = "4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923";
+export const CONTRACT_VERSION = "0.4.0"; // Log-format identity, not the SDK version.
+// sha256 of the bundled schema.json; equal in every language (tests/logging).
+export const CONTRACT_DIGEST = "298e185da5305c57450b26434ea859ddb768c82623ddb60ad5c7af72c0a68df4";
 export const MAX_MESSAGE_BYTES: number = schema['x-semantic-checks'].message_max_utf8_bytes;
 export const MAX_RECORD_BYTES: number = schema['x-semantic-checks'].record_max_compact_utf8_bytes;
+export const MAX_FIELD_BYTES: number = schema['x-semantic-checks'].field_max_utf8_bytes;
+export const MAX_STACKTRACE_BYTES: number = schema['x-semantic-checks'].stacktrace_max_utf8_bytes;
+export const MAX_DROPPED_FIELD_COUNT = schema.$defs.common.properties['logging.dropped_field_count']
+    ?.maximum as number;
 // Logger-owned fields stay protected when optional shared fields are added.
 export const COMMON_FIELDS: readonly string[] = Object.freeze(schema['x-protected-fields']);
 
@@ -91,6 +101,11 @@ function jsonValue(value: unknown, depth = 0): string {
             .join(',') +
         '}'
     );
+}
+
+/** Compact UTF-8 size of plain JSON data; throws where encodeRecord would. */
+export function encodedBytes(value: unknown): number {
+    return Buffer.byteLength(jsonValue(value));
 }
 
 export function validateRecord(record: unknown, profile = 'common'): string[] {

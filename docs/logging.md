@@ -26,6 +26,100 @@ flowchart TD
 - [`test_language_rules_remain_equivalent`](../tests/logging/test_shared_tests.py) compares the four schemas as parsed JSON. CI runs this test for every pull request and main-branch push; any schema mismatch fails the check. Shared scenarios also check behavior through each language's real APIs.
 - Each published package embeds its own schema, including Go through `go:embed`. Consumers need no repository path, network schema lookup or separate contract package.
 
+## Keep the line: shorten, strip, count (contract 0.4.0)
+
+Before 0.4.0, one broken rule dropped the **whole** record: a long error message, one unknown field, a Go `error` value. Exceptions lost their type and stack. The lines that explain an incident were the ones that never arrived.
+
+```mermaid
+flowchart LR
+    L["log(message, fields, error)"] --> M{"message > 1,024 B?"}
+    M -->|yes| M2["cut + …<br/>logging.truncated"]
+    M -->|no| F
+    M2 --> F{"each field"}
+    F -->|"unknown · protected · unsupported"| F2["remove<br/>logging.dropped_field_count +1"]
+    F -->|"string > 1,024 B"| F3["cut + …<br/>logging.truncated"]
+    F -->|ok| E
+    F2 --> E
+    F3 --> E{"error given?"}
+    E -->|yes| E2["error.type<br/>exception.stacktrace (frames only)"]
+    E -->|no| R
+    E2 --> R{"record > 4,096 B?"}
+    R -->|yes| R2["drop outer frames,<br/>then largest custom fields"]
+    R -->|no| W["one JSON line ✅"]
+    R2 --> W
+```
+
+### Rules — identical in four languages
+
+| Input | Before | Now |
+|---|---|---|
+| `message` > 1,024 UTF-8 bytes | Record dropped | Cut at a character boundary, ends `…`; `logging.truncated: true` |
+| String field > 1,024 bytes (`exception.stacktrace`: 2,048) | Go: dropped · TS: dropped > 4,096 chars · Python, .NET: kept | Cut the same way; `logging.truncated: true` |
+| Unknown or protected field | Python, TS, Go: dropped · .NET: ignored silently | Removed; `logging.dropped_field_count` counts it |
+| Unsupported value (Go struct/map/`Duration`/`Time`, TS object, NaN, invalid Unicode, a caller `error.type` with spaces) | Record dropped | Field removed and counted |
+| Go `logger.With(...)` with one bad field | **Every** later record of that logger dropped | That field removed and counted on each record |
+| Exception / error | Python, .NET: type + stack lost · Go: record dropped · TS: no API | `error.type` + `exception.stacktrace` |
+| Record > 4,096 bytes | Dropped | Outer stack frames removed, then custom fields, largest first (counted) |
+| Unserialisable, empty message, event without outcome | Dropped | Dropped and counted (unchanged) |
+
+### New fields
+
+| Field | Type | Set by | Notes |
+|---|---|---|---|
+| `logging.truncated` | `true` | SDK only (protected) | Message, a string field or the stack was cut |
+| `logging.dropped_field_count` | integer 1–64 | SDK only (protected) | Fields removed from this record |
+| `error.type` | string ≤ 128, no spaces | SDK, or the caller | Type name only |
+| `exception.stacktrace` | string ≤ 2,048 bytes | SDK, or the caller | `at <function> (<file>:<line>)` per frame, innermost first |
+
+- A caller value for `error.type` / `exception.stacktrace` wins (MLOps already sets its own).
+- Never logged: the error message, argument values, source lines, directories.
+
+### Error input per language
+
+| Language | How to pass the error | `error.type` | Stack source |
+|---|---|---|---|
+| Python | `logger.exception(...)` or `exc_info=True` | `ValueError`, `pkg.mod.Error` | The traceback |
+| TypeScript | `logger.log(msg, { error })` | `error.name` | `error.stack` frames |
+| Go | any attr whose value is an `error` | `%T`, e.g. `*fs.PathError` | Call site (`runtime.Callers`); inside `recover()` it includes the panicking frames |
+| .NET | `logger.LogError(exception, ...)` | `GetType().FullName` | `StackTrace(exception)` |
+
+### Example
+
+```text
+Before   (nothing — dropped, counted in memory)
+After    {"level":"ERROR","message":"Failure (Status 422): {\"kind\":\"Status\",…","logging.truncated":true,
+          "error.type":"ApiException","exception.stacktrace":"at reconcile (tracker.py:88)\nat run (worker.py:41)", …}
+```
+
+### Lifecycle and readiness review
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant SDK as SDK release 0.6.0
+    participant Svc as Service (pin bump)
+    participant Out as stdout → Alloy → Loki
+    participant Q as Queries / alerts
+    SDK->>Svc: new package version (old versions stay installable)
+    Svc->>Out: same base fields + optional new fields
+    Out->>Q: lines that were dropped now arrive
+    Note over Svc,Q: Rollback = previous pin/image; no data migration
+```
+
+| Area | Result |
+|---|---|
+| Dependencies | None added. stdout, Alloy and Loki unchanged; lines stay ≤ 4,096 bytes |
+| Compatibility | Additive: base fields, profiles and limits unchanged. New fields are optional; old validators accept them (`additionalProperties`) |
+| Behaviour change | Records that were dropped now arrive, flagged. Utility (TS) string fields over 1,024 bytes are now cut, not kept up to 4,096 chars |
+| Security | No error text, argument values or directories. Protected `logging.*` fields cannot be forged by callers |
+| Failure tolerance | Shortening runs before encoding; any exception inside still drops and counts — logging never breaks the caller |
+| Performance | One extra size check per record (Python and TypeScript encode once more; Go and .NET reuse the encoded line); the fitting loop runs only above 4,096 bytes |
+| Concurrency | Per-record state only; Go clones carry their removed-field count |
+| Rollout | SDK release → one service pin at a time → live raw test → promotion |
+| Rollback | Previous pin or image; no stored state, no migration |
+| Proof | `tests/logging/scenarios.json` → `degradation_cases`, run through the real logger in all four languages; live: the consuming repo's raw test |
+| Contract identity | `x-contract-version` 0.4.0; `CONTRACT_DIGEST` = sha256 of the bundled `schema.json`, equal in every language (shared test) |
+
 ## Release
 
 | Step | Required result |
@@ -60,7 +154,7 @@ flowchart TD
 ## Service upgrade
 
 - Publish and verify the SDK release, update the service pin/lockfile, then run service tests and live raw tests before promotion. Validate log completeness, drop counters, latency and rollback.
-- Existing logger APIs and log format remain. Keep old packages/tags available for pinned consumers; roll back a service through its previous pin/image.
+- Existing logger APIs and base fields remain; 0.4.0 adds optional fields and keeps lines that 0.3.2 dropped (see [Keep the line](#keep-the-line-shorten-strip-count-contract-040)). Keep old packages/tags available for pinned consumers; roll back a service through its previous pin/image.
 - Direct users of standalone contract packages must move validation calls to their logger. .NET validation is under `OneNexus.Observability.Rules`.
 - Legacy exported format constants remain for compatibility; they are not package versions or release controls.
 - Shared edge-policy cases generate IDs explicitly. Business services retain their trusted-ingress policy; Envoy owns new business-request IDs. Python's existing `incoming_context` API is edge-style and must not replace service ingress checks.

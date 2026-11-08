@@ -68,6 +68,15 @@ for key, values := range observability.OutgoingHeaders(ctx) {
 - Use `InfoContext` / `LogAttrs` with the operation's context. `logger.Info(...)` has no request context.
 - `event` and `outcome` must appear together. Common identity fields cannot be replaced by attributes.
 - Extensions are approved scalar values only. No automatic body, header, exception or arbitrary-object serialization.
+- **Keep the line.** A bad attribute never drops the record or disables a `With`/`WithGroup` logger:
+
+| Input | Result |
+|---|---|
+| Message or string attribute over 1,024 UTF-8 bytes (`exception.stacktrace`: 2,048) | Cut at a rune boundary, ending in `…`; `logging.truncated=true` |
+| Unapproved, protected, duplicate or 35th+ attribute; invalid UTF-8; NaN/Inf; struct, map, `Duration`, `Time`, `LogValuer`; invalid group name | Attribute removed; counted in `logging.dropped_field_count` (max 64) |
+| Attribute whose value is an `error` (any key) | Not emitted; `error.type` = `%T`, `exception.stacktrace` = call-site frames `at <func> (<file>:<line>)`, innermost first, within 2,048 bytes. Never the error text. Approved caller values win |
+| Record over 4,096 bytes | Drop outermost stack frames, then the largest caller attributes (ties: key descending), each counted |
+
 - Callers still own message privacy. An allowlist does not remove secrets placed inside a message.
 
 ## Output failure behavior
@@ -78,7 +87,7 @@ for key, values := range observability.OutgoingHeaders(ctx) {
 | Slow output | At most 128 active/waiting calls; default wait 100ms, configurable up to 1 second |
 | Queue full / wait expires | Drop and increment `Busy`; no retry or background queue |
 | Already-entered `Write` blocks | Caller can block: `io.Writer` has no cancellation contract. Use prompt local stdout; measure this during service rollout |
-| Invalid record | Drop; increment `Invalid`; stable error without input content |
+| Invalid record (invalid UTF-8 or empty message, `event` without `outcome`, bad timestamp, still over 4,096 bytes) | Drop; increment `Invalid`; stable error without input content |
 | Zero-byte output error | Count `IOErrors`; a later call may try again |
 | Partial write | Disable further writes on this handler; recreate only after sink recovery |
 | Close | Stop new/waiting writes; in-flight write may finish; never close caller-owned stdout |

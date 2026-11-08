@@ -5,6 +5,7 @@ import { setImmediate as nextTurn } from 'node:timers/promises';
 import { expect, it } from 'vitest';
 import {
     createLogger,
+    type LogFields,
     parseRecord,
     validateRecord,
     withIncomingContext,
@@ -56,9 +57,15 @@ it('emits common fields, message, events and exact timestamp; system events are 
     expect(stream.writable).toBe(true);
 });
 
-it('fails bad configuration at startup and rejects unsafe records without echoing secrets', async () => {
+it('fails bad configuration at startup; keeps degraded lines and drops only invalid ones, without echoing secrets', async () => {
     expect(() => createLogger({ ...config, region: '' })).toThrow();
-    for (const allowedFields of [['trace_id'], ['message'], ['__proto__'], Array(33).fill('field')])
+    for (const allowedFields of [
+        ['trace_id'],
+        ['message'],
+        ['__proto__'],
+        ['logging.truncated'],
+        Array(33).fill('field'),
+    ])
         expect(() => createLogger({ ...config, allowedFields })).toThrow('invalid_allowed_fields');
     const lines: string[] = [];
     const stream = new Writable({
@@ -68,11 +75,11 @@ it('fails bad configuration at startup and rejects unsafe records without echoin
         },
     });
     const logger = createLogger(config, stream);
-    expect(logger.log('safe', { fields: { authorization: 'secret-sentinel' } })).toBe(false);
-    expect(logger.log('')).toBe(false);
-    expect(logger.log('x'.repeat(1025))).toBe(false);
-    expect(logger.log('safe', { event: 'x'.repeat(4097) })).toBe(false);
-    expect(logger.log('safe', { fields: { attempt: NaN } })).toBe(false);
+    // Kept and flagged: unknown, protected, non-finite, accessor and non-scalar fields are removed.
+    expect(logger.log('safe', { fields: { authorization: 'secret-sentinel' } })).toBe(true);
+    expect(logger.log('safe', { fields: { environment: 'prod', attempt: 1 } })).toBe(true);
+    expect(logger.log('x'.repeat(1025))).toBe(true);
+    expect(logger.log('safe', { fields: { attempt: NaN } })).toBe(true);
     expect(
         logger.log('safe', {
             fields: Object.defineProperty({}, 'attempt', {
@@ -82,10 +89,25 @@ it('fails bad configuration at startup and rejects unsafe records without echoin
                 },
             }),
         }),
-    ).toBe(false);
-    expect(logger.stats().invalid).toBe(6);
-    expect(lines).toEqual([]);
+    ).toBe(true);
+    expect(
+        logger.log('safe', { fields: { attempt: ['secret-sentinel'] } as unknown as LogFields }),
+    ).toBe(true);
+    // Still invalid: bad message, event or fields argument.
+    expect(logger.log('')).toBe(false);
+    expect(logger.log(42 as unknown as string)).toBe(false);
+    expect(logger.log('safe', { event: 'x'.repeat(4097) })).toBe(false);
+    expect(logger.log('safe', { fields: new Map() as unknown as LogFields })).toBe(false);
+    expect(logger.stats().invalid).toBe(4);
     await logger.close();
+    const rows = lines.map((s) => parseRecord(s) as Record<string, unknown>);
+    expect(rows).toHaveLength(6);
+    for (const row of rows) expect(validateRecord(row)).toEqual([]);
+    expect(rows.map((r) => r['logging.dropped_field_count'])).toEqual([1, 1, undefined, 1, 1, 1]);
+    expect(rows[1]).toMatchObject({ environment: 'development', attempt: 1 });
+    expect(rows[2]).toMatchObject({ 'logging.truncated': true });
+    expect(Buffer.byteLength(rows[2]!.message as string)).toBeLessThanOrEqual(1024);
+    expect(lines.join('')).not.toContain('secret-sentinel');
 });
 
 it('backpressure drops boundedly then recovers on drain; flush and close have deadlines', async () => {

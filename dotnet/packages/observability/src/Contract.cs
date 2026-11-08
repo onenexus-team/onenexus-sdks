@@ -21,17 +21,26 @@ public static class Contract
     public static string Digest { get; }
     public static int MaxMessageBytes { get; }
     public static int MaxRecordBytes { get; }
+    public static int MaxFieldBytes { get; }
+    public static int MaxStacktraceBytes { get; }
+    public static int MaxDroppedFieldCount { get; }
+    public static int MaxErrorTypeChars { get; }
     public static FrozenSet<string> ReservedFields { get; }
 
     static Contract()
     {
         JsonOptions.MakeReadOnly(populateMissingResolver: true);
-        Version = "0.3.2"; // Legacy log-format identity; package version follows SDK.
-        Digest = "4d34a46189a6383afb87b5d70f771a364db8a11e29c1aab1a1b9420b0cfea923";
+        Version = "0.4.0"; // Log-format identity; package version follows SDK.
+        Digest = "298e185da5305c57450b26434ea859ddb768c82623ddb60ad5c7af72c0a68df4"; // sha256 of the bundled schema.json
         using var schema = JsonDocument.Parse(ReadResource("schema.json"));
         var limits = schema.RootElement.GetProperty("x-semantic-checks");
         MaxMessageBytes = limits.GetProperty("message_max_utf8_bytes").GetInt32();
         MaxRecordBytes = limits.GetProperty("record_max_compact_utf8_bytes").GetInt32();
+        MaxFieldBytes = limits.GetProperty("field_max_utf8_bytes").GetInt32();
+        MaxStacktraceBytes = limits.GetProperty("stacktrace_max_utf8_bytes").GetInt32();
+        var common = schema.RootElement.GetProperty("$defs").GetProperty("common").GetProperty("properties");
+        MaxDroppedFieldCount = common.GetProperty("logging.dropped_field_count").GetProperty("maximum").GetInt32();
+        MaxErrorTypeChars = common.GetProperty("error.type").GetProperty("maxLength").GetInt32();
         // Preserve logger-owned fields independently of optional shared properties.
         ReservedFields = schema.RootElement.GetProperty("x-protected-fields")
             .EnumerateArray().Select(p => p.GetString()!).ToFrozenSet(StringComparer.Ordinal);

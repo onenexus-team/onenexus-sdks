@@ -45,9 +45,10 @@ builder.Logging.AddOneNexus(new LogConfiguration(
 - Registration runs during single-threaded DI setup, as with other `IServiceCollection` changes.
 - The package does not remove existing providers. CAS integration must explicitly replace its plain console provider to avoid duplicate output; keep healthy telemetry providers.
 - Service, environment and region come from deployment configuration and cannot be overwritten by log scopes.
-- Template/scope properties are included only when allowlisted. `event` and `outcome` are reserved, optional fields and must be supplied together.
+- Template/scope properties are included only when allowlisted. Others (including protected fields such as `environment`) are removed and counted in `logging.dropped_field_count`; the `{OriginalFormat}` template entry is not counted. `event` and `outcome` are reserved, optional fields and must be supplied together.
 - Formatting still renders template arguments into `message`: callers must use safe messages. Tokens, claims, bodies, prompts and arbitrary exception text must not be message arguments.
-- Exceptions are not automatically serialized. Invalid/oversized records and write failures increment `JsonLogProvider.DroppedRecords` without throwing into application logic.
+- An `exception` argument adds `error.type` (type full name) and `exception.stacktrace` (one `at <Type>.<Method> (<file>:<line>)` per frame, innermost first, at most 2 KiB), never its message or `ToString()`. A caller-supplied allowlisted value for either field wins.
+- The line still arrives: a message or string field over 1 KiB (stack 2 KiB) is cut at a character boundary with a trailing `…` and `logging.truncated: true`. A record over 4 KiB loses outermost stack frames, then the largest custom fields (counted). Only a record that still does not fit, cannot be serialized or breaks a base-field rule, and write failures, increment `JsonLogProvider.DroppedRecords` without throwing into application logic.
 
 ## Restore context at each trusted boundary
 
@@ -87,7 +88,7 @@ bash scripts/check-dotnet-observability.sh
 - All 66 shared cases through actual C# APIs; the independent Python checker rejects a deliberately wrong result.
 - Context isolation, cancellation, retry metadata, existing Activity compatibility, log fields and failure behavior.
 - [Validation and releases](../../../docs/logging.md). Live service checks belong in the consuming repository.
-- Output is bounded to 4 KiB per record and 1 KiB per message. The provider writes synchronously and owns no growing queue; a blocked stdout writer can block the caller. CAS must measure its logging budget and expose the drop counter before production adoption.
+- Output is bounded to 4 KiB per record (as written, including JSON escapes) and 1 KiB per message or string field. The provider writes synchronously and owns no growing queue; a blocked stdout writer can block the caller. CAS must measure its logging budget and expose the drop counter before production adoption.
 - Logs go to existing stdout collection. This package adds no OpenTelemetry exporter, collector, Loki client or new recording spans.
 
 - [SDK release and upgrade guide](../../../docs/logging.md).
