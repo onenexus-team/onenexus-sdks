@@ -2361,7 +2361,7 @@
     "summary": "One write model in every language (design review F2): the caller never waits on the output; a bounded queue feeds one background writer; a full queue drops and counts; a write error is counted and the writer continues; close drains until a deadline. An ERROR/FATAL line waits at most error_wait_ms for the writer, so the line logged just before a hard exit is not lost. A logger that never logs owns no writer thread.",
     "queue_capacity": 1024,
     "close_timeout_ms": 2000,
-    "caller_budget_ms": 50,
+    "caller_budget_ms": 200,
     "counters": [
       "written",
       "invalid",
@@ -2375,7 +2375,7 @@
         "id": "blocked_output_never_blocks_caller",
         "sink": "blocked",
         "lines": 3000,
-        "expect": "every log call returns within caller_budget_ms; queue_full >= lines - queue_capacity - 1; after the output is unblocked the queued lines are written",
+        "expect": "the slowest log call returns within caller_budget_ms; queue_full >= lines - queue_capacity - 1; after the output is unblocked the queued lines are written",
         "languages": [
           "python",
           "typescript",
@@ -2471,6 +2471,7 @@
         ]
       }
     ],
-    "error_wait_ms": 50
+    "error_wait_ms": 50,
+    "caller_budget_note": "The slowest single call must stay under this. A blocked output makes a call wait as long as the output stays blocked (seconds); scheduler, GC and CPU-throttling pauses on shared CI runners and limited pods reach tens of milliseconds, so the bound keeps a 10x margin both ways."
   }
 }

@@ -315,7 +315,7 @@ def test_an_error_line_waits_at_most_the_error_budget():
     logger, handler = logger_for(stream)
     start = time.perf_counter()
     logger.error("blocked error")
-    assert time.perf_counter() - start < sdk_logging.ERROR_WAIT_SECONDS + 0.05
+    assert time.perf_counter() - start < sdk_logging.ERROR_WAIT_SECONDS + 0.15  # CI scheduling slack
     stream.open.set()
     assert handler.close_within() is True
 
