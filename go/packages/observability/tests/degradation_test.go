@@ -95,11 +95,7 @@ func TestSharedDegradationScenarios(t *testing.T) {
 	levels := map[string]slog.Level{"DEBUG": slog.LevelDebug, "INFO": slog.LevelInfo, "WARN": slog.LevelWarn, "ERROR": slog.LevelError}
 	for _, c := range suite.Cases {
 		t.Run(c.ID, func(t *testing.T) {
-			var output bytes.Buffer
-			h, err := obs.NewHandler(obs.Config{Service: "shared-test", Environment: "development", Region: "region-1", AllowedFields: suite.Allowed}, &output)
-			if err != nil {
-				t.Fatal(err)
-			}
+			h, output := newSyncHandler(t, obs.Config{Service: "shared-test", Environment: "development", Region: "region-1", AllowedFields: suite.Allowed})
 			defer h.Close()
 			logger := slog.New(h)
 			message := expand(c.Message).(string)
@@ -117,11 +113,11 @@ func TestSharedDegradationScenarios(t *testing.T) {
 			} else {
 				logger.LogAttrs(ctx, level, message, attrs...)
 			}
+			row := keptRow(t, output.Bytes(), "common")
+			line := bytes.TrimSuffix(output.Bytes(), []byte{'\n'})
 			if s := h.Stats(); s.Invalid != 0 || s.Written != 1 {
 				t.Fatal("record dropped", s)
 			}
-			row := keptRow(t, output.Bytes(), "common")
-			line := bytes.TrimSuffix(output.Bytes(), []byte{'\n'})
 			expect := c.Expect
 			if want, got := expect["truncated"], row["logging.truncated"]; want != got {
 				t.Fatalf("truncated: %v want %v", got, want)
@@ -191,17 +187,13 @@ func TestSharedDegradationScenarios(t *testing.T) {
 	}
 }
 
-func degradationHandler(t *testing.T, allowed ...string) (*obs.Handler, *bytes.Buffer) {
+func degradationHandler(t *testing.T, allowed ...string) (*obs.Handler, *syncOutput) {
 	t.Helper()
-	var output bytes.Buffer
 	cfg := config()
 	cfg.AllowedFields = append(cfg.AllowedFields, allowed...)
-	h, err := obs.NewHandler(cfg, &output)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h, output := newSyncHandler(t, cfg)
 	t.Cleanup(h.Close)
-	return h, &output
+	return h, output
 }
 
 func TestBadWithAttrsKeepLogger(t *testing.T) {
@@ -283,13 +275,9 @@ func TestDuplicateAndExcessAttrsCounted(t *testing.T) {
 		allowed[i] = fmt.Sprintf("f%02d", i)
 		args = append(args, allowed[i], i)
 	}
-	var wide bytes.Buffer
 	cfg := config()
 	cfg.AllowedFields = allowed
-	many, err := obs.NewHandler(cfg, &wide)
-	if err != nil {
-		t.Fatal(err)
-	}
+	many, wide := newSyncHandler(t, cfg)
 	defer many.Close()
 	args = append(args, "http.route", "/x", "http.request.method", "GET", "duration_ms", 1.5)
 	slog.New(many).Info("Many", args...)
@@ -356,11 +344,7 @@ func TestErrorTypeFields(t *testing.T) {
 }
 
 func TestOversizeRecordShortensStackFirst(t *testing.T) {
-	var output bytes.Buffer
-	h, err := obs.NewHandler(obs.Config{Service: "go-service", Environment: "development", Region: "ric1", AllowedFields: []string{"exception.stacktrace", "a", "b"}}, &output)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h, output := newSyncHandler(t, obs.Config{Service: "go-service", Environment: "development", Region: "ric1", AllowedFields: []string{"exception.stacktrace", "a", "b"}})
 	defer h.Close()
 	stack := strings.TrimSuffix(strings.Repeat("at app.work (work.go:10)\n", 80), "\n")
 	slog.New(h).Error(strings.Repeat("m", 1000), "exception.stacktrace", stack, "a", strings.Repeat("a", 1000), "b", strings.Repeat("b", 1000))

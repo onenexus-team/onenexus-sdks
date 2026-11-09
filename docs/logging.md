@@ -120,6 +120,86 @@ sequenceDiagram
 | Proof | `tests/logging/scenarios.json` → `degradation_cases`, run through the real logger in all four languages; live: the consuming repo's raw test |
 | Contract identity | `x-contract-version` 0.4.0; `CONTRACT_DIGEST` = sha256 of the bundled `schema.json`, equal in every language (shared test) |
 
+## The caller never waits on the output (one write model, SDK 0.7.0)
+
+A slow or broken stdout used to behave differently in every language: Python and .NET blocked the request, Go dropped after 100 ms and stopped for good after a partial write, TypeScript stopped for good after one error. Now all four share one model (`tests/logging/scenarios.json` → `write_model`).
+
+```mermaid
+flowchart LR
+    C["log() — caller thread<br/>build + validate the record"] -->|never waits| Q["bounded queue<br/>1,024 lines"]
+    Q --> W["one background writer"] --> O["stdout / pipe / file"]
+    Q -->|full| D["drop + count queue_full"]
+    O -->|write error| E["count io_errors, keep going<br/>(a cut line is ended first)"]
+```
+
+| Behaviour | Before | Now |
+|---|---|---|
+| stdout blocked | Python, .NET: the caller blocks · Go: waits 100 ms, drops · TS: drops | The caller returns at once; lines queue (1,024), the overflow is dropped and counted |
+| One write error | Go (partial write), TS: every later line dropped until restart | Counted; the next line is written. A line cut short is ended with a newline first |
+| Shutdown | Whatever the caller flushed | `close` drains for up to 2 s, then reports what is still pending |
+| Hard exit right after an error (`os._exit`, Go `os.Exit` / `log.Fatal`) | Written synchronously | Python, Go: an ERROR/FATAL line waits up to 50 ms for the writer, so it is on the output. TypeScript, .NET: call `close` before exiting (NestJS shutdown hooks and the .NET host do) |
+
+### Counters
+
+| Shared name | Python `stats()` | TypeScript counts | Go `Stats()` | .NET `Stats` |
+|---|---|---|---|---|
+| written | `written` | `written` | `Written` | `Written` |
+| invalid (record rejected) | `invalid` | `invalid` | `Invalid` | `Invalid` |
+| queue_full | `queue_full` | `backpressure` | `Busy` | `QueueFull` |
+| io_errors | `io_errors` | `io` | `IOErrors` | `IoErrors` |
+| closed (logged after close) | `closed` | `closed` | `Closed` | `Closed` |
+| pending (accepted, not yet written) | `pending` | `pending` | `Pending` | `Pending` |
+
+- Totals for compatibility: Python `dropped_records`, .NET `DroppedRecords` = invalid + queue_full + io_errors + closed.
+- Close with a deadline: Python `close_within(timeout)`, Go `CloseWithin(d)`, .NET `CloseWithin(t)`, TypeScript `close(timeoutMs)`; each returns true when nothing was lost. The plain `close()` / `Close()` / `Dispose()` uses 2 s.
+- Go `Config.MaxWait` is deprecated and ignored (still accepted).
+
+### Lifecycle and readiness review
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as Caller
+    participant Q as Queue (1,024)
+    participant W as Writer
+    participant Out as stdout
+    App->>Q: line (never waits)
+    W->>Out: write
+    Out--xW: blocked
+    App->>Q: lines … queue full → drop + count
+    Out-->>W: unblocked
+    W->>Out: queued lines
+    App->>Q: close (deadline 2 s)
+    W->>Out: drain
+    Note over App,Out: still blocked at the deadline → close returns false; the lines stay counted as pending
+```
+
+| Area | Result |
+|---|---|
+| Lifecycle | The writer starts with the logger; `close` stops new lines (counted `closed`), drains to a deadline and stops the writer. A second close is harmless |
+| Fork (Python) | After `os.fork` the child gets a new lock, queue and writer, and its own counters; the parent's may be held by a thread that does not exist in the child |
+| Exit (Python) | Every writer is drained (2 s) and stopped at interpreter exit, even when its handler was already collected. A stream with a file descriptor is written with `os.write`, so a writer still blocked at exit cannot abort the process: the exit code is kept |
+| Partial writes | Python (fd) and Go finish or end a cut line, so every later line stays one valid JSON line |
+| Concurrency | One writer per logger owns the stream; callers only enqueue. Go clones share it; Go tests run with `-race` |
+| Memory | At most 1,024 lines (≤ 4 KiB each) per logger |
+| Failure tolerance | Nothing in the write path raises to the caller; every lost line is counted under one of the counters |
+| Compatibility | Public APIs kept; additions only (`stats`, `close_within` / `CloseWithin`, `Pending`). Output can now trail the `log` call: tests read after a close or flush |
+| Rollout | SDK release → one fleet bump (`logging-fleet.json` + pins) → live raw test → promotion |
+| Rollback | Previous pin or image; no stored state |
+| Proof | `write_model` cases run in all four languages; live: the consuming repo's raw test (blocked stdout probe) |
+
+### Known limits
+
+| Limit | Effect | What to do |
+|---|---|---|
+| Close is required | A logger that has logged keeps its writer thread (Python, .NET) or goroutine (Go) until closed. One that never logged owns none (Python, Go) | Close loggers you create; DI hosts and the SDK's exit hook (Python) do it for the defaults |
+| TypeScript on Linux | Node writes to pipes, TTYs and files synchronously: a stalled stdout reader still blocks the event loop inside `log()` (as before) | None in the SDK; Kubernetes reads container stdout continuously |
+| TypeScript burst | More than 1,152 lines (128 in flight + 1,024 queued) in one tick to a fast synchronous sink drop the overflow, counted as `backpressure` | Expected; the cap bounds memory |
+| Python and `print` | Lines from `print` and from the handler can interleave out of order (the handler writes the file descriptor directly) | Log through the handler |
+| Python exit hooks | Lines logged from an `atexit` hook registered *before* the SDK was imported come after the SDK's own exit drain: counted as `closed` | Register such hooks after importing the SDK |
+| Snapshots | Counters are read one at a time: a snapshot taken mid-write can be off by one | Read after `close` for exact totals |
+
+
 ## Release
 
 | Step | Required result |

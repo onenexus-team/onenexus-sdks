@@ -2356,5 +2356,121 @@
     "record": "Over 4,096 bytes: shorten exception.stacktrace by whole frames, then remove custom fields, largest encoded size first (ties: key name descending), each counted, until it fits.",
     "error": "error.type = the error's type name; exception.stacktrace = one 'at <function> (<file basename>:<line>)' per frame, innermost first; never the error message or argument values. A caller-supplied value for either field wins. A caller value that breaks its field rule (error.type: 1-128 chars, no whitespace; exception.stacktrace: non-empty) is removed and counted, and the SDK value applies.",
     "drop": "Only a record that cannot be serialised, breaks a base-field rule (empty or unformattable message, event without outcome), or still exceeds 4,096 bytes after the steps above is dropped and counted."
+  },
+  "write_model": {
+    "summary": "One write model in every language (design review F2): the caller never waits on the output; a bounded queue feeds one background writer; a full queue drops and counts; a write error is counted and the writer continues; close drains until a deadline. An ERROR/FATAL line waits at most error_wait_ms for the writer, so the line logged just before a hard exit is not lost. A logger that never logs owns no writer thread.",
+    "queue_capacity": 1024,
+    "close_timeout_ms": 2000,
+    "caller_budget_ms": 50,
+    "counters": [
+      "written",
+      "invalid",
+      "queue_full",
+      "io_errors",
+      "closed",
+      "pending"
+    ],
+    "cases": [
+      {
+        "id": "blocked_output_never_blocks_caller",
+        "sink": "blocked",
+        "lines": 3000,
+        "expect": "every log call returns within caller_budget_ms; queue_full >= lines - queue_capacity - 1; after the output is unblocked the queued lines are written",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "write_error_recovers",
+        "sink": "fail_first_write",
+        "lines": 3,
+        "expect": "io_errors == 1; written == 2; later lines are still written",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "partial_write_recovers",
+        "sink": "partial_first_write",
+        "lines": 2,
+        "expect": "the next line starts on a new line; every complete line is valid JSON",
+        "languages": [
+          "python",
+          "go"
+        ]
+      },
+      {
+        "id": "close_drains",
+        "sink": "slow",
+        "lines": 10,
+        "expect": "close reports success; written == 10; pending == 0",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "close_deadline",
+        "sink": "blocked",
+        "lines": 5,
+        "expect": "close returns failure within close_timeout_ms + 500 ms; undelivered lines are counted",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "log_after_close",
+        "sink": "ok",
+        "lines": 1,
+        "expect": "closed == 1; nothing is written",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "fork_restarts_writer",
+        "sink": "ok",
+        "lines": 1,
+        "expect": "a child process created by fork writes through its own new writer; the parent's queue is not shared",
+        "languages": [
+          "python"
+        ]
+      },
+      {
+        "id": "error_line_survives_hard_exit",
+        "sink": "slow",
+        "lines": 1,
+        "expect": "an ERROR line logged just before a hard process exit (no close) is on the output; the call returns within error_wait_ms + 50 ms",
+        "languages": [
+          "python",
+          "go"
+        ]
+      },
+      {
+        "id": "unused_logger_owns_no_writer",
+        "sink": "ok",
+        "lines": 0,
+        "expect": "creating loggers that never log starts no writer thread or goroutine",
+        "languages": [
+          "python",
+          "go"
+        ]
+      }
+    ],
+    "error_wait_ms": 50
   }
 }

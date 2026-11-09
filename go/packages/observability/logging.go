@@ -27,31 +27,67 @@ type Config struct {
 	// AllowedFields names bounded scalar extensions, including dotted group paths.
 	AllowedFields []string
 	MinLevel      slog.Level
-	// MaxWait bounds waiting behind another write (default 100ms, maximum 1s).
-	// It cannot interrupt the caller-owned writer once Write has started.
+	// Deprecated: MaxWait is ignored. The caller never waits on the writer
+	// (tests/logging write_model). Values 0..1s are still accepted so existing
+	// callers keep compiling and validating.
 	MaxWait time.Duration
 }
 
+// The shared write model (tests/logging/scenarios.json write_model).
+const (
+	// QueueCapacity is the number of accepted lines that may wait for the writer.
+	QueueCapacity = 1024
+	// CloseTimeout is how long Close drains queued lines.
+	CloseTimeout = 2 * time.Second
+	// ErrorWait is how long an ERROR or FATAL call waits for its own line to be
+	// written, so the line survives an os.Exit or log.Fatal right after it.
+	ErrorWait = 50 * time.Millisecond
+)
+
+// Stats are the shared write-model counters. Busy is the shared "queue_full"
+// counter: a line dropped because QueueCapacity lines were already waiting.
+// Pending counts lines accepted but not yet written.
 type Stats struct {
 	Written, Invalid, Busy, IOErrors, Closed uint64
 	Pending                                  int
 }
 type counters struct{ written, invalid, busy, ioErrors, closed atomic.Uint64 }
+
+// queued is one line; done, when set, is closed once the line was handled.
+type queued struct {
+	line []byte
+	done chan struct{}
+}
+
+// sink is one bounded queue and the one goroutine that owns every write to the
+// caller's writer. Logger clones share it.
 type sink struct {
-	gate     chan struct{}
-	slots    chan struct{}
-	done     chan struct{}
-	once     sync.Once
-	writer   io.Writer
+	mu       sync.RWMutex // senders hold it shared; Close holds it to close queue
 	closed   atomic.Bool
-	broken   bool
+	started  atomic.Bool // the writer goroutine starts with the first accepted line
+	start    sync.Once
+	writerID atomic.Uint64 // goroutine id of the writer, set when it starts
+	queue    chan queued
+	exited   chan struct{} // closed when the writer goroutine returns
+	stop     chan struct{} // closed when a Close deadline passed
+	once     sync.Once
+	stopOnce sync.Once
+	pending  atomic.Int64
+	writer   io.Writer
+	// midLine is owned by the writer goroutine: a failed write left part of a
+	// line on the output, so the next line must start with "\n".
+	midLine  bool
 	counters counters
 }
 
-// Handler is an opt-in slog handler. Clones share one writer fence and counters.
-// The writer must return promptly (normally process stdout). No retry loop or
-// background goroutine is started. Up to 128 calls may be active/waiting; excess
-// calls or elapsed MaxWait are counted drops.
+// Handler is an opt-in slog handler. Clones share one sink and its counters.
+// Handle builds and validates the line on the caller goroutine, then hands it to
+// a bounded queue (QueueCapacity lines) read by one background goroutine; the
+// caller never waits on the writer. A full queue drops the line (Busy), a write
+// error is counted (IOErrors) and the next line is still written. Call Close at
+// shutdown to drain queued lines: the goroutine starts with the first accepted
+// line and runs until Close. An ERROR or FATAL call waits up to ErrorWait for
+// its own line, so it survives os.Exit. The caller still owns the writer.
 type Handler struct {
 	config                    Config
 	allowed                   map[string]bool
@@ -107,14 +143,11 @@ func NewHandler(config Config, writer io.Writer) (*Handler, error) {
 	if writer == nil || len(config.AllowedFields) > 32 || config.MaxWait < 0 || config.MaxWait > time.Second {
 		return nil, errors.New("invalid_log_config")
 	}
-	if config.MaxWait == 0 {
-		config.MaxWait = 100 * time.Millisecond
-	}
 	b, err := Load()
 	if err != nil {
 		return nil, err
 	}
-	h := &Handler{config: config, allowed: make(map[string]bool), reserved: make(map[string]bool), sink: &sink{writer: writer, gate: make(chan struct{}, 1), slots: make(chan struct{}, 128), done: make(chan struct{})}, attrs: make(map[string]any), messageLimit: b.MaxMessageBytes, recordLimit: b.MaxRecordBytes, fieldLimit: b.MaxFieldBytes, stackLimit: b.MaxStacktraceBytes, errorTypeLimit: b.MaxErrorTypeChars, maxDrops: b.MaxDroppedFieldCount}
+	h := &Handler{config: config, allowed: make(map[string]bool), reserved: make(map[string]bool), attrs: make(map[string]any), messageLimit: b.MaxMessageBytes, recordLimit: b.MaxRecordBytes, fieldLimit: b.MaxFieldBytes, stackLimit: b.MaxStacktraceBytes, errorTypeLimit: b.MaxErrorTypeChars, maxDrops: b.MaxDroppedFieldCount}
 	h.config.AllowedFields = nil
 	for _, field := range b.CommonFields {
 		h.reserved[field] = true
@@ -132,6 +165,7 @@ func NewHandler(config Config, writer io.Writer) (*Handler, error) {
 	if !utf8.ValidString(config.Service+config.Region+config.Environment) || len(ValidateJSON(data, "common")) > 0 {
 		return nil, errors.New("invalid_log_config")
 	}
+	h.sink = &sink{writer: writer, exited: make(chan struct{}), stop: make(chan struct{})}
 	return h, nil
 }
 
@@ -239,50 +273,117 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 		s.counters.invalid.Add(1)
 		return errInvalid
 	}
-	// Bound waiting callers and their wait time. One line owns the writer at a time.
-	select {
-	case s.slots <- struct{}{}:
-	default:
-		s.counters.busy.Add(1)
-		return nil
+	// An ERROR/FATAL line waits (bounded) until it is written, so it survives a
+	// hard exit that follows; never on the writer goroutine (a writer that logs).
+	var done chan struct{}
+	if record.Level >= slog.LevelError && (!s.started.Load() || goroutineID() != s.writerID.Load()) {
+		done = make(chan struct{})
 	}
-	defer func() { <-s.slots }()
-	select {
-	case s.gate <- struct{}{}:
-	default:
-		timer := time.NewTimer(h.config.MaxWait)
+	if s.submit(queued{buf.Bytes(), done}) && done != nil {
+		timer := time.NewTimer(ErrorWait)
 		defer timer.Stop()
 		select {
-		case s.gate <- struct{}{}:
-		case <-s.done:
-			s.counters.closed.Add(1)
-			return nil
+		case <-done:
 		case <-timer.C:
-			s.counters.busy.Add(1)
-			return nil
 		}
 	}
-	defer func() { <-s.gate }()
+	return nil
+}
+
+// submit queues a line without waiting and reports whether it was accepted.
+// Under the shared lock no line can be queued after Close closed the queue.
+// The queue and its goroutine are created with the first accepted line, so a
+// handler that never logs owns no goroutine.
+func (s *sink) submit(item queued) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if s.closed.Load() {
 		s.counters.closed.Add(1)
-		return nil
+		return false
 	}
-	if s.broken {
-		s.counters.ioErrors.Add(1)
-		return errIO
+	s.start.Do(func() {
+		s.queue = make(chan queued, QueueCapacity)
+		ready := make(chan struct{})
+		go s.run(ready)
+		<-ready
+		s.started.Store(true)
+	})
+	s.pending.Add(1)
+	select {
+	case s.queue <- item:
+		return true
+	default:
+		s.pending.Add(-1)
+		s.counters.busy.Add(1)
+		return false
 	}
-	n, err := s.writer.Write(buf.Bytes())
-	if err != nil || n != buf.Len() {
-		s.counters.ioErrors.Add(1)
-		// A partial JSON line makes subsequent appends unsafe. A new handler/writer
-		// is required; do not repeatedly append malformed lines or retry secrets.
-		if n != 0 {
-			s.broken = true
+}
+
+// goroutineID parses the current goroutine's id ("goroutine 7 [running]:").
+func goroutineID() uint64 {
+	var buf [32]byte
+	b := buf[:runtime.Stack(buf[:], false)]
+	b = bytes.TrimPrefix(b, []byte("goroutine "))
+	id, _ := strconv.ParseUint(string(b[:max(bytes.IndexByte(b, ' '), 0)]), 10, 64)
+	return id
+}
+
+// run is the one goroutine that writes. It ends when Close closed the queue and
+// every line is written, or when a Close deadline passed (lines left stay Pending).
+func (s *sink) run(ready chan<- struct{}) {
+	defer close(s.exited)
+	s.writerID.Store(goroutineID())
+	close(ready)
+	for item := range s.queue {
+		select {
+		case <-s.stop:
+			return
+		default:
 		}
-		return errIO
+		s.write(item.line)
+		s.pending.Add(-1)
+		if item.done != nil {
+			close(item.done)
+		}
 	}
-	s.counters.written.Add(1)
-	return nil
+}
+
+// write writes one line; it never retries. A failed or short write is counted
+// and the writer goes on. When the failure left part of a line on the output,
+// the next line is preceded by "\n" so it starts on its own line.
+func (s *sink) write(line []byte) {
+	data, prefixed := line, s.midLine
+	if prefixed {
+		data = append(append(make([]byte, 0, len(line)+1), '\n'), line...)
+	}
+	n, err := s.safeWrite(data)
+	if err == nil && n != len(data) {
+		err = io.ErrShortWrite
+	}
+	if err == nil {
+		s.midLine = false
+		s.counters.written.Add(1)
+		return
+	}
+	s.counters.ioErrors.Add(1)
+	switch {
+	case n < 0 || n > len(data):
+		s.midLine = true // unknown (a panic or a writer breaking the io.Writer contract)
+	case prefixed:
+		s.midLine = n != 1 // 0: still mid-line; >1: part of this line was written
+	default:
+		s.midLine = n > 0
+	}
+}
+
+// safeWrite turns a panicking writer into a counted error instead of a crash.
+func (s *sink) safeWrite(data []byte) (n int, err error) {
+	defer func() {
+		if recover() != nil {
+			n, err = -1, errIO
+		}
+	}()
+	return s.writer.Write(data)
 }
 
 // add copies one attribute. A value that cannot be emitted is removed and
@@ -517,9 +618,36 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 // Stats returns concurrent-safe counters. Samples can advance during the snapshot.
 func (h *Handler) Stats() Stats {
 	c := &h.sink.counters
-	return Stats{c.written.Load(), c.invalid.Load(), c.busy.Load(), c.ioErrors.Load(), c.closed.Load(), len(h.sink.slots)}
+	return Stats{c.written.Load(), c.invalid.Load(), c.busy.Load(), c.ioErrors.Load(), c.closed.Load(), int(h.sink.pending.Load())}
 }
 
-// Close stops accepting new writes, including on clones. An already-entered Write
-// may finish after Close returns; caller owns any writer flush/shutdown deadline.
-func (h *Handler) Close() { h.sink.once.Do(func() { h.sink.closed.Store(true); close(h.sink.done) }) }
+// Close is CloseWithin(CloseTimeout).
+func (h *Handler) Close() { h.CloseWithin(CloseTimeout) }
+
+// CloseWithin stops accepting lines on this handler and its clones (later calls
+// count Closed), writes the queued lines until timeout (it blocks up to timeout), and stops the writer
+// goroutine. It reports true when nothing queued was lost. Past the deadline the
+// undelivered lines stay in Stats.Pending; a Write that is blocked inside the
+// caller's writer cannot be interrupted and may still finish later. Calling it
+// again is harmless. It never closes the caller-owned writer.
+func (h *Handler) CloseWithin(timeout time.Duration) bool {
+	s := h.sink
+	s.once.Do(func() {
+		s.mu.Lock()
+		s.closed.Store(true)
+		if s.started.Load() {
+			close(s.queue)
+		} else {
+			close(s.exited) // no writer was ever started
+		}
+		s.mu.Unlock()
+	})
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-s.exited:
+	case <-timer.C:
+		s.stopOnce.Do(func() { close(s.stop) })
+	}
+	return s.pending.Load() == 0
+}

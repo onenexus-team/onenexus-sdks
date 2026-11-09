@@ -1,11 +1,12 @@
 import asyncio
-import io
 import json
 import logging
 import os
 from pathlib import Path
 
 import pytest
+
+from tests._output import Output
 from opentelemetry.context import Context
 
 from onenexus_observability import (
@@ -33,7 +34,7 @@ SCENARIOS = Path(
 
 def test_shared_request_emissions_and_ambient_application_logs():
     for case in json.loads(SCENARIOS.read_text())["request_emission_cases"]:
-        output = io.StringIO()
+        output = Output()
         logger = logging.Logger("request-test", logging.INFO)
         handler = install_handler(logger, CONFIG, stream=output)
         correlation = (

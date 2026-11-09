@@ -1,41 +1,119 @@
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using OneNexus.Observability.Rules;
 
 namespace OneNexus.Observability;
 
+/// <summary>The shared write counters (tests/logging write_model). Pending lines are accepted but not yet written.</summary>
+public readonly record struct LogWriteStats(long Written, long Invalid, long QueueFull, long IoErrors, long Closed, long Pending);
+
+/// <summary>
+/// Contract-backed provider whose caller never waits on the output (design review F2).
+/// Records are built and validated on the caller's thread, then queued (bounded, <see cref="QueueCapacity"/> lines)
+/// for one background writer that owns every write. A full queue, a rejected record, a failed write and a write after
+/// close are each counted, never thrown. <see cref="Dispose"/> drains for up to <see cref="CloseTimeout"/>.
+/// </summary>
 [ProviderAlias("OneNexus")]
 public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
 {
+    public const int QueueCapacity = 1024;
+    public static readonly TimeSpan CloseTimeout = TimeSpan.FromMilliseconds(2000);
+
     private readonly object gate = new();
     private readonly TextWriter writer;
     private readonly LogConfiguration configuration;
+    private readonly Channel<string> queue = Channel.CreateBounded<string>(
+        // Wait mode: TryWrite returns false when full, so every drop is counted (no silent Drop* mode).
+        new BoundedChannelOptions(QueueCapacity) { SingleReader = true, FullMode = BoundedChannelFullMode.Wait });
+    private readonly Task worker;
     private IExternalScopeProvider scopes = new LoggerExternalScopeProvider();
-    private bool disposed;
-    private long droppedRecords;
+    private bool closed; // Guarded by gate.
+    private long written, invalid, queueFull, ioErrors, closedDrops, pending;
     private const string ErrorTypeField = "error.type";
     private const string StacktraceField = "exception.stacktrace";
     private const string TruncatedField = "logging.truncated";
     private const string DroppedField = "logging.dropped_field_count";
     private const string TruncationMark = "\u2026";
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
-    public long DroppedRecords => Interlocked.Read(ref droppedRecords);
+
+    /// <summary>Every line that was not written: invalid, queue full, write error, or logged after close.</summary>
+    public long DroppedRecords => Interlocked.Read(ref invalid) + Interlocked.Read(ref queueFull) + Interlocked.Read(ref ioErrors) + Interlocked.Read(ref closedDrops);
+
+    public LogWriteStats Stats => new(Interlocked.Read(ref written), Interlocked.Read(ref invalid), Interlocked.Read(ref queueFull),
+        Interlocked.Read(ref ioErrors), Interlocked.Read(ref closedDrops), Interlocked.Read(ref pending));
 
     public JsonLogProvider(LogConfiguration configuration, TextWriter? writer = null)
     {
         this.configuration = configuration;
         this.writer = writer ?? Console.Out;
+        // A dedicated background thread: a blocked output never holds a thread-pool thread or the process at exit.
+        worker = Task.Factory.StartNew(Run, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
     }
 
     public ILogger CreateLogger(string categoryName) => new Logger(this);
     public void SetScopeProvider(IExternalScopeProvider scopeProvider) => scopes = scopeProvider;
 
-    public void Dispose()
+    /// <summary>Stop accepting lines and drain the queue for up to <see cref="CloseTimeout"/>. A second call is harmless.</summary>
+    public void Dispose() => CloseWithin(CloseTimeout);
+
+    /// <summary>
+    /// Stop accepting lines (later ones are counted as closed) and wait up to <paramref name="timeout"/> for queued
+    /// lines. True when nothing queued was lost; undelivered lines stay counted as pending. stdout and caller-owned
+    /// writers are never closed by the provider.
+    /// </summary>
+    public bool CloseWithin(TimeSpan timeout)
     {
-        lock (gate) disposed = true;
-        // stdout and caller-owned writers are never closed by the provider.
+        lock (gate)
+        {
+            if (closed) return Interlocked.Read(ref pending) == 0;
+            closed = true;
+            queue.Writer.TryComplete();
+        }
+        try { worker.Wait(timeout); }
+        catch (Exception) { } // The writer never faults; never throw into the caller.
+        return Interlocked.Read(ref pending) == 0;
+    }
+
+    private void Submit(string line)
+    {
+        // The same gate as close: a close never sees a line that is counted pending but not yet queued.
+        // Held only for a non-blocking TryWrite, never for the output.
+        lock (gate)
+        {
+            if (closed)
+            {
+                Interlocked.Increment(ref closedDrops);
+                return;
+            }
+            Interlocked.Increment(ref pending);
+            if (queue.Writer.TryWrite(line)) return;
+            Interlocked.Decrement(ref pending);
+            Interlocked.Increment(ref queueFull);
+        }
+    }
+
+    private void Run()
+    {
+        var reader = queue.Reader;
+        // Blocks only this dedicated thread; ends once the channel is completed and empty.
+        while (reader.WaitToReadAsync().AsTask().GetAwaiter().GetResult())
+            while (reader.TryRead(out var line))
+            {
+                try
+                {
+                    writer.WriteLine(line);
+                    Interlocked.Increment(ref written);
+                }
+                catch (Exception)
+                {
+                    // Never log a sink failure through this same logger; go on with the next line.
+                    Interlocked.Increment(ref ioErrors);
+                }
+                finally { Interlocked.Decrement(ref pending); }
+            }
     }
 
     private void Write<TState>(LogLevel level, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
@@ -76,16 +154,12 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
             if (Contract.Validate(json, profile).Count != 0) throw new ArgumentException("invalid_log_record");
             var line = json.GetRawText();
             if (Encoding.UTF8.GetByteCount(line) > Contract.MaxRecordBytes) throw new ArgumentException("record_too_large");
-            lock (gate)
-            {
-                if (disposed) throw new ObjectDisposedException(nameof(JsonLogProvider));
-                writer.WriteLine(line);
-            }
+            Submit(line);
         }
         catch (Exception)
         {
-            // Never log rejected data or a sink failure through this same logger.
-            Interlocked.Increment(ref droppedRecords);
+            // Never log rejected data through this same logger.
+            Interlocked.Increment(ref invalid);
         }
     }
 
