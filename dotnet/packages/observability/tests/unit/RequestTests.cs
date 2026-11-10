@@ -32,6 +32,7 @@ public sealed class RequestTests
                 logger.Log(LogLevel.Information,new EventId(),fields,null,(_,_)=>"Request finished");
             }
             logger.LogInformation("Outside request");
+            Assert.IsTrue(provider.CloseWithin(TimeSpan.FromSeconds(10)));
             var rows=output.ToString().Split('\n',StringSplitOptions.RemoveEmptyEntries).Select(line=>JsonDocument.Parse(line).RootElement.Clone()).ToArray();
             Assert.HasCount(3,rows);
             Assert.AreEqual(item.GetProperty("principal").GetString(),rows[0].GetProperty("principal_id").GetString());
@@ -54,6 +55,7 @@ public sealed class RequestTests
         logger.Log(LogLevel.Information,new EventId(),new Dictionary<string,object?>{["request_event"]="completed"},null,(_,_)=>"Missing fields");
         using var receipt=RequestLogContext.Begin();
         logger.Log(LogLevel.Information,new EventId(),receipt.TerminalFields("GET","/",null,1),null,(_,_)=>"No observed status");
+        Assert.IsTrue(provider.CloseWithin(TimeSpan.FromSeconds(10)));
         Assert.AreEqual("",output.ToString());
         Assert.AreEqual(2L,provider.DroppedRecords);
     }

@@ -30,17 +30,35 @@ export interface LogOptions {
     error?: unknown;
 }
 export interface JsonLogger {
-    /** true = submitted to stream; this is not proof of collector/Loki delivery. */
+    /**
+     * true = accepted into the write queue; this is not proof of collector/Loki delivery.
+     * Never waits on the output and never throws.
+     */
     log(message: string, options?: LogOptions): boolean;
     stats(): Readonly<{
+        /** Lines the stream acknowledged without an error. */
         written: number;
+        /** Records dropped because they could not be encoded or validated. */
         invalid: number;
+        /** Lines dropped because the write queue (QUEUE_CAPACITY lines) was full. */
         backpressure: number;
+        /** Lines whose write failed, or that a destroyed/errored stream could not take. */
         io: number;
+        /** Lines dropped because the logger was closed. */
         closed: number;
+        /** Lines accepted and not yet written or failed (queued plus in flight). */
         pending: number;
     }>;
+    /**
+     * Resolves true when nothing is pending and no line was given up (dead stream) during
+     * this wait; losses before the call do not count (as Python's close_within).
+     */
     flush(timeoutMs?: number): Promise<boolean>;
+    /**
+     * Stops accepting and drains until the deadline. Resolves true when nothing is pending
+     * and no line was given up (dead stream) during this wait; losses before the call do not
+     * count (as Python's close_within). A second close returns the same promise.
+     */
     close(timeoutMs?: number): Promise<boolean>;
 }
 
@@ -200,7 +218,24 @@ function fit(
     }
 }
 
-/** One logger per process/sink. No global replacement, exporter, retry or private queue. */
+/** Lines accepted but not yet handed to the stream (shared write model, scenarios.json). */
+export const QUEUE_CAPACITY = 1024;
+/** Default close() deadline in milliseconds (shared write model). */
+export const CLOSE_TIMEOUT_MS = 2000;
+// Lines handed to the stream and not yet acknowledged; bounds memory for a stream with a
+// very large highWaterMark. Each line is at most 4,096 bytes plus a newline.
+const MAX_IN_FLIGHT = 128;
+
+/**
+ * One logger per process/sink; no global replacement, exporter or retry.
+ *
+ * Write model (design review F2, shared with Python/Go/.NET): `log()` builds and validates
+ * the record synchronously, then appends the line to a bounded queue and returns; it never
+ * waits on the output and never throws. Lines are handed to the stream in order while it
+ * accepts them; after `write()` returns false they stay queued until 'drain'. A full queue
+ * drops the line (`backpressure`). A failed write is counted (`io`) and the next line is
+ * still written. `close()` stops accepting (`closed`) and drains until its deadline.
+ */
 export function createLogger(config: LogConfig, stream: Writable = process.stdout): JsonLogger {
     const identity = Object.freeze({
         service: config.service,
@@ -230,22 +265,87 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
     const allowed = new Set<string>(REQUEST_FIELDS);
     for (const name of config.allowedFields ?? []) allowed.add(name);
     const counts = { written: 0, invalid: 0, backpressure: 0, io: 0, closed: 0 };
-    const pending = new Set<object>();
+    // Accepted lines not yet handed to the stream, oldest first (at most QUEUE_CAPACITY).
+    const queue: string[] = [];
+    // Lines handed to the stream whose write callback has not run yet.
+    const inFlight = new Set<object>();
     let blocked = stream.writableNeedDrain;
-    let failed = false;
     let closed = false;
-    let notify: (() => void) | undefined;
-    let flushing: Promise<boolean> | undefined;
+    let pumping = false;
+    // Set once the stream emitted 'close'. process.stdout after EPIPE emits 'error' and
+    // 'close' but keeps destroyed === false and writable === true; its callbacks never run.
+    let streamClosed = false;
+    // Accepted lines given up because the stream can no longer be written.
+    let abandoned = 0;
+    const waiters = new Set<() => void>();
     let closing: Promise<boolean> | undefined;
+
+    const pendingCount = () => queue.length + inFlight.size;
+    const settle = () => {
+        for (const waiter of [...waiters]) waiter();
+        // Keep the error listener through the stream's asynchronous error event.
+        if (closed && !pendingCount()) setImmediate(detach);
+    };
+    // Node destroys a Writable on error by default, and a Node Writable that errored
+    // stays errored (writable === false) even with autoDestroy: false. Such a stream can
+    // never take another line: what is queued or in flight, and every later line, is
+    // counted as io. A stream that reports a write error but stays writable (for example
+    // a custom write() that fails one call) keeps receiving the following lines.
+    const dead = () => streamClosed || stream.destroyed || !stream.writable;
+    const abandon = () => {
+        const lost = pendingCount();
+        counts.io += lost;
+        abandoned += lost;
+        queue.length = 0;
+        inFlight.clear();
+        settle();
+    };
+    /**
+     * Hand queued lines to the stream until it reports back-pressure. Never waits itself.
+     * Known limits: on Linux, Node writes to pipes, TTYs and files synchronously, so a
+     * stalled stdout reader still blocks the event loop inside stream.write() (as before
+     * this queue). And write callbacks of a fast synchronous sink run on a later tick, so a
+     * burst of more than MAX_IN_FLIGHT + QUEUE_CAPACITY (1,152) lines in one tick drops the
+     * overflow, counted as backpressure.
+     */
+    const pump = () => {
+        if (pumping) return; // a write callback that runs synchronously re-enters here
+        pumping = true;
+        try {
+            while (queue.length && !blocked && inFlight.size < MAX_IN_FLIGHT) {
+                if (dead()) {
+                    abandon();
+                    return;
+                }
+                const line = queue.shift() as string;
+                const token = {};
+                inFlight.add(token);
+                try {
+                    blocked = !stream.write(line, (error) => {
+                        if (!inFlight.delete(token)) return; // already counted by abandon()
+                        // A failed write is counted; the next line is still written.
+                        if (error) counts.io++;
+                        else counts.written++;
+                        pump();
+                        settle();
+                    });
+                } catch {
+                    if (inFlight.delete(token)) counts.io++;
+                }
+            }
+        } finally {
+            pumping = false;
+        }
+        settle();
+    };
 
     const onDrain = () => {
         blocked = false;
+        pump();
     };
     const onError = () => {
-        failed = true;
-        counts.io += pending.size;
-        pending.clear();
-        notify?.();
+        if (dead()) abandon();
+        else pump();
     };
     const detach = () => {
         stream.off('drain', onDrain);
@@ -253,33 +353,33 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
         stream.off('close', onStreamClose);
     };
     const onStreamClose = () => {
-        onError();
+        streamClosed = true;
+        abandon();
         detach();
     };
     stream.on('drain', onDrain);
     stream.on('error', onError);
     stream.on('close', onStreamClose);
 
-    const flush = (timeoutMs = 1000): Promise<boolean> => {
-        if (!Number.isInteger(timeoutMs) || timeoutMs < 0 || timeoutMs > 30_000)
-            return Promise.reject(new Error('invalid_flush_timeout'));
-        if (flushing) return flushing;
-        if (!pending.size) return Promise.resolve(!failed);
-        flushing = new Promise<boolean>((resolve) => {
-            const finish = (ok: boolean) => {
+    /** true when nothing is pending and no line was abandoned during this wait. */
+    const waitIdle = (timeoutMs: number): Promise<boolean> => {
+        const lostBefore = abandoned;
+        if (!pendingCount()) return Promise.resolve(true);
+        return new Promise<boolean>((resolve) => {
+            const finish = () => {
                 clearTimeout(timer);
-                notify = undefined;
-                resolve(ok);
+                waiters.delete(check);
+                resolve(!pendingCount() && abandoned === lostBefore);
             };
-            const timer = setTimeout(() => finish(false), timeoutMs);
-            notify = () => {
-                if (!pending.size) finish(!failed);
+            const check = () => {
+                if (!pendingCount()) finish();
             };
-        }).finally(() => {
-            flushing = undefined;
+            const timer = setTimeout(finish, timeoutMs);
+            waiters.add(check);
         });
-        return flushing;
     };
+    const badTimeout = (timeoutMs: number) =>
+        !Number.isInteger(timeoutMs) || timeoutMs < 0 || timeoutMs > 30_000;
 
     return {
         log(message, options = {}) {
@@ -287,13 +387,8 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
                 counts.closed++;
                 return false;
             }
-            if (failed || stream.destroyed || !stream.writable) {
+            if (dead()) {
                 counts.io++;
-                return false;
-            }
-            // Honor Node's backpressure. Also cap outstanding callbacks at 128 * 4097 bytes.
-            if (blocked || pending.size >= 128) {
-                counts.backpressure++;
                 return false;
             }
             try {
@@ -378,40 +473,34 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
                             ? 'correlated'
                             : 'common';
                 const line = encodeRecord(record, profile) + '\n';
-                const token = {};
-                pending.add(token);
-                try {
-                    blocked = !stream.write(line, (error) => {
-                        if (!pending.delete(token)) return;
-                        if (error) {
-                            counts.io++;
-                            failed = true;
-                        } else counts.written++;
-                        notify?.();
-                        // Keep the error listener through the stream's asynchronous error event.
-                        if (closed && !pending.size) setImmediate(detach);
-                    });
-                } catch {
-                    if (pending.delete(token)) counts.io++;
-                    failed = true;
-                    notify?.();
+                if (queue.length >= QUEUE_CAPACITY) {
+                    counts.backpressure++; // backpressure = the queue is full
                     return false;
                 }
+                queue.push(line);
+                pump();
                 return true;
             } catch {
                 counts.invalid++;
                 return false;
             }
         },
-        stats: () => Object.freeze({ ...counts, pending: pending.size }),
-        flush,
-        close(timeoutMs = 1000) {
-            if (closing) return closing;
+        stats: () => Object.freeze({ ...counts, pending: pendingCount() }),
+        flush(timeoutMs = 1000) {
+            if (badTimeout(timeoutMs)) return Promise.reject(new Error('invalid_flush_timeout'));
+            pump();
+            return waitIdle(timeoutMs);
+        },
+        close(timeoutMs = CLOSE_TIMEOUT_MS) {
+            if (closing) return closing; // a second close is harmless
+            if (badTimeout(timeoutMs)) return Promise.reject(new Error('invalid_close_timeout'));
             closed = true;
-            closing = flush(timeoutMs).then((ok) => {
-                // Never end/destroy a caller-owned stream (including stdout).
-                // Timed-out writes keep one listener until completion/stream close to catch late errors.
-                if (!pending.size) setImmediate(detach);
+            pump();
+            // Never end/destroy a caller-owned stream (including stdout). Lines still queued
+            // at the deadline stay counted as pending and are written if the stream recovers;
+            // the listeners stay until then (or until the stream closes).
+            closing = waitIdle(timeoutMs).then((ok) => {
+                settle();
                 return ok;
             });
             return closing;

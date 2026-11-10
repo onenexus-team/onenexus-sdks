@@ -120,3 +120,15 @@ bash scripts/check-python-observability.sh
 | Context lifecycle | Nested scopes, threads, concurrent requests, cancellation, retries and cleanup |
 | Packaging | Source and installed wheel tested; no standalone contract distribution installed |
 | Validation / releases | [SDK guide](../../../docs/logging.md) |
+
+## Output: the caller never waits
+
+`JsonLogHandler` builds and validates each record on the caller's thread, then queues the line (1,024) for one background writer. A blocked or broken output never blocks the caller: overflow and write errors are counted (`handler.stats()`), and the writer keeps going.
+
+- `handler.flush()` waits up to 2 s for queued lines; `handler.close_within(timeout)` stops, drains and returns True when nothing was lost. `close()` (used by `logging.shutdown`) is `close_within(2.0)`.
+- An ERROR/FATAL record waits up to 50 ms for the writer, so the line logged just before a hard exit is not lost.
+- Output can trail the logging call: tests read it after `flush()` or `close_within()`.
+- After `os.fork` the child gets its own writer. At exit every writer is drained within one 2 s deadline, and the process keeps its exit code even if stdout is blocked.
+
+See `docs/logging.md` → "The caller never waits on the output" for the counters in every language and the known limits.
+

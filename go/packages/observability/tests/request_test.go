@@ -47,11 +47,7 @@ func TestSharedRequestEmissions(t *testing.T) {
 	}
 	for _, c := range suite.Cases {
 		t.Run(c.ID, func(t *testing.T) {
-			var output bytes.Buffer
-			h, err := obs.NewHandler(config(), &output)
-			if err != nil {
-				t.Fatal(err)
-			}
+			h, output := newSyncHandler(t, config())
 			defer h.Close()
 			logger := slog.New(h)
 			ctx, r := obs.WithRequestLogContext(obs.IncomingContext(context.Background(), headers(c.Traceparent), true))
@@ -114,8 +110,7 @@ func TestSharedRequestEmissions(t *testing.T) {
 }
 
 func TestRequestEmissionEnforcesProfile(t *testing.T) {
-	var output bytes.Buffer
-	h, _ := obs.NewHandler(config(), &output)
+	h, output := newSyncHandler(t, config())
 	defer h.Close()
 	if err := h.Handle(context.Background(), record("Missing fields", slog.String("request_event", "completed"))); err == nil {
 		t.Fatal("accepted incomplete request")

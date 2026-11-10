@@ -108,6 +108,22 @@ class SharedTests(unittest.TestCase):
         # Callers (e.g. MLOps) may still set their own error fields.
         self.assertFalse({"error.type", "exception.stacktrace"} & protected)
 
+    def test_every_language_tests_every_write_model_case(self):
+        model = self.suite["write_model"]
+        self.assertEqual((model["queue_capacity"], model["close_timeout_ms"]), (1024, 2000))
+        self.assertEqual(model["error_wait_ms"], 50)
+        test_files = {
+            "python": "python/packages/observability/tests/test_write_model.py",
+            "typescript": "ts/packages/observability/test/write-model.test.ts",
+            "go": "go/packages/observability/tests/write_model_test.go",
+            "dotnet": "dotnet/packages/observability/tests/unit/WriteModelTests.cs",
+        }
+        for case in model["cases"]:
+            for language in case["languages"]:
+                text = (ROOT / test_files[language]).read_text()
+                with self.subTest(case=case["id"], language=language):
+                    self.assertIn(case["id"], text)
+
     def test_contract_digest_is_the_schema_hash_in_every_language(self):
         schema = ROOT / "go/packages/observability/schema.json"
         digest = hashlib.sha256(schema.read_bytes()).hexdigest()

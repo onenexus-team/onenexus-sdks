@@ -65,11 +65,15 @@ const drained = await logger.close(1000);
 
 - Importing this package does not replace `console`, NestJS logging, existing handlers, or OTel providers.
 - Create one logger per service/sink during startup. Utility's NestJS adapter is a separate integration.
-- `log()` returning `true` means submitted to the stream, **not received by Loki**.
-- Honors Node stream backpressure; caps pending callbacks at 128 records, each at most 4,096 bytes plus newline. No SDK queue or retries.
+- `log()` returning `true` means accepted into the write queue, **not received by Loki**. `log()` never waits on the output and never throws.
+- Shared write model (`tests/logging/scenarios.json` `write_model`): a bounded queue of `QUEUE_CAPACITY` (1,024) lines feeds the stream; while the stream reports back-pressure lines stay queued and are written on `drain`. A full queue drops the line and counts `backpressure`. At most 128 lines are in flight to the stream; each line is at most 4,096 bytes plus newline. No retries.
+- A failed write counts `io` and later lines are still written. A destroyed stream (Node's default on error), or a Node `Writable` that errored (it stays errored even with `autoDestroy: false`), cannot take more lines: queued and later lines count `io`.
+- Counters: `written`, `invalid`, `backpressure` (queue full), `io`, `closed`, `pending` (accepted, not yet written or failed).
 - Only a record that cannot be encoded, has an invalid message/event/outcome, or still exceeds 4,096 bytes is invalid. Invalid records, overload, I/O failure and calls after close return `false` and increment separate counters. No rejected payload is printed.
-- `flush()` waits for stream callbacks, with a 1-second default and 30-second maximum deadline. Concurrent flushes share the first caller's deadline.
-- `close()` stops acceptance and flushes once. It does not close the application's stream. On timeout, pending callbacks remain bounded; their listener is removed after completion/stream close.
+- `flush()` waits until nothing is pending, with a 1-second default and 30-second maximum deadline.
+- `close(timeoutMs = CLOSE_TIMEOUT_MS)` (2 seconds) stops acceptance (later calls count `closed`) and drains until the deadline; it resolves `true` when nothing is pending and no line was given up during the wait (earlier losses do not count), otherwise `false`. A second close returns the same result. It does not close the application's stream. Lines still pending at the deadline stay counted and are written if the stream recovers.
+- Known limits: on Linux, Node writes to pipes, TTYs and files synchronously, so a stalled stdout reader still blocks the event loop inside `log()`; the queue cannot help there (true before the queue too). A burst of more than 1,152 lines (128 in flight + 1,024 queued) in one tick to a fast synchronous sink drops the overflow, counted as `backpressure`.
+- A stream that emitted `close` is treated as dead even if it still reports `writable` (stdout after EPIPE): later lines count `io` at once.
 - Process death can lose pending logs. `stdout` may block synchronously on some destinations; measure application latency/drop budgets before production.
 - Messages and approved field values must be safe. The SDK does not recognize or redact secrets embedded in caller-supplied text. No error message, body or header serialization.
 - W3C version `00` supported; baggage and tracestate are intentionally not forwarded.

@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"log/slog"
 	"math"
 	"os"
-	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -28,11 +26,7 @@ func record(message string, attrs ...slog.Attr) slog.Record {
 }
 
 func TestHandlerSchemaLevelsAndImmutableClones(t *testing.T) {
-	var output bytes.Buffer
-	h, err := obs.NewHandler(config(), &output)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h, output := newSyncHandler(t, config())
 	defaultLogger := slog.Default()
 	logger := slog.New(h)
 	logger.Info("System ready")
@@ -73,7 +67,7 @@ func TestHandlerSchemaLevelsAndImmutableClones(t *testing.T) {
 	if h.Stats().Closed != 1 || h.Stats().Written != 9 {
 		t.Fatal("close not shared")
 	}
-	if _, err = output.WriteString("caller still owns writer"); err != nil {
+	if _, err := output.Write([]byte("caller still owns writer")); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -91,8 +85,18 @@ func TestInvalidRecordsAndConfigNeverLeak(t *testing.T) {
 	if _, err := obs.NewHandler(config(), nil); err == nil {
 		t.Fatal("nil writer accepted")
 	}
-	var output bytes.Buffer
-	h, _ := obs.NewHandler(config(), &output)
+	// MaxWait is deprecated and ignored; old values are still accepted.
+	for wait, ok := range map[time.Duration]bool{time.Second: true, -1: false, 2 * time.Second: false} {
+		c := config()
+		c.MaxWait = wait
+		if h, err := obs.NewHandler(c, io.Discard); (err == nil) != ok {
+			t.Fatal("MaxWait validation changed", wait)
+		} else if h != nil {
+			h.Close()
+		}
+	}
+	h, output := newSyncHandler(t, config())
+	defer h.Close()
 	// Only records that break a base-field rule are still dropped.
 	cases := []slog.Record{
 		slog.NewRecord(time.Date(3000, 1, 1, 0, 0, 0, 0, time.UTC), slog.LevelInfo, "invalid timestamp", 0), record(""), record(string([]byte{0xff})),
@@ -155,68 +159,6 @@ func TestInvalidRecordsAndConfigNeverLeak(t *testing.T) {
 	}
 }
 
-type blockingWriter struct {
-	entered, release chan struct{}
-	output           bytes.Buffer
-}
-
-func (w *blockingWriter) Write(b []byte) (int, error) {
-	close(w.entered)
-	<-w.release
-	return w.output.Write(b)
-}
-
-type errorWriter struct {
-	partial bool
-	calls   int
-}
-
-func (w *errorWriter) Write(b []byte) (int, error) {
-	w.calls++
-	if w.partial {
-		return len(b) / 2, nil
-	}
-	return 0, errors.New("private-sentinel")
-}
-
-func TestBackpressureCloseAndWriteFailures(t *testing.T) {
-	w := &blockingWriter{entered: make(chan struct{}), release: make(chan struct{})}
-	cfg := config()
-	cfg.MaxWait = time.Millisecond
-	h, _ := obs.NewHandler(cfg, w)
-	done := make(chan error, 1)
-	go func() { done <- h.Handle(context.Background(), record("first")) }()
-	<-w.entered
-	for range 100 {
-		_ = h.WithGroup("").Handle(context.Background(), record("busy"))
-	}
-	if h.Stats().Busy != 100 {
-		t.Fatal("unbounded sink wait")
-	}
-	h.Close()
-	_ = h.Handle(context.Background(), record("closed"))
-	close(w.release)
-	if err := <-done; err != nil {
-		t.Fatal(err)
-	}
-	if h.Stats().Written != 1 || h.Stats().Closed != 1 {
-		t.Fatal(h.Stats())
-	}
-	for _, partial := range []bool{false, true} {
-		w := &errorWriter{partial: partial}
-		h, _ := obs.NewHandler(config(), w)
-		for range 2 {
-			err := h.Handle(context.Background(), record("safe"))
-			if err == nil || strings.Contains(err.Error(), "sentinel") {
-				t.Fatal("unsafe writer error")
-			}
-		}
-		if h.Stats().IOErrors != 2 || partial && w.calls != 1 || !partial && w.calls != 2 {
-			t.Fatal("incorrect recovery fence")
-		}
-	}
-}
-
 func BenchmarkHandler(b *testing.B) {
 	h, _ := obs.NewHandler(config(), io.Discard)
 	ctx := obs.IncomingContext(context.Background(), headers(parent), true)
@@ -229,10 +171,8 @@ func BenchmarkHandler(b *testing.B) {
 }
 
 func TestConcurrentWritesAreCompleteLines(t *testing.T) {
-	var output bytes.Buffer
-	cfg := config()
-	cfg.MaxWait = time.Second
-	h, _ := obs.NewHandler(cfg, &output)
+	h, output := newSyncHandler(t, config())
+	defer h.Close()
 	ready := make(chan struct{}, 64)
 	start := make(chan struct{})
 	var wg sync.WaitGroup
@@ -253,52 +193,14 @@ func TestConcurrentWritesAreCompleteLines(t *testing.T) {
 	}
 	close(start)
 	wg.Wait()
-	if h.Stats().Written != 64 || h.Stats().Busy != 0 {
+	lines := bytes.Split(bytes.TrimSpace(output.Bytes()), []byte{'\n'})
+	if len(lines) != 64 || h.Stats().Written != 64 || h.Stats().Busy != 0 {
 		t.Fatal(h.Stats())
 	}
-	for _, line := range bytes.Split(bytes.TrimSpace(output.Bytes()), []byte{'\n'}) {
+	for _, line := range lines {
 		if got := obs.ValidateJSON(line, "correlated"); len(got) != 0 {
 			t.Fatal(got)
 		}
-	}
-}
-
-func TestWaitingCapacityAndCloseWakeup(t *testing.T) {
-	w := &blockingWriter{entered: make(chan struct{}), release: make(chan struct{})}
-	cfg := config()
-	cfg.MaxWait = time.Second
-	h, _ := obs.NewHandler(cfg, w)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() { defer wg.Done(); _ = h.Handle(context.Background(), record("entered")) }()
-	<-w.entered
-	// Cleanup always releases the injected stalled sink, even if an assertion fails.
-	defer func() { h.Close(); close(w.release); wg.Wait() }()
-	for range 127 {
-		wg.Add(1)
-		go func() { defer wg.Done(); _ = h.Handle(context.Background(), record("waiting")) }()
-	}
-	deadline := time.Now().Add(750 * time.Millisecond)
-	for h.Stats().Pending != 128 {
-		if time.Now().After(deadline) {
-			t.Fatal("waiters did not reach capacity", h.Stats())
-		}
-		runtime.Gosched()
-	}
-	_ = h.Handle(context.Background(), record("over capacity"))
-	if h.Stats().Busy != 1 || h.Stats().Pending != 128 {
-		t.Fatal(h.Stats())
-	}
-	h.Close()
-	deadline = time.Now().Add(750 * time.Millisecond)
-	for h.Stats().Pending != 1 {
-		if time.Now().After(deadline) {
-			t.Fatal("close did not wake waiters", h.Stats())
-		}
-		runtime.Gosched()
-	}
-	if h.Stats().Closed != 127 {
-		t.Fatal(h.Stats())
 	}
 }
 
@@ -327,11 +229,7 @@ func TestSharedEmissionScenarios(t *testing.T) {
 	}
 	for _, c := range suite.Cases {
 		t.Run(c.ID, func(t *testing.T) {
-			var output bytes.Buffer
-			h, err := obs.NewHandler(obs.Config{Service: "shared-test", Environment: "development", Region: "region-1"}, &output)
-			if err != nil {
-				t.Fatal(err)
-			}
+			h, output := newSyncHandler(t, obs.Config{Service: "shared-test", Environment: "development", Region: "region-1"})
 			defer h.Close()
 			ctx := context.Background()
 			if c.Traceparent != nil {

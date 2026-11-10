@@ -83,17 +83,19 @@ for key, values := range observability.OutgoingHeaders(ctx) {
 
 | Situation | Behavior |
 |---|---|
-| Normal concurrent calls | Serialize complete lines through a shared writer gate, including logger clones |
-| Slow output | At most 128 active/waiting calls; default wait 100ms, configurable up to 1 second |
-| Queue full / wait expires | Drop and increment `Busy`; no retry or background queue |
-| Already-entered `Write` blocks | Caller can block: `io.Writer` has no cancellation contract. Use prompt local stdout; measure this during service rollout |
+| Normal concurrent calls | The line is built and validated on the caller goroutine, then queued; one background goroutine per handler (shared by clones) writes complete lines |
+| Slow or blocked output | The caller never waits: up to `QueueCapacity` (1,024) lines wait in the queue |
+| Queue full | Drop and increment `Busy` (the shared `queue_full` counter); no retry |
 | Invalid record (invalid UTF-8 or empty message, `event` without `outcome`, bad timestamp, still over 4,096 bytes) | Drop; increment `Invalid`; stable error without input content |
-| Zero-byte output error | Count `IOErrors`; a later call may try again |
-| Partial write | Disable further writes on this handler; recreate only after sink recovery |
-| Close | Stop new/waiting writes; in-flight write may finish; never close caller-owned stdout |
+| Write error, short write or panicking writer | Count `IOErrors`; the writer goes on with the next line |
+| Partial write | Counted as a write error; the next line is preceded by `\n`, so it starts on its own line and stays valid JSON |
+| `Close()` / `CloseWithin(d)` | Stop accepting (later calls count `Closed`); write queued lines until `CloseTimeout` (2 s) or `d`; `CloseWithin` returns `true` when nothing queued was lost, otherwise the rest stays in `Pending`. A `Write` blocked inside the caller's writer cannot be interrupted. Never closes caller-owned stdout |
+| `ERROR` or higher, then `os.Exit` / `log.Fatal` | The call waits up to `ErrorWait` (50 ms) for its own line, so it is on the output before a hard exit (never on the writer goroutine itself) |
+| Handler lifetime | The writer goroutine and its queue start with the first accepted line; a handler that never logs owns none. After first use a handler keeps its writer until closed: call `Close()` at shutdown (it can block up to 2 s) |
+| `Config.MaxWait` | Deprecated and ignored; 0 to 1 s is still accepted |
 | Process crash | Best-effort logs may be lost; no durability claim |
 
-Export `handler.Stats()` as service metrics. `slog` ignores handler return errors; counters must be monitored.
+Export `handler.Stats()` (`Written`, `Invalid`, `Busy`, `IOErrors`, `Closed`, `Pending`) as service metrics. `slog` ignores handler return errors; counters must be monitored.
 
 ## Validate
 

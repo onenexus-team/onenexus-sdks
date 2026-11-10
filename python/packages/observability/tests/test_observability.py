@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._output import Output, settle
+
 from onenexus_observability import (
     CONTRACT_DIGEST,
     CONTRACT_VERSION,
@@ -90,7 +92,7 @@ def test_all_shared_cases_through_real_package(tmp_path):
 
 
 def test_actual_logger_fields_and_custom_fields():
-    output = io.StringIO()
+    output = Output()
     logger, handler = logger_for(output)
     with bound_context(incoming_context({}, trusted=False)):
         expected = current_trace_id()
@@ -123,7 +125,7 @@ def test_actual_logger_fields_and_custom_fields():
     "fields", [{"environment": "prod"}, {"Authorization": "private"}, {"prompt": "private"}]
 )
 def test_unapproved_or_reserved_fields_are_removed_and_counted(fields, capsys):
-    output = io.StringIO()
+    output = Output()
     logger, handler = logger_for(output)
     logger.info("Marker line", extra={"fields": fields})
     value = json.loads(output.getvalue())
@@ -144,7 +146,7 @@ def test_invalid_configuration_is_startup_error():
 
 
 def test_message_limits_json_and_error_safety(capsys):
-    output = io.StringIO()
+    output = Output()
     logger, handler = logger_for(output)
     logger.info("界" * 400)
     logger.info("safe", extra={"fields": {"operation_id": float("nan")}})
@@ -187,7 +189,7 @@ _SUITE = json.loads(SCENARIOS.read_bytes())
 @pytest.mark.parametrize("case", _SUITE["degradation_cases"], ids=lambda c: c["id"])
 def test_shared_degradation_scenarios(case):
     """The line still arrives: shortened, stripped or with its error, never dropped."""
-    output = io.StringIO()
+    output = Output()
     logger = logging.Logger("degradation", logging.DEBUG)
     config = LogConfig("shared-test", "development", "region-1", frozenset(_SUITE["degradation_allowed_fields"]))
     handler = install_handler(logger, config, stream=output)
@@ -238,12 +240,13 @@ def test_failed_sink_does_not_change_application_result(capsys):
 
     logger, handler = logger_for(BrokenStream())
     logger.info("Safe event")
+    settle()  # the write fails on the background writer
     assert handler.dropped_records == 1
     assert capsys.readouterr().err == ""
 
 
 def test_initializer_is_idempotent_under_concurrent_calls():
-    output = io.StringIO()
+    output = Output()
     logger = logging.Logger("initialize")
     other = logging.NullHandler()
     logger.addHandler(other)
@@ -278,7 +281,7 @@ def test_nested_exception_and_reused_worker_reset():
 async def test_concurrent_requests_and_cancellation_cleanup():
     ready = asyncio.Event()
     release = asyncio.Event()
-    output = io.StringIO()
+    output = Output()
     logger, handler = logger_for(output)
 
     async def cancelled():
@@ -389,7 +392,7 @@ def test_single_distribution_has_no_contract_dependency():
 @pytest.mark.parametrize("case", json.loads(SCENARIOS.read_bytes())["emission_cases"], ids=lambda c: c["id"])
 def test_shared_emission_scenarios(case):
     from opentelemetry.context import Context
-    output = io.StringIO()
+    output = Output()
     logger = logging.Logger("shared", logging.DEBUG)
     handler = install_handler(logger, LogConfig("shared-test", "development", "region-1"), stream=output)
     ctx = incoming_context({"traceparent": case["traceparent"]}, trusted=True) if case["traceparent"] else Context()
@@ -412,7 +415,7 @@ def _recurse(depth):
 
 
 def test_caller_error_fields_win_and_exception_text_never_logged():
-    output = io.StringIO()
+    output = Output()
     logger = logging.Logger("caller-error", logging.DEBUG)
     config = LogConfig("test-api", "development", "region-1", frozenset({"error.type"}))
     install_handler(logger, config, stream=output)
@@ -427,7 +430,7 @@ def test_caller_error_fields_win_and_exception_text_never_logged():
 
 
 def test_deep_stack_keeps_innermost_frames_within_budget():
-    output = io.StringIO()
+    output = Output()
     logger, handler = logger_for(output)
     try:
         _recurse(200)
@@ -442,7 +445,7 @@ def test_deep_stack_keeps_innermost_frames_within_budget():
 
 
 def test_stack_is_shortened_before_any_field_is_removed():
-    output = io.StringIO()
+    output = Output()
     logger = logging.Logger("fit", logging.DEBUG)
     config = LogConfig("test-api", "development", "region-1", frozenset({"a", "b"}))
     install_handler(logger, config, stream=output)
@@ -466,7 +469,7 @@ def test_build_record_strips_unknown_fields_instead_of_raising():
 
 
 def test_dropped_field_count_is_capped_so_the_line_stays_valid():
-    output = io.StringIO()
+    output = Output()
     logger, handler = logger_for(output)
     logger.info("Many fields", extra={"fields": {f"unknown{i}": i for i in range(100)}})
     row = json.loads(output.getvalue())
@@ -475,7 +478,7 @@ def test_dropped_field_count_is_capped_so_the_line_stays_valid():
 
 
 def test_malformed_unicode_field_is_removed_not_the_record():
-    output = io.StringIO()
+    output = Output()
     logger, handler = logger_for(output)
     logger.info("Ready", extra={"fields": {"operation_id": "ok\udc80x", "attempt": 1}})
     row = json.loads(output.getvalue())
@@ -484,7 +487,7 @@ def test_malformed_unicode_field_is_removed_not_the_record():
 
 
 def test_a_caller_stack_that_wins_never_inherits_the_sdk_cut_flag():
-    output = io.StringIO()
+    output = Output()
     logger = logging.Logger("caller-stack", logging.DEBUG)
     config = LogConfig("test-api", "development", "region-1", frozenset({"exception.stacktrace"}))
     install_handler(logger, config, stream=output)
@@ -498,7 +501,7 @@ def test_a_caller_stack_that_wins_never_inherits_the_sdk_cut_flag():
 
 
 def test_request_fields_are_never_removed_to_fit_a_record():
-    output = io.StringIO()
+    output = Output()
     logger = logging.Logger("fit-request", logging.DEBUG)
     names = [f"f{i}" for i in range(8)]
     config = LogConfig("test-api", "development", "region-1", frozenset(names))

@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import atexit
+import io
 import json
 import logging
 import math
 import os
+import queue
 import sys
 import threading
 import time
 import traceback
+import weakref
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import TracebackType
@@ -240,19 +244,241 @@ def build_record(
     return record
 
 
-class JsonLogHandler(logging.StreamHandler[TextIO]):
-    """Direct bounded-output handler. Stream writes may block; no queue or retries.
+# One write model in every language (design review F2; tests/logging write_model).
+QUEUE_CAPACITY = 1024
+CLOSE_TIMEOUT_SECONDS = 2.0
+# An ERROR/FATAL line waits this long for the writer, so the line logged just
+# before a hard exit (os._exit, a crash) is not lost. Bounded: the caller budget.
+ERROR_WAIT_SECONDS = 0.05
+_STOP = object()
+_WRITERS: weakref.WeakSet[_Writer] = weakref.WeakSet()
 
-    Failed/invalid emissions increment dropped_records and never call logging's
-    handleError (which may print the original record). An exception adds its type
-    and frames (``error.type``, ``exception.stacktrace``), never its text.
-    The application's existing OTLP handler is not modified.
+
+class _Writer:
+    """A bounded queue and one daemon thread that owns all writes to one stream.
+
+    The caller never waits on the output (an ERROR/FATAL line waits at most
+    ``ERROR_WAIT_SECONDS``): a full queue drops the line and counts it. A failed
+    write is counted and the writer goes on with the next line; a line cut short
+    by a failure is ended with a newline first, so the next line stays valid JSON.
+
+    The thread starts with the first line, so a handler that never logs owns no
+    thread. A stream backed by a file descriptor (stdout, a pipe, a file) is
+    written with ``os.write``: no Python buffer lock is held, so a writer still
+    blocked when the interpreter exits cannot abort the process. Other streams
+    use ``write``.
+
+    After ``os.fork`` the child gets a new lock, queue, thread and counters: the
+    parent's may be held by a thread that does not exist in the child. At exit
+    every writer is drained (one shared deadline) and stopped, even when its
+    handler was already collected.
     """
 
-    def __init__(self, config: LogConfig, stream: TextIO | None = None) -> None:
+    def __init__(self, stream: TextIO, capacity: int) -> None:
+        if capacity < 1:
+            raise ValueError("queue_capacity_must_be_positive")
+        self.stream = stream
+        self.capacity = capacity
+        self._fd = _file_descriptor(stream)
+        self._closed = False
+        self._reset()
+        _WRITERS.add(self)
+
+    def _reset(self) -> None:
+        self.written = self.queue_full = self.io_errors = self.closed_drops = self.invalid = 0
+        self._accepted = self._done = 0
+        self._lock = threading.Lock()
+        self._progress = threading.Condition(threading.Lock())
+        self._queue: queue.Queue[object] = queue.Queue(self.capacity)
+        self._broken_line = False
+        self._thread: threading.Thread | None = None
+
+    @property
+    def pending(self) -> int:
+        """Lines accepted but not yet written or failed."""
+        return self._accepted - self._done
+
+    def count_invalid(self) -> None:
+        with self._lock:
+            self.invalid += 1
+
+    def submit(self, line: str) -> int | None:
+        """Queue the line; its ticket, or None when it was dropped and counted."""
+        with self._lock:
+            if self._closed:
+                self.closed_drops += 1
+                return None
+            try:
+                self._queue.put_nowait(line)
+            except queue.Full:
+                self.queue_full += 1
+                return None
+            with self._progress:
+                self._accepted += 1
+                ticket = self._accepted
+            if self._thread is None:
+                self._thread = threading.Thread(target=self._run, name="onenexus-log-writer", daemon=True)
+                self._thread.start()
+            return ticket
+
+    def wait_written(self, ticket: int, timeout: float) -> None:
+        if threading.current_thread() is self._thread:
+            return  # logging from the writer thread itself
+        with self._progress:
+            self._progress.wait_for(lambda: self._done >= ticket, timeout)
+
+    def _run(self) -> None:
+        jobs = self._queue  # this thread's own queue, even after a fork resets self._queue
+        while True:
+            line = jobs.get()
+            if line is _STOP:
+                return
+            self._write(str(line))
+            with self._progress:
+                self._done += 1
+                self._progress.notify_all()
+
+    def _write(self, line: str) -> None:
+        fd, stream = self._fd, self.stream  # setStream may swap them while we write
+        if fd is None:
+            try:
+                if self._broken_line:
+                    stream.write("\n")
+                    self._broken_line = False
+                stream.write(line)
+            except BlockingIOError as error:
+                self.io_errors += 1
+                self._broken_line = error.characters_written > 0
+                return
+            except Exception:
+                self.io_errors += 1
+                return
+            self.written += 1
+            try:
+                stream.flush()
+            except Exception:
+                pass  # the line is in the stream's buffer; the next flush retries
+            return
+        prefix = 1 if self._broken_line else 0
+        data = (b"\n" if prefix else b"") + line.encode("utf-8")
+        sent = 0
+        try:
+            while sent < len(data):  # os.write may write part of the line
+                sent += os.write(fd, data[sent:])
+            self._broken_line = False
+            self.written += 1
+        except Exception:
+            self.io_errors += 1
+            # Still cut: part of this line went out, or the earlier cut line was not ended.
+            self._broken_line = sent > prefix or (prefix == 1 and sent == 0)
+
+    def drain(self, timeout: float) -> bool:
+        """Wait until every accepted line is written or failed, or until ``timeout``."""
+        if threading.current_thread() is self._thread:
+            return not self.pending
+        with self._progress:
+            return self._progress.wait_for(lambda: self._done >= self._accepted, timeout)
+
+    def close(self, timeout: float) -> bool:
+        with self._lock:
+            already = self._closed
+            self._closed = True
+            thread = self._thread
+        if already or thread is None:
+            return not self.pending
+        if threading.current_thread() is thread:
+            self._queue_stop()  # close from inside a write: never wait on ourselves
+            return not self.pending
+        deadline = time.monotonic() + timeout
+        drained = self.drain(timeout)
+        if self._queue_stop():
+            thread.join(max(0.0, deadline - time.monotonic()))
+        return drained
+
+    def _queue_stop(self) -> bool:
+        try:
+            self._queue.put_nowait(_STOP)
+        except queue.Full:
+            return False  # daemon thread; undelivered lines stay pending
+        return True
+
+    def after_fork_in_child(self) -> None:
+        if not self._closed:
+            self._reset()
+
+
+def _file_descriptor(stream: TextIO) -> int | None:
+    """The stream's descriptor after flushing its buffer, or None (e.g. StringIO)."""
+    try:
+        fd = stream.fileno()
+        stream.flush()
+    except (AttributeError, OSError, ValueError, io.UnsupportedOperation):
+        return None
+    return fd
+
+
+def _close_all_writers() -> None:
+    # One deadline for the whole process, however many handlers exist.
+    deadline = time.monotonic() + CLOSE_TIMEOUT_SECONDS
+    for writer in list(_WRITERS):
+        writer.close(max(0.0, deadline - time.monotonic()))
+
+
+atexit.register(_close_all_writers)
+
+
+def _after_fork_in_child() -> None:
+    for writer in list(_WRITERS):
+        writer.after_fork_in_child()
+
+
+if hasattr(os, "register_at_fork"):
+    os.register_at_fork(after_in_child=_after_fork_in_child)
+
+
+class JsonLogHandler(logging.StreamHandler[TextIO]):
+    """Contract-backed handler whose caller never waits on the output.
+
+    Records are built and validated on the caller's thread, then queued for one
+    background writer (``QUEUE_CAPACITY`` lines). A full queue, a rejected record,
+    a failed write and a write after close are each counted, never raised and
+    never passed to logging's handleError (which may print the original record).
+    ``flush`` and ``close`` wait up to ``CLOSE_TIMEOUT_SECONDS`` for queued lines;
+    an ERROR/FATAL line waits up to ``ERROR_WAIT_SECONDS`` so it survives a hard
+    exit. Output can trail the call: read it after ``flush`` or ``close``. Lines
+    written through ``print`` and through this handler may interleave out of order.
+    An exception adds its type and frames (``error.type``,
+    ``exception.stacktrace``), never its text. Other handlers are not modified.
+    """
+
+    def __init__(
+        self,
+        config: LogConfig,
+        stream: TextIO | None = None,
+        *,
+        queue_capacity: int = QUEUE_CAPACITY,
+    ) -> None:
         super().__init__(stream if stream is not None else sys.stdout)
         self.config = config
-        self.dropped_records = 0
+        self._writer = _Writer(self.stream, queue_capacity)
+
+    @property
+    def dropped_records(self) -> int:
+        """Every line that was not written: invalid, queue full, write error, closed."""
+        w = self._writer
+        return w.invalid + w.queue_full + w.io_errors + w.closed_drops
+
+    def stats(self) -> dict[str, int]:
+        """The shared counters (tests/logging write_model)."""
+        w = self._writer
+        return {
+            "written": w.written,
+            "invalid": w.invalid,
+            "queue_full": w.queue_full,
+            "io_errors": w.io_errors,
+            "closed": w.closed_drops,
+            "pending": w.pending,
+        }
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
@@ -278,11 +504,37 @@ class JsonLogHandler(logging.StreamHandler[TextIO]):
                 fields=getattr(record, "fields", None),
                 exc_info=record.exc_info if record.exc_info and record.exc_info[0] else None,
             )
-            self.stream.write(encode_record(value) + "\n")
-            self.flush()
+            line = encode_record(value) + "\n"
         except Exception:
             # Logging must not change business outcomes or echo rejected payloads.
-            self.dropped_records += 1
+            self._writer.count_invalid()
+            return
+        ticket = self._writer.submit(line)
+        if ticket is not None and record.levelno >= logging.ERROR:
+            self._writer.wait_written(ticket, ERROR_WAIT_SECONDS)
+
+    def flush(self) -> None:
+        """Wait (bounded) until queued lines are written; at once after close."""
+        if self._writer._closed:
+            return
+        self._writer.drain(CLOSE_TIMEOUT_SECONDS)
+
+    def close_within(self, timeout: float = CLOSE_TIMEOUT_SECONDS) -> bool:
+        """Stop accepting lines; drain until ``timeout``. True when nothing was lost."""
+        drained = self._writer.close(timeout)
+        super().close()
+        return drained
+
+    def close(self) -> None:
+        """logging's close: drain up to ``CLOSE_TIMEOUT_SECONDS``, then stop."""
+        self.close_within()
+
+    def setStream(self, stream: TextIO) -> TextIO | None:
+        self.flush()
+        previous = super().setStream(stream)
+        self._writer.stream = self.stream
+        self._writer._fd = _file_descriptor(self.stream)
+        return previous
 
 
 _INSTALL_LOCK = threading.Lock()

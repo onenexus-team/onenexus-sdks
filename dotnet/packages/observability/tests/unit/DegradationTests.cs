@@ -17,7 +17,12 @@ public sealed class DegradationTests
         ["WARN"] = LogLevel.Warning, ["ERROR"] = LogLevel.Error, ["FATAL"] = LogLevel.Critical,
     };
 
-    private static string[] Lines(StringWriter writer) => writer.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+    // Writes are asynchronous (write model F2): drain the provider before reading its output.
+    private static string[] Lines(JsonLogProvider provider, StringWriter writer)
+    {
+        Assert.IsTrue(provider.CloseWithin(TimeSpan.FromSeconds(10)));
+        return writer.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+    }
     private static int Bytes(string text) => Encoding.UTF8.GetByteCount(text);
 
     private static string Expand(JsonElement value) => value.ValueKind == JsonValueKind.String
@@ -66,7 +71,7 @@ public sealed class DegradationTests
             }
             else logger.Log(level, default, fields, null, (_, _) => message);
             Assert.AreEqual(0L, provider.DroppedRecords, id);
-            var line = Lines(output).Single();
+            var line = Lines(provider, output).Single();
             var row = JsonDocument.Parse(line).RootElement;
             Assert.IsEmpty(Contract.Validate(row), id);
             var expect = item.GetProperty("expect");
@@ -121,7 +126,7 @@ public sealed class DegradationTests
         using var output = new StringWriter();
         using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["error.type"]), output);
         provider.CreateLogger("test").LogError(Caught("private-detail", 1), "Failed {error.type}", "Payments.Declined");
-        var row = JsonDocument.Parse(Lines(output).Single()).RootElement;
+        var row = JsonDocument.Parse(Lines(provider, output).Single()).RootElement;
         Assert.AreEqual("Payments.Declined", row.GetProperty("error.type").GetString());
         Assert.StartsWith("at OneNexus.Observability.Tests.DegradationTests.RaiseNested", row.GetProperty("exception.stacktrace").GetString()!);
         Assert.IsFalse(row.TryGetProperty("logging.truncated", out _));
@@ -141,7 +146,7 @@ public sealed class DegradationTests
         };
         provider.CreateLogger("test").Log(LogLevel.Information, default, fields, null, (_, _) => "Unsupported values");
         Assert.AreEqual(0L, provider.DroppedRecords);
-        var row = JsonDocument.Parse(Lines(output).Single()).RootElement;
+        var row = JsonDocument.Parse(Lines(provider, output).Single()).RootElement;
         Assert.AreEqual(4, row.GetProperty("logging.dropped_field_count").GetInt32());
         Assert.IsTrue(new[] { "a", "b", "c", "d" }.All(k => !row.TryGetProperty(k, out _)));
         Assert.AreEqual(1, row.GetProperty("kept").GetProperty("n").GetInt32());
@@ -155,7 +160,7 @@ public sealed class DegradationTests
         using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["error.type", "exception.stacktrace"]), output);
         var fields = new Dictionary<string, object?> { ["error.type"] = new string('e', Contract.MaxErrorTypeChars + 1), ["exception.stacktrace"] = 42 };
         provider.CreateLogger("test").Log(LogLevel.Error, default, fields, Caught("private", 1), (_, _) => "Failed");
-        var row = JsonDocument.Parse(Lines(output).Single()).RootElement;
+        var row = JsonDocument.Parse(Lines(provider, output).Single()).RootElement;
         Assert.AreEqual(2, row.GetProperty("logging.dropped_field_count").GetInt32());
         Assert.AreEqual("System.InvalidOperationException", row.GetProperty("error.type").GetString());
         Assert.StartsWith("at OneNexus.Observability.Tests.DegradationTests.RaiseNested", row.GetProperty("exception.stacktrace").GetString()!);
@@ -170,7 +175,7 @@ public sealed class DegradationTests
         var fields = new Dictionary<string, object?> { ["exception.stacktrace"] = "at caller (app.cs:1)" };
         // 60 frames exceed the 2 KiB stack budget, so the SDK stack would be cut; the caller's value wins instead.
         provider.CreateLogger("test").Log(LogLevel.Error, default, fields, Caught("private", 60), (_, _) => "Failed");
-        var row = JsonDocument.Parse(Lines(output).Single()).RootElement;
+        var row = JsonDocument.Parse(Lines(provider, output).Single()).RootElement;
         Assert.AreEqual("at caller (app.cs:1)", row.GetProperty("exception.stacktrace").GetString());
         Assert.AreEqual("System.InvalidOperationException", row.GetProperty("error.type").GetString());
         Assert.IsFalse(row.TryGetProperty("logging.truncated", out _));
@@ -183,7 +188,7 @@ public sealed class DegradationTests
         using var provider = new JsonLogProvider(new("shared-test", "development", "region-1"), output);
         var fields = Enumerable.Range(0, Contract.MaxDroppedFieldCount + 6).Select(i => new KeyValuePair<string, object?>($"unknown.{i}", i)).ToList();
         provider.CreateLogger("test").Log(LogLevel.Information, default, fields, null, (_, _) => "Many fields");
-        var row = JsonDocument.Parse(Lines(output).Single()).RootElement;
+        var row = JsonDocument.Parse(Lines(provider, output).Single()).RootElement;
         Assert.AreEqual(Contract.MaxDroppedFieldCount, row.GetProperty("logging.dropped_field_count").GetInt32());
         Assert.IsEmpty(Contract.Validate(row));
     }
@@ -196,7 +201,7 @@ public sealed class DegradationTests
         var logger = provider.CreateLogger("test");
         logger.LogInformation("Attempt {attempt}", 1);
         logger.LogInformation("Attempt {attempt} for {tenant}", 2, "t1");
-        var rows = Lines(output).Select(l => JsonDocument.Parse(l).RootElement).ToArray();
+        var rows = Lines(provider, output).Select(l => JsonDocument.Parse(l).RootElement).ToArray();
         Assert.HasCount(2, rows);
         Assert.IsFalse(rows[0].TryGetProperty("logging.dropped_field_count", out _));
         Assert.IsFalse(rows[0].TryGetProperty("{OriginalFormat}", out _));
@@ -216,7 +221,7 @@ public sealed class DegradationTests
         logger.Log(LogLevel.Information, default, new Dictionary<string, object?>(), null, (_, _) => text);
         logger.Log(LogLevel.Information, default, new Dictionary<string, object?> { ["note"] = text }, null, (_, _) => "Note");
         Assert.AreEqual(0L, provider.DroppedRecords);
-        var rows = Lines(output).Select(l => JsonDocument.Parse(l).RootElement).ToArray();
+        var rows = Lines(provider, output).Select(l => JsonDocument.Parse(l).RootElement).ToArray();
         Assert.HasCount(2, rows);
         foreach (var value in new[] { rows[0].GetProperty("message").GetString()!, rows[1].GetProperty("note").GetString()! })
         {
@@ -234,7 +239,7 @@ public sealed class DegradationTests
         var fields = new Dictionary<string, object?> { ["shared.a"] = new string('a', 1000), ["shared.b"] = new string('b', 1000) };
         provider.CreateLogger("test").Log(LogLevel.Error, default, fields, Caught("private", 60), (_, _) => new string('m', 1000));
         Assert.AreEqual(0L, provider.DroppedRecords);
-        var line = Lines(output).Single();
+        var line = Lines(provider, output).Single();
         var row = JsonDocument.Parse(line).RootElement;
         Assert.IsLessThanOrEqualTo(4096, Bytes(line));
         Assert.AreEqual(1000, row.GetProperty("shared.a").GetString()!.Length);
@@ -257,6 +262,7 @@ public sealed class DegradationTests
             ["error_code"] = new string('e', 1100), ["shared.a"] = "small",
         };
         provider.CreateLogger("test").Log(LogLevel.Information, default, fields, null, (_, _) => new string('m', 1100));
+        Assert.IsTrue(provider.CloseWithin(TimeSpan.FromSeconds(10)));
         Assert.AreEqual("", output.ToString());
         Assert.AreEqual(1L, provider.DroppedRecords);
     }

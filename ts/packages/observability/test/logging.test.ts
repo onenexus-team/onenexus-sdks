@@ -4,6 +4,7 @@ import { Writable } from 'node:stream';
 import { setImmediate as nextTurn } from 'node:timers/promises';
 import { expect, it } from 'vitest';
 import {
+    QUEUE_CAPACITY,
     createLogger,
     type LogFields,
     parseRecord,
@@ -110,58 +111,63 @@ it('fails bad configuration at startup; keeps degraded lines and drops only inva
     expect(lines.join('')).not.toContain('secret-sentinel');
 });
 
-it('backpressure drops boundedly then recovers on drain; flush and close have deadlines', async () => {
-    let release: (() => void) | undefined;
+it('backpressure queues lines, drops only when the queue is full, and writes the queue on drain', async () => {
+    const callbacks: (() => void)[] = [];
+    let open = false;
     const stream = new Writable({
         highWaterMark: 1,
         write(_chunk, _encoding, cb) {
-            release = cb;
+            if (open) cb();
+            else callbacks.push(() => cb());
         },
     });
     const logger = createLogger(config, stream);
-    expect(logger.log('first')).toBe(true);
-    for (let i = 0; i < 1000; i++) expect(logger.log('overload')).toBe(false);
-    expect(logger.stats()).toMatchObject({ pending: 1, backpressure: 1000 });
+    expect(logger.log('first')).toBe(true); // handed to the stream, which reports back-pressure
+    for (let i = 0; i < QUEUE_CAPACITY; i++) expect(logger.log('queued')).toBe(true);
+    for (let i = 0; i < 100; i++) expect(logger.log('overload')).toBe(false);
+    expect(logger.stats()).toMatchObject({ pending: QUEUE_CAPACITY + 1, backpressure: 100, written: 0 });
     expect(await logger.flush(0)).toBe(false);
-    const drained = new Promise<void>((resolve) => stream.once('drain', resolve));
-    release?.();
-    await drained;
+    open = true;
+    callbacks.shift()?.();
+    expect(await logger.flush(5000)).toBe(true);
+    expect(logger.stats()).toMatchObject({ pending: 0, written: QUEUE_CAPACITY + 1 });
     expect(logger.log('recovered')).toBe(true);
-    const closing = logger.close(0);
+    const closing = logger.close(1000);
     expect(logger.close()).toBe(closing);
-    expect(await closing).toBe(false);
+    expect(await closing).toBe(true);
     expect(logger.log('closed')).toBe(false);
-    release?.();
     await nextTurn();
-    expect(logger.stats().written).toBe(2);
+    expect(logger.stats()).toMatchObject({ written: QUEUE_CAPACITY + 2, closed: 1 });
     expect(stream.listenerCount('error')).toBe(0);
 });
 
-it('caps pending records even if a stream has a very large buffer', async () => {
+it('bounds in-flight and queued lines even if a stream has a very large buffer', async () => {
     const stream = new Writable({ highWaterMark: 1_000_000, write() {} });
     const logger = createLogger(config, stream);
-    for (let i = 0; i < 128; i++) expect(logger.log('bounded')).toBe(true);
-    expect(logger.log('overflow')).toBe(false);
-    expect(logger.stats().pending).toBe(128);
+    let accepted = 0;
+    for (let i = 0; i < 2000; i++) if (logger.log('bounded')) accepted++;
+    expect(accepted).toBe(128 + QUEUE_CAPACITY);
+    expect(logger.stats()).toMatchObject({ pending: accepted, backpressure: 2000 - accepted });
     expect(await logger.close(0)).toBe(false);
     stream.destroy(new Error('sink-failed'));
     await nextTurn();
-    expect(logger.stats()).toMatchObject({ pending: 0, io: 128 });
+    expect(logger.stats()).toMatchObject({ pending: 0, io: accepted });
 });
 
-it('sink callback errors fail closed without changing business flow or recursively logging', async () => {
+it('a Node stream that errors stays errored: the failure is counted, later lines count as io', async () => {
     const stream = new Writable({
         write(_chunk, _encoding, cb) {
             cb(new Error('secret-sentinel'));
         },
     });
     const logger = createLogger(config, stream);
-    logger.log('first');
-    expect(await logger.flush()).toBe(false);
+    expect(logger.log('first')).toBe(true);
+    expect(await logger.flush()).toBe(true); // nothing pending; the failure is counted, not hung
     await nextTurn();
+    expect(stream.writable).toBe(false);
     expect(logger.log('second')).toBe(false);
-    expect(logger.stats().io).toBe(2);
-    expect(await logger.close()).toBe(false);
+    expect(logger.stats()).toMatchObject({ io: 2, written: 0, pending: 0 });
+    expect(await logger.close()).toBe(true);
     await expect(logger.flush(-1)).rejects.toThrow('invalid_flush_timeout');
 });
 
