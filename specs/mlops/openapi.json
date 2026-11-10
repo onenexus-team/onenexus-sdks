@@ -21943,8 +21943,26 @@
               "format": "uuid"
             },
             "type": "array",
+            "maxItems": 100,
             "minItems": 1,
             "title": "Quota Ids"
+          },
+          "expected_revisions": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "propertyNames": {
+                  "format": "uuid"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Revisions"
           }
         },
         "type": "object",
@@ -24978,6 +24996,18 @@
             "type": "integer",
             "minimum": 0.0,
             "title": "Number"
+          },
+          "expected_revision": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Revision"
           }
         },
         "type": "object",
