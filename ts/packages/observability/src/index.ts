@@ -17,6 +17,13 @@ export {
     type JsonLogger,
 } from './logging.js';
 export {
+    logDropCounts,
+    dropMetricsText,
+    registerDropMetric,
+    type DropCount,
+    type DropReason,
+} from './drop-metric.js';
+export {
     CONTRACT_VERSION,
     CONTRACT_DIGEST,
     validateRecord,

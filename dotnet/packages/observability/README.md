@@ -50,6 +50,26 @@ builder.Logging.AddOneNexus(new LogConfiguration(
 - An `exception` argument adds `error.type` (type full name) and `exception.stacktrace` (one `at <Type>.<Method> (<file>:<line>)` per frame, innermost first, at most 2 KiB), never its message or `ToString()`. A caller-supplied allowlisted value for either field wins.
 - The line still arrives: a message or string field over 1 KiB (stack 2 KiB) is cut at a character boundary with a trailing `…` and `logging.truncated: true`. A record over 4 KiB loses outermost stack frames, then the largest custom fields (counted). Only a record that still does not fit, cannot be serialized or breaks a base-field rule, a full queue, a write failure and a write after dispose increment `JsonLogProvider.DroppedRecords` without throwing into application logic; `JsonLogProvider.Stats` splits them (`Written`, `Invalid`, `QueueFull`, `IoErrors`, `Closed`, `Pending`).
 
+## Drop metric
+
+Every line not written is counted once per process, per `(service, reason)` (spec: `tests/logging/scenarios.json` `drop_metric`).
+
+| Read it as | API |
+|---|---|
+| Snapshot | `LogDropMetrics.Snapshot()` → `LogDropCount(Service, Reason, Count)` rows, sorted |
+| Prometheus text | `LogDropMetrics.PrometheusText()` → `onenexus_log_records_dropped_total{service, reason}` |
+| OpenTelemetry | Meter `OneNexus.Observability` (`LogDropMetrics.MeterName`): asynchronous counter `onenexus.log.records.dropped`, unit `{record}` |
+
+```csharp
+builder.Services.AddOpenTelemetry().WithMetrics(metrics => metrics.AddMeter(LogDropMetrics.MeterName));
+```
+
+- `reason` is `closed`, `invalid`, `io_errors` or `queue_full`; `service` is `LogConfiguration.Service`.
+- All four reasons appear at 0 once a provider for the service exists.
+- Providers of one service are summed; each row equals the sum of their `Stats` counters.
+- Counts never decrease, also after `Dispose`.
+- The package adds no OpenTelemetry dependency: the meter is in-box `System.Diagnostics.Metrics`.
+
 ## Restore context at each trusted boundary
 
 ```csharp
@@ -88,7 +108,7 @@ bash scripts/check-dotnet-observability.sh
 - All 66 shared cases through actual C# APIs; the independent Python checker rejects a deliberately wrong result.
 - Context isolation, cancellation, retry metadata, existing Activity compatibility, log fields and failure behavior.
 - [Validation and releases](../../../docs/logging.md). Live service checks belong in the consuming repository.
-- Output is bounded to 4 KiB per record (as written, including JSON escapes) and 1 KiB per message or string field. The caller never waits on the output: records are built and validated on the caller's thread, then queued (bounded, 1,024 lines) for one background writer that owns every write. A blocked stdout fills the queue and later lines are dropped and counted; a failed write is counted and the writer goes on. `Dispose` stops accepting lines and drains for up to 2 s; `CloseWithin(timeout)` returns `false` when queued lines were not written in time (shared spec: `tests/logging/scenarios.json` `write_model`). Each provider owns one background writer thread that ends only on `Dispose`: the provider must be disposed (the host does it for `AddOneNexus`, which registers it as a DI singleton), and `Dispose` blocks for up to 2 s while queued lines drain. `Stats` reads each counter separately, so a snapshot taken while lines are written can be briefly off by one between counters. CAS must expose the drop counters before production adoption.
+- Output is bounded to 4 KiB per record (as written, including JSON escapes) and 1 KiB per message or string field. The caller never waits on the output: records are built and validated on the caller's thread, then queued (bounded, 1,024 lines) for one background writer that owns every write. A blocked stdout fills the queue and later lines are dropped and counted; a failed write is counted and the writer goes on. `Dispose` stops accepting lines and drains for up to 2 s; `CloseWithin(timeout)` returns `false` when queued lines were not written in time (shared spec: `tests/logging/scenarios.json` `write_model`). Each provider owns one background writer thread that ends only on `Dispose`: the provider must be disposed (the host does it for `AddOneNexus`, which registers it as a DI singleton), and `Dispose` blocks for up to 2 s while queued lines drain. `Stats` reads each counter separately, so a snapshot taken while lines are written can be briefly off by one between counters. CAS must expose the drop metric (see [Drop metric](#drop-metric)) before production adoption.
 - Logs go to existing stdout collection. This package adds no OpenTelemetry exporter, collector, Loki client or new recording spans.
 
 - [SDK release and upgrade guide](../../../docs/logging.md).
