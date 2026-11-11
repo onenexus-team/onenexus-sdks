@@ -5,6 +5,7 @@ from .contract import CONTRACT_DIGEST, CONTRACT_VERSION, ContractViolation, vali
 from .drop_metric import (
     DropCount,
     DropReason,
+    LogDropCounter,
     drop_metrics_text,
     log_drop_counts,
     register_drop_metric,
@@ -23,6 +24,7 @@ __all__ = [
     "bound_context",
     "build_record",
     "current_trace_id",
+    "LogDropCounter",
     "drop_metrics_text",
     "incoming_context",
     "install_handler",

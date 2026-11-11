@@ -21,6 +21,7 @@ from onenexus_observability import (
     DropReason,
     JsonLogHandler,
     LogConfig,
+    LogDropCounter,
     drop_metrics_text,
     log_drop_counts,
     register_drop_metric,
@@ -219,3 +220,15 @@ def test_a_forked_child_starts_its_counts_at_zero():
     assert os.waitstatus_to_exitcode(status) == 0
     assert rows(service) == {**zero_rows(), "invalid": 1}  # the parent's count is unchanged
     handler.close()
+
+
+def test_an_adapter_counter_reports_and_counts_like_a_handler():
+    service = "adapter-counter"
+    counter = LogDropCounter(service)
+    assert rows(service) == zero_rows()
+    counter.add(DropReason.INVALID)
+    counter.add("io_errors")
+    LogDropCounter(service).add(DropReason.INVALID)
+    assert rows(service) == {"closed": 0, "invalid": 2, "io_errors": 1, "queue_full": 0}
+    with pytest.raises(ValueError):
+        counter.add("too_large")

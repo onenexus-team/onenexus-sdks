@@ -77,6 +77,21 @@ def log_drop_counts() -> list[DropCount]:
     return _DROPS.snapshot()
 
 
+class LogDropCounter:
+    """Counts drops for an adapter that builds records with the SDK but owns its sink.
+
+    Creating it reports every reason for ``service`` at 0, like a handler does.
+    """
+
+    def __init__(self, service: str) -> None:
+        self._service = service
+        _DROPS.register(service)
+
+    def add(self, reason: DropReason) -> None:
+        """Count one record not written, for ``reason``."""
+        _DROPS.add(self._service, DropReason(reason))
+
+
 def _label(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 

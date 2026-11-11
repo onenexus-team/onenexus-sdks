@@ -141,6 +141,7 @@ Every line a handler does not write is counted once per process, per `(service, 
 | `log_drop_counts()` | `list[DropCount(service, reason, count)]`, sorted by service then reason |
 | `drop_metrics_text(counts=None)` | Prometheus text for `onenexus_log_records_dropped_total` (default: the live counts) |
 | `register_drop_metric(meter)` | OTel asynchronous counter `onenexus.log.records.dropped`, unit `{record}` |
+| `LogDropCounter(service).add(reason)` | For an adapter that builds records with the SDK but writes them itself: counts on the same metric; creating it reports the four reasons at 0 |
 
 - Reasons (`DropReason`): `closed`, `invalid`, `io_errors`, `queue_full`. All four appear at 0 once a handler exists.
 - Counts never decrease, also after `close`. Each equals the sum of the service's `handler.stats()` counters.

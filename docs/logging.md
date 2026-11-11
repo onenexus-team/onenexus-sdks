@@ -234,6 +234,8 @@ flowchart LR
 | Go | `DropCounts()` | `DropMetricsText()` | `RegisterDropMetric(meter)` |
 | .NET | `LogDropMetrics.Snapshot()` | `LogDropMetrics.PrometheusText()` | `Meter` `OneNexus.Observability` (add it to the host's OTel metrics) |
 
+Python also has `LogDropCounter(service).add(reason)` for an adapter that builds records with the SDK but owns its sink (MLOps `ContractLogHandler`).
+
 Query for every service: `sum by (service, reason) (rate(onenexus_log_records_dropped_total[5m]))`.
 
 ## Release
