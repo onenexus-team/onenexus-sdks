@@ -2473,5 +2473,114 @@
     ],
     "error_wait_ms": 50,
     "caller_budget_note": "The slowest single call must stay under this. A blocked output makes a call wait as long as the output stays blocked (seconds); scheduler, GC and CPU-throttling pauses on shared CI runners and limited pods reach tens of milliseconds, so the bound keeps a 10x margin both ways."
+  },
+  "drop_metric": {
+    "summary": "One drop metric in every language (design review R1): every line the SDK does not write is counted under one process-wide counter per (service, reason), readable as a snapshot, as Prometheus text, and as an OpenTelemetry asynchronous counter.",
+    "otel_name": "onenexus.log.records.dropped",
+    "otel_unit": "{record}",
+    "prometheus_name": "onenexus_log_records_dropped_total",
+    "labels": [
+      "service",
+      "reason"
+    ],
+    "reasons": [
+      "closed",
+      "invalid",
+      "io_errors",
+      "queue_full"
+    ],
+    "help": "Log records the logging SDK did not write, by reason.",
+    "prometheus_text_example": {
+      "counts": [
+        {
+          "service": "svc-b",
+          "reason": "queue_full",
+          "count": 7
+        },
+        {
+          "service": "svc-a",
+          "reason": "closed",
+          "count": 0
+        },
+        {
+          "service": "q\"\\\n",
+          "reason": "invalid",
+          "count": 2
+        }
+      ],
+      "text": "# HELP onenexus_log_records_dropped_total Log records the logging SDK did not write, by reason.\n# TYPE onenexus_log_records_dropped_total counter\nonenexus_log_records_dropped_total{service=\"q\\\"\\\\\\n\",reason=\"invalid\"} 2\nonenexus_log_records_dropped_total{service=\"svc-a\",reason=\"closed\"} 0\nonenexus_log_records_dropped_total{service=\"svc-b\",reason=\"queue_full\"} 7\n"
+    },
+    "cases": [
+      {
+        "id": "every_reason_reported_from_first_handler",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "after one handler for service S is created and nothing is logged, the snapshot has exactly the four reasons for S, each 0"
+      },
+      {
+        "id": "each_reason_counted",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "a record the contract rejects adds 1 to invalid; a write error adds 1 to io_errors; a line after close adds 1 to closed; a blocked output adds the overflow to queue_full; each equals the handler's own stats counter"
+      },
+      {
+        "id": "handlers_of_one_service_are_summed",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "two handlers with the same service report one row per reason whose count is the sum of both handlers' counters"
+      },
+      {
+        "id": "services_are_separate",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "handlers with different services report separate rows; a drop in one never changes the other"
+      },
+      {
+        "id": "counts_survive_close",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "after close the service's rows remain and never decrease"
+      },
+      {
+        "id": "prometheus_text_format",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "rendering prometheus_text_example.counts gives exactly prometheus_text_example.text: HELP and TYPE first, rows sorted by service then reason, label values escaped (backslash, double quote, newline)"
+      },
+      {
+        "id": "otel_asynchronous_counter",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "registering on a meter creates one asynchronous monotonic counter named otel_name with unit otel_unit; a collection yields one observation per snapshot row with attributes service and reason"
+      }
+    ]
   }
 }
