@@ -2,6 +2,13 @@
 
 from .context import bound_context, current_trace_id, incoming_context, outgoing_headers
 from .contract import CONTRACT_DIGEST, CONTRACT_VERSION, ContractViolation, validate_record
+from .drop_metric import (
+    DropCount,
+    DropReason,
+    drop_metrics_text,
+    log_drop_counts,
+    register_drop_metric,
+)
 from .logging import JsonLogHandler, LogConfig, build_record, install_handler
 from .request import RequestLogContext, current_request_fields, request_log_context
 
@@ -9,14 +16,19 @@ __all__ = [
     "CONTRACT_DIGEST",
     "CONTRACT_VERSION",
     "ContractViolation",
+    "DropCount",
+    "DropReason",
     "JsonLogHandler",
     "LogConfig",
     "bound_context",
     "build_record",
     "current_trace_id",
+    "drop_metrics_text",
     "incoming_context",
     "install_handler",
+    "log_drop_counts",
     "outgoing_headers",
+    "register_drop_metric",
     "validate_record",
     "RequestLogContext",
     "current_request_fields",
