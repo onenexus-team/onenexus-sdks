@@ -132,3 +132,25 @@ bash scripts/check-python-observability.sh
 
 See `docs/logging.md` → "The caller never waits on the output" for the counters in every language and the known limits.
 
+## Drop metric
+
+Every line a handler does not write is counted once per process, per `(service, reason)`. `service` is `LogConfig.service`; handlers of one service are summed.
+
+| API | Returns |
+|---|---|
+| `log_drop_counts()` | `list[DropCount(service, reason, count)]`, sorted by service then reason |
+| `drop_metrics_text(counts=None)` | Prometheus text for `onenexus_log_records_dropped_total` (default: the live counts) |
+| `register_drop_metric(meter)` | OTel asynchronous counter `onenexus.log.records.dropped`, unit `{record}` |
+| `LogDropCounter(service).add(reason)` | For an adapter that builds records with the SDK but writes them itself: counts on the same metric; creating it reports the four reasons at 0 |
+
+- Reasons (`DropReason`): `closed`, `invalid`, `io_errors`, `queue_full`. All four appear at 0 once a handler exists.
+- Counts never decrease, also after `close`. Each equals the sum of the service's `handler.stats()` counters.
+- A child created by `os.fork` is a new process: its counts start at 0, its rows stay.
+
+```python
+from opentelemetry import metrics
+from onenexus_observability import drop_metrics_text, register_drop_metric
+
+register_drop_metric(metrics.get_meter("my-service"))  # or serve drop_metrics_text() on /metrics
+```
+

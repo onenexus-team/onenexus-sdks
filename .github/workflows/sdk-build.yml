@@ -47,7 +47,7 @@ jobs:
       - uses: actions/setup-go@v6
         if: matrix.language == 'go'
         with:
-          go-version: '1.27.3'
+          go-version: '1.27.4'
           cache-dependency-path: go/packages/observability/go.sum
       - name: Build and test source and installed packages
         env:

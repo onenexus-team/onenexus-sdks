@@ -97,6 +97,26 @@ for key, values := range observability.OutgoingHeaders(ctx) {
 
 Export `handler.Stats()` (`Written`, `Invalid`, `Busy`, `IOErrors`, `Closed`, `Pending`) as service metrics. `slog` ignores handler return errors; counters must be monitored.
 
+## Drop metric
+
+Every line a handler does not write is counted once per process, per `(service, reason)`. `service` is `Config.Service`; handlers of one service are summed.
+
+| API | Returns |
+|---|---|
+| `DropCounts()` | `[]DropCount{Service, Reason, Count}`, sorted by service then reason |
+| `DropMetricsText()` / `FormatDropMetrics(counts)` | Prometheus text for `onenexus_log_records_dropped_total` (live counts / the given rows) |
+| `RegisterDropMetric(meter)` | OTel asynchronous counter `onenexus.log.records.dropped`, unit `{record}` |
+
+- Reasons (`DropReason`): `closed`, `invalid`, `io_errors`, `queue_full` (= `Stats.Busy`). All four appear at 0 once a handler exists.
+- Counts never decrease, also after `Close`. Each equals the sum of the service's `handler.Stats()` counters.
+- Counting is lock-free: a handler holds its service's counters.
+
+```go
+// OTel metrics:
+_, err := observability.RegisterDropMetric(otel.Meter("my-service"))
+// or serve observability.DropMetricsText() on /metrics
+```
+
 ## Validate
 
 ```bash

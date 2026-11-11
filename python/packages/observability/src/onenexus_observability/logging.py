@@ -20,6 +20,7 @@ from types import TracebackType
 from typing import Any, TextIO
 
 from .context import current_trace_id
+from .drop_metric import _DROPS, DropReason
 from .contract import (
     COMMON_FIELDS,
     MAX_DROPPED_FIELD_COUNT,
@@ -272,11 +273,16 @@ class _Writer:
     parent's may be held by a thread that does not exist in the child. At exit
     every writer is drained (one shared deadline) and stopped, even when its
     handler was already collected.
+
+    Every drop is also added to the process-wide counter for ``service``
+    (design review R1), at the same site as the writer's own counter.
     """
 
-    def __init__(self, stream: TextIO, capacity: int) -> None:
+    def __init__(self, stream: TextIO, capacity: int, service: str) -> None:
         if capacity < 1:
             raise ValueError("queue_capacity_must_be_positive")
+        self.service = service
+        _DROPS.register(service)
         self.stream = stream
         self.capacity = capacity
         self._fd = _file_descriptor(stream)
@@ -301,17 +307,20 @@ class _Writer:
     def count_invalid(self) -> None:
         with self._lock:
             self.invalid += 1
+        _DROPS.add(self.service, DropReason.INVALID)
 
     def submit(self, line: str) -> int | None:
         """Queue the line; its ticket, or None when it was dropped and counted."""
         with self._lock:
             if self._closed:
                 self.closed_drops += 1
+                _DROPS.add(self.service, DropReason.CLOSED)
                 return None
             try:
                 self._queue.put_nowait(line)
             except queue.Full:
                 self.queue_full += 1
+                _DROPS.add(self.service, DropReason.QUEUE_FULL)
                 return None
             with self._progress:
                 self._accepted += 1
@@ -347,11 +356,11 @@ class _Writer:
                     self._broken_line = False
                 stream.write(line)
             except BlockingIOError as error:
-                self.io_errors += 1
+                self._count_io_error()
                 self._broken_line = error.characters_written > 0
                 return
             except Exception:
-                self.io_errors += 1
+                self._count_io_error()
                 return
             self.written += 1
             try:
@@ -368,9 +377,14 @@ class _Writer:
             self._broken_line = False
             self.written += 1
         except Exception:
-            self.io_errors += 1
+            self._count_io_error()
             # Still cut: part of this line went out, or the earlier cut line was not ended.
             self._broken_line = sent > prefix or (prefix == 1 and sent == 0)
+
+    def _count_io_error(self) -> None:
+        # Only the writer thread changes io_errors; the process counter has its own lock.
+        self.io_errors += 1
+        _DROPS.add(self.service, DropReason.IO_ERRORS)
 
     def drain(self, timeout: float) -> bool:
         """Wait until every accepted line is written or failed, or until ``timeout``."""
@@ -428,6 +442,7 @@ atexit.register(_close_all_writers)
 
 
 def _after_fork_in_child() -> None:
+    _DROPS.after_fork_in_child()
     for writer in list(_WRITERS):
         writer.after_fork_in_child()
 
@@ -460,7 +475,7 @@ class JsonLogHandler(logging.StreamHandler[TextIO]):
     ) -> None:
         super().__init__(stream if stream is not None else sys.stdout)
         self.config = config
-        self._writer = _Writer(self.stream, queue_capacity)
+        self._writer = _Writer(self.stream, queue_capacity, config.service)
 
     @property
     def dropped_records(self) -> int:

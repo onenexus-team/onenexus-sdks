@@ -200,6 +200,44 @@ sequenceDiagram
 | Snapshots | Counters are read one at a time: a snapshot taken mid-write can be off by one | Read after `close` for exact totals |
 
 
+## One drop metric (design review R1)
+
+Every line the SDK does not write is counted once, process-wide, per `(service, reason)` (`tests/logging/scenarios.json` → `drop_metric`).
+
+```mermaid
+flowchart LR
+    H1["handler · service A"] --> C["process counter<br/>(service, reason)"]
+    H2["handler · service A"] --> C
+    H3["handler · service B"] --> C
+    C --> S["snapshot"]
+    C --> P["Prometheus text<br/>(a /metrics route)"]
+    C --> O["OTel asynchronous counter<br/>(the service's meter)"]
+```
+
+| | Value |
+|---|---|
+| OTel instrument | `onenexus.log.records.dropped`, unit `{record}`, asynchronous monotonic counter |
+| Prometheus series | `onenexus_log_records_dropped_total{service, reason}` |
+| `service` | The handler's `LogConfig.service` |
+| `reason` | `closed` · `invalid` · `io_errors` · `queue_full` — the write-model counters that mean "not written" |
+
+| Rule | Why |
+|---|---|
+| All four reasons appear, at 0, as soon as a handler exists | "No drops" is distinguishable from "not exported" |
+| Handlers of one service are summed; services stay separate | One series per service, however many loggers it builds |
+| Counts never decrease, also after `close` | A Prometheus counter; a restart resets it, and `rate()` handles that |
+
+| Language | Snapshot | Prometheus text | OpenTelemetry |
+|---|---|---|---|
+| Python | `log_drop_counts()` | `drop_metrics_text()` | `register_drop_metric(meter)` |
+| TypeScript | `logDropCounts()` | `dropMetricsText()` | `registerDropMetric(meter)` |
+| Go | `DropCounts()` | `DropMetricsText()` | `RegisterDropMetric(meter)` |
+| .NET | `LogDropMetrics.Snapshot()` | `LogDropMetrics.PrometheusText()` | `Meter` `OneNexus.Observability` (add it to the host's OTel metrics) |
+
+Python also has `LogDropCounter(service).add(reason)` for an adapter that builds records with the SDK but owns its sink (MLOps `ContractLogHandler`).
+
+Query for every service: `sum by (service, reason) (rate(onenexus_log_records_dropped_total[5m]))`.
+
 ## Release
 
 | Step | Required result |

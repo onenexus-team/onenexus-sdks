@@ -12,6 +12,7 @@ import {
     validateRecord,
 } from './rules.js';
 import { currentTraceId } from './context.js';
+import { dropCounter } from './drop-metric.js';
 import { REQUEST_FIELDS, currentRequestFields } from './request.js';
 
 export type LogFields = Readonly<Record<string, string | number | boolean | null>>;
@@ -225,6 +226,13 @@ export const CLOSE_TIMEOUT_MS = 2000;
 // Lines handed to the stream and not yet acknowledged; bounds memory for a stream with a
 // very large highWaterMark. Each line is at most 4,096 bytes plus a newline.
 const MAX_IN_FLIGHT = 128;
+// The released TypeScript counter names and the shared drop-metric reason each one feeds.
+const DROP_REASON_OF = {
+    closed: 'closed',
+    invalid: 'invalid',
+    io: 'io_errors',
+    backpressure: 'queue_full',
+} as const;
 
 /**
  * One logger per process/sink; no global replacement, exporter or retry.
@@ -265,6 +273,12 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
     const allowed = new Set<string>(REQUEST_FIELDS);
     for (const name of config.allowedFields ?? []) allowed.add(name);
     const counts = { written: 0, invalid: 0, backpressure: 0, io: 0, closed: 0 };
+    // Every counter that means "not written" also feeds the process-wide drop metric (R1).
+    const serviceDrops = dropCounter(config.service);
+    const drop = (counter: keyof typeof DROP_REASON_OF, lines = 1) => {
+        counts[counter] += lines;
+        serviceDrops(DROP_REASON_OF[counter], lines);
+    };
     // Accepted lines not yet handed to the stream, oldest first (at most QUEUE_CAPACITY).
     const queue: string[] = [];
     // Lines handed to the stream whose write callback has not run yet.
@@ -294,7 +308,7 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
     const dead = () => streamClosed || stream.destroyed || !stream.writable;
     const abandon = () => {
         const lost = pendingCount();
-        counts.io += lost;
+        drop('io', lost);
         abandoned += lost;
         queue.length = 0;
         inFlight.clear();
@@ -324,13 +338,13 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
                     blocked = !stream.write(line, (error) => {
                         if (!inFlight.delete(token)) return; // already counted by abandon()
                         // A failed write is counted; the next line is still written.
-                        if (error) counts.io++;
+                        if (error) drop('io');
                         else counts.written++;
                         pump();
                         settle();
                     });
                 } catch {
-                    if (inFlight.delete(token)) counts.io++;
+                    if (inFlight.delete(token)) drop('io');
                 }
             }
         } finally {
@@ -384,11 +398,11 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
     return {
         log(message, options = {}) {
             if (closed) {
-                counts.closed++;
+                drop('closed');
                 return false;
             }
             if (dead()) {
-                counts.io++;
+                drop('io');
                 return false;
             }
             try {
@@ -474,14 +488,14 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
                             : 'common';
                 const line = encodeRecord(record, profile) + '\n';
                 if (queue.length >= QUEUE_CAPACITY) {
-                    counts.backpressure++; // backpressure = the queue is full
+                    drop('backpressure'); // backpressure = the queue is full
                     return false;
                 }
                 queue.push(line);
                 pump();
                 return true;
             } catch {
-                counts.invalid++;
+                drop('invalid');
                 return false;
             }
         },

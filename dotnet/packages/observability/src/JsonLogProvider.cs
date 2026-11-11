@@ -32,6 +32,7 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
     private IExternalScopeProvider scopes = new LoggerExternalScopeProvider();
     private bool closed; // Guarded by gate.
     private long written, invalid, queueFull, ioErrors, closedDrops, pending;
+    private readonly LogDropMetrics.ServiceDrops drops; // This service's process-wide drop metric (R1).
     private const string ErrorTypeField = "error.type";
     private const string StacktraceField = "exception.stacktrace";
     private const string TruncatedField = "logging.truncated";
@@ -49,6 +50,7 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
     {
         this.configuration = configuration;
         this.writer = writer ?? Console.Out;
+        drops = LogDropMetrics.Register(configuration.Service);
         // A dedicated background thread: a blocked output never holds a thread-pool thread or the process at exit.
         worker = Task.Factory.StartNew(Run, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
     }
@@ -85,14 +87,21 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
         {
             if (closed)
             {
-                Interlocked.Increment(ref closedDrops);
+                Drop(ref closedDrops, DropReason.Closed);
                 return;
             }
             Interlocked.Increment(ref pending);
             if (queue.Writer.TryWrite(line)) return;
             Interlocked.Decrement(ref pending);
-            Interlocked.Increment(ref queueFull);
+            Drop(ref queueFull, DropReason.QueueFull);
         }
+    }
+
+    /// <summary>Count one line that was not written, on this provider and on its service's drop metric.</summary>
+    private void Drop(ref long counter, DropReason reason)
+    {
+        Interlocked.Increment(ref counter);
+        drops.Add(reason);
     }
 
     private void Run()
@@ -110,7 +119,7 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
                 catch (Exception)
                 {
                     // Never log a sink failure through this same logger; go on with the next line.
-                    Interlocked.Increment(ref ioErrors);
+                    Drop(ref ioErrors, DropReason.IoErrors);
                 }
                 finally { Interlocked.Decrement(ref pending); }
             }
@@ -159,7 +168,7 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
         catch (Exception)
         {
             // Never log rejected data through this same logger.
-            Interlocked.Increment(ref invalid);
+            Drop(ref invalid, DropReason.Invalid);
         }
     }
 

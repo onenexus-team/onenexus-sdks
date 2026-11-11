@@ -124,6 +124,25 @@ class SharedTests(unittest.TestCase):
                 with self.subTest(case=case["id"], language=language):
                     self.assertIn(case["id"], text)
 
+    def test_every_language_tests_every_drop_metric_case(self):
+        metric = self.suite["drop_metric"]
+        self.assertEqual(metric["otel_name"], "onenexus.log.records.dropped")
+        self.assertEqual(metric["prometheus_name"], "onenexus_log_records_dropped_total")
+        # The reasons are exactly the write-model counters that mean "not written".
+        not_written = set(self.suite["write_model"]["counters"]) - {"written", "pending"}
+        self.assertEqual(metric["reasons"], sorted(not_written))
+        test_files = {
+            "python": "python/packages/observability/tests/test_drop_metric.py",
+            "typescript": "ts/packages/observability/test/drop-metric.test.ts",
+            "go": "go/packages/observability/tests/drop_metric_test.go",
+            "dotnet": "dotnet/packages/observability/tests/unit/DropMetricTests.cs",
+        }
+        for case in metric["cases"]:
+            for language in case["languages"]:
+                text = (ROOT / test_files[language]).read_text()
+                with self.subTest(case=case["id"], language=language):
+                    self.assertIn(case["id"], text)
+
     def test_contract_digest_is_the_schema_hash_in_every_language(self):
         schema = ROOT / "go/packages/observability/schema.json"
         digest = hashlib.sha256(schema.read_bytes()).hexdigest()

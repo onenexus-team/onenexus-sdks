@@ -78,6 +78,7 @@ type sink struct {
 	// line on the output, so the next line must start with "\n".
 	midLine  bool
 	counters counters
+	drops    *serviceDrops // this service's process-wide drop metric (R1)
 }
 
 // Handler is an opt-in slog handler. Clones share one sink and its counters.
@@ -165,7 +166,7 @@ func NewHandler(config Config, writer io.Writer) (*Handler, error) {
 	if !utf8.ValidString(config.Service+config.Region+config.Environment) || len(ValidateJSON(data, "common")) > 0 {
 		return nil, errors.New("invalid_log_config")
 	}
-	h.sink = &sink{writer: writer, exited: make(chan struct{}), stop: make(chan struct{})}
+	h.sink = &sink{writer: writer, drops: registerDrops(config.Service), exited: make(chan struct{}), stop: make(chan struct{})}
 	return h, nil
 }
 
@@ -194,15 +195,15 @@ func levelName(level slog.Level) string {
 // cannot be emitted is removed and counted, and an error attr adds its type and
 // call-site frames. Only a record that still breaks the contract is dropped; it
 // returns only stable errors and never echoes values. slog ignores handler errors.
-// Operators should export Stats through their metrics.
+// Every line not written is also counted on the drop metric (DropCounts).
 func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	s := h.sink
 	if s.closed.Load() {
-		s.counters.closed.Add(1)
+		s.drop(&s.counters.closed, reasonClosed)
 		return nil
 	}
 	if !utf8.ValidString(record.Message) {
-		s.counters.invalid.Add(1)
+		s.drop(&s.counters.invalid, reasonInvalid)
 		return errInvalid
 	}
 	message, cut := shorten(record.Message, h.messageLimit)
@@ -228,7 +229,7 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	_, hasEvent := attrs["event"]
 	_, hasOutcome := attrs["outcome"]
 	if hasEvent != hasOutcome {
-		s.counters.invalid.Add(1)
+		s.drop(&s.counters.invalid, reasonInvalid)
 		return errInvalid
 	}
 	if state.errorType != "" {
@@ -248,7 +249,7 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 		t = time.Now()
 	}
 	if !time.Unix(0, t.UnixNano()).Equal(t) {
-		s.counters.invalid.Add(1)
+		s.drop(&s.counters.invalid, reasonInvalid)
 		return errInvalid
 	}
 	attrs["timestamp"] = t.UnixNano()
@@ -270,7 +271,7 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	}
 	buf, err := h.fit(attrs, removable, state)
 	if err != nil || buf.Len()-1 > h.recordLimit || len(ValidateJSON(buf.Bytes(), profile)) > 0 {
-		s.counters.invalid.Add(1)
+		s.drop(&s.counters.invalid, reasonInvalid)
 		return errInvalid
 	}
 	// An ERROR/FATAL line waits (bounded) until it is written, so it survives a
@@ -298,7 +299,7 @@ func (s *sink) submit(item queued) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.closed.Load() {
-		s.counters.closed.Add(1)
+		s.drop(&s.counters.closed, reasonClosed)
 		return false
 	}
 	s.start.Do(func() {
@@ -314,9 +315,16 @@ func (s *sink) submit(item queued) bool {
 		return true
 	default:
 		s.pending.Add(-1)
-		s.counters.busy.Add(1)
+		s.drop(&s.counters.busy, reasonQueueFull)
 		return false
 	}
+}
+
+// drop counts one line not written: on this handler's Stats and on the
+// service's process-wide drop metric.
+func (s *sink) drop(local *atomic.Uint64, reason reasonIndex) {
+	local.Add(1)
+	s.drops[reason].Add(1)
 }
 
 // goroutineID parses the current goroutine's id ("goroutine 7 [running]:").
@@ -365,7 +373,7 @@ func (s *sink) write(line []byte) {
 		s.counters.written.Add(1)
 		return
 	}
-	s.counters.ioErrors.Add(1)
+	s.drop(&s.counters.ioErrors, reasonIOErrors)
 	switch {
 	case n < 0 || n > len(data):
 		s.midLine = true // unknown (a panic or a writer breaking the io.Writer contract)

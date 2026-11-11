@@ -79,6 +79,27 @@ const drained = await logger.close(1000);
 - W3C version `00` supported; baggage and tracestate are intentionally not forwarded.
 - Node.js >24.17; ESM and CommonJS consumers share one runtime entry point and context store. Avoid installing multiple SDK versions in the same process.
 
+## Drop metric
+
+Every line a logger does not write is counted once, process-wide, per `(service, reason)` (`tests/logging/scenarios.json` `drop_metric`, design review R1).
+
+| API | Returns |
+|---|---|
+| `logDropCounts()` | `readonly DropCount[]` — `{ service, reason, count }`, sorted by service then reason |
+| `dropMetricsText(counts?)` | Prometheus text for `onenexus_log_records_dropped_total{service, reason}` (default: the live snapshot), for a `/metrics` route |
+| `registerDropMetric(meter)` | The `onenexus.log.records.dropped` asynchronous counter (unit `{record}`) on your `@opentelemetry/api` `Meter` |
+
+| `reason` | Logger counter |
+|---|---|
+| `closed` | `closed` |
+| `invalid` | `invalid` |
+| `io_errors` | `io` |
+| `queue_full` | `backpressure` |
+
+- `service` is `LogConfig.service`. Creating a logger reports all four reasons for its service at 0.
+- Loggers of one service are summed; the metric equals the sum of their `stats()` counters.
+- Counts never decrease, also after `close()`; a process restart resets them.
+
 ## Validation
 
 ```bash
