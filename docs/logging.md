@@ -70,6 +70,7 @@ flowchart LR
 | `logging.dropped_field_count` | integer 1–64 | SDK only (protected) | Fields removed from this record |
 | `error.type` | string ≤ 128, no spaces | SDK, or the caller | Type name only |
 | `exception.stacktrace` | string ≤ 2,048 bytes | SDK, or the caller | `at <function> (<file>:<line>)` per frame, innermost first |
+| `logging.error_fingerprint` | 16 lowercase hex | SDK only (protected), contract 0.5.0 | Same failure → same value across lines and builds; see [Error fingerprint](#error-fingerprint-design-review-f1) |
 
 - A caller value for `error.type` / `exception.stacktrace` wins (MLOps already sets its own).
 - Never logged: the error message, argument values, source lines, directories.
@@ -118,7 +119,7 @@ sequenceDiagram
 | Rollout | SDK release → one service pin at a time → live raw test → promotion |
 | Rollback | Previous pin or image; no stored state, no migration |
 | Proof | `tests/logging/scenarios.json` → `degradation_cases`, run through the real logger in all four languages; live: the consuming repo's raw test |
-| Contract identity | `x-contract-version` 0.4.0; `CONTRACT_DIGEST` = sha256 of the bundled `schema.json`, equal in every language (shared test) |
+| Contract identity | `x-contract-version` 0.5.0 (0.4.0 + `logging.error_fingerprint`); `CONTRACT_DIGEST` = sha256 of the bundled `schema.json`, equal in every language (shared test) |
 
 ## The caller never waits on the output (one write model, SDK 0.7.0)
 
@@ -237,6 +238,32 @@ flowchart LR
 Python also has `LogDropCounter(service).add(reason)` for an adapter that builds records with the SDK but owns its sink (MLOps `ContractLogHandler`).
 
 Query for every service: `sum by (service, reason) (rate(onenexus_log_records_dropped_total[5m]))`.
+
+## Error fingerprint (design review F1)
+
+Every record with `error.type` carries `logging.error_fingerprint`: one value per failure, so one query groups it across pods, lines and builds (`tests/logging/scenarios.json` → `error_fingerprint`).
+
+```mermaid
+flowchart LR
+    E["error.type<br/>+ exception.stacktrace"] --> N["each frame without<br/>its :line"] --> H["SHA-256"] --> F["first 16 hex<br/>logging.error_fingerprint"]
+```
+
+| Rule | Why |
+|---|---|
+| Input = `error.type`, then each stack frame with a trailing `:<line>)` made `)` | A rebuild moves line numbers; the failure is the same |
+| Uses the values after caller values apply, before the record is fitted | Fitting to 4,096 bytes never changes it |
+| Never the message or argument values | Nothing private goes into the hash |
+| Protected: a caller value is removed and counted | One owner, one algorithm |
+| No `error.type` → no fingerprint | Only failures are grouped |
+
+| Language | Function |
+|---|---|
+| Python | `error_fingerprint(error_type, stacktrace)` |
+| TypeScript | `errorFingerprint(errorType, stacktrace)` |
+| Go | `ErrorFingerprint(errorType, stacktrace)` |
+| .NET | `JsonLogProvider.ErrorFingerprint(errorType, stacktrace)` |
+
+Query: `{service=~".+"} | json | logging_error_fingerprint="bdcfe1d0356bbee7"`.
 
 ## Release
 

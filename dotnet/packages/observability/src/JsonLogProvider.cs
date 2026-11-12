@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
@@ -37,6 +38,7 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
     private const string StacktraceField = "exception.stacktrace";
     private const string TruncatedField = "logging.truncated";
     private const string DroppedField = "logging.dropped_field_count";
+    private const string FingerprintField = "logging.error_fingerprint";
     private const string TruncationMark = "\u2026";
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
 
@@ -157,6 +159,9 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
                     // A caller-supplied value wins; only the SDK's own stack can carry its cut flag.
                     if (record.TryAdd(key, value) && key == StacktraceField) draft.Truncated |= cut;
             }
+            // Before fitting: a shortened stack keeps the fingerprint.
+            if (record.TryGetValue(ErrorTypeField, out var errorType) && errorType is string type)
+                record[FingerprintField] = ErrorFingerprint(type, record.GetValueOrDefault(StacktraceField) as string);
             if (record.ContainsKey("event") != record.ContainsKey("outcome")) throw new ArgumentException("incomplete_event");
             var json = Fit(draft);
             var profile = record.ContainsKey("request_event") ? "request" : !record.ContainsKey("trace_id") ? "common" : record.ContainsKey("event") ? "lifecycle" : "correlated";
@@ -223,6 +228,29 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
             end += rune.Utf16SequenceLength;
         }
         return (text[..end] + TruncationMark, true);
+    }
+
+    /// <summary>
+    /// Groups one failure across lines and builds (tests/logging error_fingerprint): the type and each frame
+    /// without its line number; never the message.
+    /// </summary>
+    public static string ErrorFingerprint(string errorType, string? stacktrace)
+    {
+        var text = new StringBuilder(errorType);
+        if (!string.IsNullOrEmpty(stacktrace))
+            foreach (var frame in stacktrace.Split('\n'))
+                text.Append('\n').Append(WithoutLine(frame));
+        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(text.ToString())))[..16];
+    }
+
+    /// <summary>A trailing ':&lt;digits&gt;)' becomes ')'.</summary>
+    private static string WithoutLine(string frame)
+    {
+        if (!frame.EndsWith(')')) return frame;
+        var end = frame.Length - 1;
+        var start = end;
+        while (start > 0 && char.IsAsciiDigit(frame[start - 1])) start--;
+        return start < end && start > 0 && frame[start - 1] == ':' ? frame[..(start - 1)] + ")" : frame;
     }
 
     /// <summary>Type and frames of an exception; never its message or argument values.</summary>

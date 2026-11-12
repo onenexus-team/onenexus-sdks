@@ -10,7 +10,7 @@ from .drop_metric import (
     log_drop_counts,
     register_drop_metric,
 )
-from .logging import JsonLogHandler, LogConfig, build_record, install_handler
+from .logging import JsonLogHandler, LogConfig, build_record, error_fingerprint, install_handler
 from .request import RequestLogContext, current_request_fields, request_log_context
 
 __all__ = [
@@ -24,6 +24,7 @@ __all__ = [
     "bound_context",
     "build_record",
     "current_trace_id",
+    "error_fingerprint",
     "LogDropCounter",
     "drop_metrics_text",
     "incoming_context",

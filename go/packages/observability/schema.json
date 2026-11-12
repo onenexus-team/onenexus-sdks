@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:onenexus:log-correlation:0.4.0",
+  "$id": "urn:onenexus:log-correlation:0.5.0",
   "$defs": {
     "common": {
       "additionalProperties": true,
@@ -170,6 +170,10 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 64
+        },
+        "logging.error_fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
         }
       },
       "required": [
@@ -269,7 +273,7 @@
     }
   },
   "$ref": "#/$defs/common",
-  "x-contract-version": "0.4.0",
+  "x-contract-version": "0.5.0",
   "x-semantic-checks": {
     "message_max_utf8_bytes": 1024,
     "record_max_compact_utf8_bytes": 4096,
@@ -289,6 +293,7 @@
     "outcome",
     "environment",
     "logging.truncated",
-    "logging.dropped_field_count"
+    "logging.dropped_field_count",
+    "logging.error_fingerprint"
   ]
 }

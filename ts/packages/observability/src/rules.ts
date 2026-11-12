@@ -26,9 +26,9 @@ const validators = new Map(
         ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: `#/$defs/${name}` }),
     ]),
 );
-export const CONTRACT_VERSION = "0.4.0"; // Log-format identity, not the SDK version.
+export const CONTRACT_VERSION = "0.5.0"; // Log-format identity, not the SDK version.
 // sha256 of the bundled schema.json; equal in every language (tests/logging).
-export const CONTRACT_DIGEST = "298e185da5305c57450b26434ea859ddb768c82623ddb60ad5c7af72c0a68df4";
+export const CONTRACT_DIGEST = "a74f4060d34865b8fe06494036b2e722be3ee10c9cc964e41efb9a9401bc01b9";
 export const MAX_MESSAGE_BYTES: number = schema['x-semantic-checks'].message_max_utf8_bytes;
 export const MAX_RECORD_BYTES: number = schema['x-semantic-checks'].record_max_compact_utf8_bytes;
 export const MAX_FIELD_BYTES: number = schema['x-semantic-checks'].field_max_utf8_bytes;
