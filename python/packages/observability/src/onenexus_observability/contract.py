@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import math
+import re
+from collections.abc import Callable, Collection
 from typing import Any
 
 from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
@@ -26,6 +29,61 @@ MAX_DROPPED_FIELD_COUNT = _COMMON["logging.dropped_field_count"]["maximum"]
 MAX_ERROR_TYPE_CHARS = _COMMON["error.type"]["maxLength"]
 # Logger-owned fields stay protected when optional shared fields are added.
 COMMON_FIELDS = frozenset(_SCHEMA["x-protected-fields"])
+
+# The field registry (design review E1): which custom names a service may allow.
+_REGISTRY = _SCHEMA["x-field-registry"]
+MAX_CUSTOM_FIELDS = _REGISTRY["max_custom_fields"]
+_NAME_PATTERN = re.compile(_REGISTRY["name_pattern"])
+_NAME_MAX_CHARS = _REGISTRY["name_max_chars"]
+_BANNED: dict[str, str] = _REGISTRY["banned"]
+_NAMESPACES = frozenset(_REGISTRY["namespaces"])
+_RESERVED_NAMESPACES = frozenset(_REGISTRY["reserved_namespaces"])
+# One check per registry value type; a type missing here fails at import.
+_VALUE_TYPES: dict[str, Callable[[object], bool]] = {
+    "string": lambda v: isinstance(v, str),
+    "integer": lambda v: isinstance(v, int) and not isinstance(v, bool),
+    "number": lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v),
+    "boolean": lambda v: isinstance(v, bool),
+    "null": lambda v: v is None,
+}
+_FIELD_TYPES = {name: _VALUE_TYPES[field["type"]] for name, field in _REGISTRY["fields"].items()}
+_SCALAR_CHECKS = tuple(_VALUE_TYPES[name] for name in _REGISTRY["value_types"])
+
+
+def _registry_error(rule: str, detail: object) -> ValueError:
+    return ValueError(f"invalid_allowed_fields: {rule}: {detail}")
+
+
+def check_allowed_fields(names: Collection[str]) -> None:
+    """Raise ``ValueError("invalid_allowed_fields: <rule>: <detail>")`` at the first rejected name.
+
+    Rules, in order: protected, format, banned (the error names the
+    replacement), registered field (accepted), reserved namespace, namespace.
+    More than ``MAX_CUSTOM_FIELDS`` names fails as ``too_many``.
+    """
+    if len(names) > MAX_CUSTOM_FIELDS:
+        raise _registry_error("too_many", f"{len(names)} > {MAX_CUSTOM_FIELDS}")
+    for name in names:
+        if name in COMMON_FIELDS:
+            raise _registry_error("protected", name)
+        if not isinstance(name, str) or len(name) > _NAME_MAX_CHARS or not _NAME_PATTERN.fullmatch(name):
+            raise _registry_error("format", name)
+        if name in _BANNED:
+            raise _registry_error("banned", f"{name} -> {_BANNED[name]}")
+        if name in _FIELD_TYPES:
+            continue
+        head, _, rest = name.partition(".")
+        if head in _RESERVED_NAMESPACES:
+            raise _registry_error("reserved", name)
+        if not rest or head not in _NAMESPACES:
+            raise _registry_error("namespace", name)
+
+
+def valid_field_value(name: str, value: object) -> bool:
+    """A flat scalar (string, finite number, boolean, null) of the field's registered type, if any."""
+    if not any(check(value) for check in _SCALAR_CHECKS):
+        return False
+    return value is None or name not in _FIELD_TYPES or _FIELD_TYPES[name](value)
 
 
 def _code(field: object) -> str:
