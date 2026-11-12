@@ -238,6 +238,70 @@ Python also has `LogDropCounter(service).add(reason)` for an adapter that builds
 
 Query for every service: `sum by (service, reason) (rate(onenexus_log_records_dropped_total[5m]))`.
 
+## One field registry (design review E1, contract 0.5.0)
+
+One name per concept. The schema's `x-field-registry` decides which custom field names a service may log (`tests/logging/scenarios.json` → `field_registry`).
+
+```mermaid
+flowchart TD
+    A["allowed field name"] --> P{"protected?"}
+    P -->|yes| X["config error<br/>invalid_allowed_fields"]:::bad
+    P -->|no| F{"format:<br/>lowercase · ≤ 5 segments · ≤ 128 chars"}
+    F -->|no| X
+    F -->|yes| B{"banned?"}
+    B -->|yes| XB["config error<br/>+ the replacement"]:::bad
+    B -->|no| R{"registered field?"}
+    R -->|yes| OK["accepted"]:::ok
+    R -->|no| RS{"reserved namespace?<br/>logging.* · k8s.*"}
+    RS -->|yes| X
+    RS -->|no| N{"2+ segments and<br/>registered namespace?"}
+    N -->|yes| OK
+    N -->|no| X
+    classDef ok fill:#d4edda,stroke:#2e7d32,color:#000
+    classDef bad fill:#fde2e1,stroke:#c62828,color:#000
+```
+
+```mermaid
+sequenceDiagram
+    participant Svc as Service
+    participant SDK as SDK logger
+    participant Out as stdout
+    Svc->>SDK: configure(allowed fields)
+    SDK->>SDK: check every name against the registry
+    SDK--xSvc: invalid_allowed_fields: banned: status_code -> http.response.status_code
+    Note over Svc: startup and the emission test fail in CI
+    Svc->>SDK: configure(registered names)
+    Svc->>SDK: log(fields)
+    SDK->>SDK: object / array / wrong type → remove, count
+    SDK->>Out: flat scalars only
+```
+
+| Registry part | Contents |
+|---|---|
+| `name_pattern`, `name_max_chars` | `^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){0,4}$`, 128 |
+| `max_custom_fields` | 256 per service (was 32) |
+| `namespaces` | OTel `http` `error` `exception` `service` `db` `rpc` · platform `resource` `job` · services `mlops` `policy` `utility` `usage` `quota` `collector` · `example` (tests and docs) |
+| `reserved_namespaces` | `logging` (SDK) · `k8s` (collector) |
+| `fields` | Registered cross-service fields with a type: `logger`, `tenant_id`, `error_code`, `duration_ms`, `http.*`, `error.type`, `resource.*`, `job.*`, `logging.sdk_version`, … |
+| `banned` | Synonym → replacement, e.g. `status_code` → `http.response.status_code`, `mlops.error.code` → `error_code`, `context` → flat fields |
+
+| Rule | Where | Result |
+|---|---|---|
+| Name check | Logger configuration | `invalid_allowed_fields: <rule>: <name>` (+ ` -> <replacement>` when banned) |
+| Value is an object or array | Each record | Field removed, `logging.dropped_field_count` +1, line kept |
+| Registered field with the wrong type | Each record | Same: removed and counted |
+
+| Language | Check |
+|---|---|
+| Python | `check_allowed_fields(names)` |
+| TypeScript | `checkAllowedFields(names)` |
+| Go | `CheckAllowedFields(names)` |
+| .NET | `FieldRegistry.Check(names)` |
+
+- To add a field: a service field goes in its own namespace (no SDK change); a cross-service field is a registry PR here.
+- Unit-suffix, `_at` and `_count` naming rules are documented in the design review, not enforced.
+- Upgrade: a service whose allowed fields break the registry fails at startup. Run its emission tests on the new pin first.
+
 ## Release
 
 | Step | Required result |
