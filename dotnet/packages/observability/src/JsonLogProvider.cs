@@ -39,6 +39,7 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
     private const string DroppedField = "logging.dropped_field_count";
     private const string TruncationMark = "\u2026";
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
+    private static readonly JsonElement StringValue = JsonSerializer.SerializeToElement(""); // Any string: only its kind is checked.
 
     /// <summary>Every line that was not written: invalid, queue full, write error, or logged after close.</summary>
     public long DroppedRecords => Interlocked.Read(ref invalid) + Interlocked.Read(ref queueFull) + Interlocked.Read(ref ioErrors) + Interlocked.Read(ref closedDrops);
@@ -198,14 +199,16 @@ public sealed class JsonLogProvider : ILoggerProvider, ISupportExternalScope
         if (key == StacktraceField && value is not string { Length: > 0 }) return false;
         if (value is string text)
         {
+            if (!Contract.ValidFieldValue(key, StringValue)) return false; // Registered as another type.
             try { StrictUtf8.GetByteCount(text); }
             catch (EncoderFallbackException) { return false; } // Not valid Unicode, e.g. a lone surrogate.
             (emitted, cut) = Shorten(text, key == StacktraceField ? Contract.MaxStacktraceBytes : Contract.MaxFieldBytes);
             return true;
         }
-        try { JsonSerializer.SerializeToUtf8Bytes(value, Contract.JsonOptions); } // Probe only; emitted as before.
+        JsonElement json;
+        try { json = JsonSerializer.SerializeToElement(value, Contract.JsonOptions); } // Probe only; emitted as before.
         catch (Exception) { return false; } // Non-finite numbers and values System.Text.Json cannot serialise.
-        return true;
+        return Contract.ValidFieldValue(key, json); // A flat scalar of the registered type (field registry E1).
     }
 
     private static bool ValidErrorType(object? value) => value is string { Length: > 0 } text &&

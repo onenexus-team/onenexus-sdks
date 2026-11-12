@@ -17,8 +17,7 @@ public sealed class LogConfiguration
         Environment = environment;
         Region = region;
         AllowedFields = (allowedFields ?? []).ToFrozenSet(StringComparer.Ordinal);
-        if (AllowedFields.Count > 32 || AllowedFields.Any(f => string.IsNullOrWhiteSpace(f) || f.Length > 128 || Contract.ReservedFields.Contains(f)))
-            throw new ArgumentException("invalid_allowed_fields");
+        Contract.CheckAllowedFields(AllowedFields);
         var record = JsonSerializer.SerializeToElement(new { timestamp = 0, level = "INFO", service, environment, region, message = "Configuration" });
         if (Contract.Validate(record).Count != 0) throw new ArgumentException("invalid_log_configuration");
     }

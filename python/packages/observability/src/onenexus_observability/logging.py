@@ -6,7 +6,6 @@ import atexit
 import io
 import json
 import logging
-import math
 import os
 import queue
 import sys
@@ -22,7 +21,6 @@ from typing import Any, TextIO
 from .context import current_trace_id
 from .drop_metric import _DROPS, DropReason
 from .contract import (
-    COMMON_FIELDS,
     MAX_DROPPED_FIELD_COUNT,
     MAX_ERROR_TYPE_CHARS,
     MAX_FIELD_BYTES,
@@ -30,7 +28,9 @@ from .contract import (
     MAX_RECORD_BYTES,
     MAX_STACKTRACE_BYTES,
     ContractViolation,
+    check_allowed_fields,
     encode_record,
+    valid_field_value,
     validate_record,
 )
 from .request import REQUEST_FIELDS, current_request_fields
@@ -63,13 +63,9 @@ class LogConfig:
         )
         if errors:
             raise ContractViolation(errors)
-        if not isinstance(self.allowed_fields, frozenset) or len(self.allowed_fields) > 32:
-            raise ValueError("invalid_allowed_fields")
-        if any(
-            not isinstance(k, str) or not k or len(k) > 128 or k in COMMON_FIELDS
-            for k in self.allowed_fields
-        ):
-            raise ValueError("invalid_allowed_fields")
+        if not isinstance(self.allowed_fields, frozenset):
+            raise ValueError("invalid_allowed_fields: type: allowed_fields must be a frozenset")
+        check_allowed_fields(self.allowed_fields)
 
 
 def shorten(text: str, limit: int) -> tuple[str, bool]:
@@ -91,6 +87,8 @@ def _valid_error_type(value: object) -> bool:
 
 def _field_value(key: str, value: object) -> tuple[object, bool] | None:
     """The value to emit and whether it was cut; None when it cannot be emitted."""
+    if not valid_field_value(key, value):
+        return None
     if key == ERROR_TYPE_FIELD and not _valid_error_type(value):
         return None
     if key == STACKTRACE_FIELD and not (isinstance(value, str) and value):
@@ -100,12 +98,6 @@ def _field_value(key: str, value: object) -> tuple[object, bool] | None:
             return shorten(value, MAX_STACKTRACE_BYTES if key == STACKTRACE_FIELD else MAX_FIELD_BYTES)
         except UnicodeError:
             return None  # Not valid Unicode (e.g. a lone surrogate): cannot be encoded.
-    if isinstance(value, float) and not math.isfinite(value):
-        return None
-    try:
-        _encoded_size(value)
-    except (TypeError, ValueError, RecursionError):
-        return None
     return value, False
 
 
@@ -190,8 +182,8 @@ def build_record(
 ) -> dict[str, Any]:
     """Build and validate; errors never include the source record or message.
 
-    A too-long message or string field is shortened and an unknown or
-    unserialisable field is removed, so the line still arrives; the record says so
+    A too-long message or string field is shortened; an unknown field, a value
+    that is not a flat scalar, or one not of its registered type is removed, so the line still arrives; the record says so
     in ``logging.truncated`` and ``logging.dropped_field_count``.
     """
     truncated = False

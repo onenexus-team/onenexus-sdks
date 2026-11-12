@@ -11,7 +11,7 @@ namespace OneNexus.Observability.Tests;
 public sealed partial class LoggingTests
 {
     private const string Parent = "00-11111111111111111111111111111111-2222222222222222-01";
-    private static readonly LogConfiguration Config = new("cas-test", "development", "region-1", ["operation_id", "attempt"]);
+    private static readonly LogConfiguration Config = new("cas-test", "development", "region-1", ["example.operation_id", "job.attempt", "logger"]);
     private static KeyValuePair<string, string>[] Headers(string parent = Parent) => [new("traceparent", parent)];
     // Writes are asynchronous (write model F2): drain the provider before reading its output.
     private static JsonElement[] Records(JsonLogProvider provider, StringWriter writer)
@@ -52,9 +52,9 @@ public sealed partial class LoggingTests
         using var provider = new JsonLogProvider(Config, output);
         var logger = provider.CreateLogger("test");
         using (CorrelationContext.BindIncoming(Headers(), true))
-        using (logger.BeginScope(new Dictionary<string, object?> { ["operation_id"] = "op-1", ["environment"] = "prod", ["Authorization"] = "private-marker" }))
+        using (logger.BeginScope(new Dictionary<string, object?> { ["example.operation_id"] = "op-1", ["environment"] = "prod", ["Authorization"] = "private-marker" }))
         {
-            logger.LogWarning("Request {attempt}", 2);
+            logger.LogWarning("Request {job.attempt}", 2);
             logger.LogError(new InvalidOperationException("private-exception"), "Safe failure");
         }
         logger.LogInformation("System ready");
@@ -62,8 +62,8 @@ public sealed partial class LoggingTests
         Assert.HasCount(3, rows);
         Assert.AreEqual("development", rows[0].GetProperty("environment").GetString());
         Assert.AreEqual("WARN", rows[0].GetProperty("level").GetString());
-        Assert.AreEqual("op-1", rows[0].GetProperty("operation_id").GetString());
-        Assert.AreEqual(2, rows[0].GetProperty("attempt").GetInt32());
+        Assert.AreEqual("op-1", rows[0].GetProperty("example.operation_id").GetString());
+        Assert.AreEqual(2, rows[0].GetProperty("job.attempt").GetInt32());
         Assert.AreEqual("11111111111111111111111111111111", rows[0].GetProperty("trace_id").GetString());
         // The protected "environment" and unapproved "Authorization" scope fields are removed and counted.
         Assert.IsTrue(rows[..2].All(r => r.GetProperty("logging.dropped_field_count").GetInt32() == 2));
@@ -188,7 +188,7 @@ public sealed partial class LoggingTests
         using var provider = new JsonLogProvider(Config, output);
         var logger = provider.CreateLogger("test");
         logger.LogInformation(new string('界', 400)); // Shortened, not dropped.
-        logger.LogInformation("Invalid {attempt}", double.NaN); // Field removed and counted, not dropped.
+        logger.LogInformation("Invalid {job.attempt}", double.NaN); // Field removed and counted, not dropped.
         logger.Log(LogLevel.Information, default, "safe", null, (_, _) => throw new InvalidOperationException("private"));
         using (logger.BeginScope(new Dictionary<string, object?> { ["event"] = "request.done" }))
             logger.LogInformation("Incomplete event");
@@ -198,7 +198,7 @@ public sealed partial class LoggingTests
         Assert.HasCount(2, kept);
         Assert.IsTrue(kept[0].GetProperty("logging.truncated").GetBoolean());
         Assert.AreEqual(new string('界', 340) + "\u2026", kept[0].GetProperty("message").GetString());
-        Assert.IsFalse(kept[1].TryGetProperty("attempt", out _));
+        Assert.IsFalse(kept[1].TryGetProperty("job.attempt", out _));
         Assert.AreEqual(1, kept[1].GetProperty("logging.dropped_field_count").GetInt32());
         using var broken = new JsonLogProvider(Config, new BrokenWriter());
         broken.CreateLogger("test").LogInformation("safe");
@@ -216,20 +216,21 @@ public sealed partial class LoggingTests
         public override void WriteLine(string? value) => throw new IOException("private sink detail");
     }
 
-    [LoggerMessage(EventId = 42, Level = LogLevel.Information, Message = "Attempt {attempt} completed")]
-    private static partial void GeneratedLog(ILogger logger, int attempt);
+    // A generated template name is a parameter name, so it can only carry a flat registered field.
+    [LoggerMessage(EventId = 42, Level = LogLevel.Information, Message = "Worker {logger} completed")]
+    private static partial void GeneratedLog(ILogger log, string logger);
 
     [TestMethod]
     public void SourceGeneratedLoggerUsesSameProvider()
     {
         using var output = new StringWriter();
         using var provider = new JsonLogProvider(Config, output);
-        using (CorrelationContext.BindIncoming(Headers(), true)) GeneratedLog(provider.CreateLogger("cas"), 2);
+        using (CorrelationContext.BindIncoming(Headers(), true)) GeneratedLog(provider.CreateLogger("cas"), "app.worker");
         var record = Records(provider, output).Single();
         Assert.IsEmpty(Contract.Validate(record, "correlated"));
-        Assert.AreEqual(2, record.GetProperty("attempt").GetInt32());
+        Assert.AreEqual("app.worker", record.GetProperty("logger").GetString());
         Assert.IsFalse(record.TryGetProperty("logging.dropped_field_count", out _)); // {OriginalFormat} is not a caller field.
-        Assert.AreEqual("Attempt 2 completed", record.GetProperty("message").GetString());
+        Assert.AreEqual("Worker app.worker completed", record.GetProperty("message").GetString());
     }
 
     [TestMethod]
@@ -262,13 +263,13 @@ public sealed partial class LoggingTests
         using var provider = new JsonLogProvider(Config, output);
         var logger = provider.CreateLogger("test");
         foreach (var level in Enum.GetValues<LogLevel>()) logger.Log(level, "Safe message");
-        using (logger.BeginScope(new Dictionary<string, object?> { ["operation_id"] = new string('x', 4096) }))
+        using (logger.BeginScope(new Dictionary<string, object?> { ["example.operation_id"] = new string('x', 4096) }))
             logger.LogInformation("Large custom field");
         var rows = Records(provider, output);
         Assert.AreEqual(0L, provider.DroppedRecords);
         Assert.HasCount(7, rows);
         CollectionAssert.AreEqual(new[] { "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL" }, rows[..6].Select(r => r.GetProperty("level").GetString()).ToArray());
-        Assert.AreEqual(new string('x', 1021) + "\u2026", rows[6].GetProperty("operation_id").GetString());
+        Assert.AreEqual(new string('x', 1021) + "\u2026", rows[6].GetProperty("example.operation_id").GetString());
         Assert.IsTrue(rows[6].GetProperty("logging.truncated").GetBoolean());
         Assert.IsTrue(rows.All(r => System.Text.Encoding.UTF8.GetByteCount(r.GetRawText()) <= Contract.MaxRecordBytes));
     }

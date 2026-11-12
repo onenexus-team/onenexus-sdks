@@ -31,7 +31,7 @@ from onenexus_observability import (
 
 SCENARIOS = Path(os.environ.get("ONENEXUS_LOGGING_SCENARIOS", Path(__file__).resolve().parents[4] / "tests/logging/scenarios.json"))
 
-CONFIG = LogConfig("test-api", "development", "region-1", frozenset({"operation_id", "attempt"}))
+CONFIG = LogConfig("test-api", "development", "region-1", frozenset({"example.operation_id", "job.attempt"}))
 
 
 def logger_for(stream):
@@ -102,7 +102,7 @@ def test_actual_logger_fields_and_custom_fields():
             extra={
                 "event": "request.completed",
                 "outcome": "success",
-                "fields": {"operation_id": "op-1", "attempt": 1},
+                "fields": {"example.operation_id": "op-1", "job.attempt": 1},
                 "environment": "prod",
                 "trace_id": "0" * 32,
             },
@@ -113,7 +113,7 @@ def test_actual_logger_fields_and_custom_fields():
     assert value["trace_id"] == expected
     assert value["level"] == "WARN"
     assert value["message"] == "Request completed"
-    assert value["operation_id"] == "op-1"
+    assert value["example.operation_id"] == "op-1"
     assert handler.dropped_records == 0
     output.seek(0)
     output.truncate()
@@ -149,13 +149,13 @@ def test_message_limits_json_and_error_safety(capsys):
     output = Output()
     logger, handler = logger_for(output)
     logger.info("界" * 400)
-    logger.info("safe", extra={"fields": {"operation_id": float("nan")}})
-    logger.info("safe", extra={"fields": {"operation_id": "x" * 4096}})
+    logger.info("safe", extra={"fields": {"example.operation_id": float("nan")}})
+    logger.info("safe", extra={"fields": {"example.operation_id": "x" * 4096}})
     rows = [json.loads(line) for line in output.getvalue().splitlines()]
     assert [r["message"][-1] for r in rows] == ["\u2026", "e", "e"]
     assert len(rows[0]["message"].encode()) <= 1024 and rows[0]["logging.truncated"] is True
-    assert "operation_id" not in rows[1] and rows[1]["logging.dropped_field_count"] == 1
-    assert len(rows[2]["operation_id"].encode()) <= 1024 and rows[2]["logging.truncated"] is True
+    assert "example.operation_id" not in rows[1] and rows[1]["logging.dropped_field_count"] == 1
+    assert len(rows[2]["example.operation_id"].encode()) <= 1024 and rows[2]["logging.truncated"] is True
     # A message that cannot be formatted has no text to keep: dropped and counted.
     logger.info("bad %s %s", "argument")
     assert handler.dropped_records == 1
@@ -287,7 +287,7 @@ async def test_concurrent_requests_and_cancellation_cleanup():
     async def cancelled():
         try:
             with bound_context(incoming_context({}, trusted=False)):
-                logger.info("Waiting", extra={"fields": {"operation_id": "cancelled"}})
+                logger.info("Waiting", extra={"fields": {"example.operation_id": "cancelled"}})
                 ready.set()
                 await release.wait()
         finally:
@@ -296,11 +296,11 @@ async def test_concurrent_requests_and_cancellation_cleanup():
     task = asyncio.create_task(cancelled())
     await asyncio.wait_for(ready.wait(), 2)
     with bound_context(incoming_context({}, trusted=False)):
-        logger.info("Other request", extra={"fields": {"operation_id": "other"}})
+        logger.info("Other request", extra={"fields": {"example.operation_id": "other"}})
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
-        logger.info("Other request done", extra={"fields": {"operation_id": "other"}})
+        logger.info("Other request done", extra={"fields": {"example.operation_id": "other"}})
     records = [json.loads(line) for line in output.getvalue().splitlines()]
     assert records[0]["trace_id"] != records[1]["trace_id"] == records[2]["trace_id"]
     assert handler.dropped_records == 0
@@ -316,7 +316,7 @@ def test_thread_isolation_and_durable_metadata_roundtrip():
         assert current_trace_id() is None
         for attempt in (1, 2):
             with bound_context(incoming_context(metadata, trusted=True)):
-                record = build_record(CONFIG, "Work", fields={"attempt": attempt})
+                record = build_record(CONFIG, "Work", fields={"job.attempt": attempt})
                 assert record["trace_id"] == original
             assert current_trace_id() is None
 
@@ -447,23 +447,23 @@ def test_deep_stack_keeps_innermost_frames_within_budget():
 def test_stack_is_shortened_before_any_field_is_removed():
     output = Output()
     logger = logging.Logger("fit", logging.DEBUG)
-    config = LogConfig("test-api", "development", "region-1", frozenset({"a", "b"}))
+    config = LogConfig("test-api", "development", "region-1", frozenset({"example.a", "example.b"}))
     install_handler(logger, config, stream=output)
     try:
         _recurse(200)
     except KeyError:
-        logger.exception("m" * 900, extra={"fields": {"a": "x" * 900, "b": "y" * 900}})
+        logger.exception("m" * 900, extra={"fields": {"example.a": "x" * 900, "example.b": "y" * 900}})
     line = output.getvalue().strip()
     row = json.loads(line)
     assert len(line.encode()) <= 4096
-    assert row["a"] == "x" * 900 and row["b"] == "y" * 900
+    assert row["example.a"] == "x" * 900 and row["example.b"] == "y" * 900
     assert "logging.dropped_field_count" not in row
     assert row["logging.truncated"] is True and row["exception.stacktrace"].startswith("at _recurse")
 
 
 def test_build_record_strips_unknown_fields_instead_of_raising():
-    record = build_record(CONFIG, "Ready", fields={"operation_id": "op-1", "unknown": "x"})
-    assert record["operation_id"] == "op-1" and "unknown" not in record
+    record = build_record(CONFIG, "Ready", fields={"example.operation_id": "op-1", "unknown": "x"})
+    assert record["example.operation_id"] == "op-1" and "unknown" not in record
     assert record["logging.dropped_field_count"] == 1
     assert validate_record(record) == []
 
@@ -480,9 +480,9 @@ def test_dropped_field_count_is_capped_so_the_line_stays_valid():
 def test_malformed_unicode_field_is_removed_not_the_record():
     output = Output()
     logger, handler = logger_for(output)
-    logger.info("Ready", extra={"fields": {"operation_id": "ok\udc80x", "attempt": 1}})
+    logger.info("Ready", extra={"fields": {"example.operation_id": "ok\udc80x", "job.attempt": 1}})
     row = json.loads(output.getvalue())
-    assert "operation_id" not in row and row["attempt"] == 1
+    assert "example.operation_id" not in row and row["job.attempt"] == 1
     assert row["logging.dropped_field_count"] == 1 and handler.dropped_records == 0
 
 
@@ -503,7 +503,7 @@ def test_a_caller_stack_that_wins_never_inherits_the_sdk_cut_flag():
 def test_request_fields_are_never_removed_to_fit_a_record():
     output = Output()
     logger = logging.Logger("fit-request", logging.DEBUG)
-    names = [f"f{i}" for i in range(8)]
+    names = [f"example.f{i}" for i in range(8)]
     config = LogConfig("test-api", "development", "region-1", frozenset(names))
     install_handler(logger, config, stream=output)
     route = "/items/" + "r" * 500  # the largest field, and a request field

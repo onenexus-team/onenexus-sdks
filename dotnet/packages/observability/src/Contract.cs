@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Corvus.Json;
 using OneNexus.Observability.Rules.Generated;
 
@@ -26,12 +27,22 @@ public static class Contract
     public static int MaxDroppedFieldCount { get; }
     public static int MaxErrorTypeChars { get; }
     public static FrozenSet<string> ReservedFields { get; }
+    /// <summary>The most custom field names one logger may allow (field registry <c>max_custom_fields</c>).</summary>
+    public static int MaxCustomFields { get; }
+    private static readonly Regex FieldNamePattern;
+    private static readonly int FieldNameMaxChars;
+    private static readonly FrozenDictionary<string, FieldValueType> RegisteredFields;
+    private static readonly FrozenSet<string> FieldNamespaces;
+    private static readonly FrozenSet<string> ReservedNamespaces;
+
+    /// <summary>The value types of the field registry (<c>value_types</c>).</summary>
+    private enum FieldValueType { String, Integer, Number, Boolean, Null }
 
     static Contract()
     {
         JsonOptions.MakeReadOnly(populateMissingResolver: true);
-        Version = "0.4.0"; // Log-format identity; package version follows SDK.
-        Digest = "298e185da5305c57450b26434ea859ddb768c82623ddb60ad5c7af72c0a68df4"; // sha256 of the bundled schema.json
+        Version = "0.5.0"; // Log-format identity; package version follows SDK.
+        Digest = "cf62150214247ebcfe4fcc0c3dd69f1c6d9c15d2d634f156fe3406f0b9feb4a1"; // sha256 of the bundled schema.json
         using var schema = JsonDocument.Parse(ReadResource("schema.json"));
         var limits = schema.RootElement.GetProperty("x-semantic-checks");
         MaxMessageBytes = limits.GetProperty("message_max_utf8_bytes").GetInt32();
@@ -44,6 +55,62 @@ public static class Contract
         // Preserve logger-owned fields independently of optional shared properties.
         ReservedFields = schema.RootElement.GetProperty("x-protected-fields")
             .EnumerateArray().Select(p => p.GetString()!).ToFrozenSet(StringComparer.Ordinal);
+        var registry = schema.RootElement.GetProperty("x-field-registry");
+        MaxCustomFields = registry.GetProperty("max_custom_fields").GetInt32();
+        FieldNamePattern = new Regex(registry.GetProperty("name_pattern").GetString()!, RegexOptions.CultureInvariant);
+        FieldNameMaxChars = registry.GetProperty("name_max_chars").GetInt32();
+        RegisteredFields = registry.GetProperty("fields").EnumerateObject()
+            .ToFrozenDictionary(f => f.Name, f => ValueType(f.Value.GetProperty("type").GetString()!), StringComparer.Ordinal);
+        FieldNamespaces = registry.GetProperty("namespaces").EnumerateObject().Select(n => n.Name).ToFrozenSet(StringComparer.Ordinal);
+        ReservedNamespaces = registry.GetProperty("reserved_namespaces").EnumerateObject().Select(n => n.Name).ToFrozenSet(StringComparer.Ordinal);
+    }
+
+    private static FieldValueType ValueType(string name) => name switch
+    {
+        "string" => FieldValueType.String, "integer" => FieldValueType.Integer, "number" => FieldValueType.Number,
+        "boolean" => FieldValueType.Boolean, "null" => FieldValueType.Null,
+        _ => throw new InvalidOperationException("unknown_field_value_type"),
+    };
+
+    /// <summary>
+    /// Check the custom field names a logger allows against the field registry (design review E1). Rules, in order:
+    /// protected, format, registered field (accepted), reserved namespace, namespace; more than
+    /// <see cref="MaxCustomFields"/> names is <c>too_many</c>. Throws
+    /// <c>ArgumentException("invalid_allowed_fields: &lt;rule&gt;: &lt;detail&gt;")</c> for the first failure.
+    /// </summary>
+    public static void CheckAllowedFields(IReadOnlyCollection<string> names)
+    {
+        if (names.Count > MaxCustomFields) throw FieldError("too_many", $"{names.Count} > {MaxCustomFields}");
+        foreach (var name in names)
+        {
+            if (ReservedFields.Contains(name)) throw FieldError("protected", name);
+            // Match the whole name: '$' alone also matches before a final newline.
+            if (name.Length > FieldNameMaxChars || FieldNamePattern.Match(name) is not { Success: true } match || match.Length != name.Length)
+                throw FieldError("format", name);
+            if (RegisteredFields.ContainsKey(name)) continue;
+            var dot = name.IndexOf('.');
+            var head = dot < 0 ? name : name[..dot];
+            if (ReservedNamespaces.Contains(head)) throw FieldError("reserved", name);
+            if (dot < 0 || !FieldNamespaces.Contains(head)) throw FieldError("namespace", name);
+        }
+    }
+
+    private static ArgumentException FieldError(string rule, string detail) => new($"invalid_allowed_fields: {rule}: {detail}");
+
+    /// <summary>A flat scalar (string, finite number, boolean or null) of the field's registered type, if it has one.</summary>
+    internal static bool ValidFieldValue(string name, JsonElement value)
+    {
+        if (value.ValueKind is JsonValueKind.Null) return true;
+        if (value.ValueKind is JsonValueKind.Object or JsonValueKind.Array) return false;
+        if (!RegisteredFields.TryGetValue(name, out var type)) return true;
+        return type switch
+        {
+            FieldValueType.String => value.ValueKind is JsonValueKind.String,
+            FieldValueType.Integer => value.ValueKind is JsonValueKind.Number && double.IsInteger(value.GetDouble()),
+            FieldValueType.Number => value.ValueKind is JsonValueKind.Number,
+            FieldValueType.Boolean => value.ValueKind is JsonValueKind.True or JsonValueKind.False,
+            _ => false, // Null: only null, accepted above.
+        };
     }
 
     public static byte[] ReadResource(string name)

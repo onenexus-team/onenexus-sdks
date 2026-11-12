@@ -35,7 +35,7 @@ handler, err := observability.NewHandler(observability.Config{
     Service: "monitoring",
     Environment: "development", // development, staging, prod
     Region: "ric1",
-    AllowedFields: []string{"operation.id", "attempt"},
+    AllowedFields: []string{"mlops.operation.id", "job.attempt"},
 }, os.Stdout)
 if err != nil { return err } // Invalid configuration fails before serving work.
 defer handler.Close()
@@ -68,12 +68,26 @@ for key, values := range observability.OutgoingHeaders(ctx) {
 - Use `InfoContext` / `LogAttrs` with the operation's context. `logger.Info(...)` has no request context.
 - `event` and `outcome` must appear together. Common identity fields cannot be replaced by attributes.
 - Extensions are approved scalar values only. No automatic body, header, exception or arbitrary-object serialization.
+- **Field registry (E1).** `NewHandler` checks every `AllowedFields` name with `CheckAllowedFields`, against the
+  schema's `x-field-registry`, in this order. The first failure is an `*AllowedFieldError` wrapping
+  `ErrInvalidAllowedFields`, e.g. `invalid_allowed_fields: namespace: status_code`.
+
+| Rule | Rejects |
+|---|---|
+| `too_many` | More than 256 names (`max_custom_fields`) |
+| `protected` | A base field, e.g. `message` |
+| `format` | Not lowercase `a.b_c` with at most 5 segments, or over 128 characters |
+| (registered) | Accepted: a field in `fields`, even under `logging.*` |
+| `reserved` | Other `logging.*` and `k8s.*` names |
+| `namespace` | A single segment, or an unregistered first segment |
+| `duplicate` | A name listed twice (Go only) |
+
 - **Keep the line.** A bad attribute never drops the record or disables a `With`/`WithGroup` logger:
 
 | Input | Result |
 |---|---|
 | Message or string attribute over 1,024 UTF-8 bytes (`exception.stacktrace`: 2,048) | Cut at a rune boundary, ending in `…`; `logging.truncated=true` |
-| Unapproved, protected, duplicate or 35th+ attribute; invalid UTF-8; NaN/Inf; struct, map, `Duration`, `Time`, `LogValuer`; invalid group name | Attribute removed; counted in `logging.dropped_field_count` (max 64) |
+| Unapproved, protected, duplicate or 35th+ attribute; invalid UTF-8; NaN/Inf; struct, map, slice, named `slog.Group`, `Duration`, `Time`, `LogValuer`; registered field of another type (`job.attempt` takes a whole number); invalid group name | Attribute removed; counted in `logging.dropped_field_count` (max 64) |
 | Attribute whose value is an `error` (any key) | Not emitted; `error.type` = `%T`, `exception.stacktrace` = call-site frames `at <func> (<file>:<line>)`, innermost first, within 2,048 bytes. Never the error text. Approved caller values win |
 | Record over 4,096 bytes | Drop outermost stack frames, then the largest caller attributes (ties: key descending), each counted |
 

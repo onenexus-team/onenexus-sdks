@@ -163,3 +163,83 @@ class SharedTests(unittest.TestCase):
             ".github/workflows/log-contract-release.yml",
         ]:
             self.assertFalse((ROOT / path).exists(), path)
+
+
+SCHEMA = ROOT / "go/packages/observability/schema.json"
+FIELD_REGISTRY_TESTS = {
+    "python": "python/packages/observability/tests/test_field_registry.py",
+    "typescript": "ts/packages/observability/test/field-registry.test.ts",
+    "go": "go/packages/observability/tests/field_registry_test.go",
+    "dotnet": "dotnet/packages/observability/tests/unit/FieldRegistryTests.cs",
+}
+
+
+def expand_names(names):
+    if isinstance(names, list):
+        return names
+    if "repeat" in names:
+        return [names["prefix"] + names["repeat"] * names["count"]]
+    return [f"{names['prefix']}{i}" for i in range(names["count"])]
+
+
+def registry_reason(registry, protected, names):
+    """The reference check: the first failing rule, in check_order, or None."""
+    if len(names) > registry["max_custom_fields"]:
+        return "too_many"
+    pattern = re.compile(registry["name_pattern"])
+    for name in names:
+        if name in protected:
+            return "protected"
+        if len(name) > registry["name_max_chars"] or not pattern.fullmatch(name):
+            return "format"
+        if name in registry["fields"]:
+            continue
+        head, _, rest = name.partition(".")
+        if head in registry["reserved_namespaces"]:
+            return "reserved"
+        if not rest or head not in registry["namespaces"]:
+            return "namespace"
+    return None
+
+
+class FieldRegistryTests(unittest.TestCase):
+    def setUp(self):
+        schema = json.loads(SCHEMA.read_text())
+        self.registry = schema["x-field-registry"]
+        self.protected = set(schema["x-protected-fields"])
+        self.spec = json.loads(SCENARIOS.read_text())["field_registry"]
+
+    def test_registry_is_coherent(self):
+        r = self.registry
+        self.assertEqual(r["name_max_chars"], 128)
+        self.assertEqual(r["max_custom_fields"], 256)
+        self.assertFalse(set(r["namespaces"]) & set(r["reserved_namespaces"]))
+        self.assertFalse(set(r["fields"]) & self.protected)
+        for name, field in r["fields"].items():
+            with self.subTest(field=name):
+                self.assertIn(field["type"], r["value_types"])
+                self.assertIsNone(registry_reason(r, self.protected, [name]))
+
+    def test_cases_follow_the_reference_check(self):
+        self.assertEqual(self.spec["check_order"], ["protected", "format", "registered_field", "reserved", "namespace"])
+        for case in self.spec["config_cases"]:
+            with self.subTest(case=case["id"]):
+                reason = registry_reason(self.registry, self.protected, expand_names(case["names"]))
+                self.assertEqual(reason is None, case["accepted"])
+                self.assertEqual(reason, case.get("reason"))
+        reasons = {c.get("reason") for c in self.spec["config_cases"]} - {None}
+        self.assertEqual(reasons, {"protected", "format", "reserved", "namespace", "too_many"})
+
+    def test_shared_allowed_fields_are_registered(self):
+        suite = json.loads(SCENARIOS.read_text())
+        for names in (suite["degradation_allowed_fields"], self.spec["value_allowed_fields"]):
+            self.assertIsNone(registry_reason(self.registry, self.protected, names))
+        for case in self.spec["value_cases"]:
+            self.assertLessEqual(set(case["fields"]), set(self.spec["value_allowed_fields"]))
+
+    def test_every_language_tests_every_field_registry_case(self):
+        for case in self.spec["config_cases"] + self.spec["value_cases"]:
+            for language in case["languages"]:
+                text = (ROOT / FIELD_REGISTRY_TESTS[language]).read_text()
+                with self.subTest(case=case["id"], language=language):
+                    self.assertIn(case["id"], text)

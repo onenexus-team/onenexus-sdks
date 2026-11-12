@@ -17,7 +17,7 @@ import (
 )
 
 func config() obs.Config {
-	return obs.Config{Service: "go-service", Environment: "development", Region: "ric1", AllowedFields: []string{"attempt", "job.id"}, MinLevel: slog.Level(-8)}
+	return obs.Config{Service: "go-service", Environment: "development", Region: "ric1", AllowedFields: []string{"example.attempt", "job.id"}, MinLevel: slog.Level(-8)}
 }
 func record(message string, attrs ...slog.Attr) slog.Record {
 	r := slog.NewRecord(time.Unix(1, 42), slog.LevelInfo, message, 0)
@@ -32,7 +32,7 @@ func TestHandlerSchemaLevelsAndImmutableClones(t *testing.T) {
 	logger.Info("System ready")
 	ctx := obs.IncomingContext(context.Background(), headers(parent), true)
 	for _, level := range []slog.Level{-8, -4, 0, 4, 8, 12} {
-		logger.LogAttrs(ctx, level, "Work completed", slog.String("event", "work.completed"), slog.String("outcome", "success"), slog.Int("attempt", 1))
+		logger.LogAttrs(ctx, level, "Work completed", slog.String("event", "work.completed"), slog.String("outcome", "success"), slog.Int("example.attempt", 1))
 	}
 	child := logger.WithGroup("job").With("id", "job-1")
 	child.InfoContext(ctx, "Child")
@@ -77,7 +77,7 @@ type unsafeValue struct{}
 func (unsafeValue) LogValue() slog.Value { panic("must not evaluate application code") }
 
 func TestInvalidRecordsAndConfigNeverLeak(t *testing.T) {
-	for _, c := range []obs.Config{{}, {Service: "x", Environment: "dev", Region: "r"}, {Service: "x", Environment: "prod", Region: "r", AllowedFields: []string{"trace_id"}}, {Service: "x", Environment: "prod", Region: "r", AllowedFields: []string{"x", "x"}}} {
+	for _, c := range []obs.Config{{}, {Service: "x", Environment: "dev", Region: "r"}, {Service: "x", Environment: "prod", Region: "r", AllowedFields: []string{"trace_id"}}, {Service: "x", Environment: "prod", Region: "r", AllowedFields: []string{"example.x", "example.x"}}} {
 		if _, err := obs.NewHandler(c, io.Discard); err == nil {
 			t.Fatal("invalid config accepted")
 		}
@@ -120,11 +120,11 @@ func TestInvalidRecordsAndConfigNeverLeak(t *testing.T) {
 		{record(strings.Repeat("x", 1025)), true, 0, nil},
 		{record("safe", slog.String("authorization", "private-sentinel")), false, 1, nil},
 		{record("safe", slog.String("trace_id", traceB)), false, 1, nil},
-		{record("safe", slog.Float64("attempt", math.NaN())), false, 1, nil},
-		{record("safe", slog.Any("attempt", unsafeValue{})), false, 1, nil},
-		{record("safe", slog.Any("attempt", map[string]string{"secret": "private-sentinel"})), false, 1, nil},
-		{record("safe", slog.Int("attempt", 1), slog.Int("attempt", 2)), false, 1, float64(1)},
-		{record("safe", slog.String("attempt", strings.Repeat("x", 1025))), true, 0, strings.Repeat("x", 1021) + "…"},
+		{record("safe", slog.Float64("example.attempt", math.NaN())), false, 1, nil},
+		{record("safe", slog.Any("example.attempt", unsafeValue{})), false, 1, nil},
+		{record("safe", slog.Any("example.attempt", map[string]string{"secret": "private-sentinel"})), false, 1, nil},
+		{record("safe", slog.Int("example.attempt", 1), slog.Int("example.attempt", 2)), false, 1, float64(1)},
+		{record("safe", slog.String("example.attempt", strings.Repeat("x", 1025))), true, 0, strings.Repeat("x", 1021) + "…"},
 	}
 	for _, c := range kept {
 		output.Reset()
@@ -132,7 +132,7 @@ func TestInvalidRecordsAndConfigNeverLeak(t *testing.T) {
 			t.Fatal(err)
 		}
 		row := keptRow(t, output.Bytes(), "common")
-		if strings.Contains(output.String(), "sentinel") || row["trace_id"] != nil || row["attempt"] != c.attempt {
+		if strings.Contains(output.String(), "sentinel") || row["trace_id"] != nil || row["example.attempt"] != c.attempt {
 			t.Fatal("unsafe value emitted", output.String())
 		}
 		if (row["logging.truncated"] == true) != c.truncated || flagCount(row) != c.dropped {
@@ -140,7 +140,7 @@ func TestInvalidRecordsAndConfigNeverLeak(t *testing.T) {
 		}
 	}
 	// A bad clone attribute or group name never disables the derived logger.
-	for _, handler := range []slog.Handler{h.WithAttrs([]slog.Attr{slog.String("service", "override")}), h.WithGroup(strings.Repeat("x", 129)).WithAttrs([]slog.Attr{slog.Int("attempt", 1)})} {
+	for _, handler := range []slog.Handler{h.WithAttrs([]slog.Attr{slog.String("service", "override")}), h.WithGroup(strings.Repeat("x", 129)).WithAttrs([]slog.Attr{slog.Int("example.attempt", 1)})} {
 		for range 2 {
 			output.Reset()
 			if err := handler.Handle(context.Background(), record("clone")); err != nil {
@@ -162,7 +162,7 @@ func TestInvalidRecordsAndConfigNeverLeak(t *testing.T) {
 func BenchmarkHandler(b *testing.B) {
 	h, _ := obs.NewHandler(config(), io.Discard)
 	ctx := obs.IncomingContext(context.Background(), headers(parent), true)
-	r := record("Work completed", slog.Int("attempt", 1))
+	r := record("Work completed", slog.Int("example.attempt", 1))
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
@@ -183,7 +183,7 @@ func TestConcurrentWritesAreCompleteLines(t *testing.T) {
 			ready <- struct{}{}
 			<-start
 			ctx := obs.IncomingContext(context.Background(), headers(parent), true)
-			if err := h.Handle(ctx, record("Concurrent", slog.Int("attempt", n))); err != nil {
+			if err := h.Handle(ctx, record("Concurrent", slog.Int("example.attempt", n))); err != nil {
 				t.Error(err)
 			}
 		}(i)

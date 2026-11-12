@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:onenexus:log-correlation:0.4.0",
+  "$id": "urn:onenexus:log-correlation:0.5.0",
   "$defs": {
     "common": {
       "additionalProperties": true,
@@ -269,7 +269,7 @@
     }
   },
   "$ref": "#/$defs/common",
-  "x-contract-version": "0.4.0",
+  "x-contract-version": "0.5.0",
   "x-semantic-checks": {
     "message_max_utf8_bytes": 1024,
     "record_max_compact_utf8_bytes": 4096,
@@ -290,5 +290,121 @@
     "environment",
     "logging.truncated",
     "logging.dropped_field_count"
-  ]
+  ],
+  "x-field-registry": {
+    "summary": "Every custom field a service allows must pass this registry when its logger is configured (design review E1, §3.1). Values are flat scalars.",
+    "name_pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){0,4}$",
+    "name_max_chars": 128,
+    "max_custom_fields": 256,
+    "value_types": [
+      "string",
+      "integer",
+      "number",
+      "boolean",
+      "null"
+    ],
+    "namespaces": {
+      "http": "opentelemetry",
+      "error": "opentelemetry",
+      "exception": "opentelemetry",
+      "service": "opentelemetry",
+      "db": "opentelemetry",
+      "rpc": "opentelemetry",
+      "resource": "platform",
+      "job": "platform",
+      "mlops": "mlops",
+      "policy": "mlops",
+      "utility": "utility",
+      "usage": "usage",
+      "quota": "quota",
+      "collector": "observability",
+      "example": "sdk (tests and docs only)"
+    },
+    "reserved_namespaces": {
+      "logging": "sdk",
+      "k8s": "collector"
+    },
+    "fields": {
+      "logger": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "principal_id": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "tenant_id": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "error_code": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "duration_ms": {
+        "type": "number",
+        "owner": "platform"
+      },
+      "request_event": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "http.request.method": {
+        "type": "string",
+        "owner": "opentelemetry"
+      },
+      "http.route": {
+        "type": "string",
+        "owner": "opentelemetry"
+      },
+      "http.response.status_code": {
+        "type": "integer",
+        "owner": "opentelemetry"
+      },
+      "error.type": {
+        "type": "string",
+        "owner": "opentelemetry"
+      },
+      "exception.stacktrace": {
+        "type": "string",
+        "owner": "opentelemetry"
+      },
+      "resource.type": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "resource.id": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "resource.tenant_id": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "resource.generation": {
+        "type": "integer",
+        "owner": "platform"
+      },
+      "job.id": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "job.type": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "job.attempt": {
+        "type": "integer",
+        "owner": "platform"
+      },
+      "job.max_attempts": {
+        "type": "integer",
+        "owner": "platform"
+      },
+      "logging.sdk_version": {
+        "type": "string",
+        "owner": "platform"
+      }
+    }
+  }
 }

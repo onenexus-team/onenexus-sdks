@@ -54,7 +54,7 @@ import json, sys
 lines = open(sys.argv[1]).readlines()
 records = [json.loads(line) for line in lines]
 assert len(records) == 3 and 'trace_id' not in records[-1]
-assert [row['attempt'] for row in records[:2]] == [1, 2]
+assert [row['job.attempt'] for row in records[:2]] == [1, 2]
 with open(sys.argv[2], 'w') as stream:
     stream.writelines(lines[:2])
 PY

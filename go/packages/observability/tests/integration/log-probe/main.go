@@ -30,7 +30,7 @@ func main() {
 }
 
 func emit() {
-	h, err := obs.NewHandler(obs.Config{Service: "go-log-probe", Environment: "development", Region: "ric1", AllowedFields: []string{"attempt"}}, os.Stdout)
+	h, err := obs.NewHandler(obs.Config{Service: "go-log-probe", Environment: "development", Region: "ric1", AllowedFields: []string{"job.attempt"}}, os.Stdout)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func emit() {
 		var saved http.Header
 		_ = json.Unmarshal(metadata, &saved)
 		worker := obs.IncomingContext(context.Background(), saved, true)
-		logger.InfoContext(worker, "Worker attempt", slog.Int("attempt", attempt), slog.String("event", "job.attempt"), slog.String("outcome", "success"))
+		logger.InfoContext(worker, "Worker attempt", slog.Int("job.attempt", attempt), slog.String("event", "job.attempt"), slog.String("outcome", "success"))
 	}
 	logger.InfoContext(obs.UncorrelatedContext(ctx), "System ready")
 }
