@@ -9,6 +9,7 @@ export {
 } from './context.js';
 export {
     createLogger,
+    errorFingerprint,
     QUEUE_CAPACITY,
     CLOSE_TIMEOUT_MS,
     type LogConfig,

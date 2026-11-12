@@ -12,9 +12,9 @@ from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
 from importlib.resources import files
 
 # Log-format identity, not the package version.
-CONTRACT_VERSION = "0.5.0"
+CONTRACT_VERSION = "0.6.0"
 # sha256 of the bundled schema.json; equal in every language (tests/logging).
-CONTRACT_DIGEST = "cf62150214247ebcfe4fcc0c3dd69f1c6d9c15d2d634f156fe3406f0b9feb4a1"
+CONTRACT_DIGEST = "b0703638c41630885ad82f6db201a84e04545912bd4aaf1035e995e08aeda40b"
 _SCHEMA = json.loads(files("onenexus_observability").joinpath("schema.json").read_bytes())
 _VALIDATORS = {
     name: Draft202012Validator({"$defs": _SCHEMA["$defs"], "$ref": f"#/$defs/{name}"})

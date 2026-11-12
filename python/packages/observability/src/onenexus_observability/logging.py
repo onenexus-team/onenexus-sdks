@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import atexit
+import hashlib
 import io
 import json
 import logging
 import os
 import queue
+import re
 import sys
 import threading
 import time
@@ -39,6 +41,8 @@ ERROR_TYPE_FIELD = "error.type"
 STACKTRACE_FIELD = "exception.stacktrace"
 TRUNCATED_FIELD = "logging.truncated"
 DROPPED_FIELD = "logging.dropped_field_count"
+ERROR_FINGERPRINT_FIELD = "logging.error_fingerprint"
+_FRAME_LINE = re.compile(r":[0-9]+\)$")
 TRUNCATION_MARK = "\u2026"
 ExcInfo = tuple[type[BaseException], BaseException, TracebackType | None]
 
@@ -135,6 +139,16 @@ def error_fields(exc_info: ExcInfo) -> tuple[dict[str, str], bool]:
     return fields, cut
 
 
+def error_fingerprint(error_type: str, stacktrace: str | None = None) -> str:
+    """Groups one failure across lines and builds (tests/logging error_fingerprint).
+
+    The type and each frame without its line number; never the message.
+    """
+    frames = stacktrace.split("\n") if stacktrace else []
+    text = error_type + "".join("\n" + _FRAME_LINE.sub(")", frame) for frame in frames)
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+
 def _shrink_stack(record: dict[str, Any]) -> bool:
     """Drop the outermost frame; remove the stack once one frame is left."""
     stack = record.get(STACKTRACE_FIELD)
@@ -224,6 +238,9 @@ def build_record(
                 record[key] = value
                 # Only the SDK's stack can be cut; a caller stack keeps its own flag.
                 truncated = truncated or (cut and key == STACKTRACE_FIELD)
+    if isinstance(error_type := record.get(ERROR_TYPE_FIELD), str):
+        # Before fitting: a shortened stack keeps the fingerprint.
+        record[ERROR_FINGERPRINT_FIELD] = error_fingerprint(error_type, record.get(STACKTRACE_FIELD))
     _fit(record, custom, dropped, truncated)
     if "request_event" in record:
         profile = "request"

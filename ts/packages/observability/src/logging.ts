@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { Writable } from 'node:stream';
 import {
     MAX_DROPPED_FIELD_COUNT,
@@ -68,6 +69,8 @@ const ERROR_TYPE_FIELD = 'error.type';
 const STACKTRACE_FIELD = 'exception.stacktrace';
 const TRUNCATED_FIELD = 'logging.truncated';
 const DROPPED_FIELD = 'logging.dropped_field_count';
+const ERROR_FINGERPRINT_FIELD = 'logging.error_fingerprint';
+const FRAME_LINE = /:[0-9]+\)$/;
 const TRUNCATION_MARK = '\u2026';
 const ERROR_TYPE_PATTERN = /^\S{1,128}$/;
 // V8 frames: `at [async ]fn (path:line:col)` or `at [async ]path:line:col`.
@@ -170,6 +173,16 @@ function errorFields(error: unknown): [Record<string, string>, boolean] {
     } catch {
         return [{}, false];
     }
+}
+
+/**
+ * Groups one failure across lines and builds (tests/logging error_fingerprint): the type and
+ * each frame without its line number; never the message.
+ */
+export function errorFingerprint(errorType: string, stacktrace?: string | null): string {
+    const frames = stacktrace ? stacktrace.split('\n') : [];
+    const text = errorType + frames.map((frame) => '\n' + frame.replace(FRAME_LINE, ')')).join('');
+    return createHash('sha256').update(text, 'utf8').digest('hex').slice(0, 16);
 }
 
 /** Drop the outermost frame; remove the stack once one frame is left. */
@@ -460,6 +473,15 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
                         // Only the SDK's own stack can have been cut.
                         if (key === STACKTRACE_FIELD) truncated ||= cut;
                     }
+                }
+                const errorType = record[ERROR_TYPE_FIELD];
+                if (typeof errorType === 'string') {
+                    // Before fitting: a shortened stack keeps the fingerprint.
+                    const stack = record[STACKTRACE_FIELD];
+                    record[ERROR_FINGERPRINT_FIELD] = errorFingerprint(
+                        errorType,
+                        typeof stack === 'string' ? stack : undefined,
+                    );
                 }
                 fit(record, custom, dropped, truncated);
                 // Independent/system events remain valid common records without a fabricated trace ID.

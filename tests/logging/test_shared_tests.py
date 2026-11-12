@@ -143,6 +143,38 @@ class SharedTests(unittest.TestCase):
                 with self.subTest(case=case["id"], language=language):
                     self.assertIn(case["id"], text)
 
+    def test_error_fingerprint_vectors_and_every_language_covers_them(self):
+        spec = self.suite["error_fingerprint"]
+        self.assertEqual(spec["field"], "logging.error_fingerprint")
+        schema = json.loads((ROOT / "go/packages/observability/schema.json").read_text())
+        self.assertIn(spec["field"], schema["x-protected-fields"])
+        self.assertIn(spec["field"], schema["$defs"]["common"]["properties"])
+        for case in spec["cases"]:  # the reference implementation of the rule
+            frames = case["stacktrace"].split("\n") if case["stacktrace"] else []
+            text = case["error_type"] + "".join(
+                "\n" + re.sub(r":[0-9]+\)$", ")", frame) for frame in frames
+            )
+            with self.subTest(case=case["id"]):
+                self.assertEqual(
+                    hashlib.sha256(text.encode()).hexdigest()[:16], case["fingerprint"]
+                )
+        by_id = {case["id"]: case["fingerprint"] for case in spec["cases"]}
+        self.assertEqual(by_id["frames"], by_id["line_numbers_ignored"])
+        self.assertNotEqual(by_id["frames"], by_id["type_changes_fingerprint"])
+        test_files = {
+            "python": "python/packages/observability/tests/test_error_fingerprint.py",
+            "typescript": "ts/packages/observability/test/error-fingerprint.test.ts",
+            "go": "go/packages/observability/tests/error_fingerprint_test.go",
+            "dotnet": "dotnet/packages/observability/tests/unit/ErrorFingerprintTests.cs",
+        }
+        self.assertEqual(sorted(spec["languages"]), sorted(test_files))
+        ids = [c["id"] for c in spec["cases"]] + [c["id"] for c in spec["emission_cases"]]
+        for language, path in test_files.items():
+            text = (ROOT / path).read_text()
+            for case_id in ids:
+                with self.subTest(language=language, case=case_id):
+                    self.assertIn(case_id, text)
+
     def test_contract_digest_is_the_schema_hash_in_every_language(self):
         schema = ROOT / "go/packages/observability/schema.json"
         digest = hashlib.sha256(schema.read_bytes()).hexdigest()

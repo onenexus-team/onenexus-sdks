@@ -88,7 +88,7 @@ for key, values := range observability.OutgoingHeaders(ctx) {
 |---|---|
 | Message or string attribute over 1,024 UTF-8 bytes (`exception.stacktrace`: 2,048) | Cut at a rune boundary, ending in `…`; `logging.truncated=true` |
 | Unapproved, protected, duplicate or 35th+ attribute; invalid UTF-8; NaN/Inf; struct, map, slice, named `slog.Group`, `Duration`, `Time`, `LogValuer`; registered field of another type (`job.attempt` takes a whole number); invalid group name | Attribute removed; counted in `logging.dropped_field_count` (max 64) |
-| Attribute whose value is an `error` (any key) | Not emitted; `error.type` = `%T`, `exception.stacktrace` = call-site frames `at <func> (<file>:<line>)`, innermost first, within 2,048 bytes. Never the error text. Approved caller values win |
+| Attribute whose value is an `error` (any key) | Not emitted; `error.type` = `%T`, `exception.stacktrace` = call-site frames `at <func> (<file>:<line>)`, innermost first, within 2,048 bytes. Never the error text. Approved caller values win. Every record with `error.type` also gets `logging.error_fingerprint` (`ErrorFingerprint`) |
 | Record over 4,096 bytes | Drop outermost stack frames, then the largest caller attributes (ties: key descending), each counted |
 
 - Callers still own message privacy. An allowlist does not remove secrets placed inside a message.

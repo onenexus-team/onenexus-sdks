@@ -54,7 +54,7 @@ const drained = await logger.close(1000);
 | Too long | Message or string field over 1,024 UTF-8 bytes (`exception.stacktrace`: 2,048) is cut at a character boundary plus `…`; sets `logging.truncated: true` |
 | Unknown / unsupported field | Removed, the line is kept; `logging.dropped_field_count` counts it (also non-scalar, wrong registered type, accessor) |
 | Record over 4,096 bytes | Stack shortened by whole frames, then largest custom fields removed and counted, until it fits |
-| `error` option | `error.type` (error name) and `exception.stacktrace` (`at <function> (<file>:<line>)`, innermost first); caller-supplied values win; non-errors ignored |
+| `error` option | `error.type` (error name) and `exception.stacktrace` (`at <function> (<file>:<line>)`, innermost first); caller-supplied values win; non-errors ignored; adds `logging.error_fingerprint` (`errorFingerprint`) |
 | Context cleanup | `AsyncLocalStorage.run`; nested, async, exception and cancellation paths restore the caller's context |
 | Independent work | Start with `withUncorrelatedContext`; detached tasks otherwise inherit their creator's context |
 | Durable work | Save `outgoingHeaders()` with the job; restore with `withIncomingContext` for each attempt |

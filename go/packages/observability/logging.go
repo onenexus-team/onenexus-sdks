@@ -3,6 +3,8 @@ package observability
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -119,11 +121,12 @@ func (f *fieldState) merge(later fieldState) {
 }
 
 const (
-	errorTypeField  = "error.type"
-	stacktraceField = "exception.stacktrace"
-	truncatedField  = "logging.truncated"
-	droppedField    = "logging.dropped_field_count"
-	truncationMark  = "\u2026"
+	errorTypeField   = "error.type"
+	stacktraceField  = "exception.stacktrace"
+	truncatedField   = "logging.truncated"
+	droppedField     = "logging.dropped_field_count"
+	fingerprintField = "logging.error_fingerprint"
+	truncationMark   = "\u2026"
 )
 
 // packagePrefix identifies this package's frames, which call-site stacks skip.
@@ -265,6 +268,11 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	}
 	if _, ok := attrs["request_event"]; ok {
 		profile = "request"
+	}
+	if errorType, ok := attrs[errorTypeField].(string); ok {
+		// Before fitting: a shortened stack keeps the fingerprint.
+		stack, _ := attrs[stacktraceField].(string)
+		attrs[fingerprintField] = ErrorFingerprint(errorType, stack)
 	}
 	buf, err := h.fit(attrs, removable, state)
 	if err != nil || buf.Len()-1 > h.recordLimit || len(ValidateJSON(buf.Bytes(), profile)) > 0 {
@@ -495,6 +503,24 @@ func (h *Handler) validErrorField(key, text string) bool {
 		return text != ""
 	}
 	return true
+}
+
+var frameLine = regexp.MustCompile(`:[0-9]+\)$`)
+
+// ErrorFingerprint groups one failure across lines and builds
+// (tests/logging error_fingerprint): the type and each frame without its line
+// number; never the message. An empty stacktrace means no frames.
+func ErrorFingerprint(errorType, stacktrace string) string {
+	var b strings.Builder
+	b.WriteString(errorType)
+	if stacktrace != "" {
+		for _, frame := range strings.Split(stacktrace, "\n") {
+			b.WriteByte('\n')
+			b.WriteString(frameLine.ReplaceAllString(frame, ")"))
+		}
+	}
+	sum := sha256.Sum256([]byte(b.String()))
+	return hex.EncodeToString(sum[:])[:16]
 }
 
 // callStack formats the logging call site, innermost first, as whole frames

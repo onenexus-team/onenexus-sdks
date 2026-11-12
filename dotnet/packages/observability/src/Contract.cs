@@ -41,8 +41,8 @@ public static class Contract
     static Contract()
     {
         JsonOptions.MakeReadOnly(populateMissingResolver: true);
-        Version = "0.5.0"; // Log-format identity; package version follows SDK.
-        Digest = "cf62150214247ebcfe4fcc0c3dd69f1c6d9c15d2d634f156fe3406f0b9feb4a1"; // sha256 of the bundled schema.json
+        Version = "0.6.0"; // Log-format identity; package version follows SDK.
+        Digest = "b0703638c41630885ad82f6db201a84e04545912bd4aaf1035e995e08aeda40b"; // sha256 of the bundled schema.json
         using var schema = JsonDocument.Parse(ReadResource("schema.json"));
         var limits = schema.RootElement.GetProperty("x-semantic-checks");
         MaxMessageBytes = limits.GetProperty("message_max_utf8_bytes").GetInt32();

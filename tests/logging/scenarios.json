@@ -2905,5 +2905,75 @@
       "error_code"
     ],
     "names_expansion": "names is a list, or {prefix, count}: prefix + str(i) for i in 0..count-1, or {prefix, repeat, count}: one name, prefix + repeat × count."
+  },
+  "error_fingerprint": {
+    "field": "logging.error_fingerprint",
+    "rule": "When the record has error.type: the first 16 lowercase hex digits of SHA-256 over the UTF-8 bytes of error.type followed, for each line of exception.stacktrace, by a newline and that line with a trailing ':<digits>)' replaced by ')'. Uses the record's error.type and exception.stacktrace after caller values apply and before the record is fitted, so fitting never changes it. Never from the message. Protected: a caller value is removed and counted.",
+    "cases": [
+      {
+        "id": "type_only",
+        "error_type": "builtins.ValueError",
+        "stacktrace": null,
+        "fingerprint": "0757dbe0d345c12a"
+      },
+      {
+        "id": "frames",
+        "error_type": "QueryFailedError",
+        "stacktrace": "at CampaignRunner.tick (campaign-runner.ts:212)\nat WorkerRunner.run (worker-runner.ts:88)",
+        "fingerprint": "bdcfe1d0356bbee7"
+      },
+      {
+        "id": "line_numbers_ignored",
+        "error_type": "QueryFailedError",
+        "stacktrace": "at CampaignRunner.tick (campaign-runner.ts:9)\nat WorkerRunner.run (worker-runner.ts:1000)",
+        "fingerprint": "bdcfe1d0356bbee7"
+      },
+      {
+        "id": "frame_without_file",
+        "error_type": "System.InvalidOperationException",
+        "stacktrace": "at Billing.Emitter.Flush\nat Billing.Emitter.Run (Emitter.cs:40)",
+        "fingerprint": "720158e80c8f3dcc"
+      },
+      {
+        "id": "type_changes_fingerprint",
+        "error_type": "TypeError",
+        "stacktrace": "at CampaignRunner.tick (campaign-runner.ts:212)\nat WorkerRunner.run (worker-runner.ts:88)",
+        "fingerprint": "2f56ada910802197"
+      },
+      {
+        "id": "multibyte",
+        "error_type": "é.Erreur",
+        "stacktrace": "at é.f (é.py:3)",
+        "fingerprint": "d0fed3fb01790f14"
+      }
+    ],
+    "emission_cases": [
+      {
+        "id": "logged_error_has_fingerprint",
+        "expect": "an ERROR logged with an error carries logging.error_fingerprint = the rule over its emitted error.type and exception.stacktrace"
+      },
+      {
+        "id": "same_error_same_fingerprint",
+        "expect": "the same error from the same call site logged twice has one fingerprint"
+      },
+      {
+        "id": "stable_when_fitted",
+        "expect": "a record whose stack is shortened to fit 4,096 bytes keeps the fingerprint of the unshortened record"
+      },
+      {
+        "id": "caller_value_removed",
+        "expect": "a caller logging.error_fingerprint is removed and counted (logging.dropped_field_count); the SDK value applies"
+      },
+      {
+        "id": "no_error_no_fingerprint",
+        "expect": "a record without error.type has no logging.error_fingerprint"
+      }
+    ],
+    "languages": [
+      "python",
+      "typescript",
+      "go",
+      "dotnet"
+    ]
   }
 }
