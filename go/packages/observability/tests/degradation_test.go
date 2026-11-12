@@ -225,9 +225,9 @@ func TestBadWithAttrsKeepLogger(t *testing.T) {
 
 func TestStructAttrKeepsRecord(t *testing.T) {
 	h, output := degradationHandler(t)
-	slog.New(h).Error("Worker stopped", "stack", struct{ Frames []string }{[]string{"a", "b"}}, "attempt", 2)
+	slog.New(h).Error("Worker stopped", "stack", struct{ Frames []string }{[]string{"a", "b"}}, "example.attempt", 2)
 	row := keptRow(t, output.Bytes(), "common")
-	if flagCount(row) != 1 || row["stack"] != nil || row["attempt"] != float64(2) || row["exception.stacktrace"] != nil {
+	if flagCount(row) != 1 || row["stack"] != nil || row["example.attempt"] != float64(2) || row["exception.stacktrace"] != nil {
 		t.Fatal(output.String())
 	}
 }
@@ -265,14 +265,14 @@ func TestRecoveredPanicStackIncludesPanickingFrame(t *testing.T) {
 func TestDuplicateAndExcessAttrsCounted(t *testing.T) {
 	h, output := degradationHandler(t)
 	logger := slog.New(h)
-	logger.With("attempt", 1).Info("Duplicate", "attempt", 2)
-	if row := keptRow(t, output.Bytes(), "common"); row["attempt"] != float64(1) || flagCount(row) != 1 {
+	logger.With("example.attempt", 1).Info("Duplicate", "example.attempt", 2)
+	if row := keptRow(t, output.Bytes(), "common"); row["example.attempt"] != float64(1) || flagCount(row) != 1 {
 		t.Fatal(output.String())
 	}
 	allowed := make([]string, 32)
 	args := make([]any, 0, 70)
 	for i := range allowed {
-		allowed[i] = fmt.Sprintf("f%02d", i)
+		allowed[i] = fmt.Sprintf("example.f%02d", i)
 		args = append(args, allowed[i], i)
 	}
 	cfg := config()
@@ -282,7 +282,7 @@ func TestDuplicateAndExcessAttrsCounted(t *testing.T) {
 	args = append(args, "http.route", "/x", "http.request.method", "GET", "duration_ms", 1.5)
 	slog.New(many).Info("Many", args...)
 	row := keptRow(t, wide.Bytes(), "common")
-	if flagCount(row) != 1 || row["duration_ms"] != nil || row["f31"] != float64(31) {
+	if flagCount(row) != 1 || row["duration_ms"] != nil || row["example.f31"] != float64(31) {
 		t.Fatal("34-attribute cap", wide.String())
 	}
 	output.Reset()
@@ -344,13 +344,13 @@ func TestErrorTypeFields(t *testing.T) {
 }
 
 func TestOversizeRecordShortensStackFirst(t *testing.T) {
-	h, output := newSyncHandler(t, obs.Config{Service: "go-service", Environment: "development", Region: "ric1", AllowedFields: []string{"exception.stacktrace", "a", "b"}})
+	h, output := newSyncHandler(t, obs.Config{Service: "go-service", Environment: "development", Region: "ric1", AllowedFields: []string{"exception.stacktrace", "example.a", "example.b"}})
 	defer h.Close()
 	stack := strings.TrimSuffix(strings.Repeat("at app.work (work.go:10)\n", 80), "\n")
-	slog.New(h).Error(strings.Repeat("m", 1000), "exception.stacktrace", stack, "a", strings.Repeat("a", 1000), "b", strings.Repeat("b", 1000))
+	slog.New(h).Error(strings.Repeat("m", 1000), "exception.stacktrace", stack, "example.a", strings.Repeat("a", 1000), "example.b", strings.Repeat("b", 1000))
 	row := keptRow(t, output.Bytes(), "common")
 	kept, _ := row["exception.stacktrace"].(string)
-	if output.Len()-1 > 4096 || row["logging.truncated"] != true || flagCount(row) != 0 || row["a"] == nil || row["b"] == nil || kept == "" || !strings.HasPrefix(stack, kept+"\n") {
+	if output.Len()-1 > 4096 || row["logging.truncated"] != true || flagCount(row) != 0 || row["example.a"] == nil || row["example.b"] == nil || kept == "" || !strings.HasPrefix(stack, kept+"\n") {
 		t.Fatal("stack not shortened by whole frames", output.Len())
 	}
 }

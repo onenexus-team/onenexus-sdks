@@ -36,6 +36,7 @@ type Bundle struct {
 var loadOnce sync.Once
 var bundle Bundle
 var validators map[string]*jsonschema.Schema
+var registry *fieldRegistry
 var loadError error
 
 type noNetwork struct{}
@@ -48,6 +49,7 @@ func initialize() {
 		Version   string                     `json:"x-contract-version"`
 		Defs      map[string]json.RawMessage `json:"$defs"`
 		Protected []string                   `json:"x-protected-fields"`
+		Registry  json.RawMessage            `json:"x-field-registry"`
 		Limits    struct {
 			Message    int `json:"message_max_utf8_bytes"`
 			Record     int `json:"record_max_compact_utf8_bytes"`
@@ -71,6 +73,9 @@ func initialize() {
 	}
 	if json.Unmarshal(details.Defs["common"], &common) != nil || common.Properties.ErrorType.MaxLength <= 0 || common.Properties.Dropped.Maximum <= 0 {
 		loadError = errors.New("invalid_logging_rules")
+		return
+	}
+	if registry, loadError = loadRegistry(details.Registry, details.Protected); loadError != nil {
 		return
 	}
 	doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(schema))
