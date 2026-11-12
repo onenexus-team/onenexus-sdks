@@ -391,7 +391,7 @@ func TestCloseWithinBlockedWriterReturnsFalse(t *testing.T) {
 func TestLogAfterClose(t *testing.T) {
 	m := loadWriteModel(t)
 	h, out := newSyncHandler(t, config())
-	child := h.WithAttrs([]slog.Attr{slog.Int("attempt", 1)})
+	child := h.WithAttrs([]slog.Attr{slog.Int("example.attempt", 1)})
 	if !h.CloseWithin(obs.CloseTimeout) || !h.CloseWithin(obs.CloseTimeout) {
 		t.Fatal("empty close reported loss")
 	}
@@ -414,7 +414,7 @@ func TestConcurrentHandleSharesOneWriter(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			logger := slog.New(h).With("attempt", g)
+			logger := slog.New(h).With("example.attempt", g)
 			<-start
 			for i := range each {
 				logger.Info(fmt.Sprintf("worker %d line %d", g, i))
@@ -455,7 +455,7 @@ func TestErrorLineSurvivesHardExit(t *testing.T) {
 		if err != nil {
 			os.Exit(3)
 		}
-		slog.New(h).Error("Fatal before exit", "attempt", 1)
+		slog.New(h).Error("Fatal before exit", "example.attempt", 1)
 		os.Exit(1)
 	}
 	cmd := exec.Command(os.Args[0], "-test.run=^TestErrorLineSurvivesHardExit$", "-test.count=1")
@@ -564,7 +564,7 @@ func TestUnusedLoggerOwnsNoWriter(t *testing.T) {
 	handlers := make([]*obs.Handler, 50)
 	for i := range handlers {
 		handlers[i], _ = obs.NewHandler(config(), &syncOutput{})
-		_ = handlers[i].WithGroup("job").WithAttrs([]slog.Attr{slog.Int("attempt", 1)})
+		_ = handlers[i].WithGroup("job").WithAttrs([]slog.Attr{slog.Int("example.attempt", 1)})
 	}
 	if n := waitGoroutines(base); n != base {
 		t.Fatal("unused handlers started goroutines", n-base)

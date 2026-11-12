@@ -24,7 +24,8 @@ import (
 
 type Config struct {
 	Service, Environment, Region string
-	// AllowedFields names bounded scalar extensions, including dotted group paths.
+	// AllowedFields names the custom fields this service may log (full dotted
+	// names, also under WithGroup). Each must pass CheckAllowedFields.
 	AllowedFields []string
 	MinLevel      slog.Level
 	// Deprecated: MaxWait is ignored. The caller never waits on the writer
@@ -92,7 +93,6 @@ type sink struct {
 type Handler struct {
 	config                    Config
 	allowed                   map[string]bool
-	reserved                  map[string]bool
 	sink                      *sink
 	attrs                     map[string]any
 	group                     string
@@ -141,22 +141,19 @@ var errIO = errors.New("log_write_failed")
 // NewHandler validates configuration before serving work. It never changes slog's
 // global default and never closes the caller-owned writer.
 func NewHandler(config Config, writer io.Writer) (*Handler, error) {
-	if writer == nil || len(config.AllowedFields) > 32 || config.MaxWait < 0 || config.MaxWait > time.Second {
+	if writer == nil || config.MaxWait < 0 || config.MaxWait > time.Second {
 		return nil, errors.New("invalid_log_config")
 	}
 	b, err := Load()
 	if err != nil {
 		return nil, err
 	}
-	h := &Handler{config: config, allowed: make(map[string]bool), reserved: make(map[string]bool), attrs: make(map[string]any), messageLimit: b.MaxMessageBytes, recordLimit: b.MaxRecordBytes, fieldLimit: b.MaxFieldBytes, stackLimit: b.MaxStacktraceBytes, errorTypeLimit: b.MaxErrorTypeChars, maxDrops: b.MaxDroppedFieldCount}
-	h.config.AllowedFields = nil
-	for _, field := range b.CommonFields {
-		h.reserved[field] = true
+	if err = CheckAllowedFields(config.AllowedFields); err != nil {
+		return nil, err
 	}
+	h := &Handler{config: config, allowed: make(map[string]bool), attrs: make(map[string]any), messageLimit: b.MaxMessageBytes, recordLimit: b.MaxRecordBytes, fieldLimit: b.MaxFieldBytes, stackLimit: b.MaxStacktraceBytes, errorTypeLimit: b.MaxErrorTypeChars, maxDrops: b.MaxDroppedFieldCount}
+	h.config.AllowedFields = nil
 	for _, field := range config.AllowedFields {
-		if !fieldName.MatchString(field) || h.reserved[field] || h.allowed[field] {
-			return nil, errors.New("invalid_allowed_fields")
-		}
 		h.allowed[field] = true
 	}
 	data, _ := json.Marshal(map[string]any{"timestamp": 0, "level": "INFO", "message": "Startup validation", "service": config.Service, "region": config.Region, "environment": config.Environment})
@@ -394,7 +391,8 @@ func (s *sink) safeWrite(data []byte) (n int, err error) {
 	return s.writer.Write(data)
 }
 
-// add copies one attribute. A value that cannot be emitted is removed and
+// add copies one attribute. A value that cannot be emitted (an object, such as
+// a named group, an array or a registered field of another type) is removed and
 // counted; an error value is reported through error.type instead.
 func (h *Handler) add(dst map[string]any, state *fieldState, prefix string, attr slog.Attr, depth int) {
 	if attr.Equal(slog.Attr{}) {
@@ -412,21 +410,15 @@ func (h *Handler) add(dst map[string]any, state *fieldState, prefix string, attr
 		state.dropped++
 		return
 	}
-	key := prefix + attr.Key
-	if attr.Value.Kind() == slog.KindGroup {
-		if attr.Key != "" {
-			prefix = key + "."
-		}
+	// slog inlines a group without a key; a named group is an object value.
+	if attr.Value.Kind() == slog.KindGroup && attr.Key == "" {
 		for _, a := range attr.Value.Group() {
 			h.add(dst, state, prefix, a, depth+1)
 		}
 		return
 	}
-	if _, ok := dst[key]; ok || len(dst) >= 34 || (!h.allowed[key] && key != "event" && key != "outcome") {
-		state.dropped++
-		return
-	}
-	if (key == errorTypeField || key == stacktraceField) && attr.Value.Kind() != slog.KindString {
+	key := prefix + attr.Key
+	if _, ok := dst[key]; ok || len(dst) >= 34 || (!h.allowed[key] && key != "event" && key != "outcome") || !registry.accepts(key, attr.Value) {
 		state.dropped++
 		return
 	}
