@@ -16,7 +16,7 @@ if (command === 'emit') {
         service: 'typescript-package-probe',
         environment: 'development',
         region: 'region-1',
-        allowedFields: ['attempt'],
+        allowedFields: ['job.attempt'],
     });
     const metadata = withIncomingContext(
         [['traceparent', '00-11111111111111111111111111111111-2222222222222222-01']],
@@ -38,7 +38,7 @@ if (command === 'emit') {
                     logger.log('Work completed', {
                         event: 'work.completed',
                         outcome: 'success',
-                        fields: { attempt },
+                        fields: { 'job.attempt': attempt },
                     }),
                 );
             },
@@ -59,7 +59,7 @@ if (command === 'emit') {
     for (const row of rows.slice(0, 3)) assert.equal(row.trace_id, expectedTrace, 'wrong_trace');
     assert.equal(rows[0].event, 'request.accepted');
     assert.deepEqual(
-        rows.slice(1, 3).map((r) => r.attempt),
+        rows.slice(1, 3).map((r) => r['job.attempt']),
         [1, 2],
     );
     assert.equal(rows[3].trace_id, undefined, 'system_context_leak');

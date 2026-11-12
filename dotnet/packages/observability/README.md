@@ -37,7 +37,7 @@ builder.Logging.AddOneNexus(new LogConfiguration(
     service: "cas-control",
     environment: "development",
     region: "global",
-    allowedFields: ["operation_id", "attempt"]));
+    allowedFields: ["resource.id", "job.attempt"]));
 ```
 
 - Existing `ILogger<T>` and source-generated logger methods keep working.
@@ -45,6 +45,8 @@ builder.Logging.AddOneNexus(new LogConfiguration(
 - Registration runs during single-threaded DI setup, as with other `IServiceCollection` changes.
 - The package does not remove existing providers. CAS integration must explicitly replace its plain console provider to avoid duplicate output; keep healthy telemetry providers.
 - Service, environment and region come from deployment configuration and cannot be overwritten by log scopes.
+- Every allowed field name must pass the field registry (`x-field-registry` in `schema.json`, design review E1), checked in this order: not protected; format (lowercase, `.` between namespaces, `_` between words, at most 5 segments and 128 characters); not banned; a registered field is accepted; not in a reserved namespace (`logging.*`, `k8s.*`); 2+ segments with a registered first segment. At most 256 names. A failure throws `ArgumentException("invalid_allowed_fields: <rule>: <detail>")`; a banned name's detail names its replacement, e.g. `invalid_allowed_fields: banned: status_code -> http.response.status_code`. `Contract.CheckAllowedFields(names)` runs the same check.
+- A custom field value must be a flat scalar: string, finite number, boolean or null. An object or array, or a registered field's value of another type (`integer` is a whole number), is removed and counted in `logging.dropped_field_count`; the line is kept.
 - Template/scope properties are included only when allowlisted. Others (including protected fields such as `environment`) are removed and counted in `logging.dropped_field_count`; the `{OriginalFormat}` template entry is not counted. `event` and `outcome` are reserved, optional fields and must be supplied together.
 - Formatting still renders template arguments into `message`: callers must use safe messages. Tokens, claims, bodies, prompts and arbitrary exception text must not be message arguments.
 - An `exception` argument adds `error.type` (type full name) and `exception.stacktrace` (one `at <Type>.<Method> (<file>:<line>)` per frame, innermost first, at most 2 KiB), never its message or `ToString()`. A caller-supplied allowlisted value for either field wins.

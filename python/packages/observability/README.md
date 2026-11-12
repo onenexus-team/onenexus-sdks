@@ -34,13 +34,13 @@ logger = logging.getLogger("my-service")
 logger.setLevel(logging.INFO)
 handler = install_handler(logger, LogConfig(
     service="mlops-api", environment="development", region="region-1",
-    allowed_fields=frozenset({"operation_id", "attempt"}),
+    allowed_fields=frozenset({"mlops.operation_id", "job.attempt"}),
 ))
 # request_headers and operation_id come from the application.
 with bound_context(incoming_context(request_headers, trusted=False)):
     logger.info("Request accepted", extra={
         "event": "request.accepted", "outcome": "success",
-        "fields": {"operation_id": operation_id},
+        "fields": {"mlops.operation_id": operation_id},
     })
     dependency_headers = outgoing_headers()
     # Pass dependency_headers to the HTTP client or durable work metadata.
@@ -51,6 +51,8 @@ logger.info("Background maintenance ready")
 - Logger levels, propagation and other handlers are unchanged. Install at one logger hierarchy level to avoid duplicates. Owner removes/closes the handler on shutdown; shared stdout is not closed.
 - Deployment supplies `environment`: `development`, `staging` or `prod`. There is no silent default.
 - Ordinary logs need no call-site edits. Lifecycle logs supply `event` and `outcome`.
+- Allowed custom fields must pass the schema's field registry (`x-field-registry`) when `LogConfig` is built: a registered field, or `<registered namespace>.<name>`; never protected, banned or in `logging.*`/`k8s.*`; at most 256. A rejected name raises `ValueError("invalid_allowed_fields: <rule>: <detail>")`; `check_allowed_fields(names)` runs the same check.
+- A custom field value must be a flat scalar (string, finite number, boolean, null) of its registered type; anything else is removed and counted in `logging.dropped_field_count`.
 - Approved custom fields cannot override common fields. Applications must supply safe messages/values; this is not a general secret detector.
 - Exception messages, stack traces, arbitrary `LogRecord` extras and baggage are not automatically copied.
 - `build_record` supports exporter adapters. Installing this stdout handler does not reformat existing OTLP handlers; final field mapping is a service-integration gate.

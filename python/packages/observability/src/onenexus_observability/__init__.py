@@ -1,7 +1,13 @@
 """Shared contract-backed logging primitives. Initialization is explicit."""
 
 from .context import bound_context, current_trace_id, incoming_context, outgoing_headers
-from .contract import CONTRACT_DIGEST, CONTRACT_VERSION, ContractViolation, validate_record
+from .contract import (
+    CONTRACT_DIGEST,
+    CONTRACT_VERSION,
+    ContractViolation,
+    check_allowed_fields,
+    validate_record,
+)
 from .drop_metric import (
     DropCount,
     DropReason,
@@ -23,6 +29,7 @@ __all__ = [
     "LogConfig",
     "bound_context",
     "build_record",
+    "check_allowed_fields",
     "current_trace_id",
     "LogDropCounter",
     "drop_metrics_text",

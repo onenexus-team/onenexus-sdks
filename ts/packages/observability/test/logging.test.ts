@@ -15,7 +15,7 @@ const config = {
     service: 'utility',
     environment: 'development' as const,
     region: 'ric1',
-    allowedFields: ['attempt'],
+    allowedFields: ['job.attempt'],
 };
 
 it('emits common fields, message, events and exact timestamp; system events are uncorrelated', async () => {
@@ -38,7 +38,7 @@ it('emits common fields, message, events and exact timestamp; system events are 
                         level,
                         event: 'work.completed',
                         outcome: 'success',
-                        fields: { attempt: 1 },
+                        fields: { 'job.attempt': 1 },
                     }),
                 ).toBe(true);
         },
@@ -65,7 +65,7 @@ it('fails bad configuration at startup; keeps degraded lines and drops only inva
         ['message'],
         ['__proto__'],
         ['logging.truncated'],
-        Array(33).fill('field'),
+        Array.from({ length: 257 }, (_, i) => `example.f${i}`),
     ])
         expect(() => createLogger({ ...config, allowedFields })).toThrow('invalid_allowed_fields');
     const lines: string[] = [];
@@ -78,12 +78,12 @@ it('fails bad configuration at startup; keeps degraded lines and drops only inva
     const logger = createLogger(config, stream);
     // Kept and flagged: unknown, protected, non-finite, accessor and non-scalar fields are removed.
     expect(logger.log('safe', { fields: { authorization: 'secret-sentinel' } })).toBe(true);
-    expect(logger.log('safe', { fields: { environment: 'prod', attempt: 1 } })).toBe(true);
+    expect(logger.log('safe', { fields: { environment: 'prod', 'job.attempt': 1 } })).toBe(true);
     expect(logger.log('x'.repeat(1025))).toBe(true);
-    expect(logger.log('safe', { fields: { attempt: NaN } })).toBe(true);
+    expect(logger.log('safe', { fields: { 'job.attempt': NaN } })).toBe(true);
     expect(
         logger.log('safe', {
-            fields: Object.defineProperty({}, 'attempt', {
+            fields: Object.defineProperty({}, 'job.attempt', {
                 enumerable: true,
                 get() {
                     throw Error('secret-sentinel');
@@ -92,7 +92,9 @@ it('fails bad configuration at startup; keeps degraded lines and drops only inva
         }),
     ).toBe(true);
     expect(
-        logger.log('safe', { fields: { attempt: ['secret-sentinel'] } as unknown as LogFields }),
+        logger.log('safe', {
+            fields: { 'job.attempt': ['secret-sentinel'] } as unknown as LogFields,
+        }),
     ).toBe(true);
     // Still invalid: bad message, event or fields argument.
     expect(logger.log('')).toBe(false);
@@ -105,7 +107,7 @@ it('fails bad configuration at startup; keeps degraded lines and drops only inva
     expect(rows).toHaveLength(6);
     for (const row of rows) expect(validateRecord(row)).toEqual([]);
     expect(rows.map((r) => r['logging.dropped_field_count'])).toEqual([1, 1, undefined, 1, 1, 1]);
-    expect(rows[1]).toMatchObject({ environment: 'development', attempt: 1 });
+    expect(rows[1]).toMatchObject({ environment: 'development', 'job.attempt': 1 });
     expect(rows[2]).toMatchObject({ 'logging.truncated': true });
     expect(Buffer.byteLength(rows[2]!.message as string)).toBeLessThanOrEqual(1024);
     expect(lines.join('')).not.toContain('secret-sentinel');

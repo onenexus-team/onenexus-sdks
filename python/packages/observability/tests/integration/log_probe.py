@@ -26,7 +26,7 @@ def emit(environment, region, run_id):
             "observability-package-probe",
             environment,
             region,
-            frozenset({"operation_id", "attempt"}),
+            frozenset({"example.operation_id", "job.attempt"}),
         ),
     )
     with bound_context(incoming_context({}, trusted=False)):
@@ -37,7 +37,7 @@ def emit(environment, region, run_id):
             extra={
                 "event": "probe.accepted",
                 "outcome": "success",
-                "fields": {"operation_id": run_id},
+                "fields": {"example.operation_id": run_id},
             },
         )
     # Restore durable metadata after the original context has ended.
@@ -48,10 +48,10 @@ def emit(environment, region, run_id):
                 extra={
                     "event": "probe.attempt",
                     "outcome": "success",
-                    "fields": {"operation_id": run_id, "attempt": attempt},
+                    "fields": {"example.operation_id": run_id, "job.attempt": attempt},
                 },
             )
-    logger.info("Probe context cleared", extra={"fields": {"operation_id": run_id}})
+    logger.info("Probe context cleared", extra={"fields": {"example.operation_id": run_id}})
     if handler.dropped_records or current_trace_id() is not None:
         raise RuntimeError("probe_failed")
     print(json.dumps({"run_id": run_id, "trace_id": trace_id}), file=sys.stderr)
@@ -74,7 +74,7 @@ def verify(path, environment, region, run_id):
             raise ValueError("invalid_record")
         if record.get("service") != "observability-package-probe":
             raise ValueError("service_mismatch")
-        if (record["environment"], record["region"], record.get("operation_id")) != (
+        if (record["environment"], record["region"], record.get("example.operation_id")) != (
             environment,
             region,
             run_id,
@@ -89,7 +89,7 @@ def verify(path, environment, region, run_id):
         None,
     ]:
         raise ValueError("event_mismatch")
-    if [r["attempt"] for r in records[1:3]] != [1, 2]:
+    if [r["job.attempt"] for r in records[1:3]] != [1, 2]:
         raise ValueError("attempt_mismatch")
     print("PASS: four scoped records; retry correlation and context cleanup")
 

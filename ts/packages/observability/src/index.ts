@@ -26,6 +26,8 @@ export {
 export {
     CONTRACT_VERSION,
     CONTRACT_DIGEST,
+    MAX_CUSTOM_FIELDS,
+    checkAllowedFields,
     validateRecord,
     encodeRecord,
     parseRecord,

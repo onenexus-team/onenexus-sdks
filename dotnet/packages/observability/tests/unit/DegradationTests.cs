@@ -137,19 +137,20 @@ public sealed class DegradationTests
     public void UnsupportedFieldValuesAreRemovedAndCountedNotTheRecord()
     {
         using var output = new StringWriter();
-        using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["a", "b", "c", "d", "kept"]), output);
+        using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["example.a", "example.b", "example.c", "example.d", "example.o", "example.kept"]), output);
         var fields = new Dictionary<string, object?>
         {
-            ["a"] = double.NaN, ["b"] = float.PositiveInfinity, ["c"] = typeof(string), // Not serialisable.
-            ["d"] = "x\uD800y", // Lone surrogate: not valid Unicode.
-            ["kept"] = new Dictionary<string, object?> { ["n"] = 1 }, // Object values serialise as before.
+            ["example.a"] = double.NaN, ["example.b"] = float.PositiveInfinity, ["example.c"] = typeof(string), // Not serialisable.
+            ["example.d"] = "x\uD800y", // Lone surrogate: not valid Unicode.
+            ["example.o"] = new Dictionary<string, object?> { ["n"] = 1 }, // Not a flat scalar (field registry E1).
+            ["example.kept"] = 1,
         };
         provider.CreateLogger("test").Log(LogLevel.Information, default, fields, null, (_, _) => "Unsupported values");
         Assert.AreEqual(0L, provider.DroppedRecords);
         var row = JsonDocument.Parse(Lines(provider, output).Single()).RootElement;
-        Assert.AreEqual(4, row.GetProperty("logging.dropped_field_count").GetInt32());
-        Assert.IsTrue(new[] { "a", "b", "c", "d" }.All(k => !row.TryGetProperty(k, out _)));
-        Assert.AreEqual(1, row.GetProperty("kept").GetProperty("n").GetInt32());
+        Assert.AreEqual(5, row.GetProperty("logging.dropped_field_count").GetInt32());
+        Assert.IsTrue(new[] { "example.a", "example.b", "example.c", "example.d", "example.o" }.All(k => !row.TryGetProperty(k, out _)));
+        Assert.AreEqual(1, row.GetProperty("example.kept").GetInt32());
         Assert.IsEmpty(Contract.Validate(row));
     }
 
@@ -197,10 +198,10 @@ public sealed class DegradationTests
     public void TemplateMetadataIsNotCountedButUnknownTemplateFieldsAre()
     {
         using var output = new StringWriter();
-        using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["attempt"]), output);
+        using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["job.attempt"]), output);
         var logger = provider.CreateLogger("test");
-        logger.LogInformation("Attempt {attempt}", 1);
-        logger.LogInformation("Attempt {attempt} for {tenant}", 2, "t1");
+        logger.LogInformation("Attempt {job.attempt}", 1);
+        logger.LogInformation("Attempt {job.attempt} for {tenant}", 2, "t1");
         var rows = Lines(provider, output).Select(l => JsonDocument.Parse(l).RootElement).ToArray();
         Assert.HasCount(2, rows);
         Assert.IsFalse(rows[0].TryGetProperty("logging.dropped_field_count", out _));
@@ -213,17 +214,17 @@ public sealed class DegradationTests
     public void SurrogatePairIsNeverSplit()
     {
         using var output = new StringWriter();
-        using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["note"]), output);
+        using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["example.note"]), output);
         // 2 + 254 * 4 bytes fit the 1,021-byte budget; the next pair would split at byte 1,022.
         var text = "ab" + string.Concat(Enumerable.Repeat("\U0001F600", 400));
         // Separate records: the serializer escapes each pair as 12 bytes, which counts toward the line limit.
         var logger = provider.CreateLogger("test");
         logger.Log(LogLevel.Information, default, new Dictionary<string, object?>(), null, (_, _) => text);
-        logger.Log(LogLevel.Information, default, new Dictionary<string, object?> { ["note"] = text }, null, (_, _) => "Note");
+        logger.Log(LogLevel.Information, default, new Dictionary<string, object?> { ["example.note"] = text }, null, (_, _) => "Note");
         Assert.AreEqual(0L, provider.DroppedRecords);
         var rows = Lines(provider, output).Select(l => JsonDocument.Parse(l).RootElement).ToArray();
         Assert.HasCount(2, rows);
-        foreach (var value in new[] { rows[0].GetProperty("message").GetString()!, rows[1].GetProperty("note").GetString()! })
+        foreach (var value in new[] { rows[0].GetProperty("message").GetString()!, rows[1].GetProperty("example.note").GetString()! })
         {
             Assert.AreEqual("ab" + string.Concat(Enumerable.Repeat("\U0001F600", 254)) + "\u2026", value);
             Assert.AreEqual(1021, new UTF8Encoding(false, true).GetByteCount(value));
@@ -235,15 +236,15 @@ public sealed class DegradationTests
     public void OversizeRecordShortensStackByWholeFramesBeforeRemovingFields()
     {
         using var output = new StringWriter();
-        using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["shared.a", "shared.b"]), output);
-        var fields = new Dictionary<string, object?> { ["shared.a"] = new string('a', 1000), ["shared.b"] = new string('b', 1000) };
+        using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["example.a", "example.b"]), output);
+        var fields = new Dictionary<string, object?> { ["example.a"] = new string('a', 1000), ["example.b"] = new string('b', 1000) };
         provider.CreateLogger("test").Log(LogLevel.Error, default, fields, Caught("private", 60), (_, _) => new string('m', 1000));
         Assert.AreEqual(0L, provider.DroppedRecords);
         var line = Lines(provider, output).Single();
         var row = JsonDocument.Parse(line).RootElement;
         Assert.IsLessThanOrEqualTo(4096, Bytes(line));
-        Assert.AreEqual(1000, row.GetProperty("shared.a").GetString()!.Length);
-        Assert.AreEqual(1000, row.GetProperty("shared.b").GetString()!.Length);
+        Assert.AreEqual(1000, row.GetProperty("example.a").GetString()!.Length);
+        Assert.AreEqual(1000, row.GetProperty("example.b").GetString()!.Length);
         Assert.IsTrue(row.GetProperty("logging.truncated").GetBoolean());
         Assert.IsFalse(row.TryGetProperty("logging.dropped_field_count", out _));
         var frames = row.GetProperty("exception.stacktrace").GetString()!.Split('\n');
@@ -255,11 +256,11 @@ public sealed class DegradationTests
     public void RequestFieldsAreNeverRemovedSoAnUnfittableRecordIsDropped()
     {
         using var output = new StringWriter();
-        using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["shared.a"]), output);
+        using var provider = new JsonLogProvider(new("shared-test", "development", "region-1", ["example.a"]), output);
         var fields = new Dictionary<string, object?>
         {
             ["http.route"] = new string('r', 1100), ["http.request.method"] = new string('g', 1100),
-            ["error_code"] = new string('e', 1100), ["shared.a"] = "small",
+            ["error_code"] = new string('e', 1100), ["example.a"] = "small",
         };
         provider.CreateLogger("test").Log(LogLevel.Information, default, fields, null, (_, _) => new string('m', 1100));
         Assert.IsTrue(provider.CloseWithin(TimeSpan.FromSeconds(10)));
