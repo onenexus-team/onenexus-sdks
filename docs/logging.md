@@ -298,7 +298,12 @@ sequenceDiagram
 | Go | `CheckAllowedFields(names)` |
 | .NET | `Contract.CheckAllowedFields(names)` |
 
-- To add a field: a service field goes in its own namespace (no SDK change); a cross-service field is a registry PR here.
+| To add | Change |
+|---|---|
+| A service's own field | Its name under the service namespace, in the service repo. No SDK change |
+| A field shared by 2+ services | A registry PR here (`fields`, with its type) |
+| A new service | One namespace line in `namespaces` (registry PR here), so every prefix is reviewed once |
+
 - Unit-suffix, `_at` and `_count` naming rules are documented in the design review, not enforced.
 - Upgrade: a service whose allowed fields break the registry fails at startup. Run its emission tests on the new pin first.
 
