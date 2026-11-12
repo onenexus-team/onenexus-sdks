@@ -7,13 +7,13 @@ try
 {
     if (args.Length == 1 && args[0] == "emit")
     {
-        using var provider = new JsonLogProvider(new("dotnet-package-probe", "development", "region-1", ["attempt"]));
+        using var provider = new JsonLogProvider(new("dotnet-package-probe", "development", "region-1", ["job.attempt"]));
         var logger = provider.CreateLogger("probe");
         // Test input represents context received from an edge. The service API never generates it.
         var headers = new Dictionary<string, string> { ["traceparent"] = "00-11111111111111111111111111111111-2222222222222222-00" };
         for (var attempt = 1; attempt <= 2; attempt++)
             using (CorrelationContext.BindIncoming(headers, trusted: true))
-                logger.LogInformation("Attempt {attempt}", attempt);
+                logger.LogInformation("Attempt {job.attempt}", attempt);
         using (CorrelationContext.BindIncoming([], trusted: true)) logger.LogInformation("Uncorrelated request");
         if (provider.DroppedRecords != 0 || CorrelationContext.TraceId is not null) throw new InvalidOperationException("probe_failed");
     }
