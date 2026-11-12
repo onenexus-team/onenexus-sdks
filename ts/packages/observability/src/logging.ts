@@ -1,12 +1,13 @@
 import type { Writable } from 'node:stream';
 import {
-    COMMON_FIELDS,
     MAX_DROPPED_FIELD_COUNT,
     MAX_FIELD_BYTES,
     MAX_MESSAGE_BYTES,
     MAX_RECORD_BYTES,
     MAX_STACKTRACE_BYTES,
     ContractViolation,
+    acceptsFieldValue,
+    checkAllowedFields,
     encodeRecord,
     encodedBytes,
     validateRecord,
@@ -258,20 +259,8 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
     });
     if (errors.length) throw new ContractViolation(errors);
     const names = config.allowedFields ?? [];
-    if (
-        !Array.isArray(names) ||
-        names.length > 32 ||
-        names.some(
-            (k) =>
-                typeof k !== 'string' ||
-                !/^[A-Za-z][A-Za-z0-9._-]{0,127}$/.test(k) ||
-                COMMON_FIELDS.includes(k),
-        )
-    ) {
-        throw new Error('invalid_allowed_fields');
-    }
-    const allowed = new Set<string>(REQUEST_FIELDS);
-    for (const name of config.allowedFields ?? []) allowed.add(name);
+    checkAllowedFields(names);
+    const allowed = new Set<string>([...REQUEST_FIELDS, ...names]);
     const counts = { written: 0, invalid: 0, backpressure: 0, io: 0, closed: 0 };
     // Every counter that means "not written" also feeds the process-wide drop metric (R1).
     const serviceDrops = dropCounter(config.service);
@@ -434,19 +423,15 @@ export function createLogger(config: LogConfig, stream: Writable = process.stdou
                     )
                         throw Error('invalid_fields');
                     const fields = Object.entries(Object.getOwnPropertyDescriptors(options.fields));
-                    // Remove what cannot be emitted (unknown, protected, non-scalar, accessor,
-                    // malformed Unicode, invalid error field); keep the record and count it.
+                    // Remove what cannot be emitted (unknown, protected, non-scalar or of the wrong
+                    // registered type, accessor, malformed Unicode, invalid error field); keep the
+                    // record and count it.
                     for (const [key, descriptor] of fields) {
                         const value: unknown = descriptor.value;
                         if (
                             !allowed.has(key) ||
                             !('value' in descriptor) ||
-                            !(
-                                value === null ||
-                                typeof value === 'boolean' ||
-                                typeof value === 'string' ||
-                                (typeof value === 'number' && Number.isFinite(value))
-                            ) ||
+                            !acceptsFieldValue(key, value) ||
                             (typeof value === 'string' && !value.isWellFormed()) ||
                             (key === ERROR_TYPE_FIELD &&
                                 !(typeof value === 'string' && ERROR_TYPE_PATTERN.test(value))) ||

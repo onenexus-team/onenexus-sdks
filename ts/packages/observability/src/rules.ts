@@ -17,6 +17,15 @@ interface Schema {
         field_max_utf8_bytes: number;
         stacktrace_max_utf8_bytes: number;
     };
+    'x-field-registry': {
+        name_pattern: string;
+        name_max_chars: number;
+        max_custom_fields: number;
+        namespaces: Record<string, string>;
+        reserved_namespaces: Record<string, string>;
+        fields: Record<string, { type: string }>;
+        banned: Record<string, string>;
+    };
 }
 const schema = JSON.parse(schemaText) as Schema;
 const ajv = new Ajv2020({ allErrors: true, strict: true });
@@ -35,8 +44,71 @@ export const MAX_FIELD_BYTES: number = schema['x-semantic-checks'].field_max_utf
 export const MAX_STACKTRACE_BYTES: number = schema['x-semantic-checks'].stacktrace_max_utf8_bytes;
 export const MAX_DROPPED_FIELD_COUNT = schema.$defs.common.properties['logging.dropped_field_count']
     ?.maximum as number;
+
+// The field registry (design review E1): every set and limit comes from schema.json.
+const registry = schema['x-field-registry'];
 // Logger-owned fields stay protected when optional shared fields are added.
-export const COMMON_FIELDS: readonly string[] = Object.freeze(schema['x-protected-fields']);
+const PROTECTED = new Set(schema['x-protected-fields']);
+const NAME_PATTERN = new RegExp(registry.name_pattern);
+const NAMESPACES = new Set(Object.keys(registry.namespaces));
+const RESERVED_NAMESPACES = new Set(Object.keys(registry.reserved_namespaces));
+// Maps, not objects: a name such as `constructor` must not match a prototype key.
+const BANNED = new Map(Object.entries(registry.banned));
+/** One predicate per schema `value_types` entry. */
+const VALUE_TYPES = {
+    string: (value: unknown) => typeof value === 'string',
+    integer: (value: unknown) => Number.isInteger(value),
+    number: (value: unknown) => typeof value === 'number' && Number.isFinite(value),
+    boolean: (value: unknown) => typeof value === 'boolean',
+    null: (value: unknown) => value === null,
+} as const;
+const isScalar = (value: unknown) => Object.values(VALUE_TYPES).some((accepts) => accepts(value));
+const REGISTERED = new Map(
+    Object.entries(registry.fields).map(([name, { type }]) => {
+        if (!Object.hasOwn(VALUE_TYPES, type)) throw Error(`unknown_value_type: ${type}`);
+        return [name, VALUE_TYPES[type as keyof typeof VALUE_TYPES]];
+    }),
+);
+/** Most custom field names one logger may allow. */
+export const MAX_CUSTOM_FIELDS: number = registry.max_custom_fields;
+
+/** The first registry rule a name breaks, with its detail, or undefined when it may be logged. */
+function registryFailure(name: unknown): string | undefined {
+    // In check_order (tests/logging/scenarios.json `field_registry`).
+    if (typeof name === 'string' && PROTECTED.has(name)) return `protected: ${name}`;
+    if (
+        typeof name !== 'string' ||
+        name.length > registry.name_max_chars ||
+        !NAME_PATTERN.test(name)
+    )
+        return `format: ${typeof name === 'string' ? name : typeof name}`;
+    const replacement = BANNED.get(name);
+    if (replacement !== undefined) return `banned: ${name} -> ${replacement}`;
+    if (REGISTERED.has(name)) return undefined;
+    const [head = '', ...rest] = name.split('.');
+    if (RESERVED_NAMESPACES.has(head)) return `reserved: ${name}`;
+    if (!rest.length || !NAMESPACES.has(head)) return `namespace: ${name}`;
+    return undefined;
+}
+
+/**
+ * Check a logger's allowed custom field names against the field registry; createLogger calls
+ * it. Throws `invalid_allowed_fields: <rule>: <name>` (a banned name adds `-> <replacement>`).
+ */
+export function checkAllowedFields(names: readonly string[]): void {
+    if (!Array.isArray(names)) throw new Error('invalid_allowed_fields: not an array');
+    if (names.length > MAX_CUSTOM_FIELDS)
+        throw new Error(`invalid_allowed_fields: too_many: ${names.length} > ${MAX_CUSTOM_FIELDS}`);
+    for (const name of names as readonly unknown[]) {
+        const failure = registryFailure(name);
+        if (failure) throw new Error(`invalid_allowed_fields: ${failure}`);
+    }
+}
+
+/** A custom field value is a flat scalar; a registered field's is of its type, or null. */
+export function acceptsFieldValue(name: string, value: unknown): boolean {
+    return value === null || (REGISTERED.get(name) ?? isScalar)(value);
+}
 
 /** Parse integer timestamps without rounding int64 values through a JS number. */
 export function parseRecord(text: string): unknown {

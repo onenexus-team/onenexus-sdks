@@ -192,11 +192,11 @@ describe('degradation details', () => {
         expect(stack.split('\n').every((f) => f.startsWith('at raiseNested ('))).toBe(true);
     });
 
-    it('32 allowed fields plus unknown ones: the unknown ones are removed and counted', async () => {
-        const names = Array.from({ length: 32 }, (_, i) => `f${i}`);
+    it('allowed fields plus unknown ones: the unknown ones are removed and counted', async () => {
+        const names = Array.from({ length: 32 }, (_, i) => `example.f${i}`);
         const { lines, logger } = sink({ ...shared, allowedFields: names });
         const fields = Object.fromEntries(
-            [...names, 'f32', 'f33', 'f34'].map((k, i) => [k, i]),
+            [...names, 'example.f32', 'example.f33', 'example.f34'].map((k, i) => [k, i]),
         ) as LogFields;
         expect(logger.log('Many fields', { fields })).toBe(true);
         await logger.close();
@@ -210,23 +210,23 @@ describe('degradation details', () => {
         const { lines, logger } = sink(shared);
         const fields = Object.fromEntries([
             ...Array.from({ length: 40 }, (_, i) => [`unknown${i}`, i]),
-            ['shared.note', 'kept'],
+            ['example.note', 'kept'],
         ]) as LogFields;
         expect(logger.log('Many unknown fields', { fields })).toBe(true);
         await logger.close();
         const [row] = rowsOf(lines);
-        expect(row).toMatchObject({ 'shared.note': 'kept', 'logging.dropped_field_count': 40 });
+        expect(row).toMatchObject({ 'example.note': 'kept', 'logging.dropped_field_count': 40 });
     });
 
     it('a malformed-Unicode string field is removed and counted, not the record', async () => {
         const { lines, logger } = sink(shared);
         expect(
-            logger.log('Bad text', { fields: { 'shared.note': 'x\ud800', 'shared.a': 'ok' } }),
+            logger.log('Bad text', { fields: { 'example.note': 'x\ud800', 'example.a': 'ok' } }),
         ).toBe(true);
         await logger.close();
         const [row] = rowsOf(lines);
-        expect(row).not.toHaveProperty(['shared.note']);
-        expect(row).toMatchObject({ 'shared.a': 'ok', 'logging.dropped_field_count': 1 });
+        expect(row).not.toHaveProperty(['example.note']);
+        expect(row).toMatchObject({ 'example.a': 'ok', 'logging.dropped_field_count': 1 });
         expect(logger.stats().invalid).toBe(0);
     });
 
@@ -298,11 +298,11 @@ describe('degradation details', () => {
     it('never splits a surrogate pair', async () => {
         const { lines, logger } = sink(shared);
         // 1,021 budget bytes: 'a' + 255 four-byte emoji = 1,021, the next pair does not fit.
-        logger.log('a' + '😀'.repeat(400), { fields: { 'shared.note': 'ab' + '😀'.repeat(400) } });
+        logger.log('a' + '😀'.repeat(400), { fields: { 'example.note': 'ab' + '😀'.repeat(400) } });
         await logger.close();
         const [row] = rowsOf(lines);
         const message = row!.message as string;
-        const note = row!['shared.note'] as string;
+        const note = row!['example.note'] as string;
         for (const value of [message, note]) {
             expect(value.isWellFormed()).toBe(true);
             expect(value.endsWith('…')).toBe(true);
@@ -314,33 +314,36 @@ describe('degradation details', () => {
     });
 
     it('oversize records shorten the stack before removing fields; request-field keys stay', async () => {
-        const { lines, logger } = sink({ ...shared, allowedFields: ['a', 'b', 'c'] });
+        const { lines, logger } = sink({
+            ...shared,
+            allowedFields: ['example.a', 'example.b', 'example.c'],
+        });
         const error = capture(() => raiseNested('x', 400), 200);
         logger.log('m'.repeat(900), {
-            fields: { a: 'x'.repeat(900), b: 'y'.repeat(900) },
+            fields: { 'example.a': 'x'.repeat(900), 'example.b': 'y'.repeat(900) },
             error,
         });
         logger.log('m'.repeat(1000), {
             fields: {
-                a: 'x'.repeat(1000),
-                b: 'y'.repeat(1000),
-                c: 'w'.repeat(1000),
+                'example.a': 'x'.repeat(1000),
+                'example.b': 'y'.repeat(1000),
+                'example.c': 'w'.repeat(1000),
                 'http.route': '/' + 'z'.repeat(199),
             },
             error,
         });
         await logger.close();
         const [first, second] = rowsOf(lines);
-        expect(first).toMatchObject({ a: 'x'.repeat(900), b: 'y'.repeat(900) });
+        expect(first).toMatchObject({ 'example.a': 'x'.repeat(900), 'example.b': 'y'.repeat(900) });
         expect(first).not.toHaveProperty(['logging.dropped_field_count']);
         expect(first!['logging.truncated']).toBe(true);
         expect(first!['exception.stacktrace']).toMatch(/^at raiseNested/);
-        // Stack gone, then a tie between a, b and c: key name descending removes c first.
+        // Stack gone, then a tie between example.a, .b and .c: key name descending removes .c first.
         expect(second).not.toHaveProperty(['exception.stacktrace']);
-        expect(second).not.toHaveProperty(['c']);
+        expect(second).not.toHaveProperty(['example.c']);
         expect(second).toMatchObject({
-            a: 'x'.repeat(1000),
-            b: 'y'.repeat(1000),
+            'example.a': 'x'.repeat(1000),
+            'example.b': 'y'.repeat(1000),
             'http.route': '/' + 'z'.repeat(199),
             'logging.dropped_field_count': 1,
         });

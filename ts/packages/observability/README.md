@@ -26,7 +26,7 @@ const logger = createLogger({
     service: 'utility',
     environment: 'development', // development | staging | prod
     region: 'region-1',
-    allowedFields: ['operation_id', 'attempt'],
+    allowedFields: ['job.id', 'job.attempt'], // checked against the field registry
 });
 
 // Decide trust from deployment/authenticated-peer policy, never a client header.
@@ -49,9 +49,10 @@ const drained = await logger.close(1000);
 | Valid trusted context | Adds the canonical `trace_id`; forwards W3C `traceparent` |
 | Missing / invalid / duplicate / untrusted context | Allows work, emits uncorrelated logs; no replacement trace generated |
 | Timestamp | Unix nanosecond units, millisecond clock resolution; exact JSON integer |
-| Custom fields | Up to 32 configured names, scalar JSON values; cannot replace common fields |
+| Custom fields | Up to 256 configured names, each checked by `checkAllowedFields` against the schema's `x-field-registry` (registered field, or a registered namespace; banned and reserved names rejected); a bad name throws `invalid_allowed_fields: <rule>: <name>` |
+| Field values | Flat scalars (string, finite number, boolean, null); a registered field's value must have its registered type |
 | Too long | Message or string field over 1,024 UTF-8 bytes (`exception.stacktrace`: 2,048) is cut at a character boundary plus `…`; sets `logging.truncated: true` |
-| Unknown / unsupported field | Removed, the line is kept; `logging.dropped_field_count` counts it (also non-scalar, accessor, beyond 32) |
+| Unknown / unsupported field | Removed, the line is kept; `logging.dropped_field_count` counts it (also non-scalar, wrong registered type, accessor) |
 | Record over 4,096 bytes | Stack shortened by whole frames, then largest custom fields removed and counted, until it fits |
 | `error` option | `error.type` (error name) and `exception.stacktrace` (`at <function> (<file>:<line>)`, innermost first); caller-supplied values win; non-errors ignored |
 | Context cleanup | `AsyncLocalStorage.run`; nested, async, exception and cancellation paths restore the caller's context |
