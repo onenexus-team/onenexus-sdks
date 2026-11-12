@@ -24,7 +24,6 @@ interface Schema {
         namespaces: Record<string, string>;
         reserved_namespaces: Record<string, string>;
         fields: Record<string, { type: string }>;
-        banned: Record<string, string>;
     };
 }
 const schema = JSON.parse(schemaText) as Schema;
@@ -37,7 +36,7 @@ const validators = new Map(
 );
 export const CONTRACT_VERSION = "0.5.0"; // Log-format identity, not the SDK version.
 // sha256 of the bundled schema.json; equal in every language (tests/logging).
-export const CONTRACT_DIGEST = "3910951d0ea07dcce757bef9a88ff841bd6015d6b3bb1437678ca4bd041b438c";
+export const CONTRACT_DIGEST = "cf62150214247ebcfe4fcc0c3dd69f1c6d9c15d2d634f156fe3406f0b9feb4a1";
 export const MAX_MESSAGE_BYTES: number = schema['x-semantic-checks'].message_max_utf8_bytes;
 export const MAX_RECORD_BYTES: number = schema['x-semantic-checks'].record_max_compact_utf8_bytes;
 export const MAX_FIELD_BYTES: number = schema['x-semantic-checks'].field_max_utf8_bytes;
@@ -52,8 +51,6 @@ const PROTECTED = new Set(schema['x-protected-fields']);
 const NAME_PATTERN = new RegExp(registry.name_pattern);
 const NAMESPACES = new Set(Object.keys(registry.namespaces));
 const RESERVED_NAMESPACES = new Set(Object.keys(registry.reserved_namespaces));
-// Maps, not objects: a name such as `constructor` must not match a prototype key.
-const BANNED = new Map(Object.entries(registry.banned));
 /** One predicate per schema `value_types` entry. */
 const VALUE_TYPES = {
     string: (value: unknown) => typeof value === 'string',
@@ -63,6 +60,7 @@ const VALUE_TYPES = {
     null: (value: unknown) => value === null,
 } as const;
 const isScalar = (value: unknown) => Object.values(VALUE_TYPES).some((accepts) => accepts(value));
+// A Map, not an object: a name such as `constructor` must not match a prototype key.
 const REGISTERED = new Map(
     Object.entries(registry.fields).map(([name, { type }]) => {
         if (!Object.hasOwn(VALUE_TYPES, type)) throw Error(`unknown_value_type: ${type}`);
@@ -82,8 +80,6 @@ function registryFailure(name: unknown): string | undefined {
         !NAME_PATTERN.test(name)
     )
         return `format: ${typeof name === 'string' ? name : typeof name}`;
-    const replacement = BANNED.get(name);
-    if (replacement !== undefined) return `banned: ${name} -> ${replacement}`;
     if (REGISTERED.has(name)) return undefined;
     const [head = '', ...rest] = name.split('.');
     if (RESERVED_NAMESPACES.has(head)) return `reserved: ${name}`;
@@ -93,7 +89,7 @@ function registryFailure(name: unknown): string | undefined {
 
 /**
  * Check a logger's allowed custom field names against the field registry; createLogger calls
- * it. Throws `invalid_allowed_fields: <rule>: <name>` (a banned name adds `-> <replacement>`).
+ * it. Throws `invalid_allowed_fields: <rule>: <name>`.
  */
 export function checkAllowedFields(names: readonly string[]): void {
     if (!Array.isArray(names)) throw new Error('invalid_allowed_fields: not an array');

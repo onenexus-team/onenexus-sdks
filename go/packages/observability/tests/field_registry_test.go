@@ -18,11 +18,10 @@ import (
 )
 
 type configCase struct {
-	ID          string          `json:"id"`
-	Names       json.RawMessage `json:"names"`
-	Accepted    bool            `json:"accepted"`
-	Reason      string          `json:"reason"`
-	Replacement string          `json:"replacement"`
+	ID       string          `json:"id"`
+	Names    json.RawMessage `json:"names"`
+	Accepted bool            `json:"accepted"`
+	Reason   string          `json:"reason"`
 }
 
 type valueCase struct {
@@ -95,8 +94,6 @@ var configCaseIDs = []string{
 	"rejects_bad_format",
 	"rejects_too_many_segments",
 	"rejects_too_long",
-	"rejects_banned",
-	"rejects_banned_namespaced",
 	"rejects_reserved_namespace",
 	"rejects_unregistered_flat",
 	"rejects_unregistered_namespace",
@@ -126,7 +123,7 @@ func TestEveryFieldRegistryCaseHasATest(t *testing.T) {
 }
 
 // Config cases: CheckAllowedFields and NewHandler give the same verdict, with
-// the stable code, the rule and a banned name's replacement.
+// the stable code and the rule.
 func TestFieldRegistryConfigCases(t *testing.T) {
 	spec := loadFieldRegistry(t)
 	for _, c := range spec.ConfigCases {
@@ -149,8 +146,8 @@ func TestFieldRegistryConfigCases(t *testing.T) {
 			if !errors.As(err, &fieldErr) || !errors.Is(err, obs.ErrInvalidAllowedFields) {
 				t.Fatal("accepted or wrong error", err)
 			}
-			if string(fieldErr.Rule) != c.Reason || fieldErr.Replacement != c.Replacement {
-				t.Fatal("rule", fieldErr.Rule, fieldErr.Replacement)
+			if string(fieldErr.Rule) != c.Reason {
+				t.Fatal("rule", fieldErr.Rule)
 			}
 			if !strings.HasPrefix(err.Error(), spec.ConfigError+": "+c.Reason+": ") {
 				t.Fatal("detail", err)
@@ -162,9 +159,9 @@ func TestFieldRegistryConfigCases(t *testing.T) {
 	}
 }
 
-func TestBannedFieldErrorNamesReplacement(t *testing.T) {
+func TestAllowedFieldErrorNamesRuleAndField(t *testing.T) {
 	err := obs.CheckAllowedFields([]string{"example.ok", "status_code"})
-	if err == nil || err.Error() != "invalid_allowed_fields: banned: status_code -> http.response.status_code" {
+	if err == nil || err.Error() != "invalid_allowed_fields: namespace: status_code" {
 		t.Fatal(err)
 	}
 }

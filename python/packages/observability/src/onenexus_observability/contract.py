@@ -14,7 +14,7 @@ from importlib.resources import files
 # Log-format identity, not the package version.
 CONTRACT_VERSION = "0.5.0"
 # sha256 of the bundled schema.json; equal in every language (tests/logging).
-CONTRACT_DIGEST = "3910951d0ea07dcce757bef9a88ff841bd6015d6b3bb1437678ca4bd041b438c"
+CONTRACT_DIGEST = "cf62150214247ebcfe4fcc0c3dd69f1c6d9c15d2d634f156fe3406f0b9feb4a1"
 _SCHEMA = json.loads(files("onenexus_observability").joinpath("schema.json").read_bytes())
 _VALIDATORS = {
     name: Draft202012Validator({"$defs": _SCHEMA["$defs"], "$ref": f"#/$defs/{name}"})
@@ -35,7 +35,6 @@ _REGISTRY = _SCHEMA["x-field-registry"]
 MAX_CUSTOM_FIELDS = _REGISTRY["max_custom_fields"]
 _NAME_PATTERN = re.compile(_REGISTRY["name_pattern"])
 _NAME_MAX_CHARS = _REGISTRY["name_max_chars"]
-_BANNED: dict[str, str] = _REGISTRY["banned"]
 _NAMESPACES = frozenset(_REGISTRY["namespaces"])
 _RESERVED_NAMESPACES = frozenset(_REGISTRY["reserved_namespaces"])
 # One check per registry value type; a type missing here fails at import.
@@ -57,8 +56,8 @@ def _registry_error(rule: str, detail: object) -> ValueError:
 def check_allowed_fields(names: Collection[str]) -> None:
     """Raise ``ValueError("invalid_allowed_fields: <rule>: <detail>")`` at the first rejected name.
 
-    Rules, in order: protected, format, banned (the error names the
-    replacement), registered field (accepted), reserved namespace, namespace.
+    Rules, in order: protected, format, registered field (accepted),
+    reserved namespace, namespace.
     More than ``MAX_CUSTOM_FIELDS`` names fails as ``too_many``.
     """
     if len(names) > MAX_CUSTOM_FIELDS:
@@ -68,8 +67,6 @@ def check_allowed_fields(names: Collection[str]) -> None:
             raise _registry_error("protected", name)
         if not isinstance(name, str) or len(name) > _NAME_MAX_CHARS or not _NAME_PATTERN.fullmatch(name):
             raise _registry_error("format", name)
-        if name in _BANNED:
-            raise _registry_error("banned", f"{name} -> {_BANNED[name]}")
         if name in _FIELD_TYPES:
             continue
         head, _, rest = name.partition(".")

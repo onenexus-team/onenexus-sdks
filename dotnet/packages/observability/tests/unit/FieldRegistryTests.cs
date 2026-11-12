@@ -50,8 +50,6 @@ public sealed class FieldRegistryTests
     [DataRow("rejects_bad_format")]
     [DataRow("rejects_too_many_segments")]
     [DataRow("rejects_too_long")]
-    [DataRow("rejects_banned")]
-    [DataRow("rejects_banned_namespaced")]
     [DataRow("rejects_reserved_namespace")]
     [DataRow("rejects_unregistered_flat")]
     [DataRow("rejects_unregistered_namespace")]
@@ -68,8 +66,6 @@ public sealed class FieldRegistryTests
         var error = Assert.ThrowsExactly<ArgumentException>(() => new LogConfiguration("registry-test", "development", "region-1", names));
         var code = Spec().GetProperty("config_error").GetString();
         Assert.StartsWith($"{code}: {item.GetProperty("reason").GetString()}: ", error.Message, id);
-        if (item.TryGetProperty("replacement", out var replacement))
-            Assert.AreEqual($"{code}: banned: {names.Single()} -> {replacement.GetString()}", error.Message, id);
     }
 
     [TestMethod]

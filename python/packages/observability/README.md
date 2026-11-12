@@ -51,7 +51,7 @@ logger.info("Background maintenance ready")
 - Logger levels, propagation and other handlers are unchanged. Install at one logger hierarchy level to avoid duplicates. Owner removes/closes the handler on shutdown; shared stdout is not closed.
 - Deployment supplies `environment`: `development`, `staging` or `prod`. There is no silent default.
 - Ordinary logs need no call-site edits. Lifecycle logs supply `event` and `outcome`.
-- Allowed custom fields must pass the schema's field registry (`x-field-registry`) when `LogConfig` is built: a registered field, or `<registered namespace>.<name>`; never protected, banned or in `logging.*`/`k8s.*`; at most 256. A rejected name raises `ValueError("invalid_allowed_fields: <rule>: <detail>")`; `check_allowed_fields(names)` runs the same check.
+- Allowed custom fields must pass the schema's field registry (`x-field-registry`) when `LogConfig` is built: a registered field, or `<registered namespace>.<name>`; never protected or in `logging.*`/`k8s.*`; at most 256. A rejected name raises `ValueError("invalid_allowed_fields: <rule>: <detail>")`; `check_allowed_fields(names)` runs the same check.
 - A custom field value must be a flat scalar (string, finite number, boolean, null) of its registered type; anything else is removed and counted in `logging.dropped_field_count`.
 - Approved custom fields cannot override common fields. Applications must supply safe messages/values; this is not a general secret detector.
 - Exception messages, stack traces, arbitrary `LogRecord` extras and baggage are not automatically copied.

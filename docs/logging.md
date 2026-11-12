@@ -248,9 +248,7 @@ flowchart TD
     P -->|yes| X["config error<br/>invalid_allowed_fields"]:::bad
     P -->|no| F{"format:<br/>lowercase · ≤ 5 segments · ≤ 128 chars"}
     F -->|no| X
-    F -->|yes| B{"banned?"}
-    B -->|yes| XB["config error<br/>+ the replacement"]:::bad
-    B -->|no| R{"registered field?"}
+    F -->|yes| R{"registered field?"}
     R -->|yes| OK["accepted"]:::ok
     R -->|no| RS{"reserved namespace?<br/>logging.* · k8s.*"}
     RS -->|yes| X
@@ -268,7 +266,7 @@ sequenceDiagram
     participant Out as stdout
     Svc->>SDK: configure(allowed fields)
     SDK->>SDK: check every name against the registry
-    SDK--xSvc: invalid_allowed_fields: banned: status_code -> http.response.status_code
+    SDK--xSvc: invalid_allowed_fields: namespace: status_code
     Note over Svc: startup and the emission test fail in CI
     Svc->>SDK: configure(registered names)
     Svc->>SDK: log(fields)
@@ -283,11 +281,10 @@ sequenceDiagram
 | `namespaces` | OTel `http` `error` `exception` `service` `db` `rpc` · platform `resource` `job` · services `mlops` `policy` `utility` `usage` `quota` `collector` · `example` (tests and docs) |
 | `reserved_namespaces` | `logging` (SDK) · `k8s` (collector) |
 | `fields` | Registered cross-service fields with a type: `logger`, `tenant_id`, `error_code`, `duration_ms`, `http.*`, `error.type`, `resource.*`, `job.*`, `logging.sdk_version`, … |
-| `banned` | Synonym → replacement, e.g. `status_code` → `http.response.status_code`, `mlops.error.code` → `error_code`, `context` → flat fields |
 
 | Rule | Where | Result |
 |---|---|---|
-| Name check | Logger configuration | `invalid_allowed_fields: <rule>: <name>` (+ ` -> <replacement>` when banned) |
+| Name check | Logger configuration | `invalid_allowed_fields: <rule>: <name>`, e.g. `namespace: status_code` |
 | Value is an object or array | Each record | Field removed, `logging.dropped_field_count` +1, line kept |
 | Registered field with the wrong type | Each record | Same: removed and counted |
 

@@ -185,23 +185,21 @@ def expand_names(names):
 def registry_reason(registry, protected, names):
     """The reference check: the first failing rule, in check_order, or None."""
     if len(names) > registry["max_custom_fields"]:
-        return "too_many", None
+        return "too_many"
     pattern = re.compile(registry["name_pattern"])
     for name in names:
         if name in protected:
-            return "protected", None
+            return "protected"
         if len(name) > registry["name_max_chars"] or not pattern.fullmatch(name):
-            return "format", None
-        if name in registry["banned"]:
-            return "banned", registry["banned"][name]
+            return "format"
         if name in registry["fields"]:
             continue
         head, _, rest = name.partition(".")
         if head in registry["reserved_namespaces"]:
-            return "reserved", None
+            return "reserved"
         if not rest or head not in registry["namespaces"]:
-            return "namespace", None
-    return None, None
+            return "namespace"
+    return None
 
 
 class FieldRegistryTests(unittest.TestCase):
@@ -216,33 +214,26 @@ class FieldRegistryTests(unittest.TestCase):
         self.assertEqual(r["name_max_chars"], 128)
         self.assertEqual(r["max_custom_fields"], 256)
         self.assertFalse(set(r["namespaces"]) & set(r["reserved_namespaces"]))
-        self.assertFalse(set(r["banned"]) & set(r["fields"]))
         self.assertFalse(set(r["fields"]) & self.protected)
         for name, field in r["fields"].items():
             with self.subTest(field=name):
                 self.assertIn(field["type"], r["value_types"])
-                self.assertEqual(registry_reason(r, self.protected, [name]), (None, None))
-        for name, use in r["banned"].items():
-            with self.subTest(banned=name):
-                # A replacement is a base or registered field; `context` has none.
-                first = use.split(" ")[0]
-                self.assertTrue(first in r["fields"] or first in self.protected or name == "context", use)
+                self.assertIsNone(registry_reason(r, self.protected, [name]))
 
     def test_cases_follow_the_reference_check(self):
-        self.assertEqual(self.spec["check_order"], ["protected", "format", "banned", "registered_field", "reserved", "namespace"])
+        self.assertEqual(self.spec["check_order"], ["protected", "format", "registered_field", "reserved", "namespace"])
         for case in self.spec["config_cases"]:
             with self.subTest(case=case["id"]):
-                reason, use = registry_reason(self.registry, self.protected, expand_names(case["names"]))
+                reason = registry_reason(self.registry, self.protected, expand_names(case["names"]))
                 self.assertEqual(reason is None, case["accepted"])
                 self.assertEqual(reason, case.get("reason"))
-                self.assertEqual(use, case.get("replacement"))
         reasons = {c.get("reason") for c in self.spec["config_cases"]} - {None}
-        self.assertEqual(reasons, set(self.spec["check_order"]) - {"registered_field"} | {"too_many"})
+        self.assertEqual(reasons, {"protected", "format", "reserved", "namespace", "too_many"})
 
     def test_shared_allowed_fields_are_registered(self):
         suite = json.loads(SCENARIOS.read_text())
         for names in (suite["degradation_allowed_fields"], self.spec["value_allowed_fields"]):
-            self.assertEqual(registry_reason(self.registry, self.protected, names), (None, None))
+            self.assertIsNone(registry_reason(self.registry, self.protected, names))
         for case in self.spec["value_cases"]:
             self.assertLessEqual(set(case["fields"]), set(self.spec["value_allowed_fields"]))
 

@@ -38,12 +38,12 @@ def check_config_case(case_id: str) -> None:
         check_allowed_fields(names)
         assert LogConfig("registry-test", "development", "region-1", frozenset(names)).allowed_fields == set(names)
         return
-    # The detail names the rule, the field and, for a banned name, its replacement.
+    # The detail names the rule and the field (for too_many, the count).
     expected = f"{SPEC['config_error']}: {case['reason']}: "
     if case["reason"] == "too_many":
         expected += f"{len(names)} > {MAX_CUSTOM_FIELDS}"
     else:
-        expected += names[0] + (f" -> {case['replacement']}" if "replacement" in case else "")
+        expected += names[0]
     for check in (
         lambda: check_allowed_fields(names),
         lambda: LogConfig("registry-test", "development", "region-1", frozenset(names)),
@@ -96,14 +96,6 @@ def test_rejects_too_many_segments():
 
 def test_rejects_too_long():
     check_config_case("rejects_too_long")
-
-
-def test_rejects_banned():
-    check_config_case("rejects_banned")
-
-
-def test_rejects_banned_namespaced():
-    check_config_case("rejects_banned_namespaced")
 
 
 def test_rejects_reserved_namespace():

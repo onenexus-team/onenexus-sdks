@@ -21,7 +21,6 @@ interface ConfigCase {
     names: Names;
     accepted: boolean;
     reason?: string;
-    replacement?: string;
 }
 interface ValueCase {
     id: string;
@@ -57,8 +56,6 @@ const CONFIG_CASE_IDS = [
     'rejects_bad_format',
     'rejects_too_many_segments',
     'rejects_too_long',
-    'rejects_banned',
-    'rejects_banned_namespaced',
     'rejects_reserved_namespace',
     'rejects_unregistered_flat',
     'rejects_unregistered_namespace',
@@ -82,12 +79,7 @@ function expandNames(names: Names): string[] {
 }
 /** The configuration error for a rejected case: `<code>: <rule>: <detail>`. */
 function expectedError(c: ConfigCase, names: string[]): string {
-    const detail =
-        c.reason === 'too_many'
-            ? `${names.length} > ${MAX_CUSTOM_FIELDS}`
-            : c.replacement
-              ? `${names[0]} -> ${c.replacement}`
-              : names[0];
+    const detail = c.reason === 'too_many' ? `${names.length} > ${MAX_CUSTOM_FIELDS}` : names[0];
     return `${spec.config_error}: ${c.reason}: ${detail}`;
 }
 const config = (allowedFields: readonly string[]): LogConfig => ({
@@ -153,7 +145,7 @@ describe('field registry details', () => {
         expect(expandNames(largest.names)).toHaveLength(MAX_CUSTOM_FIELDS);
     });
 
-    it('prototype keys are not registered, banned or namespaces', () => {
+    it('prototype keys are not registered fields or namespaces', () => {
         for (const name of ['constructor', 'tostring', 'constructor.x'])
             expect(() => checkAllowedFields([name])).toThrow(
                 new Error(`${spec.config_error}: namespace: ${name}`),
@@ -171,7 +163,7 @@ describe('field registry details', () => {
 
     it('the first failing name is reported', () => {
         expect(() => checkAllowedFields(['job.id', 'msg', 'message'])).toThrow(
-            new Error(`${spec.config_error}: banned: msg -> message`),
+            new Error(`${spec.config_error}: namespace: msg`),
         );
     });
 

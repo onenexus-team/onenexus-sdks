@@ -49,7 +49,7 @@ const drained = await logger.close(1000);
 | Valid trusted context | Adds the canonical `trace_id`; forwards W3C `traceparent` |
 | Missing / invalid / duplicate / untrusted context | Allows work, emits uncorrelated logs; no replacement trace generated |
 | Timestamp | Unix nanosecond units, millisecond clock resolution; exact JSON integer |
-| Custom fields | Up to 256 configured names, each checked by `checkAllowedFields` against the schema's `x-field-registry` (registered field, or a registered namespace; banned and reserved names rejected); a bad name throws `invalid_allowed_fields: <rule>: <name>` |
+| Custom fields | Up to 256 configured names, each checked by `checkAllowedFields` against the schema's `x-field-registry` (registered field, or a registered namespace; reserved names rejected); a bad name throws `invalid_allowed_fields: <rule>: <name>` |
 | Field values | Flat scalars (string, finite number, boolean, null); a registered field's value must have its registered type |
 | Too long | Message or string field over 1,024 UTF-8 bytes (`exception.stacktrace`: 2,048) is cut at a character boundary plus `…`; sets `logging.truncated: true` |
 | Unknown / unsupported field | Removed, the line is kept; `logging.dropped_field_count` counts it (also non-scalar, wrong registered type, accessor) |

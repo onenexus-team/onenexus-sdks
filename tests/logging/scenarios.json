@@ -2589,7 +2589,6 @@
     "check_order": [
       "protected",
       "format",
-      "banned",
       "registered_field",
       "reserved",
       "namespace"
@@ -2597,7 +2596,6 @@
     "rules": {
       "protected": "A protected field (x-protected-fields) is never a custom field.",
       "format": "Matches name_pattern (lowercase, '.' between namespaces, '_' between words, at most 5 segments) and has at most name_max_chars characters.",
-      "banned": "Not a banned name; the error names the replacement.",
       "registered_field": "A name in fields is accepted, even inside a reserved namespace.",
       "reserved": "Otherwise a name in a reserved namespace (logging.*, k8s.*) is rejected: only the SDK or the collector writes it.",
       "namespace": "Otherwise the name must have 2+ segments and its first segment must be a registered namespace; a single-segment name that is not a registered field is rejected.",
@@ -2725,36 +2723,6 @@
         },
         "accepted": false,
         "reason": "format",
-        "languages": [
-          "python",
-          "typescript",
-          "go",
-          "dotnet"
-        ]
-      },
-      {
-        "id": "rejects_banned",
-        "names": [
-          "status_code"
-        ],
-        "accepted": false,
-        "reason": "banned",
-        "replacement": "http.response.status_code",
-        "languages": [
-          "python",
-          "typescript",
-          "go",
-          "dotnet"
-        ]
-      },
-      {
-        "id": "rejects_banned_namespaced",
-        "names": [
-          "mlops.error.code"
-        ],
-        "accepted": false,
-        "reason": "banned",
-        "replacement": "error_code",
         "languages": [
           "python",
           "typescript",

@@ -32,7 +32,6 @@ public static class Contract
     private static readonly Regex FieldNamePattern;
     private static readonly int FieldNameMaxChars;
     private static readonly FrozenDictionary<string, FieldValueType> RegisteredFields;
-    private static readonly FrozenDictionary<string, string> BannedFields;
     private static readonly FrozenSet<string> FieldNamespaces;
     private static readonly FrozenSet<string> ReservedNamespaces;
 
@@ -43,7 +42,7 @@ public static class Contract
     {
         JsonOptions.MakeReadOnly(populateMissingResolver: true);
         Version = "0.5.0"; // Log-format identity; package version follows SDK.
-        Digest = "3910951d0ea07dcce757bef9a88ff841bd6015d6b3bb1437678ca4bd041b438c"; // sha256 of the bundled schema.json
+        Digest = "cf62150214247ebcfe4fcc0c3dd69f1c6d9c15d2d634f156fe3406f0b9feb4a1"; // sha256 of the bundled schema.json
         using var schema = JsonDocument.Parse(ReadResource("schema.json"));
         var limits = schema.RootElement.GetProperty("x-semantic-checks");
         MaxMessageBytes = limits.GetProperty("message_max_utf8_bytes").GetInt32();
@@ -62,8 +61,6 @@ public static class Contract
         FieldNameMaxChars = registry.GetProperty("name_max_chars").GetInt32();
         RegisteredFields = registry.GetProperty("fields").EnumerateObject()
             .ToFrozenDictionary(f => f.Name, f => ValueType(f.Value.GetProperty("type").GetString()!), StringComparer.Ordinal);
-        BannedFields = registry.GetProperty("banned").EnumerateObject()
-            .ToFrozenDictionary(f => f.Name, f => f.Value.GetString()!, StringComparer.Ordinal);
         FieldNamespaces = registry.GetProperty("namespaces").EnumerateObject().Select(n => n.Name).ToFrozenSet(StringComparer.Ordinal);
         ReservedNamespaces = registry.GetProperty("reserved_namespaces").EnumerateObject().Select(n => n.Name).ToFrozenSet(StringComparer.Ordinal);
     }
@@ -77,10 +74,9 @@ public static class Contract
 
     /// <summary>
     /// Check the custom field names a logger allows against the field registry (design review E1). Rules, in order:
-    /// protected, format, banned, registered field (accepted), reserved namespace, namespace; more than
+    /// protected, format, registered field (accepted), reserved namespace, namespace; more than
     /// <see cref="MaxCustomFields"/> names is <c>too_many</c>. Throws
-    /// <c>ArgumentException("invalid_allowed_fields: &lt;rule&gt;: &lt;detail&gt;")</c> for the first failure;
-    /// a banned name's detail names its replacement.
+    /// <c>ArgumentException("invalid_allowed_fields: &lt;rule&gt;: &lt;detail&gt;")</c> for the first failure.
     /// </summary>
     public static void CheckAllowedFields(IReadOnlyCollection<string> names)
     {
@@ -91,7 +87,6 @@ public static class Contract
             // Match the whole name: '$' alone also matches before a final newline.
             if (name.Length > FieldNameMaxChars || FieldNamePattern.Match(name) is not { Success: true } match || match.Length != name.Length)
                 throw FieldError("format", name);
-            if (BannedFields.TryGetValue(name, out var replacement)) throw FieldError("banned", $"{name} -> {replacement}");
             if (RegisteredFields.ContainsKey(name)) continue;
             var dot = name.IndexOf('.');
             var head = dot < 0 ? name : name[..dot];

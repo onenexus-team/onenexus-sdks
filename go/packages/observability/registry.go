@@ -22,7 +22,6 @@ type FieldRule string
 const (
 	FieldProtected FieldRule = "protected"
 	FieldFormat    FieldRule = "format"
-	FieldBanned    FieldRule = "banned"
 	FieldReserved  FieldRule = "reserved"
 	FieldNamespace FieldRule = "namespace"
 	FieldTooMany   FieldRule = "too_many"
@@ -31,21 +30,16 @@ const (
 )
 
 // AllowedFieldError is the first allowed field name that breaks the registry.
-// Field is that name (for FieldTooMany, the count); Replacement is set for a
-// banned name.
+// Field is that name (for FieldTooMany, the count).
 type AllowedFieldError struct {
-	Rule        FieldRule
-	Field       string
-	Replacement string
+	Rule  FieldRule
+	Field string
 }
 
 func (e *AllowedFieldError) Error() string {
 	text := ErrInvalidAllowedFields.Error() + ": " + string(e.Rule)
 	if e.Field != "" {
 		text += ": " + e.Field
-	}
-	if e.Replacement != "" {
-		text += " -> " + e.Replacement
 	}
 	return text
 }
@@ -72,7 +66,6 @@ type fieldRegistry struct {
 	namespaces  map[string]bool
 	reserved    map[string]bool
 	types       map[string]valueType
-	banned      map[string]string
 }
 
 func loadRegistry(raw json.RawMessage, protected []string) (*fieldRegistry, error) {
@@ -82,7 +75,6 @@ func loadRegistry(raw json.RawMessage, protected []string) (*fieldRegistry, erro
 		MaxFields  int               `json:"max_custom_fields"`
 		Namespaces map[string]string `json:"namespaces"`
 		Reserved   map[string]string `json:"reserved_namespaces"`
-		Banned     map[string]string `json:"banned"`
 		Fields     map[string]struct {
 			Type valueType `json:"type"`
 		} `json:"fields"`
@@ -96,7 +88,7 @@ func loadRegistry(raw json.RawMessage, protected []string) (*fieldRegistry, erro
 		return nil, invalid
 	}
 	r := &fieldRegistry{namePattern: pattern, maxChars: doc.MaxChars, maxFields: doc.MaxFields,
-		protected: make(map[string]bool), namespaces: make(map[string]bool), reserved: make(map[string]bool), types: make(map[string]valueType), banned: doc.Banned}
+		protected: make(map[string]bool), namespaces: make(map[string]bool), reserved: make(map[string]bool), types: make(map[string]valueType)}
 	for _, name := range protected {
 		r.protected[name] = true
 	}
@@ -132,8 +124,8 @@ func CheckAllowedFields(names []string) error {
 	}
 	seen := make(map[string]bool, len(names))
 	for _, name := range names {
-		if rule, use := r.check(name); rule != "" {
-			return &AllowedFieldError{Rule: rule, Field: name, Replacement: use}
+		if rule := r.check(name); rule != "" {
+			return &AllowedFieldError{Rule: rule, Field: name}
 		}
 		if seen[name] {
 			return &AllowedFieldError{Rule: FieldDuplicate, Field: name}
@@ -143,28 +135,25 @@ func CheckAllowedFields(names []string) error {
 	return nil
 }
 
-// check returns the first rule name breaks, and a banned name's replacement.
-func (r *fieldRegistry) check(name string) (FieldRule, string) {
+// check returns the first rule name breaks, or "".
+func (r *fieldRegistry) check(name string) FieldRule {
 	if r.protected[name] {
-		return FieldProtected, ""
+		return FieldProtected
 	}
 	if utf8.RuneCountInString(name) > r.maxChars || !r.namePattern.MatchString(name) {
-		return FieldFormat, ""
-	}
-	if use, ok := r.banned[name]; ok {
-		return FieldBanned, use
+		return FieldFormat
 	}
 	if _, ok := r.types[name]; ok {
-		return "", ""
+		return ""
 	}
 	head, _, dotted := strings.Cut(name, ".")
 	if r.reserved[head] {
-		return FieldReserved, ""
+		return FieldReserved
 	}
 	if !dotted || !r.namespaces[head] {
-		return FieldNamespace, ""
+		return FieldNamespace
 	}
-	return "", ""
+	return ""
 }
 
 // accepts reports whether v may be the value of field key: a registered field

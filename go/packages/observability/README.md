@@ -70,14 +70,13 @@ for key, values := range observability.OutgoingHeaders(ctx) {
 - Extensions are approved scalar values only. No automatic body, header, exception or arbitrary-object serialization.
 - **Field registry (E1).** `NewHandler` checks every `AllowedFields` name with `CheckAllowedFields`, against the
   schema's `x-field-registry`, in this order. The first failure is an `*AllowedFieldError` wrapping
-  `ErrInvalidAllowedFields`, e.g. `invalid_allowed_fields: banned: status_code -> http.response.status_code`.
+  `ErrInvalidAllowedFields`, e.g. `invalid_allowed_fields: namespace: status_code`.
 
 | Rule | Rejects |
 |---|---|
 | `too_many` | More than 256 names (`max_custom_fields`) |
 | `protected` | A base field, e.g. `message` |
 | `format` | Not lowercase `a.b_c` with at most 5 segments, or over 128 characters |
-| `banned` | A known alias; the error names the replacement |
 | (registered) | Accepted: a field in `fields`, even under `logging.*` |
 | `reserved` | Other `logging.*` and `k8s.*` names |
 | `namespace` | A single segment, or an unregistered first segment |
