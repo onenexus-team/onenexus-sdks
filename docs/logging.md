@@ -296,7 +296,7 @@ sequenceDiagram
 | Python | `check_allowed_fields(names)` |
 | TypeScript | `checkAllowedFields(names)` |
 | Go | `CheckAllowedFields(names)` |
-| .NET | `FieldRegistry.Check(names)` |
+| .NET | `Contract.CheckAllowedFields(names)` |
 
 - To add a field: a service field goes in its own namespace (no SDK change); a cross-service field is a registry PR here.
 - Unit-suffix, `_at` and `_count` naming rules are documented in the design review, not enforced.
