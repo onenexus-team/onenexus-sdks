@@ -2111,10 +2111,10 @@
     }
   ],
   "degradation_allowed_fields": [
-    "shared.note",
-    "shared.a",
-    "shared.b",
-    "shared.c",
+    "example.note",
+    "example.a",
+    "example.b",
+    "example.c",
     "error.type",
     "exception.stacktrace"
   ],
@@ -2180,12 +2180,12 @@
       "message": "Retry scheduled",
       "fields": {
         "tenant": "t1",
-        "shared.note": "kept"
+        "example.note": "kept"
       },
       "expect": {
         "message": "Retry scheduled",
         "fields": {
-          "shared.note": "kept"
+          "example.note": "kept"
         },
         "absent": [
           "tenant"
@@ -2218,7 +2218,7 @@
       "level": "ERROR",
       "message": "Dependency failed",
       "fields": {
-        "shared.note": {
+        "example.note": {
           "repeat": "y",
           "count": 1100
         }
@@ -2226,7 +2226,7 @@
       "expect": {
         "message": "Dependency failed",
         "field_bounds": {
-          "shared.note": {
+          "example.note": {
             "max_bytes": 1024,
             "prefix": "yyyyyyyy",
             "suffix": "…"
@@ -2244,15 +2244,15 @@
         "count": 1000
       },
       "fields": {
-        "shared.a": {
+        "example.a": {
           "repeat": "a",
           "count": 1000
         },
-        "shared.b": {
+        "example.b": {
           "repeat": "b",
           "count": 1000
         },
-        "shared.c": {
+        "example.c": {
           "repeat": "c",
           "count": 1000
         }
@@ -2263,17 +2263,17 @@
           "count": 1000
         },
         "fields": {
-          "shared.a": {
+          "example.a": {
             "repeat": "a",
             "count": 1000
           },
-          "shared.b": {
+          "example.b": {
             "repeat": "b",
             "count": 1000
           }
         },
         "absent": [
-          "shared.c"
+          "example.c"
         ],
         "record_max_bytes": 4096,
         "truncated": null,
@@ -2308,12 +2308,12 @@
       "fields": {
         "error.type": "Not Found",
         "exception.stacktrace": "",
-        "shared.note": "kept"
+        "example.note": "kept"
       },
       "expect": {
         "message": "Operation failed",
         "fields": {
-          "shared.note": "kept"
+          "example.note": "kept"
         },
         "absent": [
           "error.type",
@@ -2582,5 +2582,360 @@
         "expect": "registering on a meter creates one asynchronous monotonic counter named otel_name with unit otel_unit; a collection yields one observation per snapshot row with attributes service and reason"
       }
     ]
+  },
+  "field_registry": {
+    "summary": "One field registry (design review E1): the schema's x-field-registry decides, when a logger is configured, whether each allowed custom field name may be logged; at log time a custom value must be a flat scalar of its registered type.",
+    "config_error": "invalid_allowed_fields",
+    "check_order": [
+      "protected",
+      "format",
+      "banned",
+      "registered_field",
+      "reserved",
+      "namespace"
+    ],
+    "rules": {
+      "protected": "A protected field (x-protected-fields) is never a custom field.",
+      "format": "Matches name_pattern (lowercase, '.' between namespaces, '_' between words, at most 5 segments) and has at most name_max_chars characters.",
+      "banned": "Not a banned name; the error names the replacement.",
+      "registered_field": "A name in fields is accepted, even inside a reserved namespace.",
+      "reserved": "Otherwise a name in a reserved namespace (logging.*, k8s.*) is rejected: only the SDK or the collector writes it.",
+      "namespace": "Otherwise the name must have 2+ segments and its first segment must be a registered namespace; a single-segment name that is not a registered field is rejected.",
+      "too_many": "More than max_custom_fields names is rejected.",
+      "value": "At log time a custom field value must be a string, a finite number, a boolean or null; an object or array is removed and counted in logging.dropped_field_count. A registered field's value must match its type (integer: a whole number, not a boolean; number: any finite number) or be null, else it is removed and counted."
+    },
+    "config_cases": [
+      {
+        "id": "accepts_service_namespace",
+        "names": [
+          "mlops.inference.instance_id"
+        ],
+        "accepted": true,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "accepts_registered_field",
+        "names": [
+          "logger",
+          "tenant_id",
+          "job.attempt"
+        ],
+        "accepted": true,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "accepts_otel_namespace",
+        "names": [
+          "http.request.method",
+          "error.type"
+        ],
+        "accepted": true,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "accepts_registered_in_reserved",
+        "names": [
+          "logging.sdk_version"
+        ],
+        "accepted": true,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "accepts_max_custom_fields",
+        "names": {
+          "prefix": "example.f",
+          "count": 256
+        },
+        "accepted": true,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_protected",
+        "names": [
+          "message"
+        ],
+        "accepted": false,
+        "reason": "protected",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_bad_format",
+        "names": [
+          "tenantId"
+        ],
+        "accepted": false,
+        "reason": "format",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_too_many_segments",
+        "names": [
+          "example.a.b.c.d.e"
+        ],
+        "accepted": false,
+        "reason": "format",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_too_long",
+        "names": {
+          "prefix": "example.",
+          "repeat": "a",
+          "count": 121
+        },
+        "accepted": false,
+        "reason": "format",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_banned",
+        "names": [
+          "status_code"
+        ],
+        "accepted": false,
+        "reason": "banned",
+        "replacement": "http.response.status_code",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_banned_namespaced",
+        "names": [
+          "mlops.error.code"
+        ],
+        "accepted": false,
+        "reason": "banned",
+        "replacement": "error_code",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_reserved_namespace",
+        "names": [
+          "logging.custom"
+        ],
+        "accepted": false,
+        "reason": "reserved",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_unregistered_flat",
+        "names": [
+          "claim_id"
+        ],
+        "accepted": false,
+        "reason": "namespace",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_unregistered_namespace",
+        "names": [
+          "foo.bar"
+        ],
+        "accepted": false,
+        "reason": "namespace",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_too_many",
+        "names": {
+          "prefix": "example.f",
+          "count": 257
+        },
+        "accepted": false,
+        "reason": "too_many",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      }
+    ],
+    "value_cases": [
+      {
+        "id": "scalar_values_kept",
+        "fields": {
+          "example.s": "x",
+          "example.i": 3,
+          "example.f": 1.5,
+          "example.b": true,
+          "example.n": null
+        },
+        "kept": [
+          "example.b",
+          "example.f",
+          "example.i",
+          "example.n",
+          "example.s"
+        ],
+        "dropped_field_count": null,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "object_value_removed",
+        "fields": {
+          "example.o": {
+            "a": 1
+          },
+          "example.s": "x"
+        },
+        "kept": [
+          "example.s"
+        ],
+        "dropped_field_count": 1,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "array_value_removed",
+        "fields": {
+          "example.a": [
+            1,
+            2
+          ]
+        },
+        "kept": [],
+        "dropped_field_count": 1,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "registered_type_enforced",
+        "fields": {
+          "job.attempt": "3",
+          "job.max_attempts": true,
+          "http.response.status_code": 200.5,
+          "logger": 7
+        },
+        "kept": [],
+        "dropped_field_count": 4,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "registered_type_accepted",
+        "fields": {
+          "job.attempt": 3,
+          "duration_ms": 5,
+          "logger": "app.worker",
+          "error_code": null
+        },
+        "kept": [
+          "duration_ms",
+          "error_code",
+          "job.attempt",
+          "logger"
+        ],
+        "dropped_field_count": null,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      }
+    ],
+    "value_allowed_fields": [
+      "example.s",
+      "example.i",
+      "example.f",
+      "example.b",
+      "example.n",
+      "example.o",
+      "example.a",
+      "job.attempt",
+      "job.max_attempts",
+      "http.response.status_code",
+      "logger",
+      "duration_ms",
+      "error_code"
+    ],
+    "names_expansion": "names is a list, or {prefix, count}: prefix + str(i) for i in 0..count-1, or {prefix, repeat, count}: one name, prefix + repeat × count."
   }
 }
