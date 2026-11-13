@@ -428,8 +428,28 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "No tenant with that Guid\n    (`type=https://onenexus.cloud/errors/not-found`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -452,10 +472,10 @@
           "Tenant"
         ],
         "summary": "Page across all tenants known to CAS. Platform-admin / support\nsurface — there is no tenant scoping, this returns rows for every\ntenant the caller is authorized to see.",
-        "description": "    Ordering + pagination. Bidirectional cursor pagination on\nthe Tenant.Id UUID v7 PK. Forward (after) and\nbackward (before) directions both resolve to an index\nrange scan on the PK b-tree with no OFFSET cost. Items are\nalways returned in tenantId ascending order regardless of\ndirection — backward pages are reversed server-side. Because the\nPK is UUID v7 (time-ordered), this is also a chronological listing\nfor free.\n    Authorization. The class-level PlatformSupport policy\nrequires an active administrator of the reserved OneNexus platform\ntenant. CAS resolves this from the current authorization store, so a\ntoken does not retain access after an administrator role is removed.",
+        "description": "    Ordering + pagination. Bidirectional cursor pagination on\nthe Tenant.Id UUID v7 PK. Forward (after) and\nbackward (before) directions both resolve to an index\nrange scan on the PK b-tree with no OFFSET cost. Items are\nalways returned in tenantId ascending order regardless of\ndirection — backward pages are reversed server-side. Because the\nPK is UUID v7 (time-ordered), this is also a chronological listing\nfor free.\n    Lookup and search. tenantIds returns every listed tenant\nthat exists, by primary key; query returns the first\nlimit tenants, in id order, in whose display name or slug every\nword of the text starts a word, ignoring case, accents and punctuation\n(see TenantSearch). Both return one response without\ncursors and keep the TenantSummary shape. The query text\nis never logged.\n    Authorization. CAS::ListTenants on the platform's\ntenant directory. CAS resolves the caller's roles from the current\nauthorization store, so a token does not retain access after a role\nis removed.",
         "operationId": "ListTenants",
         "requestBody": {
-          "description": "Request body. Use `limit` with either\n    `before` or `after` for bidirectional cursor pagination.",
+          "description": "Request body. Use `limit` with either\n    `before` or `after` for bidirectional cursor pagination, or\n    send one of `tenantIds` and `query` instead to look tenants\n    up by id or search them by name or slug.",
           "content": {
             "application/json": {
               "schema": {
@@ -482,7 +502,7 @@
             }
           },
           "200": {
-            "description": "Page of tenant snapshots. Body is a\n    ListTenantsResponse; `after` is null on the last\n    page and `before` is null on the first page.",
+            "description": "Page of tenant snapshots. Body is a\n    ListTenantsResponse; `after` is null on the last\n    page and `before` is null on the first page, and both are null\n    for a `tenantIds` or `query` request.",
             "content": {
               "application/json": {
                 "schema": {
@@ -492,7 +512,7 @@
             }
           },
           "400": {
-            "description": "Validation failure\n    (`type=https://onenexus.cloud/errors/invalid-argument`) — typically\n    a `limit` outside 1..200, conflicting cursors, or a malformed\n    `before`/`after` cursor.",
+            "description": "Validation failure\n    (`type=https://onenexus.cloud/errors/invalid-argument`) — typically\n    a `limit` outside 1..200, conflicting cursors, or a malformed\n    `before`/`after` cursor; or `tenantIds` with\n    `query`, either of them with a cursor, an empty or over-200\n    `tenantIds`, or a `query` longer than 256 characters or\n    shorter than 2 after trimming.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -515,7 +535,7 @@
           "Tenant"
         ],
         "summary": "Page across the users belonging to a specific tenant. Platform-admin /\nsupport surface — the target tenant is identified by Guid in the\nrequest body, not inferred from the caller's principal.",
-        "description": "    Ordering + pagination. Same shape as Task&lt;IActionResult&gt; TenantController.ListTenants(ListTenantsRequest request, CancellationToken cancellationToken)\nbut on the Users table, filtered to a single tenant. The\nWHERE TenantId = ? AND Id &gt; ? predicate rides the leading\ncolumn of the composite IX_Users_TenantId_NormalizedEmail\nindex for the tenant filter and the PK for the cursor bound.\n    Tenant status is NOT a precondition. Listing the users of a\nsuspended or soft-deleted tenant is a legitimate operator use case\n(audit, cleanup, recovery). Only a missing tenant returns 404; a\ntenant that exists but is non-active still serves its user list.\n    Authorization. The class-level PlatformSupport policy\nrequires an active administrator of the reserved OneNexus platform\ntenant. CAS resolves this from the current authorization store, so a\ntoken does not retain access after an administrator role is removed.",
+        "description": "    Ordering + pagination. Same shape as Task&lt;IActionResult&gt; TenantController.ListTenants(ListTenantsRequest request, CancellationToken cancellationToken)\nbut on the Users table, filtered to a single tenant. The\nWHERE TenantId = ? AND Id &gt; ? predicate rides the leading\ncolumn of the composite IX_Users_TenantId_NormalizedEmail\nindex for the tenant filter and the PK for the cursor bound.\n    Tenant status is NOT a precondition. Listing the users of a\nsuspended or soft-deleted tenant is a legitimate operator use case\n(audit, cleanup, recovery). Only a missing tenant returns 404; a\ntenant that exists but is non-active still serves its user list.\n    Authorization. CAS::ListTenantUsers on the platform-owned\nCAS::Tenant resource for the requested tenant, for a platform\nuser or service client. Authorization precedes target lookup.",
         "operationId": "ListTenantUsers",
         "requestBody": {
           "description": "Request body. Same cursor + limit conventions as\n    Task&lt;IActionResult&gt; TenantController.ListTenants(ListTenantsRequest request, CancellationToken cancellationToken), plus the tenant's Guid PK as `tenantId`.",
@@ -564,8 +584,28 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "No tenant with that Guid\n    (`type=https://onenexus.cloud/errors/not-found`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -651,7 +691,7 @@
           "Tenant"
         ],
         "summary": "Add a roleless user to an existing active tenant. Role grants are\nseparate authorization-administration operations.",
-        "description": "    Authorization. The caller must be an active human\nTenantAdmin of the reserved platform tenant. This is the\nimplemented operator gate until a distinct platform_admin\nauthorization contract exists.\n    Differs from TenantUserController.CreateUser in that\nthe target tenant comes from the request body, not the caller's\nprincipal. The downstream invitation logic is identical and runs\nthrough IInvitationService.",
+        "description": "    Authorization. CAS::AddTenantUser on the platform-owned\nCAS::Tenant resource for the target tenant. Only users may hold\nthis action.\n    Differs from TenantUserController.CreateUser in that\nthe target tenant comes from the request body, not the caller's\nprincipal. The downstream invitation logic is identical and runs\nthrough IInvitationService.",
         "operationId": "AddTenantUser",
         "parameters": [
           {
@@ -735,6 +775,7 @@
           "Tenant"
         ],
         "summary": "Re-sends the invitation email for an existing pending user.",
+        "description": "<b>Authorization.</b> `CAS::ResendInvitation` on the user's tenant.\nThe request names only the user, so CAS reads which tenant the user\nbelongs to first; the class policy has already limited callers to\nplatform principals, so a missing user's 404 reveals nothing to a\ncustomer.",
         "operationId": "ResendInvitation",
         "parameters": [
           {
@@ -1682,6 +1723,28 @@
               "string"
             ],
             "description": "Cursor for backward pagination. When set, returns items strictly\nbefore this cursor (i.e. with a smaller Guid). Pass the\nstring? ListTenantsResponse.Before value from the previous\nresponse to move one page earlier."
+          },
+          "tenantIds": {
+            "maxItems": 200,
+            "minItems": 1,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Tenant ids to look up, 1 to int ListTenantsRequest.MaxTenantIds. The response\nlists each of them that exists, ordered by id; an id with no tenant is\nleft out rather than failing the request, and repeated ids appear\nonce. int ListTenantsRequest.Limit does not apply and no cursors are returned."
+          },
+          "query": {
+            "maxLength": 256,
+            "minLength": 2,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Search text, at most 256 characters and at least 2 after trimming.\nEvery word of the query must be the start of a word in the tenant's\ndisplay name or slug, ignoring case, accents, and punctuation, so\n`an binh` finds \"Công ty TNHH An Bình\" and `acme` finds the\nslug `acme-corp`. A complete tenant id finds exactly that tenant.\nReturns the first int ListTenantsRequest.Limit matches in id order, with no\ncursors."
           }
         },
         "additionalProperties": false,
@@ -1846,7 +1909,7 @@
           }
         },
         "additionalProperties": false,
-        "description": "User snapshot returned as a list item by `SearchUsers`."
+        "description": "User snapshot returned as a list item by `ListPlatformUsers`."
       },
       "ProblemDetails": {
         "required": [
