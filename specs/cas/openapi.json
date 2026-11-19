@@ -109,6 +109,78 @@
         ]
       }
     },
+    "/api/ListMyTenants": {
+      "post": {
+        "tags": [
+          "AccountProfile"
+        ],
+        "summary": "Lists the tenants the signed-in person can use, for the console's tenant switcher.",
+        "description": "The person comes from the access token: its user leads to their\naccount, and every tenant where the account's user is active and the\ntenant is active is listed, by name. Switching to one is a new\nauthorization request naming it, which checks the same things again,\nand refuses a tenant the calling app is not offered in.",
+        "operationId": "ListMyTenants",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListMyTenantsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListMyTenantsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListMyTenantsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/AssignRole": {
       "post": {
         "tags": [
@@ -873,7 +945,7 @@
           "AuthorizationPolicy"
         ],
         "summary": "Validates and publishes new tenant-managed policy content.",
-        "description": "Creates a policy in the caller's tenant after validating its document.\nA rejected response includes safe diagnostics and creates no usable\npolicy. Reuse the same `X-Nx1-Idempotency-Key` when retrying a timed-out call.",
+        "description": "Creates a policy in the caller's tenant after validating its document.\nA rejected response includes safe diagnostics and creates no usable\npolicy. Reuse the same `requestId` when retrying a timed-out call.",
         "operationId": "PublishPolicy",
         "parameters": [
           {
@@ -2395,7 +2467,7 @@
           "TenantUser"
         ],
         "summary": "Admin invites a user into their own tenant and triggers the invite\nemail.",
-        "description": "CAS derives the tenant from the caller's access token. The user stays\npending until they redeem the emailed invitation and set a password.",
+        "description": "CAS derives the tenant from the caller's access token. The user stays\npending until they open the emailed invitation and join.",
         "operationId": "CreateUser",
         "parameters": [
           {
@@ -2684,61 +2756,13 @@
         ]
       }
     },
-    "/api/AcceptInvitation": {
-      "post": {
-        "tags": [
-          "TenantUser"
-        ],
-        "summary": "Redeems an invitation, sets a password, and activates the account.",
-        "description": "This endpoint does not require an access token. It accepts the\ninvitation details delivered by email, and an invitation can be used\nonly once. On success, follow `loginUrl` to sign in.",
-        "operationId": "AcceptInvitation",
-        "requestBody": {
-          "description": "Request body.",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AcceptInvitationRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AcceptInvitationRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Account activated. Body is\n    AcceptInvitationResponse.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AcceptInvitationResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Token invalid/expired, password fails complexity\n    rules, or userId unknown. We conflate\n    token-invalid and user-unknown to prevent enumeration.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/SuspendUser": {
       "post": {
         "tags": [
           "TenantUser"
         ],
         "summary": "Suspends an active member in the authenticated caller's tenant.",
-        "description": "Requires `CAS::SuspendUser` on the target user's canonical URI.\nThe tenant is derived from the caller; root, deleted and cross-tenant\nusers return 404. The tenant root cannot be suspended through this API.\nSelf-suspension is refused. Role assignments are retained. Suspension rotates\nthe security stamp atomically with the lifecycle change; sessions end at\ntheir next validation, and regional authorization observes the change after\nCDC projection. Already issued access tokens retain valid signatures until expiry.\nRepeating the operation on a suspended member succeeds without changing stamps.",
+        "description": "Requires `CAS::SuspendUser` on the target user's canonical URI.\nThe tenant is derived from the caller; owners, deleted and cross-tenant\nusers return 404. Owners cannot be suspended through this API.\nSelf-suspension is refused. Role assignments are retained. CAS issues no\nmore tokens for the member in this tenant; the person's CAS session,\nwhich belongs to their account, is not ended. Regional authorization\nobserves the change after CDC projection. Already issued access tokens\nretain valid signatures until expiry. Repeating the operation on a\nsuspended member succeeds without changing anything.",
         "operationId": "SuspendUser",
         "parameters": [
           {
@@ -2851,7 +2875,7 @@
           "TenantUser"
         ],
         "summary": "Restores a suspended member in the authenticated caller's tenant.",
-        "description": "Requires `CAS::UnsuspendUser` on the target user's canonical URI.\nThe tenant is derived from the caller; root, deleted and cross-tenant\nusers return 404. Only suspended or already-active members are accepted;\npending, invited, provisioned and deprovisioned users cannot be activated here.\nExisting role assignments become usable again. Repeating the operation on\nan active member succeeds without changing stamps. Restoring the member\ndoes not reactivate a suspended tenant or revive revoked sessions.",
+        "description": "Requires `CAS::UnsuspendUser` on the target user's canonical URI.\nThe tenant is derived from the caller; root, deleted and cross-tenant\nusers return 404. Only suspended or already-active members are accepted;\npending, invited, provisioned and deprovisioned users cannot be activated here.\nExisting role assignments become usable again. Repeating the operation on\nan active member succeeds without changing anything. Restoring the member\ndoes not reactivate a suspended tenant.",
         "operationId": "UnsuspendUser",
         "parameters": [
           {
@@ -2957,70 +2981,119 @@
           }
         ]
       }
+    },
+    "/api/RemoveUser": {
+      "post": {
+        "tags": [
+          "TenantUser"
+        ],
+        "summary": "Removes a member from the authenticated caller's tenant for good.",
+        "description": "Requires `CAS::RemoveUser` on the target user's canonical URI.\nThe tenant is derived from the caller and must be active. The member,\ninvited, active or suspended, becomes `Deleted` and loses its role\nassignments in one transaction. Nothing undoes it: the person is invited\nagain as a new user. Removing an invited member withdraws the\ninvitation. An owner is refused (409) until the tenant's owner page\nmakes them a member, and so is the caller's own user. The person's\naccount, session and users in other tenants are untouched. Repeating the\ncall on a removed member returns 204. CAS refuses the member's tokens\nfrom the commit; regional authorization observes the change after CDC\nprojection, and access tokens already issued stay valid until they expire.",
+        "operationId": "RemoveUser",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": { }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
-      "AcceptInvitationRequest": {
-        "required": [
-          "userId",
-          "token",
-          "password"
-        ],
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "description": "UUID of the invitee. Read from the invite URL's\n    `userId` query parameter by the portal.",
-            "format": "uuid"
-          },
-          "token": {
-            "maxLength": 2048,
-            "minLength": 1,
-            "type": "string",
-            "description": "Invite token from the URL's `token` query parameter. Bound to\nthe user's ASP.NET Identity SecurityStamp at generate-time; verified\nvia `UserManager.VerifyUserTokenAsync`."
-          },
-          "password": {
-            "maxLength": 128,
-            "minLength": 8,
-            "type": "string",
-            "description": "Initial password chosen by the user. Subject to the Identity\npassword-complexity rules configured in\nIdentityServiceCollectionExtensions."
-          }
-        },
-        "additionalProperties": false,
-        "description": "Request body for `POST /api/AcceptInvitation`."
-      },
-      "AcceptInvitationResponse": {
-        "required": [
-          "userId",
-          "tenantId",
-          "email",
-          "loginUrl"
-        ],
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "description": "UUID of the newly-activated user.",
-            "format": "uuid"
-          },
-          "tenantId": {
-            "type": "string",
-            "description": "Owning tenant's UUID v7 primary key.",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string",
-            "description": "Email address that was just confirmed."
-          },
-          "loginUrl": {
-            "type": "string",
-            "description": "Suggested next URL for the portal to navigate to — the login form,\nwith the tenant slug pre-filled so the user only has to type the\nemail + password."
-          }
-        },
-        "additionalProperties": false,
-        "description": "Response body for `POST /api/AcceptInvitation`."
-      },
       "AddServiceClientKeyRequest": {
         "required": [
           "serviceClientId",
@@ -3819,6 +3892,28 @@
         "additionalProperties": false,
         "description": "Response body for `POST /api/ListRoles`."
       },
+      "ListMyTenantsRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Request body for `POST /api/ListMyTenants`."
+      },
+      "ListMyTenantsResponse": {
+        "required": [
+          "tenants"
+        ],
+        "type": "object",
+        "properties": {
+          "tenants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyTenant"
+            },
+            "description": "The tenants the person can use, by display name."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response body for `POST /api/ListMyTenants`."
+      },
       "ListPoliciesRequest": {
         "type": "object",
         "properties": {
@@ -4202,6 +4297,29 @@
         "additionalProperties": false,
         "description": "Response body for `POST /api/ListUsers`."
       },
+      "MyTenant": {
+        "required": [
+          "tenantId",
+          "displayName",
+          "isOwner"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "isOwner": {
+            "type": "boolean",
+            "description": "Whether the person is an owner there, and so can open the tenant's owner page."
+          }
+        },
+        "additionalProperties": false,
+        "description": "One tenant the signed-in person can use."
+      },
       "OidcApplicationLifecycleState": {
         "enum": [
           "Active",
@@ -4378,6 +4496,21 @@
         },
         "additionalProperties": false,
         "description": "Response for `RemoveServiceClientKey`."
+      },
+      "RemoveUserRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Identifier of the invited, active or suspended member to remove.",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /api/RemoveUser`."
       },
       "ResendUserInvitationRequest": {
         "required": [
@@ -4856,7 +4989,7 @@
           },
           "emailConfirmed": {
             "type": "boolean",
-            "description": "Whether the user has accepted the invitation and verified their inbox.\n`false` until `AcceptInvitation` succeeds."
+            "description": "Whether the person's account has proved its address. A new invitee's\nis `false` until they join."
           },
           "createdAt": {
             "type": "string",
@@ -4872,7 +5005,7 @@
           "RootUser",
           "Member"
         ],
-        "description": "Distinguishes a tenant's single root user from its ordinary members.\nImmutable once a OneNexusUser row is created."
+        "description": "Distinguishes a tenant's owners from its ordinary members. Only the\ntenant's owner page changes it."
       },
       "UserLifecycleState": {
         "enum": [

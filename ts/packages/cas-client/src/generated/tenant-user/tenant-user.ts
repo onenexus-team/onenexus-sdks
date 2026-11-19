@@ -6,13 +6,13 @@
  * OpenAPI spec version: v1
  */
 import type {
-  AcceptInvitationRequest,
-  AcceptInvitationResponse,
   CreateUserHeaders,
   CreateUserRequest,
   CreateUserResponse,
   ListUsersRequest,
   ListUsersResponse,
+  RemoveUserHeaders,
+  RemoveUserRequest,
   ResendUserInvitationHeaders,
   ResendUserInvitationRequest,
   SuspendUserHeaders,
@@ -32,7 +32,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
   export const getTenantUser = () => {
 /**
  * CAS derives the tenant from the caller's access token. The user stays
- * pending until they redeem the emailed invitation and set a password.
+ * pending until they open the emailed invitation and join.
  * @summary Admin invites a user into their own tenant and triggers the invite
 email.
  */
@@ -82,30 +82,15 @@ const listUsers = (
       options);
     }
   /**
- * This endpoint does not require an access token. It accepts the
- * invitation details delivered by email, and an invitation can be used
- * only once. On success, follow `loginUrl` to sign in.
- * @summary Redeems an invitation, sets a password, and activates the account.
- */
-const acceptInvitation = (
-    acceptInvitationRequest: AcceptInvitationRequest,
- options?: SecondParameter<typeof platformMutator<AcceptInvitationResponse>>,) => {
-      return platformMutator<AcceptInvitationResponse>(
-      {url: `/api/AcceptInvitation`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: acceptInvitationRequest
-    },
-      options);
-    }
-  /**
  * Requires `CAS::SuspendUser` on the target user's canonical URI.
- * The tenant is derived from the caller; root, deleted and cross-tenant
- * users return 404. The tenant root cannot be suspended through this API.
- * Self-suspension is refused. Role assignments are retained. Suspension rotates
- * the security stamp atomically with the lifecycle change; sessions end at
- * their next validation, and regional authorization observes the change after
- * CDC projection. Already issued access tokens retain valid signatures until expiry.
- * Repeating the operation on a suspended member succeeds without changing stamps.
+ * The tenant is derived from the caller; owners, deleted and cross-tenant
+ * users return 404. Owners cannot be suspended through this API.
+ * Self-suspension is refused. Role assignments are retained. CAS issues no
+ * more tokens for the member in this tenant; the person's CAS session,
+ * which belongs to their account, is not ended. Regional authorization
+ * observes the change after CDC projection. Already issued access tokens
+ * retain valid signatures until expiry. Repeating the operation on a
+ * suspended member succeeds without changing anything.
  * @summary Suspends an active member in the authenticated caller's tenant.
  */
 const suspendUser = (
@@ -125,8 +110,8 @@ const suspendUser = (
  * users return 404. Only suspended or already-active members are accepted;
  * pending, invited, provisioned and deprovisioned users cannot be activated here.
  * Existing role assignments become usable again. Repeating the operation on
- * an active member succeeds without changing stamps. Restoring the member
- * does not reactivate a suspended tenant or revive revoked sessions.
+ * an active member succeeds without changing anything. Restoring the member
+ * does not reactivate a suspended tenant.
  * @summary Restores a suspended member in the authenticated caller's tenant.
  */
 const unsuspendUser = (
@@ -140,7 +125,32 @@ const unsuspendUser = (
     },
       options);
     }
-  return {createUser,resendUserInvitation,listUsers,acceptInvitation,suspendUser,unsuspendUser}};
+  /**
+ * Requires `CAS::RemoveUser` on the target user's canonical URI.
+ * The tenant is derived from the caller and must be active. The member,
+ * invited, active or suspended, becomes `Deleted` and loses its role
+ * assignments in one transaction. Nothing undoes it: the person is invited
+ * again as a new user. Removing an invited member withdraws the
+ * invitation. An owner is refused (409) until the tenant's owner page
+ * makes them a member, and so is the caller's own user. The person's
+ * account, session and users in other tenants are untouched. Repeating the
+ * call on a removed member returns 204. CAS refuses the member's tokens
+ * from the commit; regional authorization observes the change after CDC
+ * projection, and access tokens already issued stay valid until they expire.
+ * @summary Removes a member from the authenticated caller's tenant for good.
+ */
+const removeUser = (
+    removeUserRequest: RemoveUserRequest,
+    headers: RemoveUserHeaders,
+ options?: SecondParameter<typeof platformMutator<unknown>>,) => {
+      return platformMutator<unknown>(
+      {url: `/api/RemoveUser`, method: 'POST',
+      headers: {'Content-Type': 'application/json', ...headers},
+      data: removeUserRequest
+    },
+      options);
+    }
+  return {createUser,resendUserInvitation,listUsers,suspendUser,unsuspendUser,removeUser}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -149,6 +159,6 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 export type CreateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['createUser']>>>
 export type ResendUserInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['resendUserInvitation']>>>
 export type ListUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['listUsers']>>>
-export type AcceptInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['acceptInvitation']>>>
 export type SuspendUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['suspendUser']>>>
 export type UnsuspendUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['unsuspendUser']>>>
+export type RemoveUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenantUser>['removeUser']>>>

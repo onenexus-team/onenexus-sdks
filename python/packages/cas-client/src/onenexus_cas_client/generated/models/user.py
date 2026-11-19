@@ -17,7 +17,7 @@ class User(Parsable):
     display_name: Optional[str] = None
     # The user's email (verbatim, not normalised).
     email: Optional[str] = None
-    # Whether the user has accepted the invitation and verified their inbox.`false` until `AcceptInvitation` succeeds.
+    # Whether the person's account has proved its address. A new invitee'sis `false` until they join.
     email_confirmed: Optional[bool] = None
     # Owning tenant's UUID v7 primary key.
     tenant_id: Optional[UUID] = None

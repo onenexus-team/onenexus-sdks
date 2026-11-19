@@ -6,6 +6,8 @@
  * OpenAPI spec version: v1
  */
 import type {
+  ListMyTenantsRequest,
+  ListMyTenantsResponse,
   UpdateProfileHeaders,
   UpdateProfileRequest,
   UpdateProfileResponse
@@ -35,10 +37,29 @@ const updateProfile = (
     },
       options);
     }
-  return {updateProfile}};
+  /**
+ * The person comes from the access token: its user leads to their
+ * account, and every tenant where the account's user is active and the
+ * tenant is active is listed, by name. Switching to one is a new
+ * authorization request naming it, which checks the same things again,
+ * and refuses a tenant the calling app is not offered in.
+ * @summary Lists the tenants the signed-in person can use, for the console's tenant switcher.
+ */
+const listMyTenants = (
+    listMyTenantsRequest: ListMyTenantsRequest,
+ options?: SecondParameter<typeof platformMutator<ListMyTenantsResponse>>,) => {
+      return platformMutator<ListMyTenantsResponse>(
+      {url: `/api/ListMyTenants`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: listMyTenantsRequest
+    },
+      options);
+    }
+  return {updateProfile,listMyTenants}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
     type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 export type UpdateProfileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAccountProfile>['updateProfile']>>>
+export type ListMyTenantsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAccountProfile>['listMyTenants']>>>

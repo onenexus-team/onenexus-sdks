@@ -14,50 +14,52 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from warnings import warn
 
 if TYPE_CHECKING:
-    from ...models.accept_invitation_request import AcceptInvitationRequest
-    from ...models.accept_invitation_response import AcceptInvitationResponse
-    from ...models.validation_problem_details import ValidationProblemDetails
+    from ...models.list_my_tenants_request import ListMyTenantsRequest
+    from ...models.list_my_tenants_response import ListMyTenantsResponse
+    from ...models.problem_details import ProblemDetails
 
-class AcceptInvitationRequestBuilder(BaseRequestBuilder):
+class ListMyTenantsRequestBuilder(BaseRequestBuilder):
     """
-    Builds and executes requests for operations under /api/AcceptInvitation
+    Builds and executes requests for operations under /api/ListMyTenants
     """
     def __init__(self,request_adapter: RequestAdapter, path_parameters: Union[str, dict[str, Any]]) -> None:
         """
-        Instantiates a new AcceptInvitationRequestBuilder and sets the default values.
+        Instantiates a new ListMyTenantsRequestBuilder and sets the default values.
         param path_parameters: The raw url or the url-template parameters for the request.
         param request_adapter: The request adapter to use to execute the requests.
         Returns: None
         """
-        super().__init__(request_adapter, "{+baseurl}/api/AcceptInvitation", path_parameters)
+        super().__init__(request_adapter, "{+baseurl}/api/ListMyTenants", path_parameters)
     
-    async def post(self,body: AcceptInvitationRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[AcceptInvitationResponse]:
+    async def post(self,body: ListMyTenantsRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[ListMyTenantsResponse]:
         """
-        This endpoint does not require an access token. It accepts theinvitation details delivered by email, and an invitation can be usedonly once. On success, follow `loginUrl` to sign in.
-        param body: Request body for `POST /api/AcceptInvitation`.
+        The person comes from the access token: its user leads to theiraccount, and every tenant where the account's user is active and thetenant is active is listed, by name. Switching to one is a newauthorization request naming it, which checks the same things again,and refuses a tenant the calling app is not offered in.
+        param body: Request body for `POST /api/ListMyTenants`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
-        Returns: Optional[AcceptInvitationResponse]
+        Returns: Optional[ListMyTenantsResponse]
         """
         if body is None:
             raise TypeError("body cannot be null.")
         request_info = self.to_post_request_information(
             body, request_configuration
         )
-        from ...models.validation_problem_details import ValidationProblemDetails
+        from ...models.problem_details import ProblemDetails
 
         error_mapping: dict[str, type[ParsableFactory]] = {
-            "400": ValidationProblemDetails,
+            "401": ProblemDetails,
+            "403": ProblemDetails,
+            "503": ProblemDetails,
         }
         if not self.request_adapter:
             raise Exception("Http core is null") 
-        from ...models.accept_invitation_response import AcceptInvitationResponse
+        from ...models.list_my_tenants_response import ListMyTenantsResponse
 
-        return await self.request_adapter.send_async(request_info, AcceptInvitationResponse, error_mapping)
+        return await self.request_adapter.send_async(request_info, ListMyTenantsResponse, error_mapping)
     
-    def to_post_request_information(self,body: AcceptInvitationRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
+    def to_post_request_information(self,body: ListMyTenantsRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        This endpoint does not require an access token. It accepts theinvitation details delivered by email, and an invitation can be usedonly once. On success, follow `loginUrl` to sign in.
-        param body: Request body for `POST /api/AcceptInvitation`.
+        The person comes from the access token: its user leads to theiraccount, and every tenant where the account's user is active and thetenant is active is listed, by name. Switching to one is a newauthorization request naming it, which checks the same things again,and refuses a tenant the calling app is not offered in.
+        param body: Request body for `POST /api/ListMyTenants`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation
         """
@@ -69,18 +71,18 @@ class AcceptInvitationRequestBuilder(BaseRequestBuilder):
         request_info.set_content_from_parsable(self.request_adapter, "application/json", body)
         return request_info
     
-    def with_url(self,raw_url: str) -> AcceptInvitationRequestBuilder:
+    def with_url(self,raw_url: str) -> ListMyTenantsRequestBuilder:
         """
         Returns a request builder with the provided arbitrary URL. Using this method means any other path or query parameters are ignored.
         param raw_url: The raw URL to use for the request builder.
-        Returns: AcceptInvitationRequestBuilder
+        Returns: ListMyTenantsRequestBuilder
         """
         if raw_url is None:
             raise TypeError("raw_url cannot be null.")
-        return AcceptInvitationRequestBuilder(self.request_adapter, raw_url)
+        return ListMyTenantsRequestBuilder(self.request_adapter, raw_url)
     
     @dataclass
-    class AcceptInvitationRequestBuilderPostRequestConfiguration(RequestConfiguration[QueryParameters]):
+    class ListMyTenantsRequestBuilderPostRequestConfiguration(RequestConfiguration[QueryParameters]):
         """
         Configuration for the request such as headers, query parameters, and middleware options.
         """

@@ -31,7 +31,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 /**
  * Creates a policy in the caller's tenant after validating its document.
  * A rejected response includes safe diagnostics and creates no usable
- * policy. Reuse the same `X-Nx1-Idempotency-Key` when retrying a timed-out call.
+ * policy. Reuse the same `requestId` when retrying a timed-out call.
  * @summary Validates and publishes new tenant-managed policy content.
  */
 const publishPolicy = (

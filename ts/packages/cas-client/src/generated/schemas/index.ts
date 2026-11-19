@@ -6,8 +6,6 @@
  * OpenAPI spec version: v1
  */
 
-export * from './acceptInvitationRequest';
-export * from './acceptInvitationResponse';
 export * from './addServiceClientKeyHeaders';
 export * from './addServiceClientKeyRequest';
 export * from './addServiceClientKeyResponse';
@@ -58,6 +56,8 @@ export * from './getPolicyResponse';
 export * from './jsonElement';
 export * from './listAuthorizationRolesRequest';
 export * from './listAuthorizationRolesResponse';
+export * from './listMyTenantsRequest';
+export * from './listMyTenantsResponse';
 export * from './listPoliciesRequest';
 export * from './listPoliciesResponse';
 export * from './listPolicyAttachmentsRequest';
@@ -69,6 +69,7 @@ export * from './listS3RolesResponse';
 export * from './listServiceClientsResponse';
 export * from './listUsersRequest';
 export * from './listUsersResponse';
+export * from './myTenant';
 export * from './oidcApplicationLifecycleState';
 export * from './problemDetails';
 export * from './publishPolicyHeaders';
@@ -79,6 +80,8 @@ export * from './removeRoleAssignmentRequest';
 export * from './removeServiceClientKeyHeaders';
 export * from './removeServiceClientKeyRequest';
 export * from './removeServiceClientKeyResponse';
+export * from './removeUserHeaders';
+export * from './removeUserRequest';
 export * from './resendUserInvitationHeaders';
 export * from './resendUserInvitationRequest';
 export * from './s3Role';

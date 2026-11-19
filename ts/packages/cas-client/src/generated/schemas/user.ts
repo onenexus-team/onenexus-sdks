@@ -24,8 +24,8 @@ export interface User {
   /** Display name shown in UIs. */
   displayName: string;
   /**
-     * Whether the user has accepted the invitation and verified their inbox.
-     * `false` until `AcceptInvitation` succeeds.
+     * Whether the person's account has proved its address. A new invitee's
+     * is `false` until they join.
      */
   emailConfirmed: boolean;
   /** UTC instant when the row was created. */

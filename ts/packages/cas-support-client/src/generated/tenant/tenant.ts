@@ -18,6 +18,8 @@ import type {
   ListTenantUsersResponse,
   ListTenantsRequest,
   ListTenantsResponse,
+  RemoveTenantUserHeaders,
+  RemoveTenantUserRequest,
   ResendInvitationHeaders,
   ResendInvitationRequest,
   ResendInvitationResponse,
@@ -220,10 +222,11 @@ const unsuspendTenant = (
   /**
  *     The user's role assignments are retained and become inert, because
  * sign-in and authorization admit only Active users; unsuspending
- * therefore restores the previous access in one change. Live CAS sessions
- * end at their next security-stamp validation. Access tokens already
- * issued keep a valid signature until they expire, and each region denies
- * authorization once CDC has applied the change.
+ * therefore restores the previous access in one change. CAS issues no
+ * more tokens for the user; the person's CAS session belongs to their
+ * account and is not ended. Access tokens already issued keep a valid
+ * signature until they expire, and each region denies authorization once
+ * CDC has applied the change.
  *     Invited and pending users cannot be suspended: accepting the invitation
  * would make them active again. A caller cannot suspend themselves,
  * because that would lock them out of the API that undoes it.
@@ -259,7 +262,32 @@ const unsuspendTenantUser = (
     },
       options);
     }
-  return {createTenant,describeTenant,listTenants,listTenantUsers,searchUsers,addTenantUser,resendInvitation,suspendTenant,unsuspendTenant,suspendTenantUser,unsuspendTenantUser}};
+  /**
+ *     The user becomes Deleted and loses its role assignments in one
+ * transaction. Nothing undoes it: the person is invited again as a new
+ * user. The row keeps its id for audit, and its display name until the
+ * person's account is deleted; the account and the person's users in other
+ * tenants are untouched. Removing an invited user revokes the invitation.
+ *     Owners are removed too, but never the tenant's last active owner; for an
+ * owner who must lose access now, suspend instead, which can be undone.
+ * Removing an owner emails every owner, and the removed one, naming
+ * OneNexus support. A caller cannot remove their own user. CAS refuses the
+ * user's tokens from the commit, each region once CDC has applied the
+ * change, and access tokens already issued stay valid until they expire.
+ * @summary Removes a user of any tenant for good.
+ */
+const removeTenantUser = (
+    removeTenantUserRequest: RemoveTenantUserRequest,
+    headers: RemoveTenantUserHeaders,
+ options?: SecondParameter<typeof platformMutator<unknown>>,) => {
+      return platformMutator<unknown>(
+      {url: `/support-api/RemoveTenantUser`, method: 'POST',
+      headers: {'Content-Type': 'application/json', ...headers},
+      data: removeTenantUserRequest
+    },
+      options);
+    }
+  return {createTenant,describeTenant,listTenants,listTenantUsers,searchUsers,addTenantUser,resendInvitation,suspendTenant,unsuspendTenant,suspendTenantUser,unsuspendTenantUser,removeTenantUser}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -276,3 +304,4 @@ export type SuspendTenantResult = NonNullable<Awaited<ReturnType<ReturnType<type
 export type UnsuspendTenantResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['unsuspendTenant']>>>
 export type SuspendTenantUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['suspendTenantUser']>>>
 export type UnsuspendTenantUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['unsuspendTenantUser']>>>
+export type RemoveTenantUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTenant>['removeTenantUser']>>>

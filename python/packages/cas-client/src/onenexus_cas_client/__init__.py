@@ -10,8 +10,6 @@ from __future__ import annotations
 
 from . import generated
 from .client import (
-    AcceptInvitationRequest,
-    AcceptInvitationResponse,
     AddServiceClientKeyRequest,
     AddServiceClientKeyResponse,
     AssignRoleRequest,
@@ -39,6 +37,7 @@ from .client import (
     GetPolicyResponse,
     ListAuthorizationRolesRequest,
     ListAuthorizationRolesResponse,
+    ListMyTenantsResponse,
     ListPoliciesRequest,
     ListPoliciesResponse,
     ListPolicyAttachmentsRequest,
@@ -55,6 +54,7 @@ from .client import (
     RemoveRoleAssignmentRequest,
     RemoveServiceClientKeyRequest,
     RemoveServiceClientKeyResponse,
+    RemoveUserRequest,
     ResendUserInvitationRequest,
     SuspendUserRequest,
     SuspendUserResponse,
@@ -68,11 +68,10 @@ from .client import (
     UpdateProfileResponse,
     resolve_assume_s3_role_base_url,
 )
+from .generated.models.my_tenant import MyTenant
 from .generated.models.user_lifecycle_state import UserLifecycleState
 
 __all__ = [
-    "AcceptInvitationRequest",
-    "AcceptInvitationResponse",
     "AddServiceClientKeyRequest",
     "AddServiceClientKeyResponse",
     "AssignRoleRequest",
@@ -103,6 +102,7 @@ __all__ = [
 
     "ListAuthorizationRolesRequest",
     "ListAuthorizationRolesResponse",
+    "ListMyTenantsResponse",
     "ListPoliciesRequest",
     "ListPoliciesResponse",
 
@@ -115,12 +115,14 @@ __all__ = [
     "ListServiceClientsResponse",
     "ListUsersRequest",
     "ListUsersResponse",
+    "MyTenant",
     "PublishPolicyRequest",
     "PublishPolicyResponse",
 
     "RemoveRoleAssignmentRequest",
     "RemoveServiceClientKeyRequest",
     "RemoveServiceClientKeyResponse",
+    "RemoveUserRequest",
     "ResendUserInvitationRequest",
     "SuspendUserRequest",
     "SuspendUserResponse",

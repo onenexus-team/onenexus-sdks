@@ -6,29 +6,27 @@ from typing import Any, Optional, TYPE_CHECKING, Union
 from uuid import UUID
 
 @dataclass
-class AcceptInvitationResponse(Parsable):
+class MyTenant(Parsable):
     """
-    Response body for `POST /api/AcceptInvitation`.
+    One tenant the signed-in person can use.
     """
-    # Email address that was just confirmed.
-    email: Optional[str] = None
-    # Suggested next URL for the portal to navigate to — the login form,with the tenant slug pre-filled so the user only has to type theemail + password.
-    login_url: Optional[str] = None
-    # Owning tenant's UUID v7 primary key.
+    # The displayName property
+    display_name: Optional[str] = None
+    # Whether the person is an owner there, and so can open the tenant's owner page.
+    is_owner: Optional[bool] = None
+    # The tenantId property
     tenant_id: Optional[UUID] = None
-    # UUID of the newly-activated user.
-    user_id: Optional[UUID] = None
     
     @staticmethod
-    def create_from_discriminator_value(parse_node: ParseNode) -> AcceptInvitationResponse:
+    def create_from_discriminator_value(parse_node: ParseNode) -> MyTenant:
         """
         Creates a new instance of the appropriate class based on discriminator value
         param parse_node: The parse node to use to read the discriminator value and create the object
-        Returns: AcceptInvitationResponse
+        Returns: MyTenant
         """
         if parse_node is None:
             raise TypeError("parse_node cannot be null.")
-        return AcceptInvitationResponse()
+        return MyTenant()
     
     def get_field_deserializers(self,) -> dict[str, Callable[[ParseNode], None]]:
         """
@@ -36,10 +34,9 @@ class AcceptInvitationResponse(Parsable):
         Returns: dict[str, Callable[[ParseNode], None]]
         """
         fields: dict[str, Callable[[Any], None]] = {
-            "email": lambda n : setattr(self, 'email', n.get_str_value()),
-            "loginUrl": lambda n : setattr(self, 'login_url', n.get_str_value()),
+            "displayName": lambda n : setattr(self, 'display_name', n.get_str_value()),
+            "isOwner": lambda n : setattr(self, 'is_owner', n.get_bool_value()),
             "tenantId": lambda n : setattr(self, 'tenant_id', n.get_uuid_value()),
-            "userId": lambda n : setattr(self, 'user_id', n.get_uuid_value()),
         }
         return fields
     
@@ -51,9 +48,8 @@ class AcceptInvitationResponse(Parsable):
         """
         if writer is None:
             raise TypeError("writer cannot be null.")
-        writer.write_str_value("email", self.email)
-        writer.write_str_value("loginUrl", self.login_url)
+        writer.write_str_value("displayName", self.display_name)
+        writer.write_bool_value("isOwner", self.is_owner)
         writer.write_uuid_value("tenantId", self.tenant_id)
-        writer.write_uuid_value("userId", self.user_id)
     
 

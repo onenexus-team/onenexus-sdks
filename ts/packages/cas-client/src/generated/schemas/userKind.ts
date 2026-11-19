@@ -7,8 +7,8 @@
  */
 
 /**
- * Distinguishes a tenant's single root user from its ordinary members.
- * Immutable once a OneNexusUser row is created.
+ * Distinguishes a tenant's owners from its ordinary members. Only the
+ * tenant's owner page changes it.
  */
 export type UserKind = typeof UserKind[keyof typeof UserKind];
 
