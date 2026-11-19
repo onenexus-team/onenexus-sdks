@@ -1,0 +1,23 @@
+name: SDK release checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  guards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.14'
+      - run: python3 -m unittest discover -s tests/logging -p 'test_*.py'
+      - run: python3 scripts/test-go-module-release.py
+      - run: python3 scripts/test-sdk-release.py
+  packages:
+    uses: ./.github/workflows/sdk-build.yml
+    with:
+      ref: ${{ github.sha }}

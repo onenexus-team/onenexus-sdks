@@ -3,13 +3,14 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const version = readFileSync(join(repoRoot, 'VERSION'), 'utf8').trim();
+const version = process.env.SDK_PACKAGE_VERSION ?? readFileSync(join(repoRoot, 'VERSION'), 'utf8').trim();
 
 if (!version) {
     throw new Error('VERSION must not be empty');
 }
 
 const packagePaths = [
+    'ts/packages/observability/package.json',
     'ts/packages/sdk-core/package.json',
     'ts/packages/cas-client/package.json',
     'ts/packages/cas-support-client/package.json',

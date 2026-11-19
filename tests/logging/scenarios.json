@@ -1,0 +1,2909 @@
+{
+  "record_cases": [
+    {
+      "id": "system_without_context",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "correlated",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "lifecycle",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "extensions",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "example.operation.id": "op-1",
+        "custom": {
+          "nested": true
+        },
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "missing_timestamp",
+      "profile": "lifecycle",
+      "record": {
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "missing_level",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "missing_service",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "missing_region",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "missing_message",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_empty",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_blank",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "  ",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_number",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": 23,
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_null",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": null,
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_utf8_limit",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_message"
+      ]
+    },
+    {
+      "id": "message_utf8_boundary",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "timestamp_bool",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": true,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "timestamp_string",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": "1792573200000000000",
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "timestamp_negative",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": -1,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "timestamp_float",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1.5,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "timestamp_overflow",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 9223372036854775808,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "trace_zero",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "00000000000000000000000000000000",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "trace_uppercase",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "trace_short",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "abc",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "trace_null",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": null,
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "correlated_requires_trace",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "optional_trace_invalid",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "bad",
+        "environment": "development"
+      },
+      "errors": [
+        "missing_or_invalid_trace_id"
+      ]
+    },
+    {
+      "id": "lifecycle_requires_event_outcome",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "severity_requires_normalization",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "WARNING",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "oversized_extension",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "custom": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "environment": "development"
+      },
+      "errors": [
+        "record_too_large"
+      ]
+    },
+    {
+      "id": "environment_common_development",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_common_staging",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "staging"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_common_prod",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "prod"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_common_missing",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event."
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_common_null",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": null
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_common_empty",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": ""
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_common_number",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": 1
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_common_alias_dev",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "dev"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_common_unknown",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "preview"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_development",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_correlated_staging",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "staging"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_correlated_prod",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "prod"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_correlated_missing",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_null",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": null
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_empty",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": ""
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_number",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": 1
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_alias_dev",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "dev"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_correlated_unknown",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "preview"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_development",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_lifecycle_staging",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "staging"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_lifecycle_prod",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "prod"
+      },
+      "errors": []
+    },
+    {
+      "id": "environment_lifecycle_missing",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_null",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": null
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_empty",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": ""
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_number",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": 1
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_alias_dev",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "dev"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "environment_lifecycle_unknown",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "preview"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_anonymous",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": []
+    },
+    {
+      "id": "request_uncorrelated",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": []
+    },
+    {
+      "id": "request_forbidden",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "POLICY_DENIED",
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 403
+      },
+      "errors": []
+    },
+    {
+      "id": "request_interrupted_before_headers",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "interrupted",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": null
+      },
+      "errors": []
+    },
+    {
+      "id": "request_interrupted_stream",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "interrupted",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": []
+    },
+    {
+      "id": "request_missing_principal_id",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_tenant_id",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_error_code",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_request_event",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_http_request_method",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_http_route",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_http_response_status_code",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_missing_duration_ms",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_null_error_for_500",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 500
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_completed_unknown_status",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": null
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_bad_status",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 600
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_fractional_status",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200.5
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_negative_duration",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": -1,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_raw_message_error",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "contains a secret",
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 400
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_zero_tenant",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": "00000000000000000000000000000000",
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_space",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GET POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_tab",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GET\t",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_newline",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GET\n",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_empty",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_non_ascii",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GÉT",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_too_long",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "request_invalid_method_separator",
+      "profile": "request",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Request completed",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "completed",
+        "duration_ms": 1.5,
+        "http.request.method": "GET/POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "optional_shared_fields_common",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "http.request.method": "GET",
+        "http.route": "/items",
+        "http.response.status_code": 200,
+        "duration_ms": 1
+      },
+      "errors": []
+    },
+    {
+      "id": "optional_shared_fields_correlated",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "http.request.method": "GET",
+        "http.route": "/items",
+        "http.response.status_code": 200,
+        "duration_ms": 1
+      },
+      "errors": []
+    },
+    {
+      "id": "optional_shared_fields_lifecycle",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development",
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "http.request.method": "GET",
+        "http.route": "/items",
+        "http.response.status_code": 200,
+        "duration_ms": 1
+      },
+      "errors": []
+    },
+    {
+      "id": "common_invalid_principal_id",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "principal_id": "username"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_tenant_id",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "tenant_id": "00000000000000000000000000000000"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_error_code",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "error_code": "secret text"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_request_event",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "request_event": "unknown"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_http_request_method",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "http.request.method": "GET POST"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_http_route",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "http.route": "/items\n"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_http_response_status_code",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "http.response.status_code": "403"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "common_invalid_duration_ms",
+      "profile": "common",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "environment": "development",
+        "duration_ms": -1
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "correlated_invalid_shared_principal",
+      "profile": "correlated",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "environment": "development",
+        "principal_id": "username"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    },
+    {
+      "id": "lifecycle_invalid_shared_principal",
+      "profile": "lifecycle",
+      "record": {
+        "timestamp": 1792573200000000000,
+        "level": "INFO",
+        "service": "test-service",
+        "region": "test",
+        "message": "Synthetic event.",
+        "trace_id": "11111111111111111111111111111111",
+        "event": "request.completed",
+        "outcome": "success",
+        "environment": "development",
+        "principal_id": "username"
+      },
+      "errors": [
+        "schema_invalid"
+      ]
+    }
+  ],
+  "context_cases": [
+    {
+      "id": "public_missing",
+      "trusted": false,
+      "traceparent": "",
+      "preserve_trace": false
+    },
+    {
+      "id": "public_malformed",
+      "trusted": false,
+      "traceparent": "bad",
+      "preserve_trace": false
+    },
+    {
+      "id": "public_zero",
+      "trusted": false,
+      "traceparent": "00-00000000000000000000000000000000-2222222222222222-01",
+      "preserve_trace": false
+    },
+    {
+      "id": "public_valid",
+      "trusted": false,
+      "traceparent": "00-11111111111111111111111111111111-2222222222222222-01",
+      "preserve_trace": false
+    },
+    {
+      "id": "public_oversized",
+      "trusted": false,
+      "traceparent": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "preserve_trace": false
+    },
+    {
+      "id": "trusted_missing",
+      "trusted": true,
+      "traceparent": "",
+      "preserve_trace": false
+    },
+    {
+      "id": "trusted_malformed",
+      "trusted": true,
+      "traceparent": "bad",
+      "preserve_trace": false
+    },
+    {
+      "id": "trusted_zero",
+      "trusted": true,
+      "traceparent": "00-00000000000000000000000000000000-2222222222222222-01",
+      "preserve_trace": false
+    },
+    {
+      "id": "trusted_valid",
+      "trusted": true,
+      "traceparent": "00-11111111111111111111111111111111-2222222222222222-01",
+      "preserve_trace": true
+    },
+    {
+      "id": "trusted_oversized",
+      "trusted": true,
+      "traceparent": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "preserve_trace": false
+    }
+  ],
+  "required_behavior_scenarios": [
+    "concurrent_context_isolation",
+    "reset_after_exception",
+    "reset_after_cancellation",
+    "reused_worker_context",
+    "durable_metadata_roundtrip",
+    "phase2_recorded_child_compatibility"
+  ],
+  "scope": "Language-neutral vectors; Python test setup is the first consumer. Schema PASS alone is not behavior, deployed-service, or installed-package proof.",
+  "emission_cases": [
+    {
+      "id": "correlated_request",
+      "traceparent": "00-11111111111111111111111111111111-2222222222222222-01",
+      "message": "Request completed",
+      "expected": {
+        "level": "INFO",
+        "service": "shared-test",
+        "environment": "development",
+        "region": "region-1",
+        "message": "Request completed",
+        "trace_id": "11111111111111111111111111111111"
+      }
+    },
+    {
+      "id": "system_event",
+      "traceparent": null,
+      "message": "System ready",
+      "expected": {
+        "level": "INFO",
+        "service": "shared-test",
+        "environment": "development",
+        "region": "region-1",
+        "message": "System ready"
+      },
+      "absent": [
+        "trace_id"
+      ]
+    },
+    {
+      "id": "unicode_message",
+      "traceparent": null,
+      "message": "Ready ✓",
+      "expected": {
+        "level": "INFO",
+        "service": "shared-test",
+        "environment": "development",
+        "region": "region-1",
+        "message": "Ready ✓"
+      },
+      "absent": [
+        "trace_id"
+      ]
+    }
+  ],
+  "request_emission_cases": [
+    {
+      "id": "anonymous_401",
+      "status": 401,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 401,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "verified_403",
+      "status": 403,
+      "interrupted": false,
+      "principal": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+      "tenant": "11111111111111111111111111111111",
+      "error": "POLICY_DENIED",
+      "expected": {
+        "principal_id": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+        "tenant_id": "11111111111111111111111111111111",
+        "error_code": "POLICY_DENIED",
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 403,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000002"
+      },
+      "traceparent": "00-00000000000000000000000000000002-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "verified_429",
+      "status": 429,
+      "interrupted": false,
+      "principal": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+      "tenant": "11111111111111111111111111111111",
+      "error": "QUOTA_EXCEEDED",
+      "expected": {
+        "principal_id": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+        "tenant_id": "11111111111111111111111111111111",
+        "error_code": "QUOTA_EXCEEDED",
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 429,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000003"
+      },
+      "traceparent": "00-00000000000000000000000000000003-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "legacy_key",
+      "status": 200,
+      "interrupted": false,
+      "principal": null,
+      "tenant": "11111111111111111111111111111111",
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": "11111111111111111111111111111111",
+        "error_code": null,
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000004"
+      },
+      "traceparent": "00-00000000000000000000000000000004-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "interrupted_before_headers",
+      "status": null,
+      "interrupted": true,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": null,
+        "request_event": "interrupted",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": null,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000005"
+      },
+      "traceparent": "00-00000000000000000000000000000005-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "interrupted_stream",
+      "status": 200,
+      "interrupted": true,
+      "principal": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+      "tenant": "11111111111111111111111111111111",
+      "error": null,
+      "expected": {
+        "principal_id": "nx1://test/11111111111111111111111111111111/CAS/global/User/22222222222222222222222222222222",
+        "tenant_id": "11111111111111111111111111111111",
+        "error_code": null,
+        "request_event": "interrupted",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 200,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000006"
+      },
+      "traceparent": "00-00000000000000000000000000000006-2222222222222222-01",
+      "method": "POST"
+    },
+    {
+      "id": "uncorrelated_401",
+      "status": 401,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "POST",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 401,
+        "duration_ms": 1.5
+      },
+      "traceparent": null,
+      "method": "POST"
+    },
+    {
+      "id": "method_extension_405",
+      "status": 405,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "M-SEARCH",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 405,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "M-SEARCH"
+    },
+    {
+      "id": "method_lowercase_405",
+      "status": 405,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "get",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 405,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "get"
+    },
+    {
+      "id": "method_digit_405",
+      "status": 405,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "GET3",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 405,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "GET3"
+    },
+    {
+      "id": "method_sentinel_405",
+      "status": 405,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "_OTHER",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 405,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "_OTHER"
+    },
+    {
+      "id": "method_tchar_405",
+      "status": 405,
+      "interrupted": false,
+      "principal": null,
+      "tenant": null,
+      "error": null,
+      "expected": {
+        "principal_id": null,
+        "tenant_id": null,
+        "error_code": "UNCLASSIFIED",
+        "request_event": "completed",
+        "http.request.method": "!#$%&'*+-.^_`|~",
+        "http.route": "/items/{id}",
+        "http.response.status_code": 405,
+        "duration_ms": 1.5,
+        "trace_id": "00000000000000000000000000000001"
+      },
+      "traceparent": "00-00000000000000000000000000000001-2222222222222222-01",
+      "method": "!#$%&'*+-.^_`|~"
+    }
+  ],
+  "degradation_allowed_fields": [
+    "example.note",
+    "example.a",
+    "example.b",
+    "example.c",
+    "error.type",
+    "exception.stacktrace"
+  ],
+  "degradation_error_type": {
+    "python": "ValueError",
+    "typescript": "TypeError",
+    "go": "*errors.errorString",
+    "dotnet": "System.InvalidOperationException"
+  },
+  "degradation_cases": [
+    {
+      "id": "long_message",
+      "level": "ERROR",
+      "message": {
+        "repeat": "x",
+        "count": 1100
+      },
+      "fields": {},
+      "expect": {
+        "message_max_bytes": 1024,
+        "message_prefix": "xxxxxxxx",
+        "message_suffix": "…",
+        "truncated": true,
+        "dropped_field_count": null
+      }
+    },
+    {
+      "id": "long_multibyte_message",
+      "level": "ERROR",
+      "message": {
+        "repeat": "é",
+        "count": 600
+      },
+      "fields": {},
+      "expect": {
+        "message_max_bytes": 1024,
+        "message_prefix": "éééé",
+        "message_suffix": "…",
+        "truncated": true,
+        "dropped_field_count": null
+      }
+    },
+    {
+      "id": "message_at_limit",
+      "level": "INFO",
+      "message": {
+        "repeat": "x",
+        "count": 1024
+      },
+      "fields": {},
+      "expect": {
+        "message": {
+          "repeat": "x",
+          "count": 1024
+        },
+        "truncated": null,
+        "dropped_field_count": null
+      }
+    },
+    {
+      "id": "unknown_field",
+      "level": "WARN",
+      "message": "Retry scheduled",
+      "fields": {
+        "tenant": "t1",
+        "example.note": "kept"
+      },
+      "expect": {
+        "message": "Retry scheduled",
+        "fields": {
+          "example.note": "kept"
+        },
+        "absent": [
+          "tenant"
+        ],
+        "truncated": null,
+        "dropped_field_count": 1
+      }
+    },
+    {
+      "id": "large_unknown_field",
+      "level": "WARN",
+      "message": "Retry scheduled",
+      "fields": {
+        "tenant": {
+          "repeat": "q",
+          "count": 5000
+        }
+      },
+      "expect": {
+        "message": "Retry scheduled",
+        "absent": [
+          "tenant"
+        ],
+        "truncated": null,
+        "dropped_field_count": 1
+      }
+    },
+    {
+      "id": "long_field",
+      "level": "ERROR",
+      "message": "Dependency failed",
+      "fields": {
+        "example.note": {
+          "repeat": "y",
+          "count": 1100
+        }
+      },
+      "expect": {
+        "message": "Dependency failed",
+        "field_bounds": {
+          "example.note": {
+            "max_bytes": 1024,
+            "prefix": "yyyyyyyy",
+            "suffix": "…"
+          }
+        },
+        "truncated": true,
+        "dropped_field_count": null
+      }
+    },
+    {
+      "id": "oversize_record",
+      "level": "ERROR",
+      "message": {
+        "repeat": "m",
+        "count": 1000
+      },
+      "fields": {
+        "example.a": {
+          "repeat": "a",
+          "count": 1000
+        },
+        "example.b": {
+          "repeat": "b",
+          "count": 1000
+        },
+        "example.c": {
+          "repeat": "c",
+          "count": 1000
+        }
+      },
+      "expect": {
+        "message": {
+          "repeat": "m",
+          "count": 1000
+        },
+        "fields": {
+          "example.a": {
+            "repeat": "a",
+            "count": 1000
+          },
+          "example.b": {
+            "repeat": "b",
+            "count": 1000
+          }
+        },
+        "absent": [
+          "example.c"
+        ],
+        "record_max_bytes": 4096,
+        "truncated": null,
+        "dropped_field_count": 1
+      }
+    },
+    {
+      "id": "error_with_stack",
+      "level": "ERROR",
+      "message": "Operation failed",
+      "fields": {},
+      "error": {
+        "message": "secret-detail",
+        "nested_calls": 2
+      },
+      "expect": {
+        "message": "Operation failed",
+        "error_type": true,
+        "stacktrace_line_pattern": "^at \\S+( \\([^/\\\\()]+:[0-9]+\\))?$",
+        "stacktrace_max_bytes": 2048,
+        "stacktrace_excludes": [
+          "secret-detail"
+        ],
+        "truncated": null,
+        "dropped_field_count": null
+      }
+    },
+    {
+      "id": "invalid_caller_error_fields",
+      "level": "ERROR",
+      "message": "Operation failed",
+      "fields": {
+        "error.type": "Not Found",
+        "exception.stacktrace": "",
+        "example.note": "kept"
+      },
+      "expect": {
+        "message": "Operation failed",
+        "fields": {
+          "example.note": "kept"
+        },
+        "absent": [
+          "error.type",
+          "exception.stacktrace"
+        ],
+        "truncated": null,
+        "dropped_field_count": 2
+      }
+    },
+    {
+      "id": "caller_error_fields_win",
+      "level": "ERROR",
+      "message": "Operation failed",
+      "fields": {
+        "error.type": "CallerError",
+        "exception.stacktrace": "at caller (app.src:1)"
+      },
+      "error": {
+        "message": "secret-detail",
+        "nested_calls": 2
+      },
+      "expect": {
+        "message": "Operation failed",
+        "fields": {
+          "error.type": "CallerError",
+          "exception.stacktrace": "at caller (app.src:1)"
+        },
+        "stacktrace_excludes": [
+          "secret-detail"
+        ],
+        "truncated": null,
+        "dropped_field_count": null
+      }
+    }
+  ],
+  "degradation_rules": {
+    "message": "Over 1,024 UTF-8 bytes: cut at a character boundary so that the text plus a trailing U+2026 fits 1,024 bytes; set logging.truncated=true.",
+    "string_field": "Over 1,024 UTF-8 bytes (exception.stacktrace: 2,048): cut the same way; set logging.truncated=true.",
+    "unknown_or_unsupported_field": "Remove the field, keep the record; logging.dropped_field_count = number removed. Unsupported = not JSON-encodable, non-finite number, or a string that is not valid Unicode.",
+    "record": "Over 4,096 bytes: shorten exception.stacktrace by whole frames, then remove custom fields, largest encoded size first (ties: key name descending), each counted, until it fits.",
+    "error": "error.type = the error's type name; exception.stacktrace = one 'at <function> (<file basename>:<line>)' per frame, innermost first; never the error message or argument values. A caller-supplied value for either field wins. A caller value that breaks its field rule (error.type: 1-128 chars, no whitespace; exception.stacktrace: non-empty) is removed and counted, and the SDK value applies.",
+    "drop": "Only a record that cannot be serialised, breaks a base-field rule (empty or unformattable message, event without outcome), or still exceeds 4,096 bytes after the steps above is dropped and counted."
+  },
+  "write_model": {
+    "summary": "One write model in every language (design review F2): the caller never waits on the output; a bounded queue feeds one background writer; a full queue drops and counts; a write error is counted and the writer continues; close drains until a deadline. An ERROR/FATAL line waits at most error_wait_ms for the writer, so the line logged just before a hard exit is not lost. A logger that never logs owns no writer thread.",
+    "queue_capacity": 1024,
+    "close_timeout_ms": 2000,
+    "caller_budget_ms": 200,
+    "counters": [
+      "written",
+      "invalid",
+      "queue_full",
+      "io_errors",
+      "closed",
+      "pending"
+    ],
+    "cases": [
+      {
+        "id": "blocked_output_never_blocks_caller",
+        "sink": "blocked",
+        "lines": 3000,
+        "expect": "the slowest log call returns within caller_budget_ms; queue_full >= lines - queue_capacity - 1; after the output is unblocked the queued lines are written",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "write_error_recovers",
+        "sink": "fail_first_write",
+        "lines": 3,
+        "expect": "io_errors == 1; written == 2; later lines are still written",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "partial_write_recovers",
+        "sink": "partial_first_write",
+        "lines": 2,
+        "expect": "the next line starts on a new line; every complete line is valid JSON",
+        "languages": [
+          "python",
+          "go"
+        ]
+      },
+      {
+        "id": "close_drains",
+        "sink": "slow",
+        "lines": 10,
+        "expect": "close reports success; written == 10; pending == 0",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "close_deadline",
+        "sink": "blocked",
+        "lines": 5,
+        "expect": "close returns failure within close_timeout_ms + 500 ms; undelivered lines are counted",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "log_after_close",
+        "sink": "ok",
+        "lines": 1,
+        "expect": "closed == 1; nothing is written",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "fork_restarts_writer",
+        "sink": "ok",
+        "lines": 1,
+        "expect": "a child process created by fork writes through its own new writer; the parent's queue is not shared",
+        "languages": [
+          "python"
+        ]
+      },
+      {
+        "id": "error_line_survives_hard_exit",
+        "sink": "slow",
+        "lines": 1,
+        "expect": "an ERROR line logged just before a hard process exit (no close) is on the output; the call returns within error_wait_ms + 50 ms",
+        "languages": [
+          "python",
+          "go"
+        ]
+      },
+      {
+        "id": "unused_logger_owns_no_writer",
+        "sink": "ok",
+        "lines": 0,
+        "expect": "creating loggers that never log starts no writer thread or goroutine",
+        "languages": [
+          "python",
+          "go"
+        ]
+      }
+    ],
+    "error_wait_ms": 50,
+    "caller_budget_note": "The slowest single call must stay under this. A blocked output makes a call wait as long as the output stays blocked (seconds); scheduler, GC and CPU-throttling pauses on shared CI runners and limited pods reach tens of milliseconds, so the bound keeps a 10x margin both ways."
+  },
+  "drop_metric": {
+    "summary": "One drop metric in every language (design review R1): every line the SDK does not write is counted under one process-wide counter per (service, reason), readable as a snapshot, as Prometheus text, and as an OpenTelemetry asynchronous counter.",
+    "otel_name": "onenexus.log.records.dropped",
+    "otel_unit": "{record}",
+    "prometheus_name": "onenexus_log_records_dropped_total",
+    "labels": [
+      "service",
+      "reason"
+    ],
+    "reasons": [
+      "closed",
+      "invalid",
+      "io_errors",
+      "queue_full"
+    ],
+    "help": "Log records the logging SDK did not write, by reason.",
+    "prometheus_text_example": {
+      "counts": [
+        {
+          "service": "svc-b",
+          "reason": "queue_full",
+          "count": 7
+        },
+        {
+          "service": "svc-a",
+          "reason": "closed",
+          "count": 0
+        },
+        {
+          "service": "q\"\\\n",
+          "reason": "invalid",
+          "count": 2
+        }
+      ],
+      "text": "# HELP onenexus_log_records_dropped_total Log records the logging SDK did not write, by reason.\n# TYPE onenexus_log_records_dropped_total counter\nonenexus_log_records_dropped_total{service=\"q\\\"\\\\\\n\",reason=\"invalid\"} 2\nonenexus_log_records_dropped_total{service=\"svc-a\",reason=\"closed\"} 0\nonenexus_log_records_dropped_total{service=\"svc-b\",reason=\"queue_full\"} 7\n"
+    },
+    "cases": [
+      {
+        "id": "every_reason_reported_from_first_handler",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "after one handler for service S is created and nothing is logged, the snapshot has exactly the four reasons for S, each 0"
+      },
+      {
+        "id": "each_reason_counted",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "a record the contract rejects adds 1 to invalid; a write error adds 1 to io_errors; a line after close adds 1 to closed; a blocked output adds the overflow to queue_full; each equals the handler's own stats counter"
+      },
+      {
+        "id": "handlers_of_one_service_are_summed",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "two handlers with the same service report one row per reason whose count is the sum of both handlers' counters"
+      },
+      {
+        "id": "services_are_separate",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "handlers with different services report separate rows; a drop in one never changes the other"
+      },
+      {
+        "id": "counts_survive_close",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "after close the service's rows remain and never decrease"
+      },
+      {
+        "id": "prometheus_text_format",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "rendering prometheus_text_example.counts gives exactly prometheus_text_example.text: HELP and TYPE first, rows sorted by service then reason, label values escaped (backslash, double quote, newline)"
+      },
+      {
+        "id": "otel_asynchronous_counter",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ],
+        "expect": "registering on a meter creates one asynchronous monotonic counter named otel_name with unit otel_unit; a collection yields one observation per snapshot row with attributes service and reason"
+      }
+    ]
+  },
+  "field_registry": {
+    "summary": "One field registry (design review E1): the schema's x-field-registry decides, when a logger is configured, whether each allowed custom field name may be logged; at log time a custom value must be a flat scalar of its registered type.",
+    "config_error": "invalid_allowed_fields",
+    "check_order": [
+      "protected",
+      "format",
+      "registered_field",
+      "reserved",
+      "namespace"
+    ],
+    "rules": {
+      "protected": "A protected field (x-protected-fields) is never a custom field.",
+      "format": "Matches name_pattern (lowercase, '.' between namespaces, '_' between words, at most 5 segments) and has at most name_max_chars characters.",
+      "registered_field": "A name in fields is accepted, even inside a reserved namespace.",
+      "reserved": "Otherwise a name in a reserved namespace (logging.*, k8s.*) is rejected: only the SDK or the collector writes it.",
+      "namespace": "Otherwise the name must have 2+ segments and its first segment must be a registered namespace; a single-segment name that is not a registered field is rejected.",
+      "too_many": "More than max_custom_fields names is rejected.",
+      "value": "At log time a custom field value must be a string, a finite number, a boolean or null; an object or array is removed and counted in logging.dropped_field_count. A registered field's value must match its type (integer: a whole number, not a boolean; number: any finite number) or be null, else it is removed and counted."
+    },
+    "config_cases": [
+      {
+        "id": "accepts_service_namespace",
+        "names": [
+          "mlops.inference.instance_id"
+        ],
+        "accepted": true,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "accepts_registered_field",
+        "names": [
+          "logger",
+          "tenant_id",
+          "job.attempt"
+        ],
+        "accepted": true,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "accepts_otel_namespace",
+        "names": [
+          "http.request.method",
+          "error.type"
+        ],
+        "accepted": true,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "accepts_registered_in_reserved",
+        "names": [
+          "logging.sdk_version"
+        ],
+        "accepted": true,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "accepts_max_custom_fields",
+        "names": {
+          "prefix": "example.f",
+          "count": 256
+        },
+        "accepted": true,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_protected",
+        "names": [
+          "message"
+        ],
+        "accepted": false,
+        "reason": "protected",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_bad_format",
+        "names": [
+          "tenantId"
+        ],
+        "accepted": false,
+        "reason": "format",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_too_many_segments",
+        "names": [
+          "example.a.b.c.d.e"
+        ],
+        "accepted": false,
+        "reason": "format",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_too_long",
+        "names": {
+          "prefix": "example.",
+          "repeat": "a",
+          "count": 121
+        },
+        "accepted": false,
+        "reason": "format",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_reserved_namespace",
+        "names": [
+          "logging.custom"
+        ],
+        "accepted": false,
+        "reason": "reserved",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_unregistered_flat",
+        "names": [
+          "claim_id"
+        ],
+        "accepted": false,
+        "reason": "namespace",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_unregistered_namespace",
+        "names": [
+          "foo.bar"
+        ],
+        "accepted": false,
+        "reason": "namespace",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "rejects_too_many",
+        "names": {
+          "prefix": "example.f",
+          "count": 257
+        },
+        "accepted": false,
+        "reason": "too_many",
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      }
+    ],
+    "value_cases": [
+      {
+        "id": "scalar_values_kept",
+        "fields": {
+          "example.s": "x",
+          "example.i": 3,
+          "example.f": 1.5,
+          "example.b": true,
+          "example.n": null
+        },
+        "kept": [
+          "example.b",
+          "example.f",
+          "example.i",
+          "example.n",
+          "example.s"
+        ],
+        "dropped_field_count": null,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "object_value_removed",
+        "fields": {
+          "example.o": {
+            "a": 1
+          },
+          "example.s": "x"
+        },
+        "kept": [
+          "example.s"
+        ],
+        "dropped_field_count": 1,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "array_value_removed",
+        "fields": {
+          "example.a": [
+            1,
+            2
+          ]
+        },
+        "kept": [],
+        "dropped_field_count": 1,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "registered_type_enforced",
+        "fields": {
+          "job.attempt": "3",
+          "job.max_attempts": true,
+          "http.response.status_code": 200.5,
+          "logger": 7
+        },
+        "kept": [],
+        "dropped_field_count": 4,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      },
+      {
+        "id": "registered_type_accepted",
+        "fields": {
+          "job.attempt": 3,
+          "duration_ms": 5,
+          "logger": "app.worker",
+          "error_code": null
+        },
+        "kept": [
+          "duration_ms",
+          "error_code",
+          "job.attempt",
+          "logger"
+        ],
+        "dropped_field_count": null,
+        "languages": [
+          "python",
+          "typescript",
+          "go",
+          "dotnet"
+        ]
+      }
+    ],
+    "value_allowed_fields": [
+      "example.s",
+      "example.i",
+      "example.f",
+      "example.b",
+      "example.n",
+      "example.o",
+      "example.a",
+      "job.attempt",
+      "job.max_attempts",
+      "http.response.status_code",
+      "logger",
+      "duration_ms",
+      "error_code"
+    ],
+    "names_expansion": "names is a list, or {prefix, count}: prefix + str(i) for i in 0..count-1, or {prefix, repeat, count}: one name, prefix + repeat × count."
+  }
+}

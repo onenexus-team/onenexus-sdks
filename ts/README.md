@@ -8,6 +8,14 @@ and service calls; server-side token validation belongs to the services.
 
 ## Packages
 
+Node.js services use one self-contained logging package:
+
+| Package | Description |
+|---|---|
+| [`@onenexus-team/observability`](packages/observability/README.md) | Opt-in context isolation and JSON logging; no runtime download or global logger replacement |
+
+Validate both source and installed logging packages with `bash scripts/check-typescript-observability.sh` from the repository root.
+
 | Package                   | Description                                                                                                               |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `@onenexus-team/sdk-core`      | Credential primitives (`AccessToken`, `Credentials`, `ClientContext`), `ClientBase`, Ky-based HTTP transport, custom mutator factory, RFC 9457 error mapping. |

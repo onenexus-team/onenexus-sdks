@@ -80,10 +80,17 @@ const describeTenant = (
  * direction — backward pages are reversed server-side. Because the
  * PK is UUID v7 (time-ordered), this is also a chronological listing
  * for free.
- *     Authorization. The class-level PlatformSupport policy
- * requires an active administrator of the reserved OneNexus platform
- * tenant. CAS resolves this from the current authorization store, so a
- * token does not retain access after an administrator role is removed.
+ *     Lookup and search. tenantIds returns every listed tenant
+ * that exists, by primary key; query returns the first
+ * limit tenants, in id order, in whose display name or slug every
+ * word of the text starts a word, ignoring case, accents and punctuation
+ * (see TenantSearch). Both return one response without
+ * cursors and keep the TenantSummary shape. The query text
+ * is never logged.
+ *     Authorization. CAS::ListTenants on the platform's
+ * tenant directory. CAS resolves the caller's roles from the current
+ * authorization store, so a token does not retain access after a role
+ * is removed.
  * @summary Page across all tenants known to CAS. Platform-admin / support
 surface — there is no tenant scoping, this returns rows for every
 tenant the caller is authorized to see.
@@ -108,10 +115,9 @@ const listTenants = (
  * suspended or soft-deleted tenant is a legitimate operator use case
  * (audit, cleanup, recovery). Only a missing tenant returns 404; a
  * tenant that exists but is non-active still serves its user list.
- *     Authorization. The class-level PlatformSupport policy
- * requires an active administrator of the reserved OneNexus platform
- * tenant. CAS resolves this from the current authorization store, so a
- * token does not retain access after an administrator role is removed.
+ *     Authorization. CAS::ListTenantUsers on the platform-owned
+ * CAS::Tenant resource for the requested tenant, for a platform
+ * user or service client. Authorization precedes target lookup.
  * @summary Page across the users belonging to a specific tenant. Platform-admin /
 support surface — the target tenant is identified by Guid in the
 request body, not inferred from the caller's principal.
@@ -143,10 +149,9 @@ const searchUsers = (
       options);
     }
   /**
- *     Authorization. The caller must be an active human
- * TenantAdmin of the reserved platform tenant. This is the
- * implemented operator gate until a distinct platform_admin
- * authorization contract exists.
+ *     Authorization. CAS::AddTenantUser on the platform-owned
+ * CAS::Tenant resource for the target tenant. Only users may hold
+ * this action.
  *     Differs from TenantUserController.CreateUser in that
  * the target tenant comes from the request body, not the caller's
  * principal. The downstream invitation logic is identical and runs
@@ -166,6 +171,11 @@ const addTenantUser = (
       options);
     }
   /**
+ * <b>Authorization.</b> `CAS::ResendInvitation` on the user's tenant.
+ * The request names only the user, so CAS reads which tenant the user
+ * belongs to first; the class policy has already limited callers to
+ * platform principals, so a missing user's 404 reveals nothing to a
+ * customer.
  * @summary Re-sends the invitation email for an existing pending user.
  */
 const resendInvitation = (

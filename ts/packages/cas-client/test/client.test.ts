@@ -288,7 +288,9 @@ describe('CasClient', () => {
                 retry: { limit: 2, backoffLimitMs: 0 },
             });
 
-            await expect(cas.assumeS3Role({ roleName: 'S3ObjectFullAccess' })).rejects.toBeDefined();
+            await expect(
+                cas.assumeS3Role({ roleName: 'S3ObjectFullAccess' }),
+            ).rejects.toBeDefined();
             expect(resolve).toHaveBeenCalledOnce();
             expect(requestCount).toBe(1);
         });
@@ -635,7 +637,7 @@ describe('CasClient', () => {
                 http.post(`${BASE_URL}/api/CreateUser`, () =>
                     HttpResponse.json(
                         {
-                            type: 'https://docs.onenexus.vn/errors/already-exists',
+                            type: 'https://onenexus.cloud/errors/already-exists',
                             title: 'User already exists',
                             status: 409,
                             detail: "User 'a@b.c' already exists.",

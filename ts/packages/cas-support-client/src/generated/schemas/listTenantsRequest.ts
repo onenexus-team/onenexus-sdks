@@ -39,4 +39,27 @@ export interface ListTenantsRequest {
      * @nullable
      */
   before?: string | null;
+  /**
+     * Tenant ids to look up, 1 to int ListTenantsRequest.MaxTenantIds. The response
+     * lists each of them that exists, ordered by id; an id with no tenant is
+     * left out rather than failing the request, and repeated ids appear
+     * once. int ListTenantsRequest.Limit does not apply and no cursors are returned.
+     * @minItems 1
+     * @maxItems 200
+     * @nullable
+     */
+  tenantIds?: string[] | null;
+  /**
+     * Search text, at most 256 characters and at least 2 after trimming.
+     * Every word of the query must be the start of a word in the tenant's
+     * display name or slug, ignoring case, accents, and punctuation, so
+     * `an binh` finds "Công ty TNHH An Bình" and `acme` finds the
+     * slug `acme-corp`. A complete tenant id finds exactly that tenant.
+     * Returns the first int ListTenantsRequest.Limit matches in id order, with no
+     * cursors.
+     * @minLength 2
+     * @maxLength 256
+     * @nullable
+     */
+  query?: string | null;
 }

@@ -1,5 +1,21 @@
 # OneNexus SDKs
 
+## Shared logging
+
+Each language has one self-contained logging package: Python, TypeScript, Go and .NET.
+All use SDK release `vX.Y.Z`; no separate contract release or dependency is needed.
+
+| Language | Logging package |
+|---|---|
+| Python | `onenexus-observability-python` |
+| TypeScript | `@onenexus-team/observability` |
+| Go | `github.com/onenexus-team/onenexus-sdks/go/packages/observability` |
+| .NET | `OneNexus.Observability` |
+
+[Release, upgrade and validation guide](docs/logging.md).
+Shared inputs and expected results live in `tests/logging/scenarios.json`.
+Each language tests its real implementation against those cases, both from source and as an installed package.
+
 ## Install packages from GitHub Packages
 
 TypeScript SDK packages are published to the OneNexus GitHub Packages npm
@@ -172,14 +188,18 @@ can be overridden with `ONENEXUS_DOTNET_SDK_VERSION`, `ONENEXUS_NODE_VERSION`,
 
 ## Publishing SDK packages
 
-Local package versions are specified by the repository-level `VERSION` file.
-Publishing a GitHub release with a stable semantic-version tag such as `v0.0.6`
-triggers the SDK release workflow. The workflow derives `0.0.6` from the tag and
-uses it as the package version in separate Python and TypeScript jobs on
-`self-hosted` runners. It builds and tests both workspaces, attaches the Python
-wheels and TypeScript tarballs to the existing GitHub release, and publishes the
-TypeScript SDK packages to GitHub
-Packages' npm registry.
+Local SDK versions come from `VERSION`. Publishing a GitHub Release `vX.Y.Z`
+builds and tests every language before any SDK package is published.
+
+| Package | Destination |
+|---|---|
+| Python SDKs and logging wheel | GitHub Release assets |
+| TypeScript SDKs and logging package | GitHub npm registry and Release assets |
+| .NET logging package | GitHub NuGet registry and Release asset |
+| Go logging module | Automatic `go/packages/observability/vX.Y.Z` tag at the SDK commit and Release ZIP |
+
+PR/main checks use the same build workflow without publishing. Existing releases are retained.
+See the [release guide](docs/logging.md) for failure recovery and service validation.
 
 For local builds and consumption examples, see [`python/README.md`](python/README.md)
 and [`ts/README.md`](ts/README.md).
@@ -363,3 +383,9 @@ Token exchange is not exposed as a credential type yet. Until CAS's RFC 8693
 surface is ready for SDK consumption, services that need on-behalf-of behavior
 should use the service-specific CAS API/flow documented by the auth platform
 team rather than constructing SDK credentials directly.
+
+
+### Shared logging
+
+Python, TypeScript, Go and .NET logging packages share the SDK release version.
+See [usage, validation and releases](docs/logging.md).

@@ -124,7 +124,7 @@ describe('platformMutator', () => {
             http.post(`${BASE_URL}/api/CreateTenant`, () =>
                 HttpResponse.json(
                     {
-                        type: 'https://docs.onenexus.vn/errors/already-exists',
+                        type: 'https://onenexus.cloud/errors/already-exists',
                         title: 'Tenant already exists',
                         status: 409,
                         detail: "Tenant 'tn_acme' already exists.",

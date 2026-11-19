@@ -17,6 +17,7 @@ testpaths = ["packages"]
 [dependency-groups]
 dev = [
     "mypy>=1.11",
+    "opentelemetry-sdk>=1.42,<2",
     "pytest>=8.2",
     "pytest-asyncio>=0.24",
     "ruff>=0.6",
@@ -28,6 +29,15 @@ examples = [
 [tool.mypy]
 python_version = "3.11"
 strict = true
+exclude = [
+    "(?:^|/)build/",
+    "(?:^|/)dist/",
+    "(?:^|/)tests?/",
+]
+
+[[tool.mypy.overrides]]
+module = ["boto3", "boto3.*", "botocore", "botocore.*"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["onenexus_cas_client.generated.*"]

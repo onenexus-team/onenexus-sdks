@@ -8,7 +8,7 @@
 import type { UserLifecycleState } from './userLifecycleState';
 
 /**
- * User snapshot returned as a list item by `SearchUsers`.
+ * User snapshot returned as a list item by `ListPlatformUsers`.
  */
 export interface PlatformUserSummary {
   /** The user's UUID v7 primary key. */

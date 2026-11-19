@@ -1,0 +1,410 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:onenexus:log-correlation:0.5.0",
+  "$defs": {
+    "common": {
+      "additionalProperties": true,
+      "properties": {
+        "timestamp": {
+          "maximum": 9223372036854775807,
+          "minimum": 0,
+          "title": "Timestamp",
+          "type": "integer"
+        },
+        "level": {
+          "enum": [
+            "TRACE",
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR",
+            "FATAL"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "service": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "title": "Service",
+          "type": "string"
+        },
+        "region": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "title": "Region",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Message",
+          "type": "string"
+        },
+        "trace_id": {
+          "not": {
+            "const": "00000000000000000000000000000000"
+          },
+          "pattern": "^[0-9a-f]{32}$",
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "event": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "title": "Event",
+          "type": "string"
+        },
+        "outcome": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "title": "Outcome",
+          "type": "string"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "development",
+            "staging",
+            "prod"
+          ],
+          "title": "Environment"
+        },
+        "principal_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^nx1://[A-Za-z0-9._:-]+/[0-9a-f]{32}/[A-Za-z0-9._:-]+/[A-Za-z0-9._:-]+/(User|ServiceClient|Workload)/[A-Za-z0-9._:-]+$",
+          "not": {
+            "pattern": "[\\r\\n]",
+            "type": "string"
+          }
+        },
+        "tenant_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 32,
+          "pattern": "^[0-9a-f]{32}$",
+          "not": {
+            "const": "00000000000000000000000000000000"
+          }
+        },
+        "error_code": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "not": {
+            "pattern": "[\\r\\n]",
+            "type": "string"
+          }
+        },
+        "request_event": {
+          "enum": [
+            "completed",
+            "interrupted"
+          ]
+        },
+        "http.request.method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "pattern": "^[!#$%&'*+.^_`|~0-9A-Za-z-]+$",
+          "not": {
+            "pattern": "[\\r\\n]",
+            "type": "string"
+          }
+        },
+        "http.route": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[ -~]+$",
+          "not": {
+            "pattern": "[\\r\\n]",
+            "type": "string"
+          }
+        },
+        "http.response.status_code": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 100,
+          "maximum": 599
+        },
+        "duration_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "error.type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^\\S+$"
+        },
+        "exception.stacktrace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "logging.truncated": {
+          "type": "boolean",
+          "const": true
+        },
+        "logging.dropped_field_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        }
+      },
+      "required": [
+        "timestamp",
+        "level",
+        "service",
+        "environment",
+        "region",
+        "message"
+      ],
+      "title": "CommonRecord",
+      "type": "object"
+    },
+    "correlated": {
+      "$ref": "#/$defs/common",
+      "type": "object",
+      "title": "CorrelatedRecord",
+      "required": [
+        "trace_id"
+      ]
+    },
+    "lifecycle": {
+      "$ref": "#/$defs/common",
+      "type": "object",
+      "title": "LifecycleRecord",
+      "required": [
+        "trace_id",
+        "event",
+        "outcome"
+      ]
+    },
+    "request": {
+      "$ref": "#/$defs/common",
+      "type": "object",
+      "title": "RequestRecord",
+      "required": [
+        "principal_id",
+        "tenant_id",
+        "error_code",
+        "request_event",
+        "http.request.method",
+        "http.route",
+        "http.response.status_code",
+        "duration_ms"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "request_event": {
+                "const": "completed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "http.response.status_code": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "http.response.status_code": {
+                "type": "integer",
+                "minimum": 400
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "error_code": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "principal_id": {
+                "type": "string"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "tenant_id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$ref": "#/$defs/common",
+  "x-contract-version": "0.5.0",
+  "x-semantic-checks": {
+    "message_max_utf8_bytes": 1024,
+    "record_max_compact_utf8_bytes": 4096,
+    "serialization": "UTF-8 JSON, ensure_ascii=false, compact separators; reject non-finite numbers",
+    "profile_selection": "Chosen by the test scenario, never by the producer",
+    "field_max_utf8_bytes": 1024,
+    "stacktrace_max_utf8_bytes": 2048
+  },
+  "x-protected-fields": [
+    "timestamp",
+    "level",
+    "service",
+    "region",
+    "message",
+    "trace_id",
+    "event",
+    "outcome",
+    "environment",
+    "logging.truncated",
+    "logging.dropped_field_count"
+  ],
+  "x-field-registry": {
+    "summary": "Every custom field a service allows must pass this registry when its logger is configured (design review E1, §3.1). Values are flat scalars.",
+    "name_pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){0,4}$",
+    "name_max_chars": 128,
+    "max_custom_fields": 256,
+    "value_types": [
+      "string",
+      "integer",
+      "number",
+      "boolean",
+      "null"
+    ],
+    "namespaces": {
+      "http": "opentelemetry",
+      "error": "opentelemetry",
+      "exception": "opentelemetry",
+      "service": "opentelemetry",
+      "db": "opentelemetry",
+      "rpc": "opentelemetry",
+      "resource": "platform",
+      "job": "platform",
+      "mlops": "mlops",
+      "policy": "mlops",
+      "utility": "utility",
+      "usage": "usage",
+      "quota": "quota",
+      "collector": "observability",
+      "example": "sdk (tests and docs only)"
+    },
+    "reserved_namespaces": {
+      "logging": "sdk",
+      "k8s": "collector"
+    },
+    "fields": {
+      "logger": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "principal_id": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "tenant_id": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "error_code": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "duration_ms": {
+        "type": "number",
+        "owner": "platform"
+      },
+      "request_event": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "http.request.method": {
+        "type": "string",
+        "owner": "opentelemetry"
+      },
+      "http.route": {
+        "type": "string",
+        "owner": "opentelemetry"
+      },
+      "http.response.status_code": {
+        "type": "integer",
+        "owner": "opentelemetry"
+      },
+      "error.type": {
+        "type": "string",
+        "owner": "opentelemetry"
+      },
+      "exception.stacktrace": {
+        "type": "string",
+        "owner": "opentelemetry"
+      },
+      "resource.type": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "resource.id": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "resource.tenant_id": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "resource.generation": {
+        "type": "integer",
+        "owner": "platform"
+      },
+      "job.id": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "job.type": {
+        "type": "string",
+        "owner": "platform"
+      },
+      "job.attempt": {
+        "type": "integer",
+        "owner": "platform"
+      },
+      "job.max_attempts": {
+        "type": "integer",
+        "owner": "platform"
+      },
+      "logging.sdk_version": {
+        "type": "string",
+        "owner": "platform"
+      }
+    }
+  }
+}

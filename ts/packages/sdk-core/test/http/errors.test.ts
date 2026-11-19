@@ -52,7 +52,7 @@ describe('parseHttpError', () => {
     it('maps invalid_argument → InvalidArgumentError with fieldErrors', async () => {
         const error = makeHttpError(
             {
-                type: 'https://docs.onenexus.vn/errors/invalid-argument',
+                type: 'https://onenexus.cloud/errors/invalid-argument',
                 title: 'Validation failed',
                 status: 400,
                 detail: 'See errors for details.',
@@ -69,6 +69,7 @@ describe('parseHttpError', () => {
         expect(e.code).toBe('invalid_argument');
         expect(e.status).toBe(400);
         expect(e.detail).toBe('See errors for details.');
+        expect(e.problemType).toBe('https://onenexus.cloud/errors/invalid-argument');
         expect(e.requestId).toBe('trace-123');
         expect(e.instance).toBe('/api/CreateTenant');
         expect(e.fieldErrors?.tenantId).toEqual(['Must match ^[a-z0-9]']);
@@ -90,6 +91,19 @@ describe('parseHttpError', () => {
         const parsed = await parseHttpError(error);
         expect(parsed).toBeInstanceOf(Ctor);
         expect((parsed as PlatformError).code).toBe(code);
+    });
+
+    it.each([
+        'https://onenexus.cloud/errors/already-exists',
+        'https://api-mlops.onenexus.cloud/problems/already-exists',
+    ])('classifies by code independently of the problem namespace: %s', async (type) => {
+        const error = makeHttpError(
+            { type, code: 'already_exists', status: 409, detail: 'Already exists.' },
+            { status: 409 },
+        );
+        const parsed = await parseHttpError(error);
+        expect(parsed).toBeInstanceOf(AlreadyExistsError);
+        expect((parsed as AlreadyExistsError).problemType).toBe(type);
     });
 
     it('falls back to PlatformError for unknown codes', async () => {
