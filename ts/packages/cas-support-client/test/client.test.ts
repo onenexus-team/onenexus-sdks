@@ -1,6 +1,7 @@
 import {
     AlreadyExistsError,
     InvalidArgumentError,
+    NotFoundError,
     TokenGrantCredentials,
     type AccessToken,
     type ClientContext,
@@ -55,7 +56,6 @@ describe('CasSupportClient', () => {
                     observedBody = await request.json();
                     return HttpResponse.json({
                         tenantId: 'tn_acme',
-                        tenantSlug: 'tn_acme',
                     });
                 }),
             );
@@ -65,18 +65,15 @@ describe('CasSupportClient', () => {
                 credentials: staticCreds('happy'),
             });
             const result = await support.createTenant({
-                tenantSlug: 'tn_acme',
                 displayName: 'Acme Inc',
                 rootEmail: 'admin@acme.test',
                 rootDisplayName: 'Acme Admin',
             });
 
             expect(result.tenantId).toBe('tn_acme');
-            expect(result.tenantSlug).toBe('tn_acme');
             expect(observedAuth).toBe('Bearer at-happy');
             expect(observedIdempotencyKey).toMatch(/^[a-zA-Z0-9_.-]{16,128}$/);
             expect(observedBody).toEqual({
-                tenantSlug: 'tn_acme',
                 displayName: 'Acme Inc',
                 rootEmail: 'admin@acme.test',
                 rootDisplayName: 'Acme Admin',
@@ -89,7 +86,6 @@ describe('CasSupportClient', () => {
                     HttpResponse.json({
                         data: {
                             tenantId: '0193fabc-1234-7def-abcd-1234567890ab',
-                            tenantSlug: 'tn_acme',
                             displayName: 'Acme Inc',
                             status: 1,
                             userCount: 3,
@@ -286,6 +282,51 @@ describe('CasSupportClient', () => {
             expect(observedBodies).toEqual([req, req, req, req]);
         });
 
+        it('describeAccount finds the account by address, and deleteAccount deletes it by the returned id', async () => {
+            const accountId = '0193fabc-1234-7def-abcd-1234567890ae';
+            const observed: { path: string; key: string | null; body: unknown }[] = [];
+            let deleted = false;
+            server.use(
+                http.post(`${BASE_URL}/support-api/DescribeAccount`, async ({ request }) => {
+                    observed.push({
+                        path: 'DescribeAccount',
+                        key: request.headers.get('x-nx1-idempotency-key'),
+                        body: await request.json(),
+                    });
+                    return HttpResponse.json({ accountId, displayName: 'Alice Nguyen', liveUserCount: 0 });
+                }),
+                http.post(`${BASE_URL}/support-api/DeleteAccount`, async ({ request }) => {
+                    observed.push({
+                        path: 'DeleteAccount',
+                        key: request.headers.get('x-nx1-idempotency-key'),
+                        body: await request.json(),
+                    });
+                    if (deleted) {
+                        return HttpResponse.json(
+                            { code: 'not_found', status: 404, detail: 'No account has this id.' },
+                            { status: 404, headers: { 'content-type': 'application/problem+json' } },
+                        );
+                    }
+                    deleted = true;
+                    return new HttpResponse(null, { status: 204 });
+                }),
+            );
+            const support = new CasSupportClient({ baseUrl: BASE_URL, credentials: staticCreds() });
+
+            const account = await support.describeAccount({ email: 'alice@acme.test' });
+            await expect(support.deleteAccount({ accountId: account.accountId })).resolves.toBeUndefined();
+            // A repeat names the same, now deleted, account: never a newer one at the address.
+            await expect(support.deleteAccount({ accountId: account.accountId })).rejects.toBeInstanceOf(
+                NotFoundError,
+            );
+
+            expect(account).toEqual({ accountId, displayName: 'Alice Nguyen', liveUserCount: 0 });
+            expect(observed[0]).toEqual({ path: 'DescribeAccount', key: null, body: { email: 'alice@acme.test' } });
+            expect(observed[1]?.path).toBe('DeleteAccount');
+            expect(observed[1]?.key).toMatch(/^[a-zA-Z0-9_.-]{16,128}$/);
+            expect(observed[1]?.body).toEqual({ accountId });
+        });
+
         it('resendInvitation POSTs the user ID and returns invitation details', async () => {
             let observedBody: unknown;
             server.use(
@@ -443,7 +484,6 @@ describe('CasSupportClient', () => {
             });
 
             const promise = support.createTenant({
-                tenantSlug: 'tn_acme',
                 displayName: 'Acme',
                 rootEmail: 'admin@acme.test',
                 rootDisplayName: 'Acme Admin',
@@ -466,7 +506,7 @@ describe('CasSupportClient', () => {
                             code: 'invalid_argument',
                             status: 400,
                             detail: 'See errors for per-field details.',
-                            errors: { tenantSlug: ['Required.'], displayName: ['Required.'] },
+                            errors: { rootEmail: ['Required.'], displayName: ['Required.'] },
                         },
                         { status: 400, headers: { 'content-type': 'application/problem+json' } },
                     ),
@@ -480,7 +520,6 @@ describe('CasSupportClient', () => {
             });
 
             const promise = support.createTenant({
-                tenantSlug: '',
                 displayName: '',
                 rootEmail: '',
                 rootDisplayName: '',
@@ -490,7 +529,7 @@ describe('CasSupportClient', () => {
             await promise.catch((error: unknown) => {
                 const e = error as InvalidArgumentError;
                 expect(e.fieldErrors).toEqual({
-                    tenantSlug: ['Required.'],
+                    rootEmail: ['Required.'],
                     displayName: ['Required.'],
                 });
             });
@@ -541,14 +580,12 @@ describe('CasSupportClient', () => {
                     }
                     return HttpResponse.json({
                         tenantId: 'tn_acme',
-                        tenantSlug: 'tn_acme',
                     });
                 }),
             );
 
             const support = new CasSupportClient({ baseUrl: BASE_URL, credentials });
             const result = await support.createTenant({
-                tenantSlug: 'tn_acme',
                 displayName: 'Acme',
                 rootEmail: 'admin@acme.test',
                 rootDisplayName: 'Acme Admin',
@@ -571,7 +608,6 @@ describe('CasSupportClient', () => {
                     serverResolved = true;
                     return HttpResponse.json({
                         tenantId: 'tn_acme',
-                        tenantSlug: 'tn_acme',
                     });
                 }),
             );
@@ -583,7 +619,6 @@ describe('CasSupportClient', () => {
             await expect(
                 support.createTenant(
                     {
-                        tenantSlug: 'tn_acme',
                         displayName: 'Acme',
                         rootEmail: 'admin@acme.test',
                         rootDisplayName: 'Acme Admin',
@@ -604,7 +639,6 @@ describe('CasSupportClient', () => {
                     observed.push(request.headers.get('authorization') ?? '');
                     return HttpResponse.json({
                         tenantId: 'tn_acme',
-                        tenantSlug: 'tn_acme',
                     });
                 }),
             );
@@ -622,13 +656,11 @@ describe('CasSupportClient', () => {
             // between them under race conditions.
             await Promise.all([
                 supportA.createTenant({
-                    tenantSlug: 'tn_a',
                     displayName: 'A',
                     rootEmail: 'admin-a@acme.test',
                     rootDisplayName: 'Admin A',
                 }),
                 supportB.createTenant({
-                    tenantSlug: 'tn_b',
                     displayName: 'B',
                     rootEmail: 'admin-b@acme.test',
                     rootDisplayName: 'Admin B',
@@ -646,7 +678,6 @@ describe('CasSupportClient', () => {
                 http.post(`${BASE_URL}/support-api/CreateTenant`, () =>
                     HttpResponse.json({
                         tenantId: 'tn_x',
-                        tenantSlug: 'tn_x',
                     }),
                 ),
             );
@@ -655,7 +686,6 @@ describe('CasSupportClient', () => {
             const { createTenant } = support;
 
             const result = await createTenant({
-                tenantSlug: 'tn_x',
                 displayName: 'X',
                 rootEmail: 'admin@x.test',
                 rootDisplayName: 'Admin X',

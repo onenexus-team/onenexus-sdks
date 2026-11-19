@@ -7,7 +7,9 @@
  */
 import type {
   DeleteAccountHeaders,
-  DeleteAccountRequest
+  DeleteAccountRequest,
+  DescribeAccountRequest,
+  DescribeAccountResponse
 } from '../schemas';
 
 import { platformMutator } from '../../mutator';
@@ -18,13 +20,32 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
   export const getSupportAccount = () => {
 /**
+ * The first step of deleting a person's account. Support looks the account
+ * up by the address the person gave, checks it is them, and deletes it by
+ * the id returned here. An address can belong to a new account after the
+ * first is deleted; an id never does, so a retried deletion cannot reach
+ * another account. The address is personal data and is never logged.
+ * @summary Finds the account that has an address.
+ */
+const describeAccount = (
+    describeAccountRequest: DescribeAccountRequest,
+ options?: SecondParameter<typeof platformMutator<DescribeAccountResponse>>,) => {
+      return platformMutator<DescribeAccountResponse>(
+      {url: `/support-api/DescribeAccount`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: describeAccountRequest
+    },
+      options);
+    }
+  /**
  * For a person who asked for their personal data to be deleted, once
  * support has confirmed it is them. The account goes, and with it its
  * address and sign-in state, so the address no longer appears in CAS's
  * tables; the code requests for it go with the next daily clean-up. Its
  * deleted users keep their ids for audit and lose the link and the
  * person's name. Refused while any of its users is invited, active or
- * suspended: remove those from their tenants first.
+ * suspended: remove those from their tenants first. The account is named
+ * by the id `DescribeAccount` returned, so a repeat answers 404.
  * @summary Deletes a person's account once none of its users is live.
  */
 const deleteAccount = (
@@ -38,10 +59,11 @@ const deleteAccount = (
     },
       options);
     }
-  return {deleteAccount}};
+  return {describeAccount,deleteAccount}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
     type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
+export type DescribeAccountResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSupportAccount>['describeAccount']>>>
 export type DeleteAccountResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSupportAccount>['deleteAccount']>>>

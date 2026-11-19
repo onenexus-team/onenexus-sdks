@@ -12,6 +12,4 @@
 export interface CreateTenantResponse {
   /** The tenant's UUID v7 primary key. */
   tenantId: string;
-  /** The tenant's human-entered login slug. */
-  tenantSlug: string;
 }

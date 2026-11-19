@@ -5,6 +5,9 @@ import type {
     CreateTenantRequest,
     CreateTenantResponse,
     CreateUserResponse,
+    DeleteAccountRequest,
+    DescribeAccountRequest,
+    DescribeAccountResponse,
     DescribeTenantRequest,
     DescribeTenantResponse,
     EmptyS3Request,
@@ -32,6 +35,7 @@ import type {
     UnsuspendTenantUserResponse,
 } from './generated/schemas/index.js';
 import { getCephS3 } from './generated/ceph-s3/ceph-s3.js';
+import { getSupportAccount } from './generated/support-account/support-account.js';
 import { getSupportAuthorization } from './generated/support-authorization/support-authorization.js';
 import { getTenant } from './generated/tenant/tenant.js';
 import type { PlatformMutatorOptions } from './mutator.js';
@@ -106,7 +110,6 @@ export type CasSupportRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
  * });
  *
  * const tenant = await support.createTenant({
- *     tenantSlug: 'tn_acme',
  *     displayName: 'Acme Inc',
  *     rootEmail: 'admin@acme.com',
  *     rootDisplayName: 'Acme Admin',
@@ -117,12 +120,14 @@ export class CasSupportClient extends ClientBase {
     private readonly tenant: ReturnType<typeof getTenant>;
     private readonly cephS3: ReturnType<typeof getCephS3>;
     private readonly supportAuthorization: ReturnType<typeof getSupportAuthorization>;
+    private readonly supportAccount: ReturnType<typeof getSupportAccount>;
 
     constructor(config: CasSupportClientConfig) {
         super(config);
         this.tenant = getTenant();
         this.cephS3 = getCephS3();
         this.supportAuthorization = getSupportAuthorization();
+        this.supportAccount = getSupportAccount();
     }
 
     // -- Tenant management ---------------------------------------------------
@@ -318,6 +323,34 @@ export class CasSupportClient extends ClientBase {
     ): Promise<void> =>
         this.tenant
             .removeTenantUser(req, createIdempotencyHeaders(), this.mutatorOptions(options))
+            .then(() => undefined);
+
+    // -- Accounts ------------------------------------------------------------
+
+    /**
+     * Finds the account that has an address: its id, the person's name, and how many of its users
+     * are still invited, active or suspended. The first step of deleting a person's account; a
+     * missing account is a 404 (`NotFoundError`).
+     *
+     * @see POST /support-api/DescribeAccount
+     */
+    describeAccount = (
+        req: DescribeAccountRequest,
+        options?: CasSupportRequestOptions,
+    ): Promise<DescribeAccountResponse> =>
+        this.supportAccount.describeAccount(req, this.mutatorOptions(options));
+
+    /**
+     * Deletes a person's account by the id {@link describeAccount} returned, once none of its users
+     * is live; while one is, CAS refuses with 409 (`FailedPreconditionError`). Its deleted users keep
+     * their ids, without the person's name. An id, unlike an address, never names a newer account, so
+     * a repeat answers 404 (`NotFoundError`). Automatic retries reuse the same idempotency key.
+     *
+     * @see POST /support-api/DeleteAccount
+     */
+    deleteAccount = (req: DeleteAccountRequest, options?: CasSupportRequestOptions): Promise<void> =>
+        this.supportAccount
+            .deleteAccount(req, createIdempotencyHeaders(), this.mutatorOptions(options))
             .then(() => undefined);
 
     // -- Authorization diagnostics -----------------------------------------

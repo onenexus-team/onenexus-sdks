@@ -210,13 +210,85 @@
         ]
       }
     },
+    "/support-api/DescribeAccount": {
+      "post": {
+        "tags": [
+          "SupportAccount"
+        ],
+        "summary": "Finds the account that has an address.",
+        "description": "The first step of deleting a person's account. Support looks the account\nup by the address the person gave, checks it is them, and deletes it by\nthe id returned here. An address can belong to a new account after the\nfirst is deleted; an id never does, so a retried deletion cannot reach\nanother account. The address is personal data and is never logged.",
+        "operationId": "DescribeAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DescribeAccountRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DescribeAccountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "The account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DescribeAccountResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No account has this address.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/support-api/DeleteAccount": {
       "post": {
         "tags": [
           "SupportAccount"
         ],
         "summary": "Deletes a person's account once none of its users is live.",
-        "description": "For a person who asked for their personal data to be deleted, once\nsupport has confirmed it is them. The account goes, and with it its\naddress and sign-in state, so the address no longer appears in CAS's\ntables; the code requests for it go with the next daily clean-up. Its\ndeleted users keep their ids for audit and lose the link and the\nperson's name. Refused while any of its users is invited, active or\nsuspended: remove those from their tenants first.",
+        "description": "For a person who asked for their personal data to be deleted, once\nsupport has confirmed it is them. The account goes, and with it its\naddress and sign-in state, so the address no longer appears in CAS's\ntables; the code requests for it go with the next daily clean-up. Its\ndeleted users keep their ids for audit and lose the link and the\nperson's name. Refused while any of its users is invited, active or\nsuspended: remove those from their tenants first. The account is named\nby the id `DescribeAccount` returned, so a repeat answers 404.",
         "operationId": "DeleteAccount",
         "parameters": [
           {
@@ -272,7 +344,7 @@
             }
           },
           "404": {
-            "description": "No account has this address.",
+            "description": "No account has this id.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -456,7 +528,7 @@
             }
           },
           "409": {
-            "description": "The slug or root email is already reserved\n    (`type=https://onenexus.cloud/errors/already-exists`).",
+            "description": "The idempotency key is bound to a different\n    request, or the root email is already reserved\n    (`type=https://onenexus.cloud/errors/already-exists`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -571,10 +643,10 @@
           "Tenant"
         ],
         "summary": "Page across all tenants known to CAS. Platform-admin / support\nsurface — there is no tenant scoping, this returns rows for every\ntenant the caller is authorized to see.",
-        "description": "    Ordering + pagination. Bidirectional cursor pagination on\nthe Tenant.Id UUID v7 PK. Forward (after) and\nbackward (before) directions both resolve to an index\nrange scan on the PK b-tree with no OFFSET cost. Items are\nalways returned in tenantId ascending order regardless of\ndirection — backward pages are reversed server-side. Because the\nPK is UUID v7 (time-ordered), this is also a chronological listing\nfor free.\n    Lookup and search. tenantIds returns every listed tenant\nthat exists, by primary key; query returns the first\nlimit tenants, in id order, in whose display name or slug every\nword of the text starts a word, ignoring case, accents and punctuation\n(see TenantSearch). Both return one response without\ncursors and keep the TenantSummary shape. The query text\nis never logged.\n    Authorization. CAS::ListTenants on the platform's\ntenant directory. CAS resolves the caller's roles from the current\nauthorization store, so a token does not retain access after a role\nis removed.",
+        "description": "    Ordering + pagination. Bidirectional cursor pagination on\nthe Tenant.Id UUID v7 PK. Forward (after) and\nbackward (before) directions both resolve to an index\nrange scan on the PK b-tree with no OFFSET cost. Items are\nalways returned in tenantId ascending order regardless of\ndirection — backward pages are reversed server-side. Because the\nPK is UUID v7 (time-ordered), this is also a chronological listing\nfor free.\n    Lookup and search. tenantIds returns every listed tenant\nthat exists, by primary key; query returns the first\nlimit tenants, in id order, in whose display name every\nword of the text starts a word, ignoring case, accents and punctuation\n(see TenantSearch). Both return one response without\ncursors and keep the TenantSummary shape. The query text\nis never logged.\n    Authorization. CAS::ListTenants on the platform's\ntenant directory. CAS resolves the caller's roles from the current\nauthorization store, so a token does not retain access after a role\nis removed.",
         "operationId": "ListTenants",
         "requestBody": {
-          "description": "Request body. Use `limit` with either\n    `before` or `after` for bidirectional cursor pagination, or\n    send one of `tenantIds` and `query` instead to look tenants\n    up by id or search them by name or slug.",
+          "description": "Request body. Use `limit` with either\n    `before` or `after` for bidirectional cursor pagination, or\n    send one of `tenantIds` and `query` instead to look tenants\n    up by id or search them by name.",
           "content": {
             "application/json": {
               "schema": {
@@ -1698,25 +1770,17 @@
       },
       "CreateTenantRequest": {
         "required": [
-          "tenantSlug",
           "displayName",
           "rootEmail",
           "rootDisplayName"
         ],
         "type": "object",
         "properties": {
-          "tenantSlug": {
-            "maxLength": 54,
-            "minLength": 1,
-            "pattern": "^(?!(?:onenexus(?:-|$)|platform$|system$|admin$))[a-z0-9][a-z0-9_-]{0,53}$",
-            "type": "string",
-            "description": "Globally unique, immutable slug that members use to locate the tenant\nwhen they sign in (for example, `acme`)."
-          },
           "displayName": {
             "maxLength": 200,
             "minLength": 1,
             "type": "string",
-            "description": "Human-readable display name (e.g. `\"Acme Corporation, Inc.\"`).\n1–200 chars. Not used for auth decisions; shown in admin UIs only."
+            "description": "Human-readable display name (e.g. `\"Acme Corporation, Inc.\"`).\n1–200 chars, and need not be unique. Not used for auth decisions; shown\nin admin UIs only."
           },
           "rootEmail": {
             "maxLength": 254,
@@ -1737,8 +1801,7 @@
       },
       "CreateTenantResponse": {
         "required": [
-          "tenantId",
-          "tenantSlug"
+          "tenantId"
         ],
         "type": "object",
         "properties": {
@@ -1746,10 +1809,6 @@
             "type": "string",
             "description": "The tenant's UUID v7 primary key.",
             "format": "uuid"
-          },
-          "tenantSlug": {
-            "type": "string",
-            "description": "The tenant's human-entered login slug."
           }
         },
         "additionalProperties": false,
@@ -1771,6 +1830,21 @@
       },
       "DeleteAccountRequest": {
         "required": [
+          "accountId"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "description": "The id of the account to delete, as `DescribeAccount` returned it.",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /support-api/DeleteAccount`."
+      },
+      "DescribeAccountRequest": {
+        "required": [
           "email"
         ],
         "type": "object",
@@ -1779,12 +1853,42 @@
             "maxLength": 256,
             "minLength": 0,
             "type": "string",
-            "description": "The address of the account to delete, as the person gave it.",
+            "description": "The account's address, as the person gave it.",
             "format": "email"
           }
         },
         "additionalProperties": false,
-        "description": "Request body for `POST /support-api/DeleteAccount`."
+        "description": "Request body for `POST /support-api/DescribeAccount`."
+      },
+      "DescribeAccountResponse": {
+        "required": [
+          "accountId",
+          "displayName",
+          "liveUserCount"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "description": "The account's id, which `DeleteAccount` takes.",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The person's name, as first given."
+          },
+          "liveUserCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "How many of the account's users are still invited, active or suspended.\n`DeleteAccount` refuses the account until this is zero.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response body of `POST /support-api/DescribeAccount`."
       },
       "DescribeTenantRequest": {
         "required": [
@@ -1950,7 +2054,7 @@
               "null",
               "string"
             ],
-            "description": "Search text, at most 256 characters and at least 2 after trimming.\nEvery word of the query must be the start of a word in the tenant's\ndisplay name or slug, ignoring case, accents, and punctuation, so\n`an binh` finds \"Công ty TNHH An Bình\" and `acme` finds the\nslug `acme-corp`. A complete tenant id finds exactly that tenant.\nReturns the first int ListTenantsRequest.Limit matches in id order, with no\ncursors."
+            "description": "Search text, at most 256 characters and at least 2 after trimming.\nEvery word of the query must be the start of a word in the tenant's\ndisplay name, ignoring case, accents, and punctuation, so\n`an binh` finds \"Công ty TNHH An Bình\" and `acme` finds\n\"Acme-Corp\". A complete tenant id finds exactly that tenant.\nReturns the first int ListTenantsRequest.Limit matches in id order, with no\ncursors."
           }
         },
         "additionalProperties": false,
@@ -2509,7 +2613,6 @@
       "TenantData": {
         "required": [
           "tenantId",
-          "tenantSlug",
           "displayName",
           "status",
           "createdAt",
@@ -2521,10 +2624,6 @@
             "type": "string",
             "description": "The tenant's ID.",
             "format": "uuid"
-          },
-          "tenantSlug": {
-            "type": "string",
-            "description": "The tenant's globally unique login slug."
           },
           "displayName": {
             "type": "string",
@@ -2563,7 +2662,6 @@
       "TenantSummary": {
         "required": [
           "tenantId",
-          "tenantSlug",
           "displayName",
           "status",
           "createdAt",
@@ -2575,10 +2673,6 @@
             "type": "string",
             "description": "The tenant's UUID v7 primary key.",
             "format": "uuid"
-          },
-          "tenantSlug": {
-            "type": "string",
-            "description": "The tenant's globally unique login slug."
           },
           "displayName": {
             "type": "string",

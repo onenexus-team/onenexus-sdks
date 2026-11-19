@@ -10,8 +10,6 @@ import type { TenantStatus } from './tenantStatus';
 export interface TenantData {
   /** The tenant's ID. */
   tenantId: string;
-  /** The tenant's globally unique login slug. */
-  tenantSlug: string;
   /** Human-readable display name set at creation time. */
   displayName: string;
   /** Lifecycle status. */

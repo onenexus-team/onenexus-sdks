@@ -52,9 +52,9 @@ export interface ListTenantsRequest {
   /**
      * Search text, at most 256 characters and at least 2 after trimming.
      * Every word of the query must be the start of a word in the tenant's
-     * display name or slug, ignoring case, accents, and punctuation, so
-     * `an binh` finds "Công ty TNHH An Bình" and `acme` finds the
-     * slug `acme-corp`. A complete tenant id finds exactly that tenant.
+     * display name, ignoring case, accents, and punctuation, so
+     * `an binh` finds "Công ty TNHH An Bình" and `acme` finds
+     * "Acme-Corp". A complete tenant id finds exactly that tenant.
      * Returns the first int ListTenantsRequest.Limit matches in id order, with no
      * cursors.
      * @minLength 2

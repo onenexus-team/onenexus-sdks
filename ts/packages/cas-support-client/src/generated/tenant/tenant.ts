@@ -84,7 +84,7 @@ const describeTenant = (
  * for free.
  *     Lookup and search. tenantIds returns every listed tenant
  * that exists, by primary key; query returns the first
- * limit tenants, in id order, in whose display name or slug every
+ * limit tenants, in id order, in whose display name every
  * word of the text starts a word, ignoring case, accents and punctuation
  * (see TenantSearch). Both return one response without
  * cursors and keep the TenantSummary shape. The query text
