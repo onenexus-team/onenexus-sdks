@@ -43,6 +43,7 @@ node_modules/
 .idea/
 .zed/
 .vscode/
+.claude/
 *.swp
 *.swo
 *~
