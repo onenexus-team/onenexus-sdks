@@ -12,6 +12,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 
 import { CasClient } from '../src/client.js';
 import type {
+    ListMyTenantsResponse,
     ListUsersResponse,
     SuspendUserResponse,
     UnsuspendUserResponse,
@@ -370,27 +371,68 @@ describe('CasClient', () => {
             );
         });
 
-        it('acceptInvitation binds through the same transport', async () => {
+        it('listMyTenants posts an empty body and returns the tenants with ownership', async () => {
+            const response: ListMyTenantsResponse = {
+                tenants: [
+                    {
+                        tenantId: '0193fabc-1234-7def-abcd-1234567890a1',
+                        displayName: 'Acme',
+                        isOwner: true,
+                    },
+                    {
+                        tenantId: '0193fabc-1234-7def-abcd-1234567890a2',
+                        displayName: 'Beta',
+                        isOwner: false,
+                    },
+                ],
+            };
+            let observedBody: unknown;
             server.use(
-                http.post(`${BASE_URL}/api/AcceptInvitation`, () =>
-                    HttpResponse.json({
-                        userId: '0193fabc-1234-7def-abcd-1234567890ab',
-                        tenantId: 'tn_acme',
-                        email: 'a@b.c',
-                        loginUrl: 'https://portal.acme.com/user/login?tenant=tn_acme',
-                    }),
-                ),
+                http.post(`${BASE_URL}/api/ListMyTenants`, async ({ request }) => {
+                    observedBody = await request.json();
+                    return HttpResponse.json(response);
+                }),
             );
 
             const cas = new CasClient({ baseUrl: BASE_URL, credentials: staticCreds() });
 
-            const user = await cas.acceptInvitation({
-                userId: '0193fabc-1234-7def-abcd-1234567890ab',
-                token: 'invite-token-abc',
-                password: 'a-good-password',
+            expect(await cas.listMyTenants()).toEqual(response);
+            expect(observedBody).toEqual({});
+        });
+
+        it('removeUser creates one key per call, reuses it across retries, and resolves on 204', async () => {
+            const firstKey = '0193fabc-1234-7def-abcd-1234567890ab';
+            const secondKey = '0193fabc-1234-7def-abcd-1234567890ac';
+            const randomUUID = vi
+                .spyOn(globalThis.crypto, 'randomUUID')
+                .mockReturnValueOnce(firstKey)
+                .mockReturnValueOnce(secondKey);
+            const req = { userId: '0193fabc-1234-7def-abcd-1234567890ad' };
+            const observedKeys: (string | null)[] = [];
+            const observedBodies: unknown[] = [];
+            server.use(
+                http.post(`${BASE_URL}/api/RemoveUser`, async ({ request }) => {
+                    observedKeys.push(request.headers.get('x-nx1-idempotency-key'));
+                    observedBodies.push(await request.json());
+                    if (observedKeys.length % 2 === 1) {
+                        return HttpResponse.json({ code: 'unavailable' }, { status: 503 });
+                    }
+                    return new HttpResponse(null, { status: 204 });
+                }),
+            );
+
+            const cas = new CasClient({
+                baseUrl: BASE_URL,
+                credentials: staticCreds(),
+                retry: { limit: 1, backoffLimitMs: 0 },
             });
-            expect(user.email).toBe('a@b.c');
-            expect(user.loginUrl).toContain('tn_acme');
+
+            await expect(cas.removeUser(req)).resolves.toBeUndefined();
+            // A repeat is a new call with a new key; CAS answers 204 again.
+            await expect(cas.removeUser(req)).resolves.toBeUndefined();
+            expect(randomUUID).toHaveBeenCalledTimes(2);
+            expect(observedKeys).toEqual([firstKey, firstKey, secondKey, secondKey]);
+            expect(observedBodies).toEqual([req, req, req, req]);
         });
 
         it('binds authorization policy methods to their generated RPC operations', async () => {

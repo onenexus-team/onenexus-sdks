@@ -6,7 +6,6 @@ from kiota_abstractions.request_adapter import RequestAdapter
 from typing import Any, Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from .accept_invitation.accept_invitation_request_builder import AcceptInvitationRequestBuilder
     from .add_service_client_key.add_service_client_key_request_builder import AddServiceClientKeyRequestBuilder
     from .assign_role.assign_role_request_builder import AssignRoleRequestBuilder
     from .assume_s3_role.assume_s3_role_request_builder import AssumeS3RoleRequestBuilder
@@ -19,6 +18,7 @@ if TYPE_CHECKING:
     from .detach_policy_from_role.detach_policy_from_role_request_builder import DetachPolicyFromRoleRequestBuilder
     from .disable_service_client.disable_service_client_request_builder import DisableServiceClientRequestBuilder
     from .get_policy.get_policy_request_builder import GetPolicyRequestBuilder
+    from .list_my_tenants.list_my_tenants_request_builder import ListMyTenantsRequestBuilder
     from .list_policies.list_policies_request_builder import ListPoliciesRequestBuilder
     from .list_policy_attachments.list_policy_attachments_request_builder import ListPolicyAttachmentsRequestBuilder
     from .list_roles.list_roles_request_builder import ListRolesRequestBuilder
@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from .publish_policy.publish_policy_request_builder import PublishPolicyRequestBuilder
     from .remove_role_assignment.remove_role_assignment_request_builder import RemoveRoleAssignmentRequestBuilder
     from .remove_service_client_key.remove_service_client_key_request_builder import RemoveServiceClientKeyRequestBuilder
+    from .remove_user.remove_user_request_builder import RemoveUserRequestBuilder
     from .resend_user_invitation.resend_user_invitation_request_builder import ResendUserInvitationRequestBuilder
     from .suspend_user.suspend_user_request_builder import SuspendUserRequestBuilder
     from .unsuspend_user.unsuspend_user_request_builder import UnsuspendUserRequestBuilder
@@ -48,15 +49,6 @@ class ApiRequestBuilder(BaseRequestBuilder):
         Returns: None
         """
         super().__init__(request_adapter, "{+baseurl}/api", path_parameters)
-    
-    @property
-    def accept_invitation(self) -> AcceptInvitationRequestBuilder:
-        """
-        The AcceptInvitation property
-        """
-        from .accept_invitation.accept_invitation_request_builder import AcceptInvitationRequestBuilder
-
-        return AcceptInvitationRequestBuilder(self.request_adapter, self.path_parameters)
     
     @property
     def add_service_client_key(self) -> AddServiceClientKeyRequestBuilder:
@@ -167,6 +159,15 @@ class ApiRequestBuilder(BaseRequestBuilder):
         return GetPolicyRequestBuilder(self.request_adapter, self.path_parameters)
     
     @property
+    def list_my_tenants(self) -> ListMyTenantsRequestBuilder:
+        """
+        The ListMyTenants property
+        """
+        from .list_my_tenants.list_my_tenants_request_builder import ListMyTenantsRequestBuilder
+
+        return ListMyTenantsRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
     def list_policies(self) -> ListPoliciesRequestBuilder:
         """
         The ListPolicies property
@@ -264,6 +265,15 @@ class ApiRequestBuilder(BaseRequestBuilder):
         from .remove_service_client_key.remove_service_client_key_request_builder import RemoveServiceClientKeyRequestBuilder
 
         return RemoveServiceClientKeyRequestBuilder(self.request_adapter, self.path_parameters)
+    
+    @property
+    def remove_user(self) -> RemoveUserRequestBuilder:
+        """
+        The RemoveUser property
+        """
+        from .remove_user.remove_user_request_builder import RemoveUserRequestBuilder
+
+        return RemoveUserRequestBuilder(self.request_adapter, self.path_parameters)
     
     @property
     def resend_user_invitation(self) -> ResendUserInvitationRequestBuilder:

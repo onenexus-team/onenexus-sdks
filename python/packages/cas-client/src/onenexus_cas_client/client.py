@@ -22,8 +22,6 @@ from onenexus_sdk_core import (
 )
 
 from .generated.cas_generated_client import CasGeneratedClient
-from .generated.models.accept_invitation_request import AcceptInvitationRequest
-from .generated.models.accept_invitation_response import AcceptInvitationResponse
 from .generated.models.add_service_client_key_request import AddServiceClientKeyRequest
 from .generated.models.add_service_client_key_response import AddServiceClientKeyResponse
 from .generated.models.assign_role_request import AssignRoleRequest
@@ -54,6 +52,8 @@ from .generated.models.get_policy_request import GetPolicyRequest
 from .generated.models.get_policy_response import GetPolicyResponse
 from .generated.models.list_authorization_roles_request import ListAuthorizationRolesRequest
 from .generated.models.list_authorization_roles_response import ListAuthorizationRolesResponse
+from .generated.models.list_my_tenants_request import ListMyTenantsRequest
+from .generated.models.list_my_tenants_response import ListMyTenantsResponse
 from .generated.models.list_policies_request import ListPoliciesRequest
 from .generated.models.list_policies_response import ListPoliciesResponse
 from .generated.models.list_policy_attachments_request import ListPolicyAttachmentsRequest
@@ -70,6 +70,7 @@ from .generated.models.publish_policy_response import PublishPolicyResponse
 from .generated.models.remove_role_assignment_request import RemoveRoleAssignmentRequest
 from .generated.models.remove_service_client_key_request import RemoveServiceClientKeyRequest
 from .generated.models.remove_service_client_key_response import RemoveServiceClientKeyResponse
+from .generated.models.remove_user_request import RemoveUserRequest
 from .generated.models.resend_user_invitation_request import ResendUserInvitationRequest
 from .generated.models.suspend_user_request import SuspendUserRequest
 from .generated.models.suspend_user_response import SuspendUserResponse
@@ -200,21 +201,20 @@ class CasClient:
             raise RuntimeError("CAS UnsuspendUser returned no response body")
         return response
 
-    async def accept_invitation(
-        self, request: AcceptInvitationRequest
-    ) -> AcceptInvitationResponse:
-        """
-        Redeems an invitation, sets a password, and activates the account.
+    async def remove_user(self, request: RemoveUserRequest) -> None:
+        """Remove a member from the authenticated caller's tenant for good.
 
-        This endpoint does not require an access token. It accepts the invitation details delivered
-        by email, and an invitation can be used only once. On success, follow `loginUrl` to sign in.
+        Requires ``CAS::RemoveUser`` on the target user's canonical URI. Invited, active and
+        suspended members can be removed: the user becomes ``Deleted`` and loses its role
+        assignments, and a pending invitation is withdrawn. Nothing undoes it; invite the
+        address again to add the person back as a new user. Owners and the caller's own user
+        are refused (409). Removing an already-removed member succeeds without change.
 
-        API operation: POST /api/AcceptInvitation.
+        The SDK creates one idempotency key per call and reuses it across transport retries.
+
+        API operation: ``POST /api/RemoveUser``.
         """
-        response = await self._client.api.accept_invitation.post(request)
-        if response is None:
-            raise RuntimeError("CAS AcceptInvitation returned no response body")
-        return response
+        await self._client.api.remove_user.post(request, _idempotency_request_configuration())
 
     async def list_s3_roles(self) -> ListS3RolesResponse:
         """
@@ -617,6 +617,20 @@ class CasClient:
             raise RuntimeError("CAS UpdateProfile returned no response body")
         return response
 
+    async def list_my_tenants(self) -> ListMyTenantsResponse:
+        """List the tenants the signed-in person can use, by display name.
+
+        The person comes from the access token: every tenant where their account's user is
+        active and the tenant is active is listed, with whether they own it. Switching to one
+        is a new authorization request naming that tenant, which CAS checks again.
+
+        API operation: ``POST /api/ListMyTenants``.
+        """
+        response = await self._client.api.list_my_tenants.post(ListMyTenantsRequest())
+        if response is None:
+            raise RuntimeError("CAS ListMyTenants returned no response body")
+        return response
+
     async def aclose(self) -> None:
         if self._owns_http:
             await self._http_client.aclose()
@@ -629,8 +643,6 @@ class CasClient:
 
 
 __all__ = [
-    "AcceptInvitationRequest",
-    "AcceptInvitationResponse",
     "AddServiceClientKeyRequest",
     "AddServiceClientKeyResponse",
     "AssignRoleRequest",
@@ -659,6 +671,7 @@ __all__ = [
     "GetPolicyResponse",
     "ListAuthorizationRolesRequest",
     "ListAuthorizationRolesResponse",
+    "ListMyTenantsResponse",
     "ListPoliciesRequest",
     "ListPoliciesResponse",
     "ListPolicyAttachmentsRequest",
@@ -675,6 +688,7 @@ __all__ = [
     "RemoveRoleAssignmentRequest",
     "RemoveServiceClientKeyRequest",
     "RemoveServiceClientKeyResponse",
+    "RemoveUserRequest",
     "ResendUserInvitationRequest",
     "SuspendUserRequest",
     "SuspendUserResponse",

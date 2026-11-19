@@ -251,6 +251,41 @@ describe('CasSupportClient', () => {
             },
         );
 
+        it('removeTenantUser creates one key per call, reuses it across retries, and resolves on 204', async () => {
+            const firstKey = '0193fabc-1234-7def-abcd-1234567890ab';
+            const secondKey = '0193fabc-1234-7def-abcd-1234567890ac';
+            const randomUUID = vi
+                .spyOn(globalThis.crypto, 'randomUUID')
+                .mockReturnValueOnce(firstKey)
+                .mockReturnValueOnce(secondKey);
+            const req = { userId: '0193fabc-1234-7def-abcd-1234567890ad' };
+            const observedKeys: (string | null)[] = [];
+            const observedBodies: unknown[] = [];
+            server.use(
+                http.post(`${BASE_URL}/support-api/RemoveTenantUser`, async ({ request }) => {
+                    observedKeys.push(request.headers.get('x-nx1-idempotency-key'));
+                    observedBodies.push(await request.json());
+                    if (observedKeys.length % 2 === 1) {
+                        return HttpResponse.json({ code: 'unavailable' }, { status: 503 });
+                    }
+                    return new HttpResponse(null, { status: 204 });
+                }),
+            );
+
+            const support = new CasSupportClient({
+                baseUrl: BASE_URL,
+                credentials: staticCreds(),
+                retry: { limit: 1, backoffLimitMs: 0 },
+            });
+
+            await expect(support.removeTenantUser(req)).resolves.toBeUndefined();
+            // A repeat is a new call with a new key; CAS answers 204 again.
+            await expect(support.removeTenantUser(req)).resolves.toBeUndefined();
+            expect(randomUUID).toHaveBeenCalledTimes(2);
+            expect(observedKeys).toEqual([firstKey, firstKey, secondKey, secondKey]);
+            expect(observedBodies).toEqual([req, req, req, req]);
+        });
+
         it('resendInvitation POSTs the user ID and returns invitation details', async () => {
             let observedBody: unknown;
             server.use(

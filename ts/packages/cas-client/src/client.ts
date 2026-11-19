@@ -1,8 +1,6 @@
 import { ClientBase, type ClientBaseConfig } from '@onenexus-team/sdk-core';
 
 import type {
-    AcceptInvitationRequest,
-    AcceptInvitationResponse,
     AddServiceClientKeyRequest,
     AddServiceClientKeyResponse,
     AssignRoleRequest,
@@ -29,6 +27,7 @@ import type {
     GetPolicyResponse,
     ListAuthorizationRolesRequest,
     ListAuthorizationRolesResponse,
+    ListMyTenantsResponse,
     ListPoliciesRequest,
     ListPoliciesResponse,
     ListPolicyAttachmentsRequest,
@@ -45,6 +44,7 @@ import type {
     RemoveRoleAssignmentRequest,
     RemoveServiceClientKeyRequest,
     RemoveServiceClientKeyResponse,
+    RemoveUserRequest,
     ResendUserInvitationRequest,
     SuspendUserRequest,
     SuspendUserResponse,
@@ -98,7 +98,7 @@ export type CasRequestOptions = Omit<PlatformMutatorOptions, 'http'>;
 /**
  * Typed client for the Central Auth Service Customer API `/api/*` RPC surface.
  *
- * This is the customer-facing user surface (`CreateUser`, `AcceptInvitation`).
+ * This is the customer-facing user surface (`CreateUser`, `RemoveUser`, `ListMyTenants`).
  * Tenant-management and support operations live in a separate spec and are
  * served by `@onenexus-team/cas-support-client` (`/support-api/*`).
  *
@@ -177,6 +177,18 @@ export class CasClient extends ClientBase {
             this.mutatorOptions(options),
         );
 
+    /**
+     * Lists the tenants the signed-in person can use, by display name, for a tenant switcher.
+     *
+     * The person comes from the access token: every tenant where their account's user is active
+     * and the tenant is active is listed, with whether they own it. Switching to one is a new
+     * authorization request naming that tenant, which CAS checks again.
+     *
+     * @see POST /api/ListMyTenants
+     */
+    listMyTenants = (options?: CasRequestOptions): Promise<ListMyTenantsResponse> =>
+        this.accountProfile.listMyTenants({}, this.mutatorOptions(options));
+
     // -- Tenant user management ----------------------------------------------
 
     /**
@@ -240,18 +252,20 @@ export class CasClient extends ClientBase {
         this.tenantUser.unsuspendUser(req, createIdempotencyHeaders(), this.mutatorOptions(options));
 
     /**
-     * Redeems an invitation, sets a password, and activates the account.
+     * Removes a member from the caller's tenant for good.
      *
-     * This endpoint does not require an access token. It accepts the invitation details delivered by
-     * email, and an invitation can be used only once. On success, follow `loginUrl` to sign in.
+     * Invited, active and suspended members can be removed: the user becomes `Deleted` and loses
+     * its role assignments, and a pending invitation is withdrawn. Nothing undoes it; invite the
+     * address again to add the person back as a new user. Owners and the caller's own user are
+     * refused (409). Repeating the call on a removed member succeeds without change. Automatic
+     * retries reuse the same idempotency key.
      *
-     * @see POST /api/AcceptInvitation
+     * @see POST /api/RemoveUser
      */
-    acceptInvitation = (
-        req: AcceptInvitationRequest,
-        options?: CasRequestOptions,
-    ): Promise<AcceptInvitationResponse> =>
-        this.tenantUser.acceptInvitation(req, this.mutatorOptions(options));
+    removeUser = (req: RemoveUserRequest, options?: CasRequestOptions): Promise<void> =>
+        this.tenantUser
+            .removeUser(req, createIdempotencyHeaders(), this.mutatorOptions(options))
+            .then(() => undefined);
 
     // -- Tenant S3 -----------------------------------------------------------
 

@@ -34,7 +34,7 @@ class CreateUserRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: CreateUserRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[CreateUserResponse]:
         """
-        CAS derives the tenant from the caller's access token. The user stayspending until they redeem the emailed invitation and set a password.
+        CAS derives the tenant from the caller's access token. The user stayspending until they open the emailed invitation and join.
         param body: Request body for `POST /api/CreateUser`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[CreateUserResponse]
@@ -62,7 +62,7 @@ class CreateUserRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: CreateUserRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        CAS derives the tenant from the caller's access token. The user stayspending until they redeem the emailed invitation and set a password.
+        CAS derives the tenant from the caller's access token. The user stayspending until they open the emailed invitation and join.
         param body: Request body for `POST /api/CreateUser`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation

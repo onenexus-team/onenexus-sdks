@@ -89,9 +89,9 @@ profile updates use `/account/profile`. The MLOps spec uses REST routes with pat
 and query parameters; no MLOps SDK package is implemented here yet.
 
 CAS failures use RFC 9457 Problem Details. Successful operations usually return
-JSON, but some, such as `ResendUserInvitation`, return no body. Authenticated
-operations require a CAS bearer token; `AcceptInvitation` is anonymous in the
-API contract, although the SDK client constructors still require credentials.
+JSON, but some, such as `ResendUserInvitation` and `RemoveUser`, return no body.
+Every CAS operation requires a CAS bearer token. Invitations are accepted on
+CAS's own invitation page, not through the API.
 The current CAS specs and generated clients do not use `X-Api-Version`.
 
 Mutation operations that require `X-Nx1-Idempotency-Key` receive a new key from

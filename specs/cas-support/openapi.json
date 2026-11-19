@@ -210,6 +210,105 @@
         ]
       }
     },
+    "/support-api/DeleteAccount": {
+      "post": {
+        "tags": [
+          "SupportAccount"
+        ],
+        "summary": "Deletes a person's account once none of its users is live.",
+        "description": "For a person who asked for their personal data to be deleted, once\nsupport has confirmed it is them. The account goes, and with it its\naddress and sign-in state, so the address no longer appears in CAS's\ntables; the code requests for it go with the next daily clean-up. Its\ndeleted users keep their ids for audit and lose the link and the\nperson's name. Refused while any of its users is invited, active or\nsuspended: remove those from their tenants first.",
+        "operationId": "DeleteAccount",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "The account is deleted.",
+            "content": {
+              "application/json": { }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No account has this address.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A user of the account is still live\n    (`type=https://onenexus.cloud/errors/failed-precondition`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/support-api/EvaluateAuthorization": {
       "post": {
         "tags": [
@@ -1043,7 +1142,7 @@
           "Tenant"
         ],
         "summary": "Suspends an active user. Sign-in, token issuance and refresh, and\nauthorization checks are denied until the user is unsuspended.",
-        "description": "    The user's role assignments are retained and become inert, because\nsign-in and authorization admit only Active users; unsuspending\ntherefore restores the previous access in one change. Live CAS sessions\nend at their next security-stamp validation. Access tokens already\nissued keep a valid signature until they expire, and each region denies\nauthorization once CDC has applied the change.\n    Invited and pending users cannot be suspended: accepting the invitation\nwould make them active again. A caller cannot suspend themselves,\nbecause that would lock them out of the API that undoes it.",
+        "description": "    The user's role assignments are retained and become inert, because\nsign-in and authorization admit only Active users; unsuspending\ntherefore restores the previous access in one change. CAS issues no\nmore tokens for the user; the person's CAS session belongs to their\naccount and is not ended. Access tokens already issued keep a valid\nsignature until they expire, and each region denies authorization once\nCDC has applied the change.\n    Invited and pending users cannot be suspended: accepting the invitation\nwould make them active again. A caller cannot suspend themselves,\nbecause that would lock them out of the API that undoes it.",
         "operationId": "SuspendTenantUser",
         "parameters": [
           {
@@ -1209,6 +1308,96 @@
           },
           "409": {
             "description": "The user is neither suspended nor active\n    (`type=https://onenexus.cloud/errors/failed-precondition`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/support-api/RemoveTenantUser": {
+      "post": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Removes a user of any tenant for good.",
+        "description": "    The user becomes Deleted and loses its role assignments in one\ntransaction. Nothing undoes it: the person is invited again as a new\nuser. The row keeps its id for audit, and its display name until the\nperson's account is deleted; the account and the person's users in other\ntenants are untouched. Removing an invited user revokes the invitation.\n    Owners are removed too, but never the tenant's last active owner; for an\nowner who must lose access now, suspend instead, which can be undone.\nRemoving an owner emails every owner, and the removed one, naming\nOneNexus support. A caller cannot remove their own user. CAS refuses the\nuser's tokens from the commit, each region once CDC has applied the\nchange, and access tokens already issued stay valid until they expire.",
+        "operationId": "RemoveTenantUser",
+        "parameters": [
+          {
+            "name": "X-Nx1-Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-zA-Z0-9_.-]{16,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Request body. Contains the target user id.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveTenantUserRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveTenantUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "The user is removed, or already was.",
+            "content": {
+              "application/json": { }
+            }
+          },
+          "400": {
+            "description": "Validation failure (`type=https://onenexus.cloud/errors/invalid-argument`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No user with that id exists\n    (`type=https://onenexus.cloud/errors/not-found`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The user is the tenant's last active owner, is the\n    caller, or changed during the call\n    (`type=https://onenexus.cloud/errors/failed-precondition`).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1579,6 +1768,23 @@
         },
         "additionalProperties": false,
         "description": "Response body for `POST /api/CreateUser`."
+      },
+      "DeleteAccountRequest": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "maxLength": 256,
+            "minLength": 0,
+            "type": "string",
+            "description": "The address of the account to delete, as the person gave it.",
+            "format": "email"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /support-api/DeleteAccount`."
       },
       "DescribeTenantRequest": {
         "required": [
@@ -1970,6 +2176,21 @@
         },
         "additionalProperties": false,
         "description": "Response for `ProvisionS3DefaultAccount`."
+      },
+      "RemoveTenantUserRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Guid primary key of the user to remove, in any tenant.",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for `POST /support-api/RemoveTenantUser`."
       },
       "ResendInvitationRequest": {
         "required": [
@@ -2542,7 +2763,7 @@
           },
           "emailConfirmed": {
             "type": "boolean",
-            "description": "Whether the user has accepted the invitation and verified their inbox.\n`false` until `AcceptInvitation` succeeds."
+            "description": "Whether the person's account has proved its address. A new invitee's\nis `false` until they join."
           },
           "createdAt": {
             "type": "string",
@@ -2558,7 +2779,7 @@
           "RootUser",
           "Member"
         ],
-        "description": "Distinguishes a tenant's single root user from its ordinary members.\nImmutable once a OneNexusUser row is created."
+        "description": "Distinguishes a tenant's owners from its ordinary members. Only the\ntenant's owner page changes it."
       },
       "UserLifecycleState": {
         "enum": [
@@ -2630,6 +2851,9 @@
   "tags": [
     {
       "name": "CephS3"
+    },
+    {
+      "name": "SupportAccount"
     },
     {
       "name": "SupportAuthorization"

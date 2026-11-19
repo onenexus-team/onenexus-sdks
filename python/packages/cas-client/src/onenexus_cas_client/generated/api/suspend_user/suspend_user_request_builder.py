@@ -34,7 +34,7 @@ class SuspendUserRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: SuspendUserRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[SuspendUserResponse]:
         """
-        Requires `CAS::SuspendUser` on the target user's canonical URI.The tenant is derived from the caller; root, deleted and cross-tenantusers return 404. The tenant root cannot be suspended through this API.Self-suspension is refused. Role assignments are retained. Suspension rotatesthe security stamp atomically with the lifecycle change; sessions end attheir next validation, and regional authorization observes the change afterCDC projection. Already issued access tokens retain valid signatures until expiry.Repeating the operation on a suspended member succeeds without changing stamps.
+        Requires `CAS::SuspendUser` on the target user's canonical URI.The tenant is derived from the caller; owners, deleted and cross-tenantusers return 404. Owners cannot be suspended through this API.Self-suspension is refused. Role assignments are retained. CAS issues nomore tokens for the member in this tenant; the person's CAS session,which belongs to their account, is not ended. Regional authorizationobserves the change after CDC projection. Already issued access tokensretain valid signatures until expiry. Repeating the operation on asuspended member succeeds without changing anything.
         param body: Request body for `POST /api/SuspendUser`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[SuspendUserResponse]
@@ -63,7 +63,7 @@ class SuspendUserRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: SuspendUserRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        Requires `CAS::SuspendUser` on the target user's canonical URI.The tenant is derived from the caller; root, deleted and cross-tenantusers return 404. The tenant root cannot be suspended through this API.Self-suspension is refused. Role assignments are retained. Suspension rotatesthe security stamp atomically with the lifecycle change; sessions end attheir next validation, and regional authorization observes the change afterCDC projection. Already issued access tokens retain valid signatures until expiry.Repeating the operation on a suspended member succeeds without changing stamps.
+        Requires `CAS::SuspendUser` on the target user's canonical URI.The tenant is derived from the caller; owners, deleted and cross-tenantusers return 404. Owners cannot be suspended through this API.Self-suspension is refused. Role assignments are retained. CAS issues nomore tokens for the member in this tenant; the person's CAS session,which belongs to their account, is not ended. Regional authorizationobserves the change after CDC projection. Already issued access tokensretain valid signatures until expiry. Repeating the operation on asuspended member succeeds without changing anything.
         param body: Request body for `POST /api/SuspendUser`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation

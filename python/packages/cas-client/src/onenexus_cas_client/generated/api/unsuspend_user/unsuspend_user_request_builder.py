@@ -34,7 +34,7 @@ class UnsuspendUserRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: UnsuspendUserRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[UnsuspendUserResponse]:
         """
-        Requires `CAS::UnsuspendUser` on the target user's canonical URI.The tenant is derived from the caller; root, deleted and cross-tenantusers return 404. Only suspended or already-active members are accepted;pending, invited, provisioned and deprovisioned users cannot be activated here.Existing role assignments become usable again. Repeating the operation onan active member succeeds without changing stamps. Restoring the memberdoes not reactivate a suspended tenant or revive revoked sessions.
+        Requires `CAS::UnsuspendUser` on the target user's canonical URI.The tenant is derived from the caller; root, deleted and cross-tenantusers return 404. Only suspended or already-active members are accepted;pending, invited, provisioned and deprovisioned users cannot be activated here.Existing role assignments become usable again. Repeating the operation onan active member succeeds without changing anything. Restoring the memberdoes not reactivate a suspended tenant.
         param body: Request body for `POST /api/UnsuspendUser`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[UnsuspendUserResponse]
@@ -63,7 +63,7 @@ class UnsuspendUserRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: UnsuspendUserRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        Requires `CAS::UnsuspendUser` on the target user's canonical URI.The tenant is derived from the caller; root, deleted and cross-tenantusers return 404. Only suspended or already-active members are accepted;pending, invited, provisioned and deprovisioned users cannot be activated here.Existing role assignments become usable again. Repeating the operation onan active member succeeds without changing stamps. Restoring the memberdoes not reactivate a suspended tenant or revive revoked sessions.
+        Requires `CAS::UnsuspendUser` on the target user's canonical URI.The tenant is derived from the caller; root, deleted and cross-tenantusers return 404. Only suspended or already-active members are accepted;pending, invited, provisioned and deprovisioned users cannot be activated here.Existing role assignments become usable again. Repeating the operation onan active member succeeds without changing anything. Restoring the memberdoes not reactivate a suspended tenant.
         param body: Request body for `POST /api/UnsuspendUser`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation

@@ -16,6 +16,7 @@ import type {
     ListTenantUsersRequest,
     ListTenantUsersResponse,
     ProvisionS3DefaultAccountResponse,
+    RemoveTenantUserRequest,
     ResendInvitationRequest,
     ResendInvitationResponse,
     S3DefaultAccountResponse,
@@ -298,6 +299,26 @@ export class CasSupportClient extends ClientBase {
             createIdempotencyHeaders(),
             this.mutatorOptions(options),
         );
+
+    /**
+     * Removes a user of any tenant for good, owners included.
+     *
+     * The user becomes `Deleted` and loses its role assignments, and a pending invitation is
+     * revoked. Nothing undoes it: the person is invited again as a new user. The tenant's last
+     * active owner and the caller's own user are refused (409); to cut off an owner who must lose
+     * access now, suspend instead, which can be undone. Removing an owner emails every owner, and
+     * the removed one, naming OneNexus support. Repeating the call on a removed user succeeds
+     * without change. Automatic retries reuse the same idempotency key.
+     *
+     * @see POST /support-api/RemoveTenantUser
+     */
+    removeTenantUser = (
+        req: RemoveTenantUserRequest,
+        options?: CasSupportRequestOptions,
+    ): Promise<void> =>
+        this.tenant
+            .removeTenantUser(req, createIdempotencyHeaders(), this.mutatorOptions(options))
+            .then(() => undefined);
 
     // -- Authorization diagnostics -----------------------------------------
 

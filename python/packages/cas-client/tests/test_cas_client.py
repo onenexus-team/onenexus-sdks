@@ -33,6 +33,7 @@ from onenexus_cas_client import (
     PublishPolicyRequest,
     RemoveRoleAssignmentRequest,
     RemoveServiceClientKeyRequest,
+    RemoveUserRequest,
     ResendUserInvitationRequest,
     SuspendUserRequest,
     SuspendUserResponse,
@@ -219,6 +220,38 @@ async def test_user_lifecycle_methods_route_through_kiota(
     assert json.loads(request.content) == {"userId": str(user_id)}
     assert result.user_id == user_id
     assert result.status is status
+
+
+async def test_remove_user_and_list_my_tenants_route_through_kiota() -> None:
+    captured: list[httpx.Request] = []
+    user_id = UUID("0193fabc-1234-7def-abcd-1234567890ab")
+    tenant_id = "0193fabc-1234-7def-abcd-1234567890a1"
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        if request.url.path == "/api/RemoveUser":
+            return httpx.Response(204)
+        return httpx.Response(
+            200,
+            json={"tenants": [{"tenantId": tenant_id, "displayName": "Acme", "isOwner": True}]},
+        )
+
+    async with _client(httpx.MockTransport(handler)) as cas:
+        removed = await cas.remove_user(RemoveUserRequest(user_id=user_id))
+        tenants = await cas.list_my_tenants()
+
+    assert removed is None
+    remove, listing = captured
+    assert remove.url.path == "/api/RemoveUser"
+    assert remove.headers["authorization"] == "Bearer at-test"
+    assert IDEMPOTENCY_KEY_PATTERN.fullmatch(remove.headers["x-nx1-idempotency-key"])
+    assert json.loads(remove.content) == {"userId": str(user_id)}
+    assert listing.url.path == "/api/ListMyTenants"
+    assert json.loads(listing.content) == {}
+    assert tenants.tenants is not None
+    assert [(str(t.tenant_id), t.display_name, t.is_owner) for t in tenants.tenants] == [
+        (tenant_id, "Acme", True)
+    ]
 
 
 @pytest.mark.parametrize("operation", ["SuspendUser", "UnsuspendUser"])
@@ -611,7 +644,7 @@ async def test_policy_and_profile_methods_route_through_kiota() -> None:
     assert profile.display_name == "Updated User"
 
 
-@pytest.mark.parametrize("operation", ["CreateUser", "SuspendUser", "UnsuspendUser"])
+@pytest.mark.parametrize("operation", ["CreateUser", "SuspendUser", "UnsuspendUser", "RemoveUser"])
 @pytest.mark.parametrize("retry_status", [429, 503, 504])
 async def test_idempotency_key_is_reused_when_kiota_retries(
     monkeypatch: pytest.MonkeyPatch, operation: str, retry_status: int
@@ -672,13 +705,16 @@ async def test_idempotency_key_is_reused_when_kiota_retries(
         create_request = CreateUserRequest(email="a@b.c", display_name="A B")
         suspend_request = SuspendUserRequest(user_id=user_id)
         unsuspend_request = UnsuspendUserRequest(user_id=user_id)
+        remove_request = RemoveUserRequest(user_id=user_id)
         for _ in range(2):
             if operation == "CreateUser":
                 await cas.create_user(create_request)
             elif operation == "SuspendUser":
                 await cas.suspend_user(suspend_request)
-            else:
+            elif operation == "UnsuspendUser":
                 await cas.unsuspend_user(unsuspend_request)
+            else:
+                await cas.remove_user(remove_request)
 
     first_key, second_key = UUID(int=1).hex, UUID(int=2).hex
     assert uuid_calls == 2
