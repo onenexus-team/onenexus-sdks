@@ -34,6 +34,8 @@ export * from './createTenantResponse';
 export * from './createUserResponse';
 export * from './deleteAccountHeaders';
 export * from './deleteAccountRequest';
+export * from './describeAccountRequest';
+export * from './describeAccountResponse';
 export * from './describeTenantRequest';
 export * from './describeTenantResponse';
 export * from './emptyS3Request';

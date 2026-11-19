@@ -11,16 +11,9 @@
  */
 export interface CreateTenantRequest {
   /**
-     * Globally unique, immutable slug that members use to locate the tenant
-     * when they sign in (for example, `acme`).
-     * @minLength 1
-     * @maxLength 54
-     * @pattern ^(?!(?:onenexus(?:-|$)|platform$|system$|admin$))[a-z0-9][a-z0-9_-]{0,53}$
-     */
-  tenantSlug: string;
-  /**
      * Human-readable display name (e.g. `"Acme Corporation, Inc."`).
-     * 1–200 chars. Not used for auth decisions; shown in admin UIs only.
+     * 1–200 chars, and need not be unique. Not used for auth decisions; shown
+     * in admin UIs only.
      * @minLength 1
      * @maxLength 200
      */

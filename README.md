@@ -127,9 +127,9 @@ async def invite_user(credentials: Credentials) -> CreateUserResponse:
 ```
 
 Tenant creation belongs to the TypeScript `CasSupportClient.createTenant()`
-operation at `/support-api/CreateTenant`. Its request contains `tenantSlug`,
-`displayName`, `rootEmail`, and `rootDisplayName`. There is currently no Python
-CAS Support package.
+operation at `/support-api/CreateTenant`. Its request contains `displayName`,
+`rootEmail`, and `rootDisplayName`; tenants have no slug, and two may share a
+name. There is currently no Python CAS Support package.
 
 ### OpenAPI & Code generation
 To make client development quick, we utilize OpenAPI specs and generator tools to generate client SDK for the services.

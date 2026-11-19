@@ -13,8 +13,6 @@ import type { TenantStatus } from './tenantStatus';
 export interface TenantSummary {
   /** The tenant's UUID v7 primary key. */
   tenantId: string;
-  /** The tenant's globally unique login slug. */
-  tenantSlug: string;
   /** Human-readable display name set at creation time. */
   displayName: string;
   /** Lifecycle status. */

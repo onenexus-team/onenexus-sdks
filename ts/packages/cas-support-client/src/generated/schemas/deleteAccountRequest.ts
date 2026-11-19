@@ -10,10 +10,6 @@
  * Request body for `POST /support-api/DeleteAccount`.
  */
 export interface DeleteAccountRequest {
-  /**
-     * The address of the account to delete, as the person gave it.
-     * @minLength 0
-     * @maxLength 256
-     */
-  email: string;
+  /** The id of the account to delete, as `DescribeAccount` returned it. */
+  accountId: string;
 }
