@@ -16,10 +16,4 @@ export interface TenantData {
   status: TenantStatus;
   /** UTC instant when the tenant row was created. */
   createdAt: string;
-  /**
-     * Live count of OneNexusUser rows belonging to this
-     * tenant at read time. Not cached.
-     * @pattern ^-?(?:0|[1-9]\d*)$
-     */
-  userCount: number | string;
 }

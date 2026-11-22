@@ -88,7 +88,6 @@ describe('CasSupportClient', () => {
                             tenantId: '0193fabc-1234-7def-abcd-1234567890ab',
                             displayName: 'Acme Inc',
                             status: 1,
-                            userCount: 3,
                             createdAt: '2026-05-13T10:00:00Z',
                         },
                     }),
@@ -113,7 +112,7 @@ describe('CasSupportClient', () => {
             const tenant = await support.describeTenant({
                 tenantId: '0193fabc-1234-7def-abcd-1234567890ab',
             });
-            expect(tenant.data.userCount).toBe(3);
+            expect(tenant.data.displayName).toBe('Acme Inc');
 
             const created = await support.addTenantUser({
                 tenantId: '0193fabc-1234-7def-abcd-1234567890ac',
