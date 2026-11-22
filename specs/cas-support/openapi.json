@@ -2615,8 +2615,7 @@
           "tenantId",
           "displayName",
           "status",
-          "createdAt",
-          "userCount"
+          "createdAt"
         ],
         "type": "object",
         "properties": {
@@ -2637,15 +2636,6 @@
             "type": "string",
             "description": "UTC instant when the tenant row was created.",
             "format": "date-time"
-          },
-          "userCount": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "description": "Live count of OneNexusUser rows belonging to this\ntenant at read time. Not cached.",
-            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -2664,8 +2654,7 @@
           "tenantId",
           "displayName",
           "status",
-          "createdAt",
-          "userCount"
+          "createdAt"
         ],
         "type": "object",
         "properties": {
@@ -2686,15 +2675,6 @@
             "type": "string",
             "description": "UTC instant when the tenant row was created.",
             "format": "date-time"
-          },
-          "userCount": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "description": "Live count of OneNexusUser rows belonging to this\ntenant at read time. Not cached.",
-            "format": "int32"
           }
         },
         "additionalProperties": false,
