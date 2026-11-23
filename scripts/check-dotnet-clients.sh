@@ -15,14 +15,14 @@ dotnet restore "$solution" --locked-mode
 dotnet test --solution "$solution" --no-restore -c Release
 dotnet pack "$solution" --no-restore -c Release -p:Version="$version" -p:PackageOutputPath="$out"
 
-# Run all three test projects in an application workspace with no SDK source or cached OneNexus packages.
+# Run the client test projects in an application workspace with no SDK source or cached OneNexus packages.
 consumer="$(mktemp -d)"
 trap 'rm -rf "$consumer"' EXIT
 mkdir -p "$consumer/dotnet/tests/Shared" "$consumer/specs"
 cp global.json "$consumer/"
 cp dotnet/Directory.Packages.props "$consumer/dotnet/"
 cp dotnet/tests/Shared/*.cs "$consumer/dotnet/tests/Shared/"
-cp -R specs/cas specs/cas-support "$consumer/specs/"
+cp -R specs/cas specs/cas-support specs/mlops "$consumer/specs/"
 export NUGET_PACKAGES="$consumer/packages" ONENEXUS_LOCAL_NUGET="$out"
 for project in dotnet/tests/OneNexus.Sdk.*.Tests; do
   mkdir -p "$consumer/$project"

@@ -12,15 +12,18 @@
   <ItemGroup Condition="'$(PackageUnderTest)' == ''">
     <ProjectReference Include="../../src/OneNexus.Sdk.Cas/OneNexus.Sdk.Cas.csproj" />
     <ProjectReference Include="../../src/OneNexus.Sdk.Cas.Support/OneNexus.Sdk.Cas.Support.csproj" />
+    <ProjectReference Include="../../src/OneNexus.Sdk.MLOps/OneNexus.Sdk.MLOps.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(PackageUnderTest)' != ''">
     <PackageReference Include="OneNexus.Sdk.Cas" />
     <PackageReference Include="OneNexus.Sdk.Cas.Support" />
+    <PackageReference Include="OneNexus.Sdk.MLOps" />
   </ItemGroup>
   <ItemGroup>
     <TrimmerRootAssembly Include="OneNexus.Sdk.Core" />
     <TrimmerRootAssembly Include="OneNexus.Sdk.Cas" />
     <TrimmerRootAssembly Include="OneNexus.Sdk.Cas.Support" />
+    <TrimmerRootAssembly Include="OneNexus.Sdk.MLOps" />
     <Compile Include="../Shared/TestHandler.cs" Link="Shared/TestHandler.cs" />
   </ItemGroup>
 </Project>

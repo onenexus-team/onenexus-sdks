@@ -85,8 +85,8 @@ Content-Type: application/json
 
 The committed OpenAPI specs define each operation's path, request, response, and
 required headers. CAS support operations use `/support-api/*`, and account
-profile updates use `/account/profile`. The MLOps spec uses REST routes with path
-and query parameters; no MLOps SDK package is implemented here yet.
+profile updates use `/account/profile`. The MLOps client uses public RPC paths under `/api/v1/<Domain>/<Operation>`,
+plus the GET routes in `specs/mlops/openapi.json`.
 
 CAS failures use RFC 9457 Problem Details. Successful operations usually return
 JSON, but some, such as `ResendUserInvitation` and `RemoveUser`, return no body.
@@ -196,7 +196,7 @@ builds and tests every language before any SDK package is published.
 |---|---|
 | Python SDKs and logging wheel | GitHub Release assets |
 | TypeScript SDKs and logging package | GitHub npm registry and Release assets |
-| .NET core, CAS, CAS Support and logging packages | GitHub NuGet registry and Release assets |
+| .NET core, CAS, CAS Support, MLOps and logging packages | GitHub NuGet registry and Release assets |
 | Go logging module | Automatic `go/packages/observability/vX.Y.Z` tag at the SDK commit and Release ZIP |
 
 PR/main checks use the same build workflow without publishing. Existing releases are retained.

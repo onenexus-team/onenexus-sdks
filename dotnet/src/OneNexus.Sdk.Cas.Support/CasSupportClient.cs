@@ -15,6 +15,7 @@ public sealed class CasSupportClient : IDisposable
     /// <summary>Connects to a CAS service with application-provided credentials.</summary>
     public CasSupportClient(Uri baseUrl, IAccessTokenCredential credentials, SdkClientOptions? options = null)
     {
+        ArgumentNullException.ThrowIfNull(credentials);
         _transport = new ServiceTransport(baseUrl, credentials, options);
         _api = new CasSupportGeneratedClient(_transport.Adapter);
     }

@@ -18,7 +18,7 @@ EXPECTED = {
         "onenexus_observability_python",
     ),
     "typescript": ("sdk-core", "cas-client", "cas-support-client", "observability"),
-    "dotnet": ("OneNexus.Sdk.Core", "OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support", "OneNexus.Observability"),
+    "dotnet": ("OneNexus.Sdk.Core", "OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support", "OneNexus.Sdk.MLOps", "OneNexus.Observability"),
     "go": ("observability",),
 }
 
@@ -84,9 +84,9 @@ def verify(language, version, directory):
             dependencies = {
                 d.attrib["id"]: d.attrib["version"] for d in m.findall(".//{*}dependency")
             }
-            if package in {"OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support"}:
+            if package in {"OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support", "OneNexus.Sdk.MLOps"}:
                 if dependencies.get("OneNexus.Sdk.Core") != f"[{version}]":
-                    raise ValueError("cas_client_requires_exact_core_version")
+                    raise ValueError("client_requires_exact_core_version")
             if package == "OneNexus.Sdk.Core":
                 for dep, constraint in dependencies.items():
                     if (

@@ -16,6 +16,7 @@ public sealed class CasClient : IDisposable
     /// <summary>Connects to a CAS service with application-provided credentials.</summary>
     public CasClient(Uri baseUrl, IAccessTokenCredential credentials, SdkClientOptions? options = null)
     {
+        ArgumentNullException.ThrowIfNull(credentials);
         _transport = new ServiceTransport(baseUrl, credentials, options);
         _api = new CasGeneratedClient(_transport.Adapter);
         _s3Route = new ServiceTransport.TokenRoute(token => CasRouting.ResolveAssumeS3RoleBaseUrl(baseUrl, token));

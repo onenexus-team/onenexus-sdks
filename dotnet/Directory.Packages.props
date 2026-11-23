@@ -11,6 +11,7 @@
   <ItemGroup Condition="'$(PackageUnderTest)' != ''">
     <PackageVersion Include="OneNexus.Sdk.Cas" Version="[$(PackageUnderTest)]" />
     <PackageVersion Include="OneNexus.Sdk.Cas.Support" Version="[$(PackageUnderTest)]" />
+    <PackageVersion Include="OneNexus.Sdk.MLOps" Version="[$(PackageUnderTest)]" />
     <PackageVersion Include="OneNexus.Sdk.Core" Version="[$(PackageUnderTest)]" />
   </ItemGroup>
 </Project>

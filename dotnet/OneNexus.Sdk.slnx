@@ -8,11 +8,13 @@
     <Project Path="src/OneNexus.Sdk.Cas/OneNexus.Sdk.Cas.csproj" />
     <Project Path="src/OneNexus.Sdk.Cas.Support/OneNexus.Sdk.Cas.Support.csproj" />
     <Project Path="src/OneNexus.Sdk.Core/OneNexus.Sdk.Core.csproj" />
+    <Project Path="src/OneNexus.Sdk.MLOps/OneNexus.Sdk.MLOps.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/OneNexus.Sdk.Cas.Support.Tests/OneNexus.Sdk.Cas.Support.Tests.csproj" />
     <Project Path="tests/OneNexus.Sdk.Cas.Tests/OneNexus.Sdk.Cas.Tests.csproj" />
     <Project Path="tests/OneNexus.Sdk.Core.Tests/OneNexus.Sdk.Core.Tests.csproj" />
+    <Project Path="tests/OneNexus.Sdk.MLOps.Tests/OneNexus.Sdk.MLOps.Tests.csproj" />
     <Project Path="tests/OneNexus.Sdk.NativeAotProbe/OneNexus.Sdk.NativeAotProbe.csproj" />
   </Folder>
 </Solution>

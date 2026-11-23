@@ -12,6 +12,8 @@ using OneNexus.Sdk.Cas;
 using OneNexus.Sdk.Cas.Models;
 using OneNexus.Sdk.Cas.Support;
 using OneNexus.Sdk.Core;
+using OneNexus.Sdk.MLOps;
+using OneNexus.Sdk.MLOps.Models;
 using OneNexus.Sdk.Tests;
 
 namespace OneNexus.Sdk.NativeAotProbe;
@@ -50,6 +52,13 @@ internal static class Program
             throw new InvalidOperationException("Failed to read the support response.");
         }
 
+        using var mlops = new MLOpsClient(new Uri("https://mlops.example.test"), credentials, options);
+        ListResponse_DatasetSummaryResponse_ datasets = await mlops.ListDatasetsAsync(new RpcListDatasetsRequest { Name = "training" });
+        if (datasets.TotalPages != 1 || datasets.Items?.Single().Name != "training")
+        {
+            throw new InvalidOperationException("Failed to read the MLOps dataset page.");
+        }
+
         try
         {
             await cas.ListUsersAsync();
@@ -58,7 +67,7 @@ internal static class Program
         catch (PlatformException error) when (error.StatusCode == HttpStatusCode.BadRequest
             && error.Code == "invalid_argument" && error.FieldErrors["name"].Single() == "required")
         {
-            Console.WriteLine("Native AOT passed for CAS, CAS Support, credentials and Problem Details.");
+            Console.WriteLine("Native AOT passed for CAS, CAS Support, MLOps, credentials and Problem Details.");
         }
     }
 
@@ -99,6 +108,15 @@ internal static class Program
                 break;
             case "/support-api/ListTenants" when request.Headers.Authorization?.Parameter == "service":
                 return TestHandler.Json("""{"items":[{"displayName":"Example"}]}""");
+            case "/api/v1/DataHub/ListDatasets" when request.Headers.Authorization?.Parameter == "user":
+                using (var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken)))
+                {
+                    if (body.RootElement.GetProperty("name").GetString() == "training")
+                    {
+                        return TestHandler.Json("""{"items":[{"name":"training"}],"total_pages":1}""");
+                    }
+                }
+                break;
             case "/api/ListUsers":
                 return TestHandler.Json("""{"type":"https://onenexus.cloud/errors/invalid-argument","errors":{"name":["required"]}}""",
                     HttpStatusCode.BadRequest, "application/problem+json");

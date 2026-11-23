@@ -66,7 +66,7 @@ class ReleaseTests(unittest.TestCase):
             with self.subTest(core=core_range, runtime=runtime_range):
                 for name in artifacts.EXPECTED["dotnet"]:
                     dependency = ""
-                    if name in {"OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support"}:
+                    if name in {"OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support", "OneNexus.Sdk.MLOps"}:
                         dependency = f'<dependency id="OneNexus.Sdk.Core" version="{core_range}" />'
                     elif name == "OneNexus.Sdk.Core":
                         dependency = f'<dependency id="Microsoft.Kiota.Abstractions" version="{runtime_range}" />'
@@ -77,7 +77,7 @@ class ReleaseTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, error):
                         artifacts.verify("dotnet", version, self.root)
                 else:
-                    self.assertEqual(artifacts.verify("dotnet", version, self.root), 4)
+                    self.assertEqual(artifacts.verify("dotnet", version, self.root), 5)
 
     def test_publication_requires_all_language_builds(self):
         release = (ROOT / ".github/workflows/sdk-release.yml").read_text()

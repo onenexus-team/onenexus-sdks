@@ -11,7 +11,7 @@ Guidance for AI coding agents working in the standalone OneNexus SDK repository.
 - `python/` is a `uv` workspace for Python SDK packages.
 - `ts/` is a `pnpm` workspace for TypeScript SDK packages.
 - `go/packages/observability/` is the opt-in Go `slog` and trace-context module. Run `bash scripts/check-go-observability.sh`.
-- `dotnet/OneNexus.Sdk.slnx` groups the .NET service clients and credentials under `src/`, with corresponding projects under `tests/`. Run `bash scripts/check-dotnet-clients.sh`.
+- `dotnet/OneNexus.Sdk.slnx` groups the .NET CAS, CAS Support and MLOps clients and their shared credentials under `src/`, with corresponding projects under `tests/`. Run `bash scripts/check-dotnet-clients.sh`.
 - `dotnet/packages/observability/` contains the self-contained `ILogger` package, source, unit tests and local integration probes; run `bash scripts/check-dotnet-observability.sh`.
 
 ## Core rules

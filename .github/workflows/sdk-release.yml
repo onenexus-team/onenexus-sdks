@@ -98,7 +98,7 @@ jobs:
           NUGET_AUTH_TOKEN: ${{ github.token }}
           SDK_VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          for name in OneNexus.Sdk.Core OneNexus.Sdk.Cas OneNexus.Sdk.Cas.Support OneNexus.Observability; do
+          for name in OneNexus.Sdk.Core OneNexus.Sdk.Cas OneNexus.Sdk.Cas.Support OneNexus.Sdk.MLOps OneNexus.Observability; do
             dotnet nuget push ".artifacts/publish/$name.$SDK_VERSION.nupkg" \
               --api-key "$NUGET_AUTH_TOKEN" --source https://nuget.pkg.github.com/onenexus-team/index.json
           done

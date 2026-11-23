@@ -20,6 +20,7 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <InternalsVisibleTo Include="OneNexus.Sdk.Cas" />
     <InternalsVisibleTo Include="OneNexus.Sdk.Cas.Support" />
+    <InternalsVisibleTo Include="OneNexus.Sdk.MLOps" />
     <None Update="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 </Project>

@@ -74,6 +74,12 @@
           "Microsoft.Kiota.Serialization.Json": "[2.1.2, )"
         }
       },
+      "onenexus.sdk.mlops": {
+        "type": "Project",
+        "dependencies": {
+          "OneNexus.Sdk.Core": "[0.0.5, )"
+        }
+      },
       "Microsoft.IdentityModel.JsonWebTokens": {
         "type": "CentralTransitive",
         "requested": "[8.23.0, )",
