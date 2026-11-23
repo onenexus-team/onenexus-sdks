@@ -93,8 +93,10 @@ public sealed class TransportTests
     public void RestrictsCleartextServiceAndIssuerUrlsToLoopback()
     {
         var remote = new Uri("http://cas.example.test");
-        Assert.ThrowsExactly<ArgumentException>(() => new CasClient(remote, WireTests.Token()));
-        Assert.ThrowsExactly<ArgumentException>(() => new OidcOptions(remote));
+        Assert.AreEqual("baseUrl", Assert.ThrowsExactly<ArgumentException>(() => new CasClient(remote, WireTests.Token())).ParamName);
+        Assert.AreEqual("baseUrl", Assert.ThrowsExactly<ArgumentNullException>(() => new CasClient(null!, WireTests.Token())).ParamName);
+        Assert.AreEqual("issuer", Assert.ThrowsExactly<ArgumentException>(() => new OidcOptions(remote)).ParamName);
+        Assert.AreEqual("issuer", Assert.ThrowsExactly<ArgumentNullException>(() => new OidcOptions(null!)).ParamName);
         var loopback = new Uri("http://127.0.0.1:8080");
         using var local = new CasClient(loopback, WireTests.Token());
         Assert.AreEqual(loopback, new OidcOptions(loopback).Issuer);

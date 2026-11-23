@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 using System.Security.Authentication;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -47,13 +48,13 @@ internal sealed class OidcClient
         _tokenEndpoint = options.TokenEndpoint is null ? null : ValidateEndpoint(options.TokenEndpoint);
     }
 
-    internal static Uri ValidateEndpoint(Uri uri)
+    internal static Uri ValidateEndpoint(Uri uri, [CallerArgumentExpression(nameof(uri))] string? paramName = null)
     {
-        ArgumentNullException.ThrowIfNull(uri);
+        ArgumentNullException.ThrowIfNull(uri, paramName);
         if (!uri.IsAbsoluteUri || (uri.Scheme != Uri.UriSchemeHttps && !(uri.IsLoopback && uri.Scheme == Uri.UriSchemeHttp))
             || uri.UserInfo.Length != 0 || uri.Fragment.Length != 0)
         {
-            throw new ArgumentException("Use an absolute HTTPS endpoint or a loopback HTTP endpoint.", nameof(uri));
+            throw new ArgumentException("Use an absolute HTTPS endpoint or a loopback HTTP endpoint.", paramName);
         }
 
         return uri;
