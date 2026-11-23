@@ -100,7 +100,7 @@ internal sealed class OidcClient
         }
 
         response.EnsureSuccessStatusCode();
-        JsonElement json = await response.Content.ReadFromJsonAsync<JsonElement>().ConfigureAwait(false);
+        JsonElement json = await response.Content.ReadFromJsonAsync(SdkJsonContext.Default.JsonElement).ConfigureAwait(false);
         var value = json.GetProperty("access_token").GetString();
         if (string.IsNullOrWhiteSpace(value) || (json.TryGetProperty("token_type", out JsonElement type)
             && !string.Equals(type.GetString(), "Bearer", StringComparison.OrdinalIgnoreCase)))
@@ -128,7 +128,7 @@ internal sealed class OidcClient
     private async Task<Uri> DiscoverEndpointAsync()
     {
         var url = new Uri(_options.Issuer.AbsoluteUri.TrimEnd('/') + "/.well-known/openid-configuration");
-        JsonElement metadata = await _http.GetFromJsonAsync<JsonElement>(url).ConfigureAwait(false);
+        JsonElement metadata = await _http.GetFromJsonAsync(url, SdkJsonContext.Default.JsonElement).ConfigureAwait(false);
         if (metadata.GetProperty("issuer").GetString() != _options.Issuer.OriginalString)
         {
             throw new AuthenticationException("The discovery issuer does not match the configured issuer.");
@@ -141,7 +141,7 @@ internal sealed class OidcClient
     {
         try
         {
-            return await response.Content.ReadFromJsonAsync<JsonDocument>().ConfigureAwait(false);
+            return await response.Content.ReadFromJsonAsync(SdkJsonContext.Default.JsonDocument).ConfigureAwait(false);
         }
         catch (JsonException)
         {

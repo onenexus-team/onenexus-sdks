@@ -21,7 +21,7 @@ public sealed class PlatformException : HttpRequestException
         Instance = problem.Instance;
         Code = problem.Code ?? CodeFromType(problem.Type);
         RequestId = problem.RequestId;
-        FieldErrors = problem.Errors ?? new Dictionary<string, string[]>();
+        FieldErrors = problem.Errors ?? [];
     }
 
     /// <summary>RFC 9457 problem type URI.</summary>
@@ -59,7 +59,7 @@ public sealed class PlatformException : HttpRequestException
             Problem? problem;
             try
             {
-                problem = await response.Content.ReadFromJsonAsync<Problem>(cancellationToken).ConfigureAwait(false);
+                problem = await response.Content.ReadFromJsonAsync(SdkJsonContext.Default.Problem, cancellationToken).ConfigureAwait(false);
             }
             catch (JsonException)
             {
@@ -80,7 +80,7 @@ public sealed class PlatformException : HttpRequestException
         return type?.StartsWith(prefix, StringComparison.Ordinal) == true ? type[prefix.Length..].Replace('-', '_') : null;
     }
 
-    private sealed class Problem
+    internal sealed class Problem
     {
         public string? Type { get; init; }
         public string? Title { get; init; }

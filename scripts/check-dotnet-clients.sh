@@ -30,3 +30,12 @@ for project in dotnet/tests/OneNexus.Sdk.*.Tests; do
   dotnet restore "$consumer/$project" -p:PackageUnderTest="$version" --configfile "$root/scripts/dotnet-package-probe.NuGet.Config"
   dotnet run --project "$consumer/$project" --no-restore -c Release -p:PackageUnderTest="$version" -- --timeout 2m
 done
+
+# Compile and execute a native consumer. Root all SDK assemblies so the compiler also
+# checks operations outside the smoke scenario. Use the locally packed NuGets.
+probe=dotnet/tests/OneNexus.Sdk.NativeAotProbe
+mkdir -p "$consumer/$probe"
+cp "$probe"/*.cs "$probe"/*.csproj "$consumer/$probe/"
+dotnet publish "$consumer/$probe" --use-current-runtime -c Release -p:PublishAot=true -p:PackageUnderTest="$version" \
+  -p:RestoreConfigFile="$root/scripts/dotnet-package-probe.NuGet.Config" -o "$consumer/native"
+"$consumer/native/OneNexus.Sdk.NativeAotProbe"

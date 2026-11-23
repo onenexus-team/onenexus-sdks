@@ -13,5 +13,6 @@
     <Project Path="tests/OneNexus.Sdk.Cas.Support.Tests/OneNexus.Sdk.Cas.Support.Tests.csproj" />
     <Project Path="tests/OneNexus.Sdk.Cas.Tests/OneNexus.Sdk.Cas.Tests.csproj" />
     <Project Path="tests/OneNexus.Sdk.Core.Tests/OneNexus.Sdk.Core.Tests.csproj" />
+    <Project Path="tests/OneNexus.Sdk.NativeAotProbe/OneNexus.Sdk.NativeAotProbe.csproj" />
   </Folder>
 </Solution>
