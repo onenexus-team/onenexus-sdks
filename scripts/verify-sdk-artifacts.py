@@ -18,7 +18,7 @@ EXPECTED = {
         "onenexus_observability_python",
     ),
     "typescript": ("sdk-core", "cas-client", "cas-support-client", "observability"),
-    "dotnet": ("OneNexus.Observability",),
+    "dotnet": ("OneNexus.Sdk.Core", "OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support", "OneNexus.Sdk.MLOps", "OneNexus.Observability"),
     "go": ("observability",),
 }
 
@@ -32,7 +32,7 @@ def verify(language, version, directory):
         "typescript": {
             f"onenexus-team-{n}-{version}.tgz" for n in EXPECTED["typescript"]
         },
-        "dotnet": {f"OneNexus.Observability.{version}.nupkg"},
+        "dotnet": {f"{n}.{version}.nupkg" for n in EXPECTED["dotnet"]},
         "go": {f"observability-go-v{version}.zip"},
     }[language]
     if {p.name for p in root.iterdir()} != expected:
@@ -77,9 +77,24 @@ def verify(language, version, directory):
                 m = ET.fromstring(z.read(nuspec))
             if (
                 m.findtext(".//{*}version") != version
-                or m.findtext(".//{*}id") != "OneNexus.Observability"
+                or m.findtext(".//{*}id") != name.removesuffix(f".{version}.nupkg")
             ):
                 raise ValueError("nuget_sdk_version_or_name_mismatch")
+            package = m.findtext(".//{*}id")
+            dependencies = {
+                d.attrib["id"]: d.attrib["version"] for d in m.findall(".//{*}dependency")
+            }
+            if package in {"OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support", "OneNexus.Sdk.MLOps"}:
+                if dependencies.get("OneNexus.Sdk.Core") != f"[{version}]":
+                    raise ValueError("client_requires_exact_core_version")
+            if package == "OneNexus.Sdk.Core":
+                for dep, constraint in dependencies.items():
+                    if (
+                        dep.startswith(("Microsoft.Kiota.", "Microsoft.IdentityModel."))
+                        and constraint.startswith("[")
+                        and "," not in constraint
+                    ):
+                        raise ValueError("external_sdk_dependency_pinned_exactly")
             if any(
                 "logcontract" in n.attrib.get("id", "").lower()
                 for n in m.findall(".//{*}dependency")

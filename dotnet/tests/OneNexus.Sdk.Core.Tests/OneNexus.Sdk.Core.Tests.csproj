@@ -1,0 +1,19 @@
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' == ''">
+    <ProjectReference Include="../../src/OneNexus.Sdk.Core/OneNexus.Sdk.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' != ''">
+    <PackageReference Include="OneNexus.Sdk.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/TestHandler.cs" Link="Shared/TestHandler.cs" />
+  </ItemGroup>
+</Project>

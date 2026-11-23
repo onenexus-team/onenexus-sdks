@@ -225,6 +225,8 @@ def test_public_models_have_exact_bounded_fields() -> None:
             "extras_data",
         },
         RunCheckpoint: {
+            "failure_reason",
+            "failure_message",
             "id",
             "name",
             "status",
@@ -248,6 +250,8 @@ def test_public_models_have_exact_bounded_fields() -> None:
             "updated_at",
         },
         InferenceInstanceSummary: {
+            "live_edit",
+            "pd_live_edit",
             "id",
             "name",
             "model",
@@ -261,6 +265,8 @@ def test_public_models_have_exact_bounded_fields() -> None:
             "endpoint",
         },
         InferenceInstanceDetail: {
+            "live_edit",
+            "pd_live_edit",
             "id",
             "name",
             "model",

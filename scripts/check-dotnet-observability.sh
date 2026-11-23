@@ -13,24 +13,25 @@ out="$root/.artifacts/dotnet/$version"
 mkdir -p "$out"
 export ONENEXUS_LOGGING_SCENARIOS="$root/tests/logging/scenarios.json"
 checker=tests/logging/check_results.py
-project=dotnet/packages/observability/tests/unit
+project=dotnet/packages/observability/tests/OneNexus.Observability.Tests
 dotnet restore "$project" --locked-mode
 ONENEXUS_LOGGING_RESULTS="$out/source-results.json" dotnet run --project "$project" --no-restore -c Release -- --timeout 2m
 python3 "$checker" "$out/source-results.json"
-dotnet pack dotnet/packages/observability/src --no-restore -c Release -p:Version="$version" -o "$out"
+dotnet pack dotnet/packages/observability/src/OneNexus.Observability --no-restore -c Release -p:Version="$version" -o "$out"
 
 # A separate consumer directory and package cache prove that .nupkg dependency metadata works.
 consumer="$(mktemp -d)"
 trap 'rm -rf "$consumer"' EXIT
 cp global.json "$consumer/global.json"
-cp dotnet/Directory.Build.props "$consumer/Directory.Build.props"
+cp dotnet/packages/observability/Directory.Packages.props "$consumer/"
 cp dotnet/packages/observability/README.md "$consumer/README.md"
-cp -R dotnet/packages/observability/tests/unit "$consumer/tests"
+cp -R dotnet/packages/observability/tests/OneNexus.Observability.Tests "$consumer/tests"
 rm -rf "$consumer/tests/bin" "$consumer/tests/obj" "$consumer/tests/TestResults"
-cp -R dotnet/packages/observability/tests/integration/LogProbe "$consumer/probe"
+cp -R dotnet/packages/observability/tests/OneNexus.Observability.LogProbe "$consumer/probe"
 rm -rf "$consumer/probe/bin" "$consumer/probe/obj"
 cache="$consumer/packages"
-sources=(--source "$out" --source https://api.nuget.org/v3/index.json)
+export ONENEXUS_LOCAL_NUGET="$out"
+sources=(--configfile "$root/scripts/dotnet-package-probe.NuGet.Config")
 dotnet restore "$consumer/tests" -p:Version="$version" -p:PackageUnderTest="$version" --packages "$cache" "${sources[@]}" --force-evaluate
 ONENEXUS_LOGGING_RESULTS="$out/installed-results.json" dotnet run --project "$consumer/tests" --no-restore -c Release -p:Version="$version" -p:PackageUnderTest="$version" -- --timeout 2m
 python3 "$checker" "$out/installed-results.json"
@@ -47,7 +48,7 @@ if python3 "$checker" "$out/rejected-results.json" > "$out/negative-check.log" 2
 fi
 dotnet restore "$consumer/probe" -p:Version="$version" -p:PackageUnderTest="$version" --packages "$cache" "${sources[@]}"
 dotnet build "$consumer/probe" --no-restore -c Release -p:Version="$version" -p:PackageUnderTest="$version"
-probe="$consumer/probe/bin/Release/net10.0/LogProbe.dll"
+probe="$consumer/probe/bin/Release/net10.0/OneNexus.Observability.LogProbe.dll"
 dotnet "$probe" emit > "$out/probe.ndjson"
 python3 - "$out/probe.ndjson" "$out/correlated.ndjson" <<'PY'
 import json, sys

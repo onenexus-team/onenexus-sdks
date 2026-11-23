@@ -1,0 +1,20 @@
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' == ''">
+    <ProjectReference Include="../../src/OneNexus.Sdk.MLOps/OneNexus.Sdk.MLOps.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' != ''">
+    <PackageReference Include="OneNexus.Sdk.MLOps" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/TestHandler.cs" Link="Shared/%(Filename)%(Extension)" />
+    <None Include="../../../specs/mlops/openapi.json" Link="contracts/mlops.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

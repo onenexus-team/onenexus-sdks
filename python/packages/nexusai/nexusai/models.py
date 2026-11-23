@@ -434,6 +434,9 @@ class InferenceMetricsResult(APIModel):
     grafana_metrics_url: Optional[str] = None
     pd_metrics: Optional[dict[str, Any]] = None
     pools: Optional[list[Any]] = None
+    grafana_catalog_metrics_url: Optional[str] = None
+    metrics_charts: Optional[list[Any]] = None
+    pd_metrics_router_scope: Optional[str] = None
 
 
 InferenceMonitoringResult = InferenceLogsResult | InferenceMetricsResult
@@ -456,6 +459,8 @@ class RunCheckpoint(APIModel):
     source_attempt: Optional[int] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+    failure_reason: Optional[str] = None
+    failure_message: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -483,6 +488,8 @@ class InferenceInstanceSummary(APIModel):
     updated_at: str
     endpoint: Optional[str] = None
     status_detail: dict[str, Any] = field(default_factory=dict)
+    live_edit: Optional[dict[str, Any]] = field(default=None, kw_only=True)
+    pd_live_edit: Optional[dict[str, Any]] = field(default=None, kw_only=True)
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> InferenceInstanceSummary:

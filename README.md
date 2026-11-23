@@ -85,8 +85,8 @@ Content-Type: application/json
 
 The committed OpenAPI specs define each operation's path, request, response, and
 required headers. CAS support operations use `/support-api/*`, and account
-profile updates use `/account/profile`. The MLOps spec uses REST routes with path
-and query parameters; no MLOps SDK package is implemented here yet.
+profile updates use `/account/profile`. The MLOps client uses public RPC paths under `/api/v1/<Domain>/<Operation>`,
+plus the GET routes in `specs/mlops/openapi.json`.
 
 CAS failures use RFC 9457 Problem Details. Successful operations usually return
 JSON, but some, such as `ResendUserInvitation` and `RemoveUser`, return no body.
@@ -96,7 +96,8 @@ The current CAS specs and generated clients do not use `X-Api-Version`.
 
 Mutation operations that require `X-Nx1-Idempotency-Key` receive a new key from
 the hand-written client wrapper. The same key is retained for transport retries
-within that call. A separate method invocation gets a new key. There is no
+within that call. A separate method invocation gets a new key by default. The
+.NET clients also accept an explicit key to replay the same logical request. There is no
 `clientToken` request-body field for these operations.
 
 Applications construct a client with a service URL and credentials, then call
@@ -195,14 +196,14 @@ builds and tests every language before any SDK package is published.
 |---|---|
 | Python SDKs and logging wheel | GitHub Release assets |
 | TypeScript SDKs and logging package | GitHub npm registry and Release assets |
-| .NET logging package | GitHub NuGet registry and Release asset |
+| .NET core, CAS, CAS Support, MLOps and logging packages | GitHub NuGet registry and Release assets |
 | Go logging module | Automatic `go/packages/observability/vX.Y.Z` tag at the SDK commit and Release ZIP |
 
 PR/main checks use the same build workflow without publishing. Existing releases are retained.
 See the [release guide](docs/logging.md) for failure recovery and service validation.
 
-For local builds and consumption examples, see [`python/README.md`](python/README.md)
-and [`ts/README.md`](ts/README.md).
+For local builds and consumption examples, see [`python/README.md`](python/README.md),
+[`ts/README.md`](ts/README.md), and [`dotnet/README.md`](dotnet/README.md).
 
 ## Credentials systems
 

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <IsPackable>false</IsPackable>
+    <!-- Use a serviced native compiler and runtime when publishing with the repository SDK. -->
+    <RuntimeFrameworkVersion Condition="'$(PublishAot)' == 'true'">10.0.15</RuntimeFrameworkVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' == ''">
+    <ProjectReference Include="../../src/OneNexus.Sdk.Cas/OneNexus.Sdk.Cas.csproj" />
+    <ProjectReference Include="../../src/OneNexus.Sdk.Cas.Support/OneNexus.Sdk.Cas.Support.csproj" />
+    <ProjectReference Include="../../src/OneNexus.Sdk.MLOps/OneNexus.Sdk.MLOps.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' != ''">
+    <PackageReference Include="OneNexus.Sdk.Cas" />
+    <PackageReference Include="OneNexus.Sdk.Cas.Support" />
+    <PackageReference Include="OneNexus.Sdk.MLOps" />
+  </ItemGroup>
+  <ItemGroup>
+    <TrimmerRootAssembly Include="OneNexus.Sdk.Core" />
+    <TrimmerRootAssembly Include="OneNexus.Sdk.Cas" />
+    <TrimmerRootAssembly Include="OneNexus.Sdk.Cas.Support" />
+    <TrimmerRootAssembly Include="OneNexus.Sdk.MLOps" />
+    <Compile Include="../Shared/TestHandler.cs" Link="Shared/TestHandler.cs" />
+  </ItemGroup>
+</Project>

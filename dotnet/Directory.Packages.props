@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
+    <PackageVersion Include="Microsoft.Kiota.Abstractions" Version="2.1.2" />
+    <PackageVersion Include="Microsoft.Kiota.Http.HttpClientLibrary" Version="2.1.2" />
+    <PackageVersion Include="Microsoft.Kiota.Serialization.Json" Version="2.1.2" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' != ''">
+    <PackageVersion Include="OneNexus.Sdk.Cas" Version="[$(PackageUnderTest)]" />
+    <PackageVersion Include="OneNexus.Sdk.Cas.Support" Version="[$(PackageUnderTest)]" />
+    <PackageVersion Include="OneNexus.Sdk.MLOps" Version="[$(PackageUnderTest)]" />
+    <PackageVersion Include="OneNexus.Sdk.Core" Version="[$(PackageUnderTest)]" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,21 @@
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- The logging contract requires lowercase structured field names, including job.attempt. -->
+    <NoWarn>$(NoWarn);CA1727</NoWarn>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' == ''">
+    <ProjectReference Include="../../src/OneNexus.Observability/OneNexus.Observability.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' != ''">
+    <PackageReference Include="OneNexus.Observability" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' == ''">
+    <None Include="../../../../../tests/logging/scenarios.json" Link="scenarios.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

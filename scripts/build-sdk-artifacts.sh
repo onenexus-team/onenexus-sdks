@@ -31,6 +31,7 @@ case "$language" in
     ;;
   dotnet)
     bash scripts/check-dotnet-observability.sh
+    bash scripts/check-dotnet-clients.sh "$out"
     cp ".artifacts/dotnet/$version/OneNexus.Observability.$version.nupkg" "$out/"
     ;;
   go)

@@ -92,14 +92,16 @@ jobs:
           for name in sdk-core cas-client cas-support-client observability; do
             npm publish ".artifacts/publish/onenexus-team-$name-$SDK_VERSION.tgz" --registry=https://npm.pkg.github.com
           done
-      - name: Publish NuGet package
+      - name: Publish NuGet packages
         if: matrix.language == 'dotnet'
         env:
           NUGET_AUTH_TOKEN: ${{ github.token }}
           SDK_VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          dotnet nuget push ".artifacts/publish/OneNexus.Observability.$SDK_VERSION.nupkg" \
-            --api-key "$NUGET_AUTH_TOKEN" --source https://nuget.pkg.github.com/onenexus-team/index.json
+          for name in OneNexus.Sdk.Core OneNexus.Sdk.Cas OneNexus.Sdk.Cas.Support OneNexus.Sdk.MLOps OneNexus.Observability; do
+            dotnet nuget push ".artifacts/publish/$name.$SDK_VERSION.nupkg" \
+              --api-key "$NUGET_AUTH_TOKEN" --source https://nuget.pkg.github.com/onenexus-team/index.json
+          done
       - name: Create Go module tag at the SDK release commit
         if: matrix.language == 'go'
         env:
