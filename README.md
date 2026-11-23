@@ -195,14 +195,14 @@ builds and tests every language before any SDK package is published.
 |---|---|
 | Python SDKs and logging wheel | GitHub Release assets |
 | TypeScript SDKs and logging package | GitHub npm registry and Release assets |
-| .NET logging package | GitHub NuGet registry and Release asset |
+| .NET core, CAS, CAS Support and logging packages | GitHub NuGet registry and Release assets |
 | Go logging module | Automatic `go/packages/observability/vX.Y.Z` tag at the SDK commit and Release ZIP |
 
 PR/main checks use the same build workflow without publishing. Existing releases are retained.
 See the [release guide](docs/logging.md) for failure recovery and service validation.
 
-For local builds and consumption examples, see [`python/README.md`](python/README.md)
-and [`ts/README.md`](ts/README.md).
+For local builds and consumption examples, see [`python/README.md`](python/README.md),
+[`ts/README.md`](ts/README.md), and [`dotnet/README.md`](dotnet/README.md).
 
 ## Credentials systems
 

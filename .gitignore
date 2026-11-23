@@ -61,3 +61,6 @@ secrets.yaml
 **/bin/
 **/obj/
 **/TestResults/
+
+# Kiota diagnostics are local to the generation run.
+dotnet/src/*/Generated/.kiota.log

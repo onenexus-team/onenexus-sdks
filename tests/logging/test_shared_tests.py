@@ -79,7 +79,7 @@ class SharedTests(unittest.TestCase):
             "python/packages/observability/src/onenexus_observability/schema.json",
             "ts/packages/observability/src/schema.json",
             "go/packages/observability/schema.json",
-            "dotnet/packages/observability/src/schema.json",
+            "dotnet/packages/observability/src/OneNexus.Observability/schema.json",
         ]
         definitions = [json.loads((ROOT / path).read_text()) for path in paths]
         definition = definitions[0]
@@ -116,7 +116,7 @@ class SharedTests(unittest.TestCase):
             "python": "python/packages/observability/tests/test_write_model.py",
             "typescript": "ts/packages/observability/test/write-model.test.ts",
             "go": "go/packages/observability/tests/write_model_test.go",
-            "dotnet": "dotnet/packages/observability/tests/unit/WriteModelTests.cs",
+            "dotnet": "dotnet/packages/observability/tests/OneNexus.Observability.Tests/WriteModelTests.cs",
         }
         for case in model["cases"]:
             for language in case["languages"]:
@@ -135,7 +135,7 @@ class SharedTests(unittest.TestCase):
             "python": "python/packages/observability/tests/test_drop_metric.py",
             "typescript": "ts/packages/observability/test/drop-metric.test.ts",
             "go": "go/packages/observability/tests/drop_metric_test.go",
-            "dotnet": "dotnet/packages/observability/tests/unit/DropMetricTests.cs",
+            "dotnet": "dotnet/packages/observability/tests/OneNexus.Observability.Tests/DropMetricTests.cs",
         }
         for case in metric["cases"]:
             for language in case["languages"]:
@@ -149,7 +149,7 @@ class SharedTests(unittest.TestCase):
         for path, pattern in [
             ("python/packages/observability/src/onenexus_observability/contract.py", r'CONTRACT_DIGEST = "([0-9a-f]{64})"'),
             ("ts/packages/observability/src/rules.ts", r'CONTRACT_DIGEST = "([0-9a-f]{64})"'),
-            ("dotnet/packages/observability/src/Contract.cs", r'Digest = "([0-9a-f]{64})"'),
+            ("dotnet/packages/observability/src/OneNexus.Observability/Contract.cs", r'Digest = "([0-9a-f]{64})"'),
         ]:
             found = re.search(pattern, (ROOT / path).read_text())
             self.assertIsNotNone(found, path)
@@ -170,7 +170,7 @@ FIELD_REGISTRY_TESTS = {
     "python": "python/packages/observability/tests/test_field_registry.py",
     "typescript": "ts/packages/observability/test/field-registry.test.ts",
     "go": "go/packages/observability/tests/field_registry_test.go",
-    "dotnet": "dotnet/packages/observability/tests/unit/FieldRegistryTests.cs",
+    "dotnet": "dotnet/packages/observability/tests/OneNexus.Observability.Tests/FieldRegistryTests.cs",
 }
 
 

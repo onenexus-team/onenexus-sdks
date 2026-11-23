@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Corvus.Json.ExtendedTypes" Version="[5.7.5]" />
+    <PackageVersion Include="Corvus.Json.SourceGenerator" Version="[5.7.5]" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="[10.0.13]" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PackageUnderTest)' != ''">
+    <PackageVersion Include="OneNexus.Observability" Version="[$(PackageUnderTest)]" />
+  </ItemGroup>
+</Project>

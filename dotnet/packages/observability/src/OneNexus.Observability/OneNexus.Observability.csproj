@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <Version Condition="'$(Version)' == ''">$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../../../../../VERSION').Trim())</Version>
+    <Authors>OneNexus</Authors>
+    <RepositoryUrl>https://github.com/onenexus-team/onenexus-sdks</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <CorvusJsonSchemaDefaultAccessibility>Internal</CorvusJsonSchemaDefaultAccessibility>
+    <CorvusJsonSchemaAddExplicitUsings>true</CorvusJsonSchemaAddExplicitUsings>
+    <Description>OneNexus ILogger provider and W3C log correlation context.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <PackageReference Include="Corvus.Json.ExtendedTypes" />
+    <PackageReference Include="Corvus.Json.SourceGenerator" PrivateAssets="all" />
+    <AdditionalFiles Include="schema.json" />
+    <EmbeddedResource Include="schema.json" LogicalName="Contract.schema.json" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+</Project>

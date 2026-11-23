@@ -18,7 +18,7 @@ EXPECTED = {
         "onenexus_observability_python",
     ),
     "typescript": ("sdk-core", "cas-client", "cas-support-client", "observability"),
-    "dotnet": ("OneNexus.Observability",),
+    "dotnet": ("OneNexus.Sdk.Core", "OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support", "OneNexus.Observability"),
     "go": ("observability",),
 }
 
@@ -32,7 +32,7 @@ def verify(language, version, directory):
         "typescript": {
             f"onenexus-team-{n}-{version}.tgz" for n in EXPECTED["typescript"]
         },
-        "dotnet": {f"OneNexus.Observability.{version}.nupkg"},
+        "dotnet": {f"{n}.{version}.nupkg" for n in EXPECTED["dotnet"]},
         "go": {f"observability-go-v{version}.zip"},
     }[language]
     if {p.name for p in root.iterdir()} != expected:
@@ -77,7 +77,7 @@ def verify(language, version, directory):
                 m = ET.fromstring(z.read(nuspec))
             if (
                 m.findtext(".//{*}version") != version
-                or m.findtext(".//{*}id") != "OneNexus.Observability"
+                or m.findtext(".//{*}id") != name.removesuffix(f".{version}.nupkg")
             ):
                 raise ValueError("nuget_sdk_version_or_name_mismatch")
             if any(

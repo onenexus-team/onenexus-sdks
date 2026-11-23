@@ -1,0 +1,81 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Reflection;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using OneNexus.Sdk.Core;
+
+namespace OneNexus.Sdk.Tests;
+
+internal static class WireTests
+{
+    internal static readonly Uri Origin = new Uri("https://auth.example.test");
+
+    internal static TokenGrantCredentials Token(string value = "opaque") => new TokenGrantCredentials(new AccessToken(value, DateTimeOffset.UtcNow.AddHours(1)));
+
+    internal static IEnumerable<object[]> Operations(string service)
+    {
+        using var spec = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "contracts", service + ".json")));
+        foreach (JsonProperty path in spec.RootElement.GetProperty("paths").EnumerateObject())
+        {
+            JsonElement operation = path.Value.GetProperty("post");
+            var keyed = operation.TryGetProperty("parameters", out JsonElement parameters) && parameters.EnumerateArray().Any(p =>
+                p.GetProperty("name").GetString() == "X-Nx1-Idempotency-Key" && p.GetProperty("required").GetBoolean());
+            yield return [operation.GetProperty("operationId").GetString()!, path.Name, keyed, operation.GetProperty("responses").TryGetProperty("204", out _)];
+        }
+    }
+
+    // Drive the public method for every operation declared in the independent, committed contract.
+    internal static async Task ExerciseAsync<T>(Func<SdkClientOptions, T> create, string operation, string path, bool keyed, bool noContent)
+        where T : IDisposable
+    {
+        var keys = new List<string?>();
+        var bodies = new List<string>();
+        using var http = new HttpClient(new TestHandler(async (request, ct) =>
+        {
+            Assert.AreEqual(new Uri(Origin, path), request.RequestUri);
+            Assert.AreEqual(HttpMethod.Post, request.Method);
+            Assert.AreEqual("Bearer opaque", request.Headers.Authorization?.ToString());
+            Assert.AreEqual("application/json", request.Content?.Headers.ContentType?.MediaType);
+            keys.Add(request.Headers.TryGetValues("X-Nx1-Idempotency-Key", out IEnumerable<string>? values) ? values.Single() : null);
+            bodies.Add(await request.Content!.ReadAsStringAsync(ct));
+            if (keys.Count == 1)
+            {
+                return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+            }
+            return noContent ? new HttpResponseMessage(HttpStatusCode.NoContent) : TestHandler.Json("{}");
+        }));
+        using T client = create(new SdkClientOptions { HttpClient = http, MaxRetryDelay = TimeSpan.Zero });
+        MethodInfo method = typeof(T).GetMethod(operation + "Async") ?? throw new AssertFailedException("Missing facade method " + operation);
+        ParameterInfo[] parameters = method.GetParameters();
+        Assert.AreEqual(typeof(CancellationToken), parameters[^1].ParameterType);
+        object?[] args = parameters.Length == 1 ? [CancellationToken.None] : [Activator.CreateInstance(parameters[0].ParameterType), CancellationToken.None];
+        for (var i = 0; i < 2; i++)
+        {
+            await (Task)method.Invoke(client, args)!;
+        }
+        Assert.HasCount(3, keys);
+        Assert.AreEqual(bodies[0], bodies[1]);
+        if (parameters.Length == 1)
+        {
+            Assert.AreEqual("{}", bodies[0]);
+        }
+        if (keyed)
+        {
+            Assert.IsTrue(Guid.TryParseExact(keys[0], "D", out _));
+            Assert.AreEqual(keys[0], keys[1]);
+            Assert.AreNotEqual(keys[0], keys[2]);
+        }
+        else
+        {
+            Assert.IsTrue(keys.TrueForAll(key => key is null));
+        }
+        Assert.AreEqual(noContent, method.ReturnType == typeof(Task));
+    }
+}

@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Packages.props" />
+    <File Path="../global.json" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/OneNexus.Sdk.Cas/OneNexus.Sdk.Cas.csproj" />
+    <Project Path="src/OneNexus.Sdk.Cas.Support/OneNexus.Sdk.Cas.Support.csproj" />
+    <Project Path="src/OneNexus.Sdk.Core/OneNexus.Sdk.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OneNexus.Sdk.Cas.Support.Tests/OneNexus.Sdk.Cas.Support.Tests.csproj" />
+    <Project Path="tests/OneNexus.Sdk.Cas.Tests/OneNexus.Sdk.Cas.Tests.csproj" />
+    <Project Path="tests/OneNexus.Sdk.Core.Tests/OneNexus.Sdk.Core.Tests.csproj" />
+  </Folder>
+</Solution>
