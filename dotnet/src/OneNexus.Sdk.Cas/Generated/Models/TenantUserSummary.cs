@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// User snapshot returned as a list item by `ListTenantUsers`.
@@ -34,9 +34,9 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>Whether the user has accepted the invitation and verified theirinbox. `false` for users still in the pending-invite state.</summary>
         public bool? EmailConfirmed { get; set; }
         /// <summary>Whether this is the tenant root user or an ordinary member.</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Models.UserKind? Kind { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.UserKind? Kind { get; set; }
         /// <summary>The user&apos;s lifecycle state. Only `Active` users can sign in orbe authorized.</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Models.UserLifecycleState? Status { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.UserLifecycleState? Status { get; set; }
         /// <summary>The user&apos;s UUID v7 primary key.</summary>
         public Guid? UserId { get; set; }
         /// <summary>Canonical principal URI used by role-assignment APIs.</summary>
@@ -50,12 +50,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.TenantUserSummary"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.TenantUserSummary"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.TenantUserSummary CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.TenantUserSummary CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.TenantUserSummary();
+            return new global::OneNexus.Sdk.Cas.Models.TenantUserSummary();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -69,8 +69,8 @@ namespace OneNexus.Sdk.Cas.Generated.Models
                 { "displayName", n => { DisplayName = n.GetStringValue(); } },
                 { "email", n => { Email = n.GetStringValue(); } },
                 { "emailConfirmed", n => { EmailConfirmed = n.GetBoolValue(); } },
-                { "kind", n => { Kind = n.GetEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.UserKind>(); } },
-                { "status", n => { Status = n.GetEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.UserLifecycleState>(); } },
+                { "kind", n => { Kind = n.GetEnumValue<global::OneNexus.Sdk.Cas.Models.UserKind>(); } },
+                { "status", n => { Status = n.GetEnumValue<global::OneNexus.Sdk.Cas.Models.UserLifecycleState>(); } },
                 { "userId", n => { UserId = n.GetGuidValue(); } },
                 { "userUri", n => { UserUri = n.GetStringValue(); } },
             };
@@ -86,8 +86,8 @@ namespace OneNexus.Sdk.Cas.Generated.Models
             writer.WriteStringValue("displayName", DisplayName);
             writer.WriteStringValue("email", Email);
             writer.WriteBoolValue("emailConfirmed", EmailConfirmed);
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.UserKind>("kind", Kind);
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.UserLifecycleState>("status", Status);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Models.UserKind>("kind", Kind);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Models.UserLifecycleState>("status", Status);
             writer.WriteGuidValue("userId", UserId);
             writer.WriteStringValue("userUri", UserUri);
         }

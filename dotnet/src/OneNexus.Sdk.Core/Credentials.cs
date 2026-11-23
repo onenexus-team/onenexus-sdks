@@ -21,6 +21,8 @@ public sealed class AccessToken
 
     /// <summary>Absolute token expiry.</summary>
     public DateTimeOffset ExpiresAt { get; }
+
+    internal TimeSpan? Lifetime { get; init; }
 }
 
 /// <summary>A grant returned by CAS or an external login flow.</summary>
@@ -79,10 +81,9 @@ public sealed class StaleCredentialsException : InvalidOperationException
 }
 
 /// <summary>Shares one grant acquisition across concurrent callers of a credential.</summary>
-public abstract class CachedCredentials : IAccessTokenCredential, IDisposable
+public abstract class CachedCredentials : IAccessTokenCredential
 {
-    private readonly SemaphoreSlim _refreshGate = new SemaphoreSlim(1, 1);
-    private bool _disposed;
+    private readonly Lock _refreshGate = new Lock();
     private TokenGrant? _grant;
     private Task<AccessToken>? _refresh;
 
@@ -91,56 +92,49 @@ public abstract class CachedCredentials : IAccessTokenCredential, IDisposable
     private protected TokenGrant? CurrentGrant => Volatile.Read(ref _grant);
 
     /// <inheritdoc/>
-    public async ValueTask<AccessToken> GetTokenAsync(ClientContext context, CancellationToken cancellationToken = default)
+    public ValueTask<AccessToken> GetTokenAsync(ClientContext context, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ObjectDisposedException.ThrowIf(_disposed, this);
         cancellationToken.ThrowIfCancellationRequested();
         if (GetFreshToken(context) is AccessToken cached)
         {
-            return cached;
+            return ValueTask.FromResult(cached);
         }
 
         Task<AccessToken> refresh;
-        await _refreshGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        lock (_refreshGate)
         {
             if (_refresh is null || _refresh.IsCompleted)
             {
                 // Another caller may have finished refreshing while we waited for the gate.
                 if (GetFreshToken(context) is AccessToken refreshed)
                 {
-                    return refreshed;
+                    return ValueTask.FromResult(refreshed);
                 }
 
                 _refresh = RefreshAndStoreAsync(context);
             }
             refresh = _refresh;
         }
-        finally
-        {
-            _refreshGate.Release();
-        }
 
         // Cancel only this wait. Other callers can still use the grant being acquired.
-        return await refresh.WaitAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>Releases the refresh gate after callers have finished using the credential.</summary>
-    public void Dispose()
-    {
-        if (!_disposed)
-        {
-            _disposed = true;
-            _refreshGate.Dispose();
-        }
-        GC.SuppressFinalize(this);
+        return new ValueTask<AccessToken>(refresh.WaitAsync(cancellationToken));
     }
 
     private AccessToken? GetFreshToken(ClientContext context)
     {
         AccessToken? token = CurrentGrant?.AccessToken;
-        return token is not null && token.ExpiresAt - context.UtcNow > context.RefreshLeeway ? token : null;
+        if (token is null)
+        {
+            return null;
+        }
+
+        TimeSpan leeway = context.RefreshLeeway;
+        if (token.Lifetime is TimeSpan lifetime && lifetime / 2 < leeway)
+        {
+            leeway = lifetime / 2;
+        }
+        return token.ExpiresAt - context.UtcNow > leeway ? token : null;
     }
 
     private async Task<AccessToken> RefreshAndStoreAsync(ClientContext context)

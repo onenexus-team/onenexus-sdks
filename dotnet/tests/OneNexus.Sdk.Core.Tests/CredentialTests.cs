@@ -29,11 +29,11 @@ public sealed class CredentialTests
     {
         var context = new ClientContext();
         var token = new AccessToken("external", context.UtcNow.AddMinutes(5));
-        using var credential = new TokenGrantCredentials(token);
+        var credential = new TokenGrantCredentials(token);
         ValueTask<AccessToken> hit = credential.GetTokenAsync(context);
         Assert.IsTrue(hit.IsCompletedSuccessfully);
         Assert.AreSame(token, await hit);
-        using var stale = new TokenGrantCredentials(new AccessToken("expired", context.UtcNow));
+        var stale = new TokenGrantCredentials(new AccessToken("expired", context.UtcNow));
         await Assert.ThrowsExactlyAsync<StaleCredentialsException>(() => stale.GetTokenAsync(context).AsTask());
     }
 
@@ -62,7 +62,7 @@ public sealed class CredentialTests
             return TestHandler.Json("""{"access_token":"refreshed","refresh_token":"rotated","id_token":"identity","scope":"read write","expires_in":3600}""");
         }));
         var grant = new TokenGrant(new AccessToken("expired", DateTimeOffset.UnixEpoch)) { RefreshToken = "initial" };
-        using var credential = new TokenGrantCredentials(grant, new OidcOptions(Issuer) { ClientId = "application", HttpClient = http });
+        var credential = new TokenGrantCredentials(grant, new OidcOptions(Issuer) { ClientId = "application", HttpClient = http });
         var context = new ClientContext();
         Task<AccessToken> first = credential.GetTokenAsync(context).AsTask();
         await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -76,7 +76,7 @@ public sealed class CredentialTests
         Assert.AreEqual("rotated", credential.Snapshot.RefreshToken);
         Assert.AreEqual("identity", credential.Snapshot.IdToken);
         Assert.HasCount(2, credential.Snapshot.Scopes);
-        await credential.GetTokenAsync(new ClientContext(refreshLeeway: TimeSpan.FromHours(2)));
+        await credential.GetTokenAsync(new ClientContext(new TestClock(context.UtcNow.AddMinutes(60))));
         CollectionAssert.AreEqual(ExpectedRefreshTokens, grants);
         Assert.AreEqual(1, discoveryCount);
     }
@@ -90,7 +90,7 @@ public sealed class CredentialTests
             return Task.FromResult(TestHandler.Json("""{"issuer":"https://other.example.test","token_endpoint":"https://other.example.test/token"}"""));
         }));
         var grant = new TokenGrant(new AccessToken("expired", DateTimeOffset.UnixEpoch)) { RefreshToken = "old" };
-        using var credential = new TokenGrantCredentials(grant, new OidcOptions(Issuer) { ClientId = "application", HttpClient = http });
+        var credential = new TokenGrantCredentials(grant, new OidcOptions(Issuer) { ClientId = "application", HttpClient = http });
         await Assert.ThrowsExactlyAsync<AuthenticationException>(() => credential.GetTokenAsync(new ClientContext()).AsTask());
     }
 
@@ -112,7 +112,7 @@ public sealed class CredentialTests
                     ? TestHandler.Json("""{"error":"invalid_grant"}""", HttpStatusCode.BadRequest)
                     : TestHandler.Json("""{"access_token":"service-token","token_type":"Bearer","expires_in":3600}""");
             }));
-            using var credential = new WorkloadIdentityFileCredentials(new OidcOptions(Issuer) { TokenEndpoint = Endpoint, Audience = "service", HttpClient = http }, path);
+            var credential = new WorkloadIdentityFileCredentials(new OidcOptions(Issuer) { TokenEndpoint = Endpoint, Audience = "service", HttpClient = http }, path);
             await File.WriteAllTextAsync(path, " first\n");
             await Assert.ThrowsExactlyAsync<AuthenticationException>(() => credential.GetTokenAsync(new ClientContext()).AsTask());
             await File.WriteAllTextAsync(path, "second\n");
@@ -123,6 +123,74 @@ public sealed class CredentialTests
         {
             File.Delete(path);
         }
+    }
+
+    private sealed class TestClock : TimeProvider
+    {
+        internal TestClock(DateTimeOffset now) => Now = now;
+        internal DateTimeOffset Now { get; set; }
+        public override DateTimeOffset GetUtcNow() => Now;
+    }
+
+    [TestMethod]
+    public async Task ShortLivedGrantIsCachedUntilHalfItsLifetime()
+    {
+        var clock = new TestClock(DateTimeOffset.UnixEpoch);
+        var context = new ClientContext(clock);
+        var exchanges = 0;
+        using var http = new HttpClient(new TestHandler((_, _) =>
+        {
+            exchanges++;
+            return Task.FromResult(TestHandler.Json("""{"access_token":"short","expires_in":20}"""));
+        }));
+        var grant = new TokenGrant(new AccessToken("expired", clock.Now)) { RefreshToken = "initial" };
+        var credential = new TokenGrantCredentials(grant, new OidcOptions(Issuer) { ClientId = "application", TokenEndpoint = Endpoint, HttpClient = http });
+        AccessToken first = await credential.GetTokenAsync(context);
+        clock.Now = clock.Now.AddSeconds(9);
+        Assert.AreSame(first, await credential.GetTokenAsync(context));
+        Assert.AreEqual(1, exchanges);
+        clock.Now = clock.Now.AddSeconds(1);
+        await credential.GetTokenAsync(context);
+        Assert.AreEqual(2, exchanges);
+    }
+
+    [TestMethod]
+    public async Task RejectedTokenExchangeCorrectsNextClientAssertion()
+    {
+        var serverTime = DateTimeOffset.FromUnixTimeSeconds(1800000000);
+        var context = new ClientContext(new TestClock(serverTime.AddHours(-1)));
+        var attempts = 0;
+        using var rsa = RSA.Create(2048);
+        var key = new RsaSecurityKey(rsa) { KeyId = "test-key" };
+        using var http = new HttpClient(new TestHandler(async (request, ct) =>
+        {
+            NameValueCollection form = HttpUtility.ParseQueryString(await request.Content!.ReadAsStringAsync(ct));
+            var jwt = new JsonWebToken(form["client_assertion"]);
+            if (++attempts == 1)
+            {
+                Assert.IsTrue(jwt.ValidTo < serverTime.UtcDateTime);
+                HttpResponseMessage rejection = TestHandler.Json("""{"error":"invalid_client"}""", HttpStatusCode.BadRequest);
+                rejection.Headers.Date = serverTime;
+                return rejection;
+            }
+            Assert.AreEqual(serverTime.UtcDateTime, jwt.IssuedAt);
+            HttpResponseMessage success = TestHandler.Json("""{"access_token":"corrected","expires_in":60}""");
+            success.Headers.Date = serverTime.AddSeconds(2);
+            return success;
+        }));
+        var credential = new PrivateKeyJwtCredentials(new OidcOptions(Issuer) { ClientId = "app", TokenEndpoint = Endpoint, HttpClient = http },
+            new SigningCredentials(key, SecurityAlgorithms.RsaSha256));
+        await Assert.ThrowsExactlyAsync<AuthenticationException>(() => credential.GetTokenAsync(context).AsTask());
+        Assert.AreEqual(serverTime.AddSeconds(62), (await credential.GetTokenAsync(context)).ExpiresAt);
+    }
+
+    [TestMethod]
+    public void RejectsUnsupportedSigningAlgorithm()
+    {
+        using var rsa = RSA.Create(2048);
+        var key = new RsaSecurityKey(rsa) { KeyId = "test-key" };
+        Assert.ThrowsExactly<ArgumentException>(() => new PrivateKeyJwtCredentials(new OidcOptions(Issuer) { ClientId = "app" },
+            new SigningCredentials(key, SecurityAlgorithms.RsaSha512)));
     }
 
     [TestMethod]
@@ -152,7 +220,7 @@ public sealed class CredentialTests
             Assert.IsFalse(string.IsNullOrWhiteSpace(assertion.Id));
             return TestHandler.Json("""{"access_token":"minted","expires_in":3600}""");
         }));
-        using var credential = new PrivateKeyJwtCredentials(new OidcOptions(Issuer)
+        var credential = new PrivateKeyJwtCredentials(new OidcOptions(Issuer)
         {
             ClientId = "application", Scope = "api", TokenEndpoint = Endpoint, HttpClient = http,
         }, new SigningCredentials(key, SecurityAlgorithms.RsaSha256));

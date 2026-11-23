@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// Request body for `POST /api/ListPolicyAttachments`.
@@ -34,20 +34,20 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>Policy whose direct role attachments to return.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference? Policy { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference? Policy { get; set; }
 #nullable restore
 #else
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference Policy { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference Policy { get; set; }
 #endif
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsRequest"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsRequest"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsRequest CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsRequest CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsRequest();
+            return new global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsRequest();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -60,7 +60,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
                 { "after", n => { After = n.GetStringValue(); } },
                 { "before", n => { Before = n.GetStringValue(); } },
                 { "limit", n => { Limit = n.GetIntValue(); } },
-                { "policy", n => { Policy = n.GetObjectValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference>(global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference.CreateFromDiscriminatorValue); } },
+                { "policy", n => { Policy = n.GetObjectValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference>(global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference.CreateFromDiscriminatorValue); } },
             };
         }
         /// <summary>
@@ -73,7 +73,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
             writer.WriteStringValue("after", After);
             writer.WriteStringValue("before", Before);
             writer.WriteIntValue("limit", Limit);
-            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference>("policy", Policy);
+            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference>("policy", Policy);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,10 +9,9 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OneNexus.Sdk.Cas;
-using OneNexus.Sdk.Cas.Generated.Models;
+using OneNexus.Sdk.Cas.Models;
 using OneNexus.Sdk.Core;
 using OneNexus.Sdk.Tests;
 
@@ -21,7 +21,7 @@ namespace OneNexus.Sdk.Cas.Tests;
 public sealed class CasBehaviorTests
 {
     private const string Region = "https://auth.eu-1.example.test";
-    private static string Routed(string issuer) => "header." + Base64UrlEncoder.Encode(JsonSerializer.Serialize(new { iss = issuer })) + ".signature";
+    private static string Routed(string issuer) => "header." + Base64Url.EncodeToString(JsonSerializer.SerializeToUtf8Bytes(new { iss = issuer })) + ".signature";
 
     [TestMethod]
     public async Task RoutedRetriesPinOriginAndToken()
@@ -49,8 +49,12 @@ public sealed class CasBehaviorTests
     [DataRow("https://auth.eu-1.example.test:444")]
     [DataRow("https://auth.eu-1.example.test/path")]
     [DataRow("https://user@auth.eu-1.example.test")]
-    public void RejectsUntrustedIssuer(string issuer) =>
-        Assert.ThrowsExactly<ArgumentException>(() => CasRouting.ResolveAssumeS3RoleBaseUrl(WireTests.Origin, Routed(issuer)));
+    public async Task RejectsUntrustedIssuer(string issuer)
+    {
+        using var http = new HttpClient(new TestHandler((_, _) => throw new AssertFailedException("Unexpected HTTP request.")));
+        using var client = new CasClient(WireTests.Origin, WireTests.Token(Routed(issuer)), new SdkClientOptions { HttpClient = http });
+        await Assert.ThrowsExactlyAsync<ArgumentException>(() => client.AssumeS3RoleAsync(new AssumeS3RoleRequest()));
+    }
 
     [TestMethod]
     public async Task RoutedUnauthorizedStopsAfterOneAttempt()
@@ -71,10 +75,11 @@ public sealed class CasBehaviorTests
     {
         DateTimeOffset serverTime = DateTimeOffset.UtcNow.AddMinutes(5);
         var attempts = 0;
-        var credentials = new CountingCredentials("fresh");
-        using var http = new HttpClient(new TestHandler((_, _) =>
+        var credentials = new CountingCredentials("old", "fresh");
+        using var http = new HttpClient(new TestHandler((request, _) =>
         {
             attempts++;
+            Assert.AreEqual(attempts == 1 ? "old" : "fresh", request.Headers.Authorization?.Parameter);
             HttpResponseMessage response = attempts == 1 ? new HttpResponseMessage(HttpStatusCode.Unauthorized) : TestHandler.Json("{}");
             response.Headers.Date = serverTime;
             return Task.FromResult(response);
@@ -129,9 +134,9 @@ public sealed class CasBehaviorTests
 
     private sealed class CountingCredentials : IAccessTokenCredential
     {
-        private readonly string _value;
+        private readonly string[] _tokens;
 
-        internal CountingCredentials(string value) => _value = value;
+        internal CountingCredentials(params string[] tokens) => _tokens = tokens;
         internal int Calls { get; private set; }
         internal DateTimeOffset ObservedTime { get; private set; }
 
@@ -139,7 +144,7 @@ public sealed class CasBehaviorTests
         {
             Calls++;
             ObservedTime = context.UtcNow;
-            return ValueTask.FromResult(new AccessToken(_value, ObservedTime.AddHours(1)));
+            return ValueTask.FromResult(new AccessToken(_tokens[Calls - 1], ObservedTime.AddHours(1)));
         }
     }
 }

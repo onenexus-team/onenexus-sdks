@@ -96,7 +96,8 @@ The current CAS specs and generated clients do not use `X-Api-Version`.
 
 Mutation operations that require `X-Nx1-Idempotency-Key` receive a new key from
 the hand-written client wrapper. The same key is retained for transport retries
-within that call. A separate method invocation gets a new key. There is no
+within that call. A separate method invocation gets a new key by default. The
+.NET clients also accept an explicit key to replay the same logical request. There is no
 `clientToken` request-body field for these operations.
 
 Applications construct a client with a service URL and credentials, then call

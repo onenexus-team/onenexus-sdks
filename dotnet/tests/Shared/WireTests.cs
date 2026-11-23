@@ -45,14 +45,15 @@ internal static class WireTests
             Assert.AreEqual("application/json", request.Content?.Headers.ContentType?.MediaType);
             keys.Add(request.Headers.TryGetValues("X-Nx1-Idempotency-Key", out IEnumerable<string>? values) ? values.Single() : null);
             bodies.Add(await request.Content!.ReadAsStringAsync(ct));
-            if (keys.Count == 1)
+            if (keys.Count is 1 or 4)
             {
                 return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
             }
             return noContent ? new HttpResponseMessage(HttpStatusCode.NoContent) : TestHandler.Json("{}");
         }));
         using T client = create(new SdkClientOptions { HttpClient = http, MaxRetryDelay = TimeSpan.Zero });
-        MethodInfo method = typeof(T).GetMethod(operation + "Async") ?? throw new AssertFailedException("Missing facade method " + operation);
+        MethodInfo[] methods = [.. typeof(T).GetMethods().Where(m => m.Name == operation + "Async")];
+        MethodInfo method = methods.Single(m => m.GetParameters().All(p => p.Name != "idempotencyKey"));
         ParameterInfo[] parameters = method.GetParameters();
         Assert.AreEqual(typeof(CancellationToken), parameters[^1].ParameterType);
         object?[] args = parameters.Length == 1 ? [CancellationToken.None] : [Activator.CreateInstance(parameters[0].ParameterType), CancellationToken.None];
@@ -71,6 +72,15 @@ internal static class WireTests
             Assert.IsTrue(Guid.TryParseExact(keys[0], "D", out _));
             Assert.AreEqual(keys[0], keys[1]);
             Assert.AreNotEqual(keys[0], keys[2]);
+
+            const string callerKey = "cli.operation_123-456";
+            MethodInfo explicitKey = methods.Single(m => m.GetParameters().Any(p => p.Name == "idempotencyKey"));
+            object?[] replay = [.. args[..^1], callerKey, CancellationToken.None];
+            await (Task)explicitKey.Invoke(client, replay)!;
+            await (Task)explicitKey.Invoke(client, replay)!;
+            Assert.HasCount(6, keys);
+            Assert.IsTrue(keys.Skip(3).All(key => key == callerKey));
+            Assert.AreEqual(bodies[3], bodies[4]);
         }
         else
         {

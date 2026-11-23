@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// Result of policy validation and atomic publication.
@@ -30,9 +30,9 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         public List<string> Diagnostics { get; set; }
 #endif
         /// <summary>Publication outcome.</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyPublicationDisposition? Disposition { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyPublicationDisposition? Disposition { get; set; }
         /// <summary>The catalogue that owns the newly published policy.</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyKind? Kind { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyKind? Kind { get; set; }
         /// <summary>Stable machine-readable result reason.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -44,12 +44,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.PublishPolicyResponse"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.PublishPolicyResponse"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.PublishPolicyResponse CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.PublishPolicyResponse CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.PublishPolicyResponse();
+            return new global::OneNexus.Sdk.Cas.Models.PublishPolicyResponse();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -61,8 +61,8 @@ namespace OneNexus.Sdk.Cas.Generated.Models
             {
                 { "contentStateToken", n => { ContentStateToken = n.GetStringValue(); } },
                 { "diagnostics", n => { Diagnostics = n.GetCollectionOfPrimitiveValues<string>()?.AsList(); } },
-                { "disposition", n => { Disposition = n.GetEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyPublicationDisposition>(); } },
-                { "kind", n => { Kind = n.GetEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyKind>(); } },
+                { "disposition", n => { Disposition = n.GetEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyPublicationDisposition>(); } },
+                { "kind", n => { Kind = n.GetEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyKind>(); } },
                 { "reasonCode", n => { ReasonCode = n.GetStringValue(); } },
             };
         }
@@ -75,8 +75,8 @@ namespace OneNexus.Sdk.Cas.Generated.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("contentStateToken", ContentStateToken);
             writer.WriteCollectionOfPrimitiveValues<string>("diagnostics", Diagnostics);
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyPublicationDisposition>("disposition", Disposition);
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyKind>("kind", Kind);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyPublicationDisposition>("disposition", Disposition);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyKind>("kind", Kind);
             writer.WriteStringValue("reasonCode", ReasonCode);
         }
     }

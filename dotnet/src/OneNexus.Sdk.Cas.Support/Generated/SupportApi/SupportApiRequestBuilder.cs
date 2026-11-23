@@ -2,29 +2,29 @@
 #pragma warning disable CS0618
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.AddTenantUser;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.CreateTenant;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.DeleteAccount;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.DescribeAccount;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.DescribeTenant;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.EvaluateAuthorization;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.GetS3DefaultAccount;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.ListS3Accounts;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.ListTenantUsers;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.ListTenants;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.ProvisionS3DefaultAccount;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.RemoveTenantUser;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.ResendInvitation;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.SearchUsers;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.SuspendTenant;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.SuspendTenantUser;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenantUser;
+using OneNexus.Sdk.Cas.Support.SupportApi.AddTenantUser;
+using OneNexus.Sdk.Cas.Support.SupportApi.CreateTenant;
+using OneNexus.Sdk.Cas.Support.SupportApi.DeleteAccount;
+using OneNexus.Sdk.Cas.Support.SupportApi.DescribeAccount;
+using OneNexus.Sdk.Cas.Support.SupportApi.DescribeTenant;
+using OneNexus.Sdk.Cas.Support.SupportApi.EvaluateAuthorization;
+using OneNexus.Sdk.Cas.Support.SupportApi.GetS3DefaultAccount;
+using OneNexus.Sdk.Cas.Support.SupportApi.ListS3Accounts;
+using OneNexus.Sdk.Cas.Support.SupportApi.ListTenantUsers;
+using OneNexus.Sdk.Cas.Support.SupportApi.ListTenants;
+using OneNexus.Sdk.Cas.Support.SupportApi.ProvisionS3DefaultAccount;
+using OneNexus.Sdk.Cas.Support.SupportApi.RemoveTenantUser;
+using OneNexus.Sdk.Cas.Support.SupportApi.ResendInvitation;
+using OneNexus.Sdk.Cas.Support.SupportApi.SearchUsers;
+using OneNexus.Sdk.Cas.Support.SupportApi.SuspendTenant;
+using OneNexus.Sdk.Cas.Support.SupportApi.SuspendTenantUser;
+using OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant;
+using OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenantUser;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
-namespace OneNexus.Sdk.Cas.Support.Generated.SupportApi
+namespace OneNexus.Sdk.Cas.Support.SupportApi
 {
     /// <summary>
     /// Builds and executes requests for operations under \support-api
@@ -33,97 +33,97 @@ namespace OneNexus.Sdk.Cas.Support.Generated.SupportApi
     public partial class SupportApiRequestBuilder : BaseRequestBuilder
     {
         /// <summary>The AddTenantUser property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.AddTenantUser.AddTenantUserRequestBuilder AddTenantUser
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.AddTenantUser.AddTenantUserRequestBuilder AddTenantUser
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.AddTenantUser.AddTenantUserRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.AddTenantUser.AddTenantUserRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The CreateTenant property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.CreateTenant.CreateTenantRequestBuilder CreateTenant
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.CreateTenant.CreateTenantRequestBuilder CreateTenant
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.CreateTenant.CreateTenantRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.CreateTenant.CreateTenantRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The DeleteAccount property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.DeleteAccount.DeleteAccountRequestBuilder DeleteAccount
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.DeleteAccount.DeleteAccountRequestBuilder DeleteAccount
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.DeleteAccount.DeleteAccountRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.DeleteAccount.DeleteAccountRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The DescribeAccount property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.DescribeAccount.DescribeAccountRequestBuilder DescribeAccount
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.DescribeAccount.DescribeAccountRequestBuilder DescribeAccount
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.DescribeAccount.DescribeAccountRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.DescribeAccount.DescribeAccountRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The DescribeTenant property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.DescribeTenant.DescribeTenantRequestBuilder DescribeTenant
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.DescribeTenant.DescribeTenantRequestBuilder DescribeTenant
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.DescribeTenant.DescribeTenantRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.DescribeTenant.DescribeTenantRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The EvaluateAuthorization property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.EvaluateAuthorization.EvaluateAuthorizationRequestBuilder EvaluateAuthorization
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.EvaluateAuthorization.EvaluateAuthorizationRequestBuilder EvaluateAuthorization
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.EvaluateAuthorization.EvaluateAuthorizationRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.EvaluateAuthorization.EvaluateAuthorizationRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The GetS3DefaultAccount property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.GetS3DefaultAccount.GetS3DefaultAccountRequestBuilder GetS3DefaultAccount
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.GetS3DefaultAccount.GetS3DefaultAccountRequestBuilder GetS3DefaultAccount
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.GetS3DefaultAccount.GetS3DefaultAccountRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.GetS3DefaultAccount.GetS3DefaultAccountRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListS3Accounts property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.ListS3Accounts.ListS3AccountsRequestBuilder ListS3Accounts
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.ListS3Accounts.ListS3AccountsRequestBuilder ListS3Accounts
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.ListS3Accounts.ListS3AccountsRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.ListS3Accounts.ListS3AccountsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListTenants property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.ListTenants.ListTenantsRequestBuilder ListTenants
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.ListTenants.ListTenantsRequestBuilder ListTenants
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.ListTenants.ListTenantsRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.ListTenants.ListTenantsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListTenantUsers property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.ListTenantUsers.ListTenantUsersRequestBuilder ListTenantUsers
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.ListTenantUsers.ListTenantUsersRequestBuilder ListTenantUsers
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.ListTenantUsers.ListTenantUsersRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.ListTenantUsers.ListTenantUsersRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ProvisionS3DefaultAccount property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.ProvisionS3DefaultAccount.ProvisionS3DefaultAccountRequestBuilder ProvisionS3DefaultAccount
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.ProvisionS3DefaultAccount.ProvisionS3DefaultAccountRequestBuilder ProvisionS3DefaultAccount
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.ProvisionS3DefaultAccount.ProvisionS3DefaultAccountRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.ProvisionS3DefaultAccount.ProvisionS3DefaultAccountRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The RemoveTenantUser property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.RemoveTenantUser.RemoveTenantUserRequestBuilder RemoveTenantUser
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.RemoveTenantUser.RemoveTenantUserRequestBuilder RemoveTenantUser
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.RemoveTenantUser.RemoveTenantUserRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.RemoveTenantUser.RemoveTenantUserRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ResendInvitation property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.ResendInvitation.ResendInvitationRequestBuilder ResendInvitation
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.ResendInvitation.ResendInvitationRequestBuilder ResendInvitation
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.ResendInvitation.ResendInvitationRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.ResendInvitation.ResendInvitationRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The SearchUsers property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.SearchUsers.SearchUsersRequestBuilder SearchUsers
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.SearchUsers.SearchUsersRequestBuilder SearchUsers
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.SearchUsers.SearchUsersRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.SearchUsers.SearchUsersRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The SuspendTenant property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.SuspendTenant.SuspendTenantRequestBuilder SuspendTenant
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.SuspendTenant.SuspendTenantRequestBuilder SuspendTenant
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.SuspendTenant.SuspendTenantRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.SuspendTenant.SuspendTenantRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The SuspendTenantUser property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.SuspendTenantUser.SuspendTenantUserRequestBuilder SuspendTenantUser
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.SuspendTenantUser.SuspendTenantUserRequestBuilder SuspendTenantUser
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.SuspendTenantUser.SuspendTenantUserRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.SuspendTenantUser.SuspendTenantUserRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The UnsuspendTenant property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder UnsuspendTenant
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder UnsuspendTenant
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The UnsuspendTenantUser property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenantUser.UnsuspendTenantUserRequestBuilder UnsuspendTenantUser
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenantUser.UnsuspendTenantUserRequestBuilder UnsuspendTenantUser
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenantUser.UnsuspendTenantUserRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenantUser.UnsuspendTenantUserRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.SupportApiRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Support.SupportApi.SupportApiRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -131,7 +131,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.SupportApi
         {
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.SupportApiRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Support.SupportApi.SupportApiRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>

@@ -3,13 +3,13 @@
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions.Serialization;
 using Microsoft.Kiota.Abstractions;
-using OneNexus.Sdk.Cas.Generated.Models;
+using OneNexus.Sdk.Cas.Models;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments
+namespace OneNexus.Sdk.Cas.Api.ListPolicyAttachments
 {
     /// <summary>
     /// Builds and executes requests for operations under \api\ListPolicyAttachments
@@ -18,7 +18,7 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments
     public partial class ListPolicyAttachmentsRequestBuilder : BaseRequestBuilder
     {
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -26,7 +26,7 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments
         {
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -36,37 +36,37 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments
         /// <summary>
         /// The response contains the direct policy-to-role relationships, not theusers or service clients that inherit access through those roles. Usethe returned cursors for paging.
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsResponse"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsResponse"/></returns>
         /// <param name="body">Request body for `POST /api/ListPolicyAttachments`.</param>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 400 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 401 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 403 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 404 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 409 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 503 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 400 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 401 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 403 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 404 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 409 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 503 status code</exception>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public async Task<global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsResponse?> PostAsync(global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsResponse?> PostAsync(global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #nullable restore
 #else
-        public async Task<global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsResponse> PostAsync(global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsResponse> PostAsync(global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #endif
             if(ReferenceEquals(body, null)) throw new ArgumentNullException(nameof(body));
             var requestInfo = ToPostRequestInformation(body, requestConfiguration);
             var errorMapping = new Dictionary<string, ParsableFactory<IParsable>>
             {
-                { "400", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "401", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "403", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "404", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "409", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "503", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "400", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "401", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "403", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "404", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "409", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "503", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
             };
-            return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsResponse>(requestInfo, global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
+            return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsResponse>(requestInfo, global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
         /// The response contains the direct policy-to-role relationships, not theusers or service clients that inherit access through those roles. Usethe returned cursors for paging.
@@ -76,11 +76,11 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default)
+        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default)
         {
 #nullable restore
 #else
-        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Generated.Models.ListPolicyAttachmentsRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default)
+        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Models.ListPolicyAttachmentsRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default)
         {
 #endif
             if(ReferenceEquals(body, null)) throw new ArgumentNullException(nameof(body));
@@ -93,11 +93,11 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments
         /// <summary>
         /// Returns a request builder with the provided arbitrary URL. Using this method means any other path or query parameters are ignored.
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder"/></returns>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder WithUrl(string rawUrl)
+        public global::OneNexus.Sdk.Cas.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder WithUrl(string rawUrl)
         {
-            return new global::OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder(rawUrl, RequestAdapter);
+            return new global::OneNexus.Sdk.Cas.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder(rawUrl, RequestAdapter);
         }
     }
 }

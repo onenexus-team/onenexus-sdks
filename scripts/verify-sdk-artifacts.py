@@ -80,6 +80,21 @@ def verify(language, version, directory):
                 or m.findtext(".//{*}id") != name.removesuffix(f".{version}.nupkg")
             ):
                 raise ValueError("nuget_sdk_version_or_name_mismatch")
+            package = m.findtext(".//{*}id")
+            dependencies = {
+                d.attrib["id"]: d.attrib["version"] for d in m.findall(".//{*}dependency")
+            }
+            if package in {"OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support"}:
+                if dependencies.get("OneNexus.Sdk.Core") != f"[{version}]":
+                    raise ValueError("cas_client_requires_exact_core_version")
+            if package == "OneNexus.Sdk.Core":
+                for dep, constraint in dependencies.items():
+                    if (
+                        dep.startswith(("Microsoft.Kiota.", "Microsoft.IdentityModel."))
+                        and constraint.startswith("[")
+                        and "," not in constraint
+                    ):
+                        raise ValueError("external_sdk_dependency_pinned_exactly")
             if any(
                 "logcontract" in n.attrib.get("id", "").lower()
                 for n in m.findall(".//{*}dependency")

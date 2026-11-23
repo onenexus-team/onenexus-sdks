@@ -81,6 +81,10 @@ internal sealed class OidcClient
 
         using var body = new FormUrlEncodedContent(form);
         using HttpResponseMessage response = await _http.PostAsync(_tokenEndpoint, body).ConfigureAwait(false);
+        if (response.Headers.Date is DateTimeOffset serverTime)
+        {
+            context.Observe(serverTime);
+        }
         if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
         {
             throw new AuthenticationException("CAS rejected the token grant.");
@@ -105,12 +109,13 @@ internal sealed class OidcClient
         }
 
         var seconds = json.TryGetProperty("expires_in", out JsonElement expiry) ? expiry.GetInt64() : 3600;
-        if (seconds <= 0 || seconds > (DateTimeOffset.MaxValue - context.UtcNow).TotalSeconds)
+        DateTimeOffset now = context.UtcNow;
+        if (seconds <= 0 || seconds > (DateTimeOffset.MaxValue - now).TotalSeconds)
         {
             throw new JsonException("Invalid token lifetime.");
         }
 
-        return new TokenGrant(new AccessToken(value, context.UtcNow.AddSeconds(seconds)))
+        return new TokenGrant(new AccessToken(value, now.AddSeconds(seconds)) { Lifetime = TimeSpan.FromSeconds(seconds) })
         {
             RefreshToken = json.TryGetProperty("refresh_token", out JsonElement refresh) ? refresh.GetString() : prior?.RefreshToken,
             IdToken = json.TryGetProperty("id_token", out JsonElement id) ? id.GetString() : prior?.IdToken,

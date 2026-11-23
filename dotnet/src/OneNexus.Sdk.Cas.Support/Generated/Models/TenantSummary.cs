@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Support.Generated.Models
+namespace OneNexus.Sdk.Cas.Support.Models
 {
     /// <summary>
     /// Tenant snapshot returned as a list item by `ListTenants`.
@@ -24,18 +24,18 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         public string DisplayName { get; set; }
 #endif
         /// <summary>Lifecycle status.</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.Models.TenantStatus? Status { get; set; }
+        public global::OneNexus.Sdk.Cas.Support.Models.TenantStatus? Status { get; set; }
         /// <summary>The tenant&apos;s UUID v7 primary key.</summary>
         public Guid? TenantId { get; set; }
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.TenantSummary"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.TenantSummary"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Support.Generated.Models.TenantSummary CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Support.Models.TenantSummary CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Support.Generated.Models.TenantSummary();
+            return new global::OneNexus.Sdk.Cas.Support.Models.TenantSummary();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -47,7 +47,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
             {
                 { "createdAt", n => { CreatedAt = n.GetDateTimeOffsetValue(); } },
                 { "displayName", n => { DisplayName = n.GetStringValue(); } },
-                { "status", n => { Status = n.GetEnumValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.TenantStatus>(); } },
+                { "status", n => { Status = n.GetEnumValue<global::OneNexus.Sdk.Cas.Support.Models.TenantStatus>(); } },
                 { "tenantId", n => { TenantId = n.GetGuidValue(); } },
             };
         }
@@ -60,7 +60,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteDateTimeOffsetValue("createdAt", CreatedAt);
             writer.WriteStringValue("displayName", DisplayName);
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.TenantStatus>("status", Status);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Support.Models.TenantStatus>("status", Status);
             writer.WriteGuidValue("tenantId", TenantId);
         }
     }

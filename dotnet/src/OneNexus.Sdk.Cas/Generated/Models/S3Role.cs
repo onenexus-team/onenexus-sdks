@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// An RGW IAM role in a tenant&apos;s account.
@@ -48,10 +48,10 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>The role&apos;s inline permission policies.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public List<global::OneNexus.Sdk.Cas.Generated.Models.S3RolePolicy>? PermissionPolicies { get; set; }
+        public List<global::OneNexus.Sdk.Cas.Models.S3RolePolicy>? PermissionPolicies { get; set; }
 #nullable restore
 #else
-        public List<global::OneNexus.Sdk.Cas.Generated.Models.S3RolePolicy> PermissionPolicies { get; set; }
+        public List<global::OneNexus.Sdk.Cas.Models.S3RolePolicy> PermissionPolicies { get; set; }
 #endif
         /// <summary>The role&apos;s trust policy (assume-role policy) JSON.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -64,12 +64,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.S3Role"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.S3Role"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.S3Role CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.S3Role CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.S3Role();
+            return new global::OneNexus.Sdk.Cas.Models.S3Role();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -83,7 +83,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
                 { "id", n => { Id = n.GetStringValue(); } },
                 { "name", n => { Name = n.GetStringValue(); } },
                 { "path", n => { Path = n.GetStringValue(); } },
-                { "permissionPolicies", n => { PermissionPolicies = n.GetCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Generated.Models.S3RolePolicy>(global::OneNexus.Sdk.Cas.Generated.Models.S3RolePolicy.CreateFromDiscriminatorValue)?.AsList(); } },
+                { "permissionPolicies", n => { PermissionPolicies = n.GetCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Models.S3RolePolicy>(global::OneNexus.Sdk.Cas.Models.S3RolePolicy.CreateFromDiscriminatorValue)?.AsList(); } },
                 { "trustPolicy", n => { TrustPolicy = n.GetStringValue(); } },
             };
         }
@@ -98,7 +98,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
             writer.WriteStringValue("id", Id);
             writer.WriteStringValue("name", Name);
             writer.WriteStringValue("path", Path);
-            writer.WriteCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Generated.Models.S3RolePolicy>("permissionPolicies", PermissionPolicies);
+            writer.WriteCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Models.S3RolePolicy>("permissionPolicies", PermissionPolicies);
             writer.WriteStringValue("trustPolicy", TrustPolicy);
         }
     }

@@ -16,4 +16,11 @@
     <ProjectReference Include="../OneNexus.Sdk.Core/OneNexus.Sdk.Core.csproj" />
     <None Update="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
+  <!-- The client uses Core internals and must run with the Core version it was compiled against. -->
+  <Target Name="PinSdkCoreDependency" AfterTargets="_GetProjectReferenceVersions">
+    <ItemGroup>
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(Filename)' == 'OneNexus.Sdk.Core'"
+                                      ProjectVersion="[%(ProjectVersion)]" />
+    </ItemGroup>
+  </Target>
 </Project>

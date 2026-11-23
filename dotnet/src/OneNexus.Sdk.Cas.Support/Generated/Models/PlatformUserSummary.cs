@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Support.Generated.Models
+namespace OneNexus.Sdk.Cas.Support.Models
 {
     /// <summary>
     /// User snapshot returned as a list item by `ListPlatformUsers`.
@@ -30,7 +30,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         public string Email { get; set; }
 #endif
         /// <summary>The user&apos;s lifecycle state.</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.Models.UserLifecycleState? Status { get; set; }
+        public global::OneNexus.Sdk.Cas.Support.Models.UserLifecycleState? Status { get; set; }
         /// <summary>Guid primary key of the user&apos;s tenant.</summary>
         public Guid? TenantId { get; set; }
         /// <summary>The tenant&apos;s display name.</summary>
@@ -54,12 +54,12 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.PlatformUserSummary"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.PlatformUserSummary"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Support.Generated.Models.PlatformUserSummary CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Support.Models.PlatformUserSummary CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Support.Generated.Models.PlatformUserSummary();
+            return new global::OneNexus.Sdk.Cas.Support.Models.PlatformUserSummary();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -71,7 +71,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
             {
                 { "displayName", n => { DisplayName = n.GetStringValue(); } },
                 { "email", n => { Email = n.GetStringValue(); } },
-                { "status", n => { Status = n.GetEnumValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.UserLifecycleState>(); } },
+                { "status", n => { Status = n.GetEnumValue<global::OneNexus.Sdk.Cas.Support.Models.UserLifecycleState>(); } },
                 { "tenantId", n => { TenantId = n.GetGuidValue(); } },
                 { "tenantName", n => { TenantName = n.GetStringValue(); } },
                 { "userId", n => { UserId = n.GetGuidValue(); } },
@@ -87,7 +87,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("displayName", DisplayName);
             writer.WriteStringValue("email", Email);
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.UserLifecycleState>("status", Status);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Support.Models.UserLifecycleState>("status", Status);
             writer.WriteGuidValue("tenantId", TenantId);
             writer.WriteStringValue("tenantName", TenantName);
             writer.WriteGuidValue("userId", UserId);

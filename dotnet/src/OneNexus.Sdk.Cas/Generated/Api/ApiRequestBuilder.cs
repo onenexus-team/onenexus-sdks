@@ -2,41 +2,41 @@
 #pragma warning disable CS0618
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions;
-using OneNexus.Sdk.Cas.Generated.Api.AddServiceClientKey;
-using OneNexus.Sdk.Cas.Generated.Api.AssignRole;
-using OneNexus.Sdk.Cas.Generated.Api.AssumeS3Role;
-using OneNexus.Sdk.Cas.Generated.Api.AttachPolicyToRole;
-using OneNexus.Sdk.Cas.Generated.Api.CreateRole;
-using OneNexus.Sdk.Cas.Generated.Api.CreateServiceClient;
-using OneNexus.Sdk.Cas.Generated.Api.CreateUser;
-using OneNexus.Sdk.Cas.Generated.Api.DeletePolicy;
-using OneNexus.Sdk.Cas.Generated.Api.DeleteRole;
-using OneNexus.Sdk.Cas.Generated.Api.DetachPolicyFromRole;
-using OneNexus.Sdk.Cas.Generated.Api.DisableServiceClient;
-using OneNexus.Sdk.Cas.Generated.Api.GetPolicy;
-using OneNexus.Sdk.Cas.Generated.Api.ListMyTenants;
-using OneNexus.Sdk.Cas.Generated.Api.ListPolicies;
-using OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments;
-using OneNexus.Sdk.Cas.Generated.Api.ListRoleAssignments;
-using OneNexus.Sdk.Cas.Generated.Api.ListRolePolicies;
-using OneNexus.Sdk.Cas.Generated.Api.ListRoles;
-using OneNexus.Sdk.Cas.Generated.Api.ListS3Roles;
-using OneNexus.Sdk.Cas.Generated.Api.ListServiceClients;
-using OneNexus.Sdk.Cas.Generated.Api.ListUsers;
-using OneNexus.Sdk.Cas.Generated.Api.PublishPolicy;
-using OneNexus.Sdk.Cas.Generated.Api.RemoveRoleAssignment;
-using OneNexus.Sdk.Cas.Generated.Api.RemoveServiceClientKey;
-using OneNexus.Sdk.Cas.Generated.Api.RemoveUser;
-using OneNexus.Sdk.Cas.Generated.Api.ResendUserInvitation;
-using OneNexus.Sdk.Cas.Generated.Api.SuspendUser;
-using OneNexus.Sdk.Cas.Generated.Api.UnsuspendUser;
-using OneNexus.Sdk.Cas.Generated.Api.UpdatePolicy;
-using OneNexus.Sdk.Cas.Generated.Api.UpdateRoleDescription;
+using OneNexus.Sdk.Cas.Api.AddServiceClientKey;
+using OneNexus.Sdk.Cas.Api.AssignRole;
+using OneNexus.Sdk.Cas.Api.AssumeS3Role;
+using OneNexus.Sdk.Cas.Api.AttachPolicyToRole;
+using OneNexus.Sdk.Cas.Api.CreateRole;
+using OneNexus.Sdk.Cas.Api.CreateServiceClient;
+using OneNexus.Sdk.Cas.Api.CreateUser;
+using OneNexus.Sdk.Cas.Api.DeletePolicy;
+using OneNexus.Sdk.Cas.Api.DeleteRole;
+using OneNexus.Sdk.Cas.Api.DetachPolicyFromRole;
+using OneNexus.Sdk.Cas.Api.DisableServiceClient;
+using OneNexus.Sdk.Cas.Api.GetPolicy;
+using OneNexus.Sdk.Cas.Api.ListMyTenants;
+using OneNexus.Sdk.Cas.Api.ListPolicies;
+using OneNexus.Sdk.Cas.Api.ListPolicyAttachments;
+using OneNexus.Sdk.Cas.Api.ListRoleAssignments;
+using OneNexus.Sdk.Cas.Api.ListRolePolicies;
+using OneNexus.Sdk.Cas.Api.ListRoles;
+using OneNexus.Sdk.Cas.Api.ListS3Roles;
+using OneNexus.Sdk.Cas.Api.ListServiceClients;
+using OneNexus.Sdk.Cas.Api.ListUsers;
+using OneNexus.Sdk.Cas.Api.PublishPolicy;
+using OneNexus.Sdk.Cas.Api.RemoveRoleAssignment;
+using OneNexus.Sdk.Cas.Api.RemoveServiceClientKey;
+using OneNexus.Sdk.Cas.Api.RemoveUser;
+using OneNexus.Sdk.Cas.Api.ResendUserInvitation;
+using OneNexus.Sdk.Cas.Api.SuspendUser;
+using OneNexus.Sdk.Cas.Api.UnsuspendUser;
+using OneNexus.Sdk.Cas.Api.UpdatePolicy;
+using OneNexus.Sdk.Cas.Api.UpdateRoleDescription;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Api
+namespace OneNexus.Sdk.Cas.Api
 {
     /// <summary>
     /// Builds and executes requests for operations under \api
@@ -45,157 +45,157 @@ namespace OneNexus.Sdk.Cas.Generated.Api
     public partial class ApiRequestBuilder : BaseRequestBuilder
     {
         /// <summary>The AddServiceClientKey property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.AddServiceClientKey.AddServiceClientKeyRequestBuilder AddServiceClientKey
+        public global::OneNexus.Sdk.Cas.Api.AddServiceClientKey.AddServiceClientKeyRequestBuilder AddServiceClientKey
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.AddServiceClientKey.AddServiceClientKeyRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.AddServiceClientKey.AddServiceClientKeyRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The AssignRole property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.AssignRole.AssignRoleRequestBuilder AssignRole
+        public global::OneNexus.Sdk.Cas.Api.AssignRole.AssignRoleRequestBuilder AssignRole
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.AssignRole.AssignRoleRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.AssignRole.AssignRoleRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The AssumeS3Role property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.AssumeS3Role.AssumeS3RoleRequestBuilder AssumeS3Role
+        public global::OneNexus.Sdk.Cas.Api.AssumeS3Role.AssumeS3RoleRequestBuilder AssumeS3Role
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.AssumeS3Role.AssumeS3RoleRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.AssumeS3Role.AssumeS3RoleRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The AttachPolicyToRole property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.AttachPolicyToRole.AttachPolicyToRoleRequestBuilder AttachPolicyToRole
+        public global::OneNexus.Sdk.Cas.Api.AttachPolicyToRole.AttachPolicyToRoleRequestBuilder AttachPolicyToRole
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.AttachPolicyToRole.AttachPolicyToRoleRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.AttachPolicyToRole.AttachPolicyToRoleRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The CreateRole property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.CreateRole.CreateRoleRequestBuilder CreateRole
+        public global::OneNexus.Sdk.Cas.Api.CreateRole.CreateRoleRequestBuilder CreateRole
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.CreateRole.CreateRoleRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.CreateRole.CreateRoleRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The CreateServiceClient property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.CreateServiceClient.CreateServiceClientRequestBuilder CreateServiceClient
+        public global::OneNexus.Sdk.Cas.Api.CreateServiceClient.CreateServiceClientRequestBuilder CreateServiceClient
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.CreateServiceClient.CreateServiceClientRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.CreateServiceClient.CreateServiceClientRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The CreateUser property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.CreateUser.CreateUserRequestBuilder CreateUser
+        public global::OneNexus.Sdk.Cas.Api.CreateUser.CreateUserRequestBuilder CreateUser
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.CreateUser.CreateUserRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.CreateUser.CreateUserRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The DeletePolicy property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.DeletePolicy.DeletePolicyRequestBuilder DeletePolicy
+        public global::OneNexus.Sdk.Cas.Api.DeletePolicy.DeletePolicyRequestBuilder DeletePolicy
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.DeletePolicy.DeletePolicyRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.DeletePolicy.DeletePolicyRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The DeleteRole property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.DeleteRole.DeleteRoleRequestBuilder DeleteRole
+        public global::OneNexus.Sdk.Cas.Api.DeleteRole.DeleteRoleRequestBuilder DeleteRole
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.DeleteRole.DeleteRoleRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.DeleteRole.DeleteRoleRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The DetachPolicyFromRole property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.DetachPolicyFromRole.DetachPolicyFromRoleRequestBuilder DetachPolicyFromRole
+        public global::OneNexus.Sdk.Cas.Api.DetachPolicyFromRole.DetachPolicyFromRoleRequestBuilder DetachPolicyFromRole
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.DetachPolicyFromRole.DetachPolicyFromRoleRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.DetachPolicyFromRole.DetachPolicyFromRoleRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The DisableServiceClient property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.DisableServiceClient.DisableServiceClientRequestBuilder DisableServiceClient
+        public global::OneNexus.Sdk.Cas.Api.DisableServiceClient.DisableServiceClientRequestBuilder DisableServiceClient
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.DisableServiceClient.DisableServiceClientRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.DisableServiceClient.DisableServiceClientRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The GetPolicy property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.GetPolicy.GetPolicyRequestBuilder GetPolicy
+        public global::OneNexus.Sdk.Cas.Api.GetPolicy.GetPolicyRequestBuilder GetPolicy
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.GetPolicy.GetPolicyRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.GetPolicy.GetPolicyRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListMyTenants property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListMyTenants.ListMyTenantsRequestBuilder ListMyTenants
+        public global::OneNexus.Sdk.Cas.Api.ListMyTenants.ListMyTenantsRequestBuilder ListMyTenants
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.ListMyTenants.ListMyTenantsRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.ListMyTenants.ListMyTenantsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListPolicies property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListPolicies.ListPoliciesRequestBuilder ListPolicies
+        public global::OneNexus.Sdk.Cas.Api.ListPolicies.ListPoliciesRequestBuilder ListPolicies
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.ListPolicies.ListPoliciesRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.ListPolicies.ListPoliciesRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListPolicyAttachments property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder ListPolicyAttachments
+        public global::OneNexus.Sdk.Cas.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder ListPolicyAttachments
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.ListPolicyAttachments.ListPolicyAttachmentsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListRoleAssignments property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListRoleAssignments.ListRoleAssignmentsRequestBuilder ListRoleAssignments
+        public global::OneNexus.Sdk.Cas.Api.ListRoleAssignments.ListRoleAssignmentsRequestBuilder ListRoleAssignments
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.ListRoleAssignments.ListRoleAssignmentsRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.ListRoleAssignments.ListRoleAssignmentsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListRolePolicies property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListRolePolicies.ListRolePoliciesRequestBuilder ListRolePolicies
+        public global::OneNexus.Sdk.Cas.Api.ListRolePolicies.ListRolePoliciesRequestBuilder ListRolePolicies
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.ListRolePolicies.ListRolePoliciesRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.ListRolePolicies.ListRolePoliciesRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListRoles property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListRoles.ListRolesRequestBuilder ListRoles
+        public global::OneNexus.Sdk.Cas.Api.ListRoles.ListRolesRequestBuilder ListRoles
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.ListRoles.ListRolesRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.ListRoles.ListRolesRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListS3Roles property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListS3Roles.ListS3RolesRequestBuilder ListS3Roles
+        public global::OneNexus.Sdk.Cas.Api.ListS3Roles.ListS3RolesRequestBuilder ListS3Roles
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.ListS3Roles.ListS3RolesRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.ListS3Roles.ListS3RolesRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListServiceClients property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListServiceClients.ListServiceClientsRequestBuilder ListServiceClients
+        public global::OneNexus.Sdk.Cas.Api.ListServiceClients.ListServiceClientsRequestBuilder ListServiceClients
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.ListServiceClients.ListServiceClientsRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.ListServiceClients.ListServiceClientsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ListUsers property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListUsers.ListUsersRequestBuilder ListUsers
+        public global::OneNexus.Sdk.Cas.Api.ListUsers.ListUsersRequestBuilder ListUsers
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.ListUsers.ListUsersRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.ListUsers.ListUsersRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The PublishPolicy property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.PublishPolicy.PublishPolicyRequestBuilder PublishPolicy
+        public global::OneNexus.Sdk.Cas.Api.PublishPolicy.PublishPolicyRequestBuilder PublishPolicy
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.PublishPolicy.PublishPolicyRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.PublishPolicy.PublishPolicyRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The RemoveRoleAssignment property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.RemoveRoleAssignment.RemoveRoleAssignmentRequestBuilder RemoveRoleAssignment
+        public global::OneNexus.Sdk.Cas.Api.RemoveRoleAssignment.RemoveRoleAssignmentRequestBuilder RemoveRoleAssignment
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.RemoveRoleAssignment.RemoveRoleAssignmentRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.RemoveRoleAssignment.RemoveRoleAssignmentRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The RemoveServiceClientKey property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.RemoveServiceClientKey.RemoveServiceClientKeyRequestBuilder RemoveServiceClientKey
+        public global::OneNexus.Sdk.Cas.Api.RemoveServiceClientKey.RemoveServiceClientKeyRequestBuilder RemoveServiceClientKey
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.RemoveServiceClientKey.RemoveServiceClientKeyRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.RemoveServiceClientKey.RemoveServiceClientKeyRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The RemoveUser property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.RemoveUser.RemoveUserRequestBuilder RemoveUser
+        public global::OneNexus.Sdk.Cas.Api.RemoveUser.RemoveUserRequestBuilder RemoveUser
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.RemoveUser.RemoveUserRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.RemoveUser.RemoveUserRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ResendUserInvitation property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ResendUserInvitation.ResendUserInvitationRequestBuilder ResendUserInvitation
+        public global::OneNexus.Sdk.Cas.Api.ResendUserInvitation.ResendUserInvitationRequestBuilder ResendUserInvitation
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.ResendUserInvitation.ResendUserInvitationRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.ResendUserInvitation.ResendUserInvitationRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The SuspendUser property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.SuspendUser.SuspendUserRequestBuilder SuspendUser
+        public global::OneNexus.Sdk.Cas.Api.SuspendUser.SuspendUserRequestBuilder SuspendUser
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.SuspendUser.SuspendUserRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.SuspendUser.SuspendUserRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The UnsuspendUser property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.UnsuspendUser.UnsuspendUserRequestBuilder UnsuspendUser
+        public global::OneNexus.Sdk.Cas.Api.UnsuspendUser.UnsuspendUserRequestBuilder UnsuspendUser
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.UnsuspendUser.UnsuspendUserRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.UnsuspendUser.UnsuspendUserRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The UpdatePolicy property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.UpdatePolicy.UpdatePolicyRequestBuilder UpdatePolicy
+        public global::OneNexus.Sdk.Cas.Api.UpdatePolicy.UpdatePolicyRequestBuilder UpdatePolicy
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.UpdatePolicy.UpdatePolicyRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.UpdatePolicy.UpdatePolicyRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The UpdateRoleDescription property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Api.UpdateRoleDescription.UpdateRoleDescriptionRequestBuilder UpdateRoleDescription
+        public global::OneNexus.Sdk.Cas.Api.UpdateRoleDescription.UpdateRoleDescriptionRequestBuilder UpdateRoleDescription
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Api.UpdateRoleDescription.UpdateRoleDescriptionRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Api.UpdateRoleDescription.UpdateRoleDescriptionRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ApiRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Api.ApiRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -203,7 +203,7 @@ namespace OneNexus.Sdk.Cas.Generated.Api
         {
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ApiRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Api.ApiRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>

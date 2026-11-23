@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Support.Generated.Models
+namespace OneNexus.Sdk.Cas.Support.Models
 {
     /// <summary>
     /// A Cedar entity identifier, represented as its type and ID parts.
@@ -32,12 +32,12 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.CedarDiagnosticEntityUid"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.CedarDiagnosticEntityUid"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Support.Generated.Models.CedarDiagnosticEntityUid CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Support.Models.CedarDiagnosticEntityUid CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Support.Generated.Models.CedarDiagnosticEntityUid();
+            return new global::OneNexus.Sdk.Cas.Support.Models.CedarDiagnosticEntityUid();
         }
         /// <summary>
         /// The deserialization information for the current model

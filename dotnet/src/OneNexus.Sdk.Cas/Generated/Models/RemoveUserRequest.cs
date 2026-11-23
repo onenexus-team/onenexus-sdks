@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// Request body for `POST /api/RemoveUser`.
@@ -18,12 +18,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.RemoveUserRequest"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.RemoveUserRequest"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.RemoveUserRequest CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.RemoveUserRequest CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.RemoveUserRequest();
+            return new global::OneNexus.Sdk.Cas.Models.RemoveUserRequest();
         }
         /// <summary>
         /// The deserialization information for the current model

@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// A tenant-owned OAuth service client.
@@ -34,13 +34,13 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>Registered public assertion keys.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public List<global::OneNexus.Sdk.Cas.Generated.Models.ServiceClientKey>? Keys { get; set; }
+        public List<global::OneNexus.Sdk.Cas.Models.ServiceClientKey>? Keys { get; set; }
 #nullable restore
 #else
-        public List<global::OneNexus.Sdk.Cas.Generated.Models.ServiceClientKey> Keys { get; set; }
+        public List<global::OneNexus.Sdk.Cas.Models.ServiceClientKey> Keys { get; set; }
 #endif
         /// <summary>Whether the client can obtain new access tokens.</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Models.OidcApplicationLifecycleState? LifecycleState { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.OidcApplicationLifecycleState? LifecycleState { get; set; }
         /// <summary>Canonical `ServiceClient` principal URI used for role assignments.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -52,12 +52,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.ServiceClient"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.ServiceClient"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.ServiceClient CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.ServiceClient CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.ServiceClient();
+            return new global::OneNexus.Sdk.Cas.Models.ServiceClient();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -70,8 +70,8 @@ namespace OneNexus.Sdk.Cas.Generated.Models
                 { "clientId", n => { ClientId = n.GetStringValue(); } },
                 { "displayName", n => { DisplayName = n.GetStringValue(); } },
                 { "id", n => { Id = n.GetGuidValue(); } },
-                { "keys", n => { Keys = n.GetCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Generated.Models.ServiceClientKey>(global::OneNexus.Sdk.Cas.Generated.Models.ServiceClientKey.CreateFromDiscriminatorValue)?.AsList(); } },
-                { "lifecycleState", n => { LifecycleState = n.GetEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.OidcApplicationLifecycleState>(); } },
+                { "keys", n => { Keys = n.GetCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Models.ServiceClientKey>(global::OneNexus.Sdk.Cas.Models.ServiceClientKey.CreateFromDiscriminatorValue)?.AsList(); } },
+                { "lifecycleState", n => { LifecycleState = n.GetEnumValue<global::OneNexus.Sdk.Cas.Models.OidcApplicationLifecycleState>(); } },
                 { "uri", n => { Uri = n.GetStringValue(); } },
             };
         }
@@ -85,8 +85,8 @@ namespace OneNexus.Sdk.Cas.Generated.Models
             writer.WriteStringValue("clientId", ClientId);
             writer.WriteStringValue("displayName", DisplayName);
             writer.WriteGuidValue("id", Id);
-            writer.WriteCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Generated.Models.ServiceClientKey>("keys", Keys);
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.OidcApplicationLifecycleState>("lifecycleState", LifecycleState);
+            writer.WriteCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Models.ServiceClientKey>("keys", Keys);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Models.OidcApplicationLifecycleState>("lifecycleState", LifecycleState);
             writer.WriteStringValue("uri", Uri);
         }
     }

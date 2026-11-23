@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// A canonical role assignee supplied to an administration API.
@@ -14,7 +14,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
     public partial class AuthorizationAssignee : IParsable
     {
         /// <summary>The strict kind of principal represented by string AuthorizationAssignee.Uri.</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssigneeKind? Kind { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationAssigneeKind? Kind { get; set; }
         /// <summary>The complete canonical OneNexus URI.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -26,12 +26,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssignee"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.AuthorizationAssignee"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssignee CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.AuthorizationAssignee CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssignee();
+            return new global::OneNexus.Sdk.Cas.Models.AuthorizationAssignee();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -41,7 +41,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "kind", n => { Kind = n.GetEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssigneeKind>(); } },
+                { "kind", n => { Kind = n.GetEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationAssigneeKind>(); } },
                 { "uri", n => { Uri = n.GetStringValue(); } },
             };
         }
@@ -52,7 +52,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssigneeKind>("kind", Kind);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationAssigneeKind>("kind", Kind);
             writer.WriteStringValue("uri", Uri);
         }
     }

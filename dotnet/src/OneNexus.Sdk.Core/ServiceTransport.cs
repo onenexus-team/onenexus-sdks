@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -18,6 +19,7 @@ internal sealed class ServiceTransport : IDisposable
     internal static readonly HttpClient SharedHttp = new HttpClient(new SocketsHttpHandler
     {
         AllowAutoRedirect = false,
+        AutomaticDecompression = DecompressionMethods.All,
         UseCookies = false,
         PooledConnectionLifetime = TimeSpan.FromMinutes(5),
     });
@@ -26,12 +28,11 @@ internal sealed class ServiceTransport : IDisposable
 
     internal ServiceTransport(Uri baseUrl, IAccessTokenCredential credentials, SdkClientOptions? options)
     {
-        ArgumentNullException.ThrowIfNull(baseUrl);
         ArgumentNullException.ThrowIfNull(credentials);
-        if (!baseUrl.IsAbsoluteUri || baseUrl.Scheme is not ("http" or "https") || baseUrl.UserInfo.Length != 0
-            || baseUrl.Query.Length != 0 || baseUrl.Fragment.Length != 0)
+        OidcClient.ValidateEndpoint(baseUrl);
+        if (baseUrl.Query.Length != 0)
         {
-            throw new ArgumentException("Use an absolute service URL without user information, query or fragment.", nameof(baseUrl));
+            throw new ArgumentException("The service URL must not include a query.", nameof(baseUrl));
         }
 
         options ??= new SdkClientOptions();
@@ -47,8 +48,15 @@ internal sealed class ServiceTransport : IDisposable
 
     internal HttpClientRequestAdapter Adapter { get; }
 
-    internal static void AddIdempotencyKey(RequestConfiguration<DefaultQueryParameters> configuration) =>
-        configuration.Headers.Add("X-Nx1-Idempotency-Key", Guid.NewGuid().ToString("D"));
+    internal static Action<RequestConfiguration<DefaultQueryParameters>> WithIdempotencyKey(string? idempotencyKey)
+    {
+        var key = idempotencyKey ?? Guid.NewGuid().ToString("D");
+        if (key.Length is < 16 or > 128 || !key.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-' or '.'))
+        {
+            throw new ArgumentException("Expected 16–128 ASCII letters, digits, underscores, dots or hyphens.", nameof(idempotencyKey));
+        }
+        return configuration => configuration.Headers.Add("X-Nx1-Idempotency-Key", key);
+    }
 
     internal static async Task<T> RequiredAsync<T>(Task<T?> operation) where T : class =>
         await operation.ConfigureAwait(false) ?? throw new InvalidDataException("CAS returned an empty response for a typed operation.");
@@ -90,9 +98,11 @@ internal sealed class ServiceTransport : IDisposable
 
             // Kiota serializes once. Each HTTP attempt owns a fresh message with the same body and operation headers.
             var body = request.Content is null ? null : await request.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+            AccessToken? nextToken = fixedToken;
             for (var attempt = 0; ; attempt++)
             {
-                AccessToken token = fixedToken ?? await _credentials.GetTokenAsync(_options.Context, cancellationToken).ConfigureAwait(false);
+                AccessToken token = nextToken ?? await _credentials.GetTokenAsync(_options.Context, cancellationToken).ConfigureAwait(false);
+                nextToken = fixedToken;
                 using HttpRequestMessage outgoing = CreateAttempt(request, uri, body, token);
                 HttpResponseMessage response;
                 try
@@ -101,7 +111,7 @@ internal sealed class ServiceTransport : IDisposable
                 }
                 catch (HttpRequestException ex) when (attempt < _options.MaxRetries && ex.StatusCode is null)
                 {
-                    await DelayAsync(attempt, null, cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(Backoff(attempt), cancellationToken).ConfigureAwait(false);
                     continue;
                 }
 
@@ -114,18 +124,35 @@ internal sealed class ServiceTransport : IDisposable
                     return response;
                 }
 
-                RetryConditionHeaderValue? retryAfter = response.Headers.RetryAfter;
+                TimeSpan? delay = null;
                 using (response)
                 {
-                    var retryable = (int)response.StatusCode is 408 or 429 or 500 or 502 or 503 or 504
-                        || (response.StatusCode == HttpStatusCode.Unauthorized && fixedToken is null);
-                    if (!retryable || attempt >= _options.MaxRetries)
+                    if (attempt < _options.MaxRetries)
+                    {
+                        if (response.StatusCode == HttpStatusCode.Unauthorized && route is null)
+                        {
+                            AccessToken replacement = await _credentials.GetTokenAsync(_options.Context, cancellationToken).ConfigureAwait(false);
+                            if (!string.Equals(replacement.Value, token.Value, StringComparison.Ordinal))
+                            {
+                                nextToken = replacement;
+                                continue;
+                            }
+                        }
+                        else if ((int)response.StatusCode is 408 or 429 or 500 or 502 or 503 or 504)
+                        {
+                            RetryConditionHeaderValue? after = response.Headers.RetryAfter;
+                            delay = after?.Delta ?? (after?.Date - _options.Context.UtcNow) ?? Backoff(attempt);
+                        }
+                    }
+                    if (delay is null || delay > _options.MaxRetryDelay)
                     {
                         await PlatformException.ThrowIfFailedAsync(response, cancellationToken).ConfigureAwait(false);
                     }
                 }
-
-                await DelayAsync(attempt, retryAfter, cancellationToken).ConfigureAwait(false);
+                if (delay > TimeSpan.Zero)
+                {
+                    await Task.Delay(delay.Value, cancellationToken).ConfigureAwait(false);
+                }
             }
         }
 
@@ -148,11 +175,10 @@ internal sealed class ServiceTransport : IDisposable
             return message;
         }
 
-        private Task DelayAsync(int attempt, RetryConditionHeaderValue? after, CancellationToken cancellationToken)
+        private TimeSpan Backoff(int attempt)
         {
-            var milliseconds = after?.Delta?.TotalMilliseconds ?? (after?.Date - _options.Context.UtcNow)?.TotalMilliseconds
-                ?? (Random.Shared.NextDouble() * 300 * Math.Pow(2, Math.Min(attempt, 30)));
-            return Task.Delay(TimeSpan.FromMilliseconds(Math.Clamp(milliseconds, 0, _options.MaxRetryDelay.TotalMilliseconds)), cancellationToken);
+            var milliseconds = Random.Shared.NextDouble() * 300 * Math.Pow(2, Math.Min(attempt, 30));
+            return TimeSpan.FromMilliseconds(Math.Min(milliseconds, _options.MaxRetryDelay.TotalMilliseconds));
         }
     }
 }

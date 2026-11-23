@@ -3,13 +3,13 @@
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions.Serialization;
 using Microsoft.Kiota.Abstractions;
-using OneNexus.Sdk.Cas.Generated.Models;
+using OneNexus.Sdk.Cas.Models;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Api.ListMyTenants
+namespace OneNexus.Sdk.Cas.Api.ListMyTenants
 {
     /// <summary>
     /// Builds and executes requests for operations under \api\ListMyTenants
@@ -18,7 +18,7 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListMyTenants
     public partial class ListMyTenantsRequestBuilder : BaseRequestBuilder
     {
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ListMyTenants.ListMyTenantsRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Api.ListMyTenants.ListMyTenantsRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -26,7 +26,7 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListMyTenants
         {
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ListMyTenants.ListMyTenantsRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Api.ListMyTenants.ListMyTenantsRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -36,31 +36,31 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListMyTenants
         /// <summary>
         /// The person comes from the access token: its user leads to theiraccount, and every tenant where the account&apos;s user is active and thetenant is active is listed, by name. Switching to one is a newauthorization request naming it, which checks the same things again,and refuses a tenant the calling app is not offered in.
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsResponse"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.ListMyTenantsResponse"/></returns>
         /// <param name="body">Request body for `POST /api/ListMyTenants`.</param>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 401 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 403 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 503 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 401 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 403 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 503 status code</exception>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public async Task<global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsResponse?> PostAsync(global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<global::OneNexus.Sdk.Cas.Models.ListMyTenantsResponse?> PostAsync(global::OneNexus.Sdk.Cas.Models.ListMyTenantsRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #nullable restore
 #else
-        public async Task<global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsResponse> PostAsync(global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<global::OneNexus.Sdk.Cas.Models.ListMyTenantsResponse> PostAsync(global::OneNexus.Sdk.Cas.Models.ListMyTenantsRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #endif
             if(ReferenceEquals(body, null)) throw new ArgumentNullException(nameof(body));
             var requestInfo = ToPostRequestInformation(body, requestConfiguration);
             var errorMapping = new Dictionary<string, ParsableFactory<IParsable>>
             {
-                { "401", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "403", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "503", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "401", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "403", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "503", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
             };
-            return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsResponse>(requestInfo, global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
+            return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Models.ListMyTenantsResponse>(requestInfo, global::OneNexus.Sdk.Cas.Models.ListMyTenantsResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
         /// The person comes from the access token: its user leads to theiraccount, and every tenant where the account&apos;s user is active and thetenant is active is listed, by name. Switching to one is a newauthorization request naming it, which checks the same things again,and refuses a tenant the calling app is not offered in.
@@ -70,11 +70,11 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListMyTenants
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default)
+        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Models.ListMyTenantsRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default)
         {
 #nullable restore
 #else
-        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default)
+        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Models.ListMyTenantsRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default)
         {
 #endif
             if(ReferenceEquals(body, null)) throw new ArgumentNullException(nameof(body));
@@ -87,11 +87,11 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListMyTenants
         /// <summary>
         /// Returns a request builder with the provided arbitrary URL. Using this method means any other path or query parameters are ignored.
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ListMyTenants.ListMyTenantsRequestBuilder"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Api.ListMyTenants.ListMyTenantsRequestBuilder"/></returns>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListMyTenants.ListMyTenantsRequestBuilder WithUrl(string rawUrl)
+        public global::OneNexus.Sdk.Cas.Api.ListMyTenants.ListMyTenantsRequestBuilder WithUrl(string rawUrl)
         {
-            return new global::OneNexus.Sdk.Cas.Generated.Api.ListMyTenants.ListMyTenantsRequestBuilder(rawUrl, RequestAdapter);
+            return new global::OneNexus.Sdk.Cas.Api.ListMyTenants.ListMyTenantsRequestBuilder(rawUrl, RequestAdapter);
         }
     }
 }

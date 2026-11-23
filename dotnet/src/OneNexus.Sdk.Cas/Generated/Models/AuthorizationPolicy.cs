@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// Complete customer-visible authorization policy content.
@@ -40,10 +40,10 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>Validated policy object containing exactly the required,case-sensitive `Effect` (`Allow` or `Deny`),`Action`, and `ResourceScope` fields plus optional`Condition`. `Action` and `ResourceScope` containnormalized non-empty string arrays; `Condition` groups conditionkeys by operator.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public global::OneNexus.Sdk.Cas.Generated.Models.JsonElement? Document { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.JsonElement? Document { get; set; }
 #nullable restore
 #else
-        public global::OneNexus.Sdk.Cas.Generated.Models.JsonElement Document { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.JsonElement Document { get; set; }
 #endif
         /// <summary>SHA-256 hash of the canonically normalized policy document.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -54,7 +54,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         public string DocumentHash { get; set; }
 #endif
         /// <summary>The catalogue that owns this policy.</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyKind? Kind { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyKind? Kind { get; set; }
         /// <summary>Immutable machine-readable policy name.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -66,7 +66,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>UTC instant of the latest successful publication, when present.</summary>
         public DateTimeOffset? PublishedAtUtc { get; set; }
         /// <summary>Current policy lifecycle state.</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyLifecycleStatus? Status { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyLifecycleStatus? Status { get; set; }
         /// <summary>Canonical principal URI that most recently updated the policy.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -78,12 +78,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicy"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.AuthorizationPolicy"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicy CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.AuthorizationPolicy CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicy();
+            return new global::OneNexus.Sdk.Cas.Models.AuthorizationPolicy();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -96,12 +96,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
                 { "contentStateToken", n => { ContentStateToken = n.GetStringValue(); } },
                 { "createdByUri", n => { CreatedByUri = n.GetStringValue(); } },
                 { "description", n => { Description = n.GetStringValue(); } },
-                { "document", n => { Document = n.GetObjectValue<global::OneNexus.Sdk.Cas.Generated.Models.JsonElement>(global::OneNexus.Sdk.Cas.Generated.Models.JsonElement.CreateFromDiscriminatorValue); } },
+                { "document", n => { Document = n.GetObjectValue<global::OneNexus.Sdk.Cas.Models.JsonElement>(global::OneNexus.Sdk.Cas.Models.JsonElement.CreateFromDiscriminatorValue); } },
                 { "documentHash", n => { DocumentHash = n.GetStringValue(); } },
-                { "kind", n => { Kind = n.GetEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyKind>(); } },
+                { "kind", n => { Kind = n.GetEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyKind>(); } },
                 { "name", n => { Name = n.GetStringValue(); } },
                 { "publishedAtUtc", n => { PublishedAtUtc = n.GetDateTimeOffsetValue(); } },
-                { "status", n => { Status = n.GetEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyLifecycleStatus>(); } },
+                { "status", n => { Status = n.GetEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyLifecycleStatus>(); } },
                 { "updatedByUri", n => { UpdatedByUri = n.GetStringValue(); } },
             };
         }
@@ -115,12 +115,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
             writer.WriteStringValue("contentStateToken", ContentStateToken);
             writer.WriteStringValue("createdByUri", CreatedByUri);
             writer.WriteStringValue("description", Description);
-            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Generated.Models.JsonElement>("document", Document);
+            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Models.JsonElement>("document", Document);
             writer.WriteStringValue("documentHash", DocumentHash);
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyKind>("kind", Kind);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyKind>("kind", Kind);
             writer.WriteStringValue("name", Name);
             writer.WriteDateTimeOffsetValue("publishedAtUtc", PublishedAtUtc);
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyLifecycleStatus>("status", Status);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyLifecycleStatus>("status", Status);
             writer.WriteStringValue("updatedByUri", UpdatedByUri);
         }
     }

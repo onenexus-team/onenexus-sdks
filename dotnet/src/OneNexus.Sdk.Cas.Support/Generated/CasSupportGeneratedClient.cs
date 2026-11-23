@@ -2,16 +2,13 @@
 #pragma warning disable CS0618
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions;
-using Microsoft.Kiota.Serialization.Form;
 using Microsoft.Kiota.Serialization.Json;
-using Microsoft.Kiota.Serialization.Multipart;
-using Microsoft.Kiota.Serialization.Text;
-using OneNexus.Sdk.Cas.Support.Generated.SupportApi;
+using OneNexus.Sdk.Cas.Support.SupportApi;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
-namespace OneNexus.Sdk.Cas.Support.Generated
+namespace OneNexus.Sdk.Cas.Support
 {
     /// <summary>
     /// The main entry point of the SDK, exposes the configuration and the fluent API.
@@ -20,23 +17,18 @@ namespace OneNexus.Sdk.Cas.Support.Generated
     public partial class CasSupportGeneratedClient : BaseRequestBuilder
     {
         /// <summary>The supportApi property</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.SupportApiRequestBuilder SupportApi
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.SupportApiRequestBuilder SupportApi
         {
-            get => new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.SupportApiRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Support.SupportApi.SupportApiRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Support.Generated.CasSupportGeneratedClient"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Support.CasSupportGeneratedClient"/> and sets the default values.
         /// </summary>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
         public CasSupportGeneratedClient(IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}", new Dictionary<string, object>())
         {
             ApiClientBuilder.RegisterDefaultSerializer<JsonSerializationWriterFactory>();
-            ApiClientBuilder.RegisterDefaultSerializer<TextSerializationWriterFactory>();
-            ApiClientBuilder.RegisterDefaultSerializer<FormSerializationWriterFactory>();
-            ApiClientBuilder.RegisterDefaultSerializer<MultipartSerializationWriterFactory>();
             ApiClientBuilder.RegisterDefaultDeserializer<JsonParseNodeFactory>();
-            ApiClientBuilder.RegisterDefaultDeserializer<TextParseNodeFactory>();
-            ApiClientBuilder.RegisterDefaultDeserializer<FormParseNodeFactory>();
         }
     }
 }

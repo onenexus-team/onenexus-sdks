@@ -2,12 +2,12 @@
 #pragma warning disable CS0618
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions;
-using OneNexus.Sdk.Cas.Generated.Account.Profile;
+using OneNexus.Sdk.Cas.Account.Profile;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Account
+namespace OneNexus.Sdk.Cas.Account
 {
     /// <summary>
     /// Builds and executes requests for operations under \account
@@ -16,12 +16,12 @@ namespace OneNexus.Sdk.Cas.Generated.Account
     public partial class AccountRequestBuilder : BaseRequestBuilder
     {
         /// <summary>The profile property</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Account.Profile.ProfileRequestBuilder Profile
+        public global::OneNexus.Sdk.Cas.Account.Profile.ProfileRequestBuilder Profile
         {
-            get => new global::OneNexus.Sdk.Cas.Generated.Account.Profile.ProfileRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::OneNexus.Sdk.Cas.Account.Profile.ProfileRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Account.AccountRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Account.AccountRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -29,7 +29,7 @@ namespace OneNexus.Sdk.Cas.Generated.Account
         {
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Account.AccountRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Account.AccountRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>

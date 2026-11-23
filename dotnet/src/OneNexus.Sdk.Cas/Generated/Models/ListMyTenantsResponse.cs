@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// Response body for `POST /api/ListMyTenants`.
@@ -16,20 +16,20 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>The tenants the person can use, by display name.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public List<global::OneNexus.Sdk.Cas.Generated.Models.MyTenant>? Tenants { get; set; }
+        public List<global::OneNexus.Sdk.Cas.Models.MyTenant>? Tenants { get; set; }
 #nullable restore
 #else
-        public List<global::OneNexus.Sdk.Cas.Generated.Models.MyTenant> Tenants { get; set; }
+        public List<global::OneNexus.Sdk.Cas.Models.MyTenant> Tenants { get; set; }
 #endif
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsResponse"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.ListMyTenantsResponse"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsResponse CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.ListMyTenantsResponse CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.ListMyTenantsResponse();
+            return new global::OneNexus.Sdk.Cas.Models.ListMyTenantsResponse();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -39,7 +39,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "tenants", n => { Tenants = n.GetCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Generated.Models.MyTenant>(global::OneNexus.Sdk.Cas.Generated.Models.MyTenant.CreateFromDiscriminatorValue)?.AsList(); } },
+                { "tenants", n => { Tenants = n.GetCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Models.MyTenant>(global::OneNexus.Sdk.Cas.Models.MyTenant.CreateFromDiscriminatorValue)?.AsList(); } },
             };
         }
         /// <summary>
@@ -49,7 +49,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Generated.Models.MyTenant>("tenants", Tenants);
+            writer.WriteCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Models.MyTenant>("tenants", Tenants);
         }
     }
 }

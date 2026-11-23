@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// Request body for `POST /api/DetachPolicyFromRole`.
@@ -24,10 +24,10 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>Policy to detach.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference? Policy { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference? Policy { get; set; }
 #nullable restore
 #else
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference Policy { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference Policy { get; set; }
 #endif
         /// <summary>URI of the role that currently receives the policy.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -40,12 +40,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.DetachPolicyFromRoleRequest"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.DetachPolicyFromRoleRequest"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.DetachPolicyFromRoleRequest CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.DetachPolicyFromRoleRequest CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.DetachPolicyFromRoleRequest();
+            return new global::OneNexus.Sdk.Cas.Models.DetachPolicyFromRoleRequest();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -56,7 +56,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
             return new Dictionary<string, Action<IParseNode>>
             {
                 { "expectedStateToken", n => { ExpectedStateToken = n.GetStringValue(); } },
-                { "policy", n => { Policy = n.GetObjectValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference>(global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference.CreateFromDiscriminatorValue); } },
+                { "policy", n => { Policy = n.GetObjectValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference>(global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference.CreateFromDiscriminatorValue); } },
                 { "roleUri", n => { RoleUri = n.GetStringValue(); } },
             };
         }
@@ -68,7 +68,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("expectedStateToken", ExpectedStateToken);
-            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference>("policy", Policy);
+            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference>("policy", Policy);
             writer.WriteStringValue("roleUri", RoleUri);
         }
     }

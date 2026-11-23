@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Support.Generated.Models
+namespace OneNexus.Sdk.Cas.Support.Models
 {
     /// <summary>
     /// Support authorization-evaluation response.
@@ -26,10 +26,10 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         /// <summary>The complete per-request entity list CAS supplied to Cedar. Compiledpolicy text and policy-storage metadata are deliberately not includedin this privileged diagnostic response.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public List<global::OneNexus.Sdk.Cas.Support.Generated.Models.CedarDiagnosticEntity>? CedarEntities { get; set; }
+        public List<global::OneNexus.Sdk.Cas.Support.Models.CedarDiagnosticEntity>? CedarEntities { get; set; }
 #nullable restore
 #else
-        public List<global::OneNexus.Sdk.Cas.Support.Generated.Models.CedarDiagnosticEntity> CedarEntities { get; set; }
+        public List<global::OneNexus.Sdk.Cas.Support.Models.CedarDiagnosticEntity> CedarEntities { get; set; }
 #endif
         /// <summary>The reasonCode property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -42,12 +42,12 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.EvaluateAuthorizationResponse"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.EvaluateAuthorizationResponse"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Support.Generated.Models.EvaluateAuthorizationResponse CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Support.Models.EvaluateAuthorizationResponse CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Support.Generated.Models.EvaluateAuthorizationResponse();
+            return new global::OneNexus.Sdk.Cas.Support.Models.EvaluateAuthorizationResponse();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -59,7 +59,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
             {
                 { "allowed", n => { Allowed = n.GetBoolValue(); } },
                 { "authorizationGeneration", n => { AuthorizationGeneration = n.GetStringValue(); } },
-                { "cedarEntities", n => { CedarEntities = n.GetCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Support.Generated.Models.CedarDiagnosticEntity>(global::OneNexus.Sdk.Cas.Support.Generated.Models.CedarDiagnosticEntity.CreateFromDiscriminatorValue)?.AsList(); } },
+                { "cedarEntities", n => { CedarEntities = n.GetCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Support.Models.CedarDiagnosticEntity>(global::OneNexus.Sdk.Cas.Support.Models.CedarDiagnosticEntity.CreateFromDiscriminatorValue)?.AsList(); } },
                 { "reasonCode", n => { ReasonCode = n.GetStringValue(); } },
             };
         }
@@ -72,7 +72,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteBoolValue("allowed", Allowed);
             writer.WriteStringValue("authorizationGeneration", AuthorizationGeneration);
-            writer.WriteCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Support.Generated.Models.CedarDiagnosticEntity>("cedarEntities", CedarEntities);
+            writer.WriteCollectionOfObjectValues<global::OneNexus.Sdk.Cas.Support.Models.CedarDiagnosticEntity>("cedarEntities", CedarEntities);
             writer.WriteStringValue("reasonCode", ReasonCode);
         }
     }

@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// Request body for `POST /api/ListRoleAssignments`.
@@ -24,10 +24,10 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>The assignee property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssignee? Assignee { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationAssignee? Assignee { get; set; }
 #nullable restore
 #else
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssignee Assignee { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationAssignee Assignee { get; set; }
 #endif
         /// <summary>Cursor returned by a previous response for the preceding page.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -50,12 +50,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.ListRoleAssignmentsRequest"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.ListRoleAssignmentsRequest"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.ListRoleAssignmentsRequest CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.ListRoleAssignmentsRequest CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.ListRoleAssignmentsRequest();
+            return new global::OneNexus.Sdk.Cas.Models.ListRoleAssignmentsRequest();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -66,7 +66,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
             return new Dictionary<string, Action<IParseNode>>
             {
                 { "after", n => { After = n.GetStringValue(); } },
-                { "assignee", n => { Assignee = n.GetObjectValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssignee>(global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssignee.CreateFromDiscriminatorValue); } },
+                { "assignee", n => { Assignee = n.GetObjectValue<global::OneNexus.Sdk.Cas.Models.AuthorizationAssignee>(global::OneNexus.Sdk.Cas.Models.AuthorizationAssignee.CreateFromDiscriminatorValue); } },
                 { "before", n => { Before = n.GetStringValue(); } },
                 { "limit", n => { Limit = n.GetIntValue(); } },
                 { "roleUri", n => { RoleUri = n.GetStringValue(); } },
@@ -80,7 +80,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("after", After);
-            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationAssignee>("assignee", Assignee);
+            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Models.AuthorizationAssignee>("assignee", Assignee);
             writer.WriteStringValue("before", Before);
             writer.WriteIntValue("limit", Limit);
             writer.WriteStringValue("roleUri", RoleUri);

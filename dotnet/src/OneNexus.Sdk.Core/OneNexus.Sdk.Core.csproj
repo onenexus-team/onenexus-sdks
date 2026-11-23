@@ -13,7 +13,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Kiota.Bundle" />
+    <PackageReference Include="Microsoft.Kiota.Abstractions" />
+    <PackageReference Include="Microsoft.Kiota.Http.HttpClientLibrary" />
+    <PackageReference Include="Microsoft.Kiota.Serialization.Json" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <InternalsVisibleTo Include="OneNexus.Sdk.Cas" />
     <InternalsVisibleTo Include="OneNexus.Sdk.Cas.Support" />

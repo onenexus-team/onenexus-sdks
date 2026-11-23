@@ -12,7 +12,9 @@ for service in cas cas-support; do
     client=CasSupportGeneratedClient
   fi
   dotnet tool run kiota generate --language CSharp --class-name "$client" \
-    --namespace-name "$namespace.Generated" --openapi "../specs/$service/openapi.json" \
+    --namespace-name "$namespace" --openapi "../specs/$service/openapi.json" \
     --output "../dotnet/src/$namespace/Generated" --clean-output \
+    --serializer Microsoft.Kiota.Serialization.Json.JsonSerializationWriterFactory \
+    --deserializer Microsoft.Kiota.Serialization.Json.JsonParseNodeFactory \
     --exclude-backward-compatible --structured-mime-types application/json
 done

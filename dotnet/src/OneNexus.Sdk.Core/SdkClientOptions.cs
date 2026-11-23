@@ -15,7 +15,7 @@ public sealed class SdkClientOptions
     /// <summary>Maximum retries after the initial attempt. Zero disables retries.</summary>
     public int MaxRetries { get; init; } = 2;
 
-    /// <summary>Upper bound for retry delays, including Retry-After.</summary>
+    /// <summary>Maximum retry delay. A longer server Retry-After returns the original error.</summary>
     public TimeSpan MaxRetryDelay { get; init; } = TimeSpan.FromSeconds(5);
 
     /// <summary>Total timeout for a logical service request including its retries.</summary>

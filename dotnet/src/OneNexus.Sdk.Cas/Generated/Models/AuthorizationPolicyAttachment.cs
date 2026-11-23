@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// One policy-to-role attachment returned by CAS.
@@ -28,10 +28,10 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>Policy attached to the role.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference? Policy { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference? Policy { get; set; }
 #nullable restore
 #else
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference Policy { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference Policy { get; set; }
 #endif
         /// <summary>URI of the role that receives the policy.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -52,12 +52,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyAttachment"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyAttachment"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyAttachment CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyAttachment CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyAttachment();
+            return new global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyAttachment();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -70,7 +70,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
                 { "attachedAtUtc", n => { AttachedAtUtc = n.GetDateTimeOffsetValue(); } },
                 { "attachedByUri", n => { AttachedByUri = n.GetStringValue(); } },
                 { "attachmentId", n => { AttachmentId = n.GetGuidValue(); } },
-                { "policy", n => { Policy = n.GetObjectValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference>(global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference.CreateFromDiscriminatorValue); } },
+                { "policy", n => { Policy = n.GetObjectValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference>(global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference.CreateFromDiscriminatorValue); } },
                 { "roleUri", n => { RoleUri = n.GetStringValue(); } },
                 { "stateToken", n => { StateToken = n.GetStringValue(); } },
             };
@@ -85,7 +85,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
             writer.WriteDateTimeOffsetValue("attachedAtUtc", AttachedAtUtc);
             writer.WriteStringValue("attachedByUri", AttachedByUri);
             writer.WriteGuidValue("attachmentId", AttachmentId);
-            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference>("policy", Policy);
+            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference>("policy", Policy);
             writer.WriteStringValue("roleUri", RoleUri);
             writer.WriteStringValue("stateToken", StateToken);
         }

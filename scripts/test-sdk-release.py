@@ -56,6 +56,29 @@ class ReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "inventory"):
             artifacts.verify("python", "0.4.0", self.root)
 
+    def test_nuget_dependencies_distinguish_core_from_external_libraries(self):
+        version = "9.9.9"
+        for core_range, runtime_range, error in [
+            ("[9.9.9]", "2.1.2", None),
+            ("9.9.9", "2.1.2", "exact_core_version"),
+            ("[9.9.9]", "[2.1.2]", "pinned_exactly"),
+        ]:
+            with self.subTest(core=core_range, runtime=runtime_range):
+                for name in artifacts.EXPECTED["dotnet"]:
+                    dependency = ""
+                    if name in {"OneNexus.Sdk.Cas", "OneNexus.Sdk.Cas.Support"}:
+                        dependency = f'<dependency id="OneNexus.Sdk.Core" version="{core_range}" />'
+                    elif name == "OneNexus.Sdk.Core":
+                        dependency = f'<dependency id="Microsoft.Kiota.Abstractions" version="{runtime_range}" />'
+                    with zipfile.ZipFile(self.root / f"{name}.{version}.nupkg", "w") as z:
+                        z.writestr(f"{name}.nuspec", f"<package><metadata><id>{name}</id><version>{version}</version>"
+                                   f"<dependencies>{dependency}</dependencies></metadata></package>")
+                if error:
+                    with self.assertRaisesRegex(ValueError, error):
+                        artifacts.verify("dotnet", version, self.root)
+                else:
+                    self.assertEqual(artifacts.verify("dotnet", version, self.root), 4)
+
     def test_publication_requires_all_language_builds(self):
         release = (ROOT / ".github/workflows/sdk-release.yml").read_text()
         self.assertIn("needs: [prepare, build]", release)

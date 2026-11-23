@@ -3,13 +3,13 @@
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions.Serialization;
 using Microsoft.Kiota.Abstractions;
-using OneNexus.Sdk.Cas.Generated.Models;
+using OneNexus.Sdk.Cas.Models;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicies
+namespace OneNexus.Sdk.Cas.Api.ListPolicies
 {
     /// <summary>
     /// Builds and executes requests for operations under \api\ListPolicies
@@ -18,7 +18,7 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicies
     public partial class ListPoliciesRequestBuilder : BaseRequestBuilder
     {
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ListPolicies.ListPoliciesRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Api.ListPolicies.ListPoliciesRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -26,7 +26,7 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicies
         {
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ListPolicies.ListPoliciesRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Api.ListPolicies.ListPoliciesRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -36,33 +36,33 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicies
         /// <summary>
         /// Returns the tenant&apos;s own policies and platform-managed policies thatare available to that tenant. Send at most one returned cursor in thenext request to move backward or forward through the result set.
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.ListPoliciesResponse"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.ListPoliciesResponse"/></returns>
         /// <param name="body">Request body for `POST /api/ListPolicies`.</param>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 400 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 401 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 403 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails">When receiving a 503 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 400 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 401 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 403 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Models.ProblemDetails">When receiving a 503 status code</exception>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public async Task<global::OneNexus.Sdk.Cas.Generated.Models.ListPoliciesResponse?> PostAsync(global::OneNexus.Sdk.Cas.Generated.Models.ListPoliciesRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<global::OneNexus.Sdk.Cas.Models.ListPoliciesResponse?> PostAsync(global::OneNexus.Sdk.Cas.Models.ListPoliciesRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #nullable restore
 #else
-        public async Task<global::OneNexus.Sdk.Cas.Generated.Models.ListPoliciesResponse> PostAsync(global::OneNexus.Sdk.Cas.Generated.Models.ListPoliciesRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<global::OneNexus.Sdk.Cas.Models.ListPoliciesResponse> PostAsync(global::OneNexus.Sdk.Cas.Models.ListPoliciesRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #endif
             if(ReferenceEquals(body, null)) throw new ArgumentNullException(nameof(body));
             var requestInfo = ToPostRequestInformation(body, requestConfiguration);
             var errorMapping = new Dictionary<string, ParsableFactory<IParsable>>
             {
-                { "400", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "401", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "403", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "503", global::OneNexus.Sdk.Cas.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "400", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "401", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "403", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "503", global::OneNexus.Sdk.Cas.Models.ProblemDetails.CreateFromDiscriminatorValue },
             };
-            return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Generated.Models.ListPoliciesResponse>(requestInfo, global::OneNexus.Sdk.Cas.Generated.Models.ListPoliciesResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
+            return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Models.ListPoliciesResponse>(requestInfo, global::OneNexus.Sdk.Cas.Models.ListPoliciesResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
         /// Returns the tenant&apos;s own policies and platform-managed policies thatare available to that tenant. Send at most one returned cursor in thenext request to move backward or forward through the result set.
@@ -72,11 +72,11 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicies
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Generated.Models.ListPoliciesRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default)
+        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Models.ListPoliciesRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default)
         {
 #nullable restore
 #else
-        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Generated.Models.ListPoliciesRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default)
+        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Models.ListPoliciesRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default)
         {
 #endif
             if(ReferenceEquals(body, null)) throw new ArgumentNullException(nameof(body));
@@ -89,11 +89,11 @@ namespace OneNexus.Sdk.Cas.Generated.Api.ListPolicies
         /// <summary>
         /// Returns a request builder with the provided arbitrary URL. Using this method means any other path or query parameters are ignored.
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Api.ListPolicies.ListPoliciesRequestBuilder"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Api.ListPolicies.ListPoliciesRequestBuilder"/></returns>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
-        public global::OneNexus.Sdk.Cas.Generated.Api.ListPolicies.ListPoliciesRequestBuilder WithUrl(string rawUrl)
+        public global::OneNexus.Sdk.Cas.Api.ListPolicies.ListPoliciesRequestBuilder WithUrl(string rawUrl)
         {
-            return new global::OneNexus.Sdk.Cas.Generated.Api.ListPolicies.ListPoliciesRequestBuilder(rawUrl, RequestAdapter);
+            return new global::OneNexus.Sdk.Cas.Api.ListPolicies.ListPoliciesRequestBuilder(rawUrl, RequestAdapter);
         }
     }
 }

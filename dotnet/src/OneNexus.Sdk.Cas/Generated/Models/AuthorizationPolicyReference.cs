@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Generated.Models
+namespace OneNexus.Sdk.Cas.Models
 {
     /// <summary>
     /// A stable reference to a policy available to the caller&apos;s tenant.
@@ -16,7 +16,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.</summary>
         public IDictionary<string, object> AdditionalData { get; set; }
         /// <summary>Whether the policy is tenant-managed or platform-managed.</summary>
-        public global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyKind? Kind { get; set; }
+        public global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyKind? Kind { get; set; }
         /// <summary>Immutable policy name.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -26,7 +26,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         public string Name { get; set; }
 #endif
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference"/> and sets the default values.
         /// </summary>
         public AuthorizationPolicyReference()
         {
@@ -35,12 +35,12 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyReference();
+            return new global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyReference();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -50,7 +50,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "kind", n => { Kind = n.GetEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyKind>(); } },
+                { "kind", n => { Kind = n.GetEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyKind>(); } },
                 { "name", n => { Name = n.GetStringValue(); } },
             };
         }
@@ -61,7 +61,7 @@ namespace OneNexus.Sdk.Cas.Generated.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Generated.Models.AuthorizationPolicyKind>("kind", Kind);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Models.AuthorizationPolicyKind>("kind", Kind);
             writer.WriteStringValue("name", Name);
             writer.WriteAdditionalData(AdditionalData);
         }

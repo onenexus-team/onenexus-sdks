@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Support.Generated.Models
+namespace OneNexus.Sdk.Cas.Support.Models
 {
     /// <summary>
     /// Response body for `POST /support-api/UnsuspendTenant`.
@@ -14,18 +14,18 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
     public partial class UnsuspendTenantResponse : IParsable
     {
         /// <summary>The current status after the operation.</summary>
-        public global::OneNexus.Sdk.Cas.Support.Generated.Models.TenantStatus? Status { get; set; }
+        public global::OneNexus.Sdk.Cas.Support.Models.TenantStatus? Status { get; set; }
         /// <summary>The tenant id.</summary>
         public Guid? TenantId { get; set; }
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantResponse"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantResponse CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantResponse();
+            return new global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -35,7 +35,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "status", n => { Status = n.GetEnumValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.TenantStatus>(); } },
+                { "status", n => { Status = n.GetEnumValue<global::OneNexus.Sdk.Cas.Support.Models.TenantStatus>(); } },
                 { "tenantId", n => { TenantId = n.GetGuidValue(); } },
             };
         }
@@ -46,7 +46,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.TenantStatus>("status", Status);
+            writer.WriteEnumValue<global::OneNexus.Sdk.Cas.Support.Models.TenantStatus>("status", Status);
             writer.WriteGuidValue("tenantId", TenantId);
         }
     }

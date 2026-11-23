@@ -3,13 +3,13 @@
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions.Serialization;
 using Microsoft.Kiota.Abstractions;
-using OneNexus.Sdk.Cas.Support.Generated.Models;
+using OneNexus.Sdk.Cas.Support.Models;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
-namespace OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant
+namespace OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant
 {
     /// <summary>
     /// Builds and executes requests for operations under \support-api\UnsuspendTenant
@@ -18,7 +18,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant
     public partial class UnsuspendTenantRequestBuilder : BaseRequestBuilder
     {
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -26,7 +26,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant
         {
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder"/> and sets the default values.
+        /// Instantiates a new <see cref="global::OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
@@ -36,33 +36,33 @@ namespace OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant
         /// <summary>
         /// Re-activates a suspended tenant.
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantResponse"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse"/></returns>
         /// <param name="body">Request body for `POST /support-api/UnsuspendTenant`.</param>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.ValidationProblemDetails">When receiving a 400 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.ProblemDetails">When receiving a 403 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.ProblemDetails">When receiving a 404 status code</exception>
-        /// <exception cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.ProblemDetails">When receiving a 409 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Support.Models.ValidationProblemDetails">When receiving a 400 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Support.Models.ProblemDetails">When receiving a 403 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Support.Models.ProblemDetails">When receiving a 404 status code</exception>
+        /// <exception cref="global::OneNexus.Sdk.Cas.Support.Models.ProblemDetails">When receiving a 409 status code</exception>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public async Task<global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantResponse?> PostAsync(global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse?> PostAsync(global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #nullable restore
 #else
-        public async Task<global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantResponse> PostAsync(global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse> PostAsync(global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #endif
             if(ReferenceEquals(body, null)) throw new ArgumentNullException(nameof(body));
             var requestInfo = ToPostRequestInformation(body, requestConfiguration);
             var errorMapping = new Dictionary<string, ParsableFactory<IParsable>>
             {
-                { "400", global::OneNexus.Sdk.Cas.Support.Generated.Models.ValidationProblemDetails.CreateFromDiscriminatorValue },
-                { "403", global::OneNexus.Sdk.Cas.Support.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "404", global::OneNexus.Sdk.Cas.Support.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
-                { "409", global::OneNexus.Sdk.Cas.Support.Generated.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "400", global::OneNexus.Sdk.Cas.Support.Models.ValidationProblemDetails.CreateFromDiscriminatorValue },
+                { "403", global::OneNexus.Sdk.Cas.Support.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "404", global::OneNexus.Sdk.Cas.Support.Models.ProblemDetails.CreateFromDiscriminatorValue },
+                { "409", global::OneNexus.Sdk.Cas.Support.Models.ProblemDetails.CreateFromDiscriminatorValue },
             };
-            return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantResponse>(requestInfo, global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
+            return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse>(requestInfo, global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
         /// Re-activates a suspended tenant.
@@ -72,11 +72,11 @@ namespace OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default)
+        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantRequest body, Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default)
         {
 #nullable restore
 #else
-        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Support.Generated.Models.UnsuspendTenantRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default)
+        public RequestInformation ToPostRequestInformation(global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantRequest body, Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default)
         {
 #endif
             if(ReferenceEquals(body, null)) throw new ArgumentNullException(nameof(body));
@@ -89,11 +89,11 @@ namespace OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant
         /// <summary>
         /// Returns a request builder with the provided arbitrary URL. Using this method means any other path or query parameters are ignored.
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder"/></returns>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
-        public global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder WithUrl(string rawUrl)
+        public global::OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder WithUrl(string rawUrl)
         {
-            return new global::OneNexus.Sdk.Cas.Support.Generated.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder(rawUrl, RequestAdapter);
+            return new global::OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant.UnsuspendTenantRequestBuilder(rawUrl, RequestAdapter);
         }
     }
 }

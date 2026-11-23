@@ -1,15 +1,15 @@
 using System;
+using System.Buffers.Text;
 using System.Linq;
 using System.Text.Json;
-using Microsoft.IdentityModel.Tokens;
 
 namespace OneNexus.Sdk.Cas;
 
 /// <summary>Validates the issuer used to route an AssumeS3Role request.</summary>
-public static class CasRouting
+internal static class CasRouting
 {
     /// <summary>Selects the global origin or a single regional auth host on the same scheme, domain and port.</summary>
-    public static Uri ResolveAssumeS3RoleBaseUrl(Uri globalBaseUrl, string accessToken)
+    internal static Uri ResolveAssumeS3RoleBaseUrl(Uri globalBaseUrl, string accessToken)
     {
         ArgumentNullException.ThrowIfNull(globalBaseUrl);
         ArgumentException.ThrowIfNullOrWhiteSpace(accessToken);
@@ -28,7 +28,7 @@ public static class CasRouting
         JsonDocument claims;
         try
         {
-            claims = JsonDocument.Parse(Base64UrlEncoder.DecodeBytes(parts[1]));
+            claims = JsonDocument.Parse(Base64Url.DecodeFromChars(parts[1]));
         }
         catch (Exception ex) when (ex is FormatException or JsonException or ArgumentException)
         {

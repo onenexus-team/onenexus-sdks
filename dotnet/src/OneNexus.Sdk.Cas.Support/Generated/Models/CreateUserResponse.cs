@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Support.Generated.Models
+namespace OneNexus.Sdk.Cas.Support.Models
 {
     /// <summary>
     /// Response body for `POST /api/CreateUser`.
@@ -16,20 +16,20 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         /// <summary>The freshly-created user.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public global::OneNexus.Sdk.Cas.Support.Generated.Models.User? User { get; set; }
+        public global::OneNexus.Sdk.Cas.Support.Models.User? User { get; set; }
 #nullable restore
 #else
-        public global::OneNexus.Sdk.Cas.Support.Generated.Models.User User { get; set; }
+        public global::OneNexus.Sdk.Cas.Support.Models.User User { get; set; }
 #endif
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.CreateUserResponse"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.CreateUserResponse"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Support.Generated.Models.CreateUserResponse CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Support.Models.CreateUserResponse CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Support.Generated.Models.CreateUserResponse();
+            return new global::OneNexus.Sdk.Cas.Support.Models.CreateUserResponse();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -39,7 +39,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "user", n => { User = n.GetObjectValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.User>(global::OneNexus.Sdk.Cas.Support.Generated.Models.User.CreateFromDiscriminatorValue); } },
+                { "user", n => { User = n.GetObjectValue<global::OneNexus.Sdk.Cas.Support.Models.User>(global::OneNexus.Sdk.Cas.Support.Models.User.CreateFromDiscriminatorValue); } },
             };
         }
         /// <summary>
@@ -49,7 +49,7 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.User>("user", User);
+            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Support.Models.User>("user", User);
         }
     }
 }

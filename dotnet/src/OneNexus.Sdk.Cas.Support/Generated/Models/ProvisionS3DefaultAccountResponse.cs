@@ -5,7 +5,7 @@ using Microsoft.Kiota.Abstractions.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System;
-namespace OneNexus.Sdk.Cas.Support.Generated.Models
+namespace OneNexus.Sdk.Cas.Support.Models
 {
     /// <summary>
     /// Response for `ProvisionS3DefaultAccount`.
@@ -16,28 +16,28 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         /// <summary>The provisioned (or pre-existing) default account.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public global::OneNexus.Sdk.Cas.Support.Generated.Models.S3Account? Account { get; set; }
+        public global::OneNexus.Sdk.Cas.Support.Models.S3Account? Account { get; set; }
 #nullable restore
 #else
-        public global::OneNexus.Sdk.Cas.Support.Generated.Models.S3Account Account { get; set; }
+        public global::OneNexus.Sdk.Cas.Support.Models.S3Account Account { get; set; }
 #endif
         /// <summary>The rootUser property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public global::OneNexus.Sdk.Cas.Support.Generated.Models.S3RootUser? RootUser { get; set; }
+        public global::OneNexus.Sdk.Cas.Support.Models.S3RootUser? RootUser { get; set; }
 #nullable restore
 #else
-        public global::OneNexus.Sdk.Cas.Support.Generated.Models.S3RootUser RootUser { get; set; }
+        public global::OneNexus.Sdk.Cas.Support.Models.S3RootUser RootUser { get; set; }
 #endif
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
         /// </summary>
-        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Generated.Models.ProvisionS3DefaultAccountResponse"/></returns>
+        /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.ProvisionS3DefaultAccountResponse"/></returns>
         /// <param name="parseNode">The parse node to use to read the discriminator value and create the object</param>
-        public static global::OneNexus.Sdk.Cas.Support.Generated.Models.ProvisionS3DefaultAccountResponse CreateFromDiscriminatorValue(IParseNode parseNode)
+        public static global::OneNexus.Sdk.Cas.Support.Models.ProvisionS3DefaultAccountResponse CreateFromDiscriminatorValue(IParseNode parseNode)
         {
             if(ReferenceEquals(parseNode, null)) throw new ArgumentNullException(nameof(parseNode));
-            return new global::OneNexus.Sdk.Cas.Support.Generated.Models.ProvisionS3DefaultAccountResponse();
+            return new global::OneNexus.Sdk.Cas.Support.Models.ProvisionS3DefaultAccountResponse();
         }
         /// <summary>
         /// The deserialization information for the current model
@@ -47,8 +47,8 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "account", n => { Account = n.GetObjectValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.S3Account>(global::OneNexus.Sdk.Cas.Support.Generated.Models.S3Account.CreateFromDiscriminatorValue); } },
-                { "rootUser", n => { RootUser = n.GetObjectValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.S3RootUser>(global::OneNexus.Sdk.Cas.Support.Generated.Models.S3RootUser.CreateFromDiscriminatorValue); } },
+                { "account", n => { Account = n.GetObjectValue<global::OneNexus.Sdk.Cas.Support.Models.S3Account>(global::OneNexus.Sdk.Cas.Support.Models.S3Account.CreateFromDiscriminatorValue); } },
+                { "rootUser", n => { RootUser = n.GetObjectValue<global::OneNexus.Sdk.Cas.Support.Models.S3RootUser>(global::OneNexus.Sdk.Cas.Support.Models.S3RootUser.CreateFromDiscriminatorValue); } },
             };
         }
         /// <summary>
@@ -58,8 +58,8 @@ namespace OneNexus.Sdk.Cas.Support.Generated.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.S3Account>("account", Account);
-            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Support.Generated.Models.S3RootUser>("rootUser", RootUser);
+            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Support.Models.S3Account>("account", Account);
+            writer.WriteObjectValue<global::OneNexus.Sdk.Cas.Support.Models.S3RootUser>("rootUser", RootUser);
         }
     }
 }
