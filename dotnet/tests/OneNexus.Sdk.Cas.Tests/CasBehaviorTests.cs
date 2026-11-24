@@ -105,6 +105,82 @@ public sealed class CasBehaviorTests
     }
 
     [TestMethod]
+    [DataRow("""{"title":"Conflict","requestId":"body-request","traceId":"body-trace"}""", "body-request", "body-trace")]
+    [DataRow("""{"title":"Conflict","trace_id":"body-trace"}""", "header-request", "body-trace")]
+    [DataRow("""{"title":"Conflict","errors":"not a field map"}""", "header-request", "header-trace")]
+    public async Task ReadsProblemIdsFromBodyThenHeaders(string problem, string requestId, string traceId)
+    {
+        using var http = new HttpClient(new TestHandler((_, _) =>
+        {
+            HttpResponseMessage response = TestHandler.Json(problem, HttpStatusCode.Conflict, "application/problem+json");
+            response.Headers.Add("X-Request-ID", "header-request");
+            response.Headers.Add("X-Trace-Id", "header-trace");
+            return Task.FromResult(response);
+        }));
+        using var client = new CasClient(WireTests.Origin, WireTests.Token(), new SdkClientOptions { HttpClient = http });
+        PlatformException error = await Assert.ThrowsExactlyAsync<PlatformException>(() => client.ListUsersAsync());
+        Assert.AreEqual("Conflict", error.Title);
+        Assert.AreEqual(requestId, error.RequestId);
+        Assert.AreEqual(traceId, error.TraceId);
+        Assert.IsEmpty(error.FieldErrors);
+    }
+
+    [TestMethod]
+    public async Task ListAllUsersPagesACopyOfTheRequest()
+    {
+        var bodies = new List<JsonNode>();
+        using var http = new HttpClient(new TestHandler(async (request, ct) =>
+        {
+            bodies.Add(JsonNode.Parse(await request.Content!.ReadAsStringAsync(ct))!);
+            // An empty page can still carry a cursor to the next one.
+            return TestHandler.Json(bodies.Count % 2 == 1 ? """{"items":[],"after":"next"}""" : """{"items":[{"displayName":"An"}]}""");
+        }));
+        using var client = new CasClient(WireTests.Origin, WireTests.Token(), new SdkClientOptions { HttpClient = http });
+        var request = new ListUsersRequest { Query = "an", Limit = 5, After = "stale", Before = "earlier" };
+        IAsyncEnumerable<TenantUserSummary> users = client.ListAllUsersAsync(request);
+        for (var run = 0; run < 2; run++)
+        {
+            var names = new List<string?>();
+            await foreach (TenantUserSummary user in users)
+            {
+                names.Add(user.DisplayName);
+            }
+            Assert.AreEqual("An", names.Single());
+        }
+
+        Assert.HasCount(4, bodies);
+        foreach (JsonNode body in bodies)
+        {
+            Assert.AreEqual("an", (string?)body["query"]);
+            Assert.AreEqual(200, (int)body["limit"]!);
+            Assert.IsNull(body["before"]);
+        }
+        Assert.IsNull(bodies[0]["after"]);
+        Assert.AreEqual("next", (string?)bodies[1]["after"]);
+        Assert.IsNull(bodies[2]["after"]);
+        Assert.AreEqual(("an", 5, "stale", "earlier"), (request.Query, request.Limit, request.After, request.Before));
+    }
+
+    [TestMethod]
+    public async Task ListAllUsersRejectsARepeatedCursor()
+    {
+        var calls = 0;
+        using var http = new HttpClient(new TestHandler((_, _) =>
+        {
+            calls++;
+            return Task.FromResult(TestHandler.Json("""{"items":[{}],"after":"same"}"""));
+        }));
+        using var client = new CasClient(WireTests.Origin, WireTests.Token(), new SdkClientOptions { HttpClient = http });
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(async () =>
+        {
+            await foreach (TenantUserSummary _ in client.ListAllUsersAsync())
+            {
+            }
+        });
+        Assert.AreEqual(2, calls);
+    }
+
+    [TestMethod]
     public async Task NestedPolicySurvivesReadAndWrite()
     {
         const string document = """{"statements":[{"nested":{"values":[0,true,null]}}]}""";

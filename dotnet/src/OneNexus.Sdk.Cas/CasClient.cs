@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using OneNexus.Sdk.Cas.Models;
@@ -9,6 +10,9 @@ namespace OneNexus.Sdk.Cas;
 /// <summary>Typed operations for the CAS customer API.</summary>
 public sealed class CasClient : IDisposable
 {
+    // The largest limit every CAS list operation accepts.
+    private const int MaxPageSize = 200;
+
     private readonly ServiceTransport _transport;
     private readonly CasGeneratedClient _api;
     private readonly ServiceTransport.TokenRoute _s3Route;
@@ -62,6 +66,18 @@ public sealed class CasClient : IDisposable
         ServiceTransport.RequiredAsync(
             _api.Api.ListRoleAssignments.PostAsync(request ?? new ListRoleAssignmentsRequest(), cancellationToken: cancellationToken));
 
+    /// <summary>Lists every direct assignment matching one role or assignee filter, following cursors through all pages.</summary>
+    /// <remarks>The filters apply to every page of up to 200 items. <c>Limit</c>, <c>After</c> and <c>Before</c> are ignored, and <paramref name="request"/> is not modified.</remarks>
+    public IAsyncEnumerable<AuthorizationRoleAssignment> ListAllRoleAssignmentsAsync(ListRoleAssignmentsRequest? request = null, CancellationToken cancellationToken = default) =>
+        Paging.ByCursorAsync(request ?? new ListRoleAssignmentsRequest(), ListRoleAssignmentsRequest.CreateFromDiscriminatorValue,
+            static (page, after) =>
+            {
+                page.Limit = MaxPageSize;
+                page.Before = null;
+                page.After = after;
+            },
+            ListRoleAssignmentsAsync, static page => page.Items, static page => page.After, cancellationToken);
+
     /// <summary>Compiles and idempotently attaches one tenant- or platform-managed policy to a role.</summary>
     public Task<AttachPolicyToRoleResponse> AttachPolicyToRoleAsync(AttachPolicyToRoleRequest request, CancellationToken cancellationToken = default) =>
         AttachPolicyToRoleAsync(request, idempotencyKey: null, cancellationToken);
@@ -87,10 +103,34 @@ public sealed class CasClient : IDisposable
         ServiceTransport.RequiredAsync(
             _api.Api.ListPolicyAttachments.PostAsync(request, cancellationToken: cancellationToken));
 
+    /// <summary>Lists every role to which one policy is directly attached, following cursors through all pages.</summary>
+    /// <remarks>The filters apply to every page of up to 200 items. <c>Limit</c>, <c>After</c> and <c>Before</c> are ignored, and <paramref name="request"/> is not modified.</remarks>
+    public IAsyncEnumerable<AuthorizationPolicyAttachment> ListAllPolicyAttachmentsAsync(ListPolicyAttachmentsRequest request, CancellationToken cancellationToken = default) =>
+        Paging.ByCursorAsync(request ?? throw new ArgumentNullException(nameof(request)), ListPolicyAttachmentsRequest.CreateFromDiscriminatorValue,
+            static (page, after) =>
+            {
+                page.Limit = MaxPageSize;
+                page.Before = null;
+                page.After = after;
+            },
+            ListPolicyAttachmentsAsync, static page => page.Items, static page => page.After, cancellationToken);
+
     /// <summary>Lists tenant- and platform-managed policies directly attached to one role.</summary>
     public Task<ListPolicyAttachmentsResponse> ListRolePoliciesAsync(ListRolePoliciesRequest request, CancellationToken cancellationToken = default) =>
         ServiceTransport.RequiredAsync(
             _api.Api.ListRolePolicies.PostAsync(request, cancellationToken: cancellationToken));
+
+    /// <summary>Lists every tenant- and platform-managed policy directly attached to one role, following cursors through all pages.</summary>
+    /// <remarks>The filters apply to every page of up to 200 items. <c>Limit</c>, <c>After</c> and <c>Before</c> are ignored, and <paramref name="request"/> is not modified.</remarks>
+    public IAsyncEnumerable<AuthorizationPolicyAttachment> ListAllRolePoliciesAsync(ListRolePoliciesRequest request, CancellationToken cancellationToken = default) =>
+        Paging.ByCursorAsync(request ?? throw new ArgumentNullException(nameof(request)), ListRolePoliciesRequest.CreateFromDiscriminatorValue,
+            static (page, after) =>
+            {
+                page.Limit = MaxPageSize;
+                page.Before = null;
+                page.After = after;
+            },
+            ListRolePoliciesAsync, static page => page.Items, static page => page.After, cancellationToken);
 
     /// <summary>Validates and publishes new tenant-managed policy content.</summary>
     public Task<PublishPolicyResponse> PublishPolicyAsync(PublishPolicyRequest request, CancellationToken cancellationToken = default) =>
@@ -106,6 +146,18 @@ public sealed class CasClient : IDisposable
     public Task<ListPoliciesResponse> ListPoliciesAsync(ListPoliciesRequest? request = null, CancellationToken cancellationToken = default) =>
         ServiceTransport.RequiredAsync(
             _api.Api.ListPolicies.PostAsync(request ?? new ListPoliciesRequest(), cancellationToken: cancellationToken));
+
+    /// <summary>Lists every policy visible to the caller's tenant, following cursors through all pages.</summary>
+    /// <remarks>Each page holds up to 200 items. <c>Limit</c>, <c>After</c> and <c>Before</c> are ignored, and <paramref name="request"/> is not modified.</remarks>
+    public IAsyncEnumerable<AuthorizationPolicySummary> ListAllPoliciesAsync(ListPoliciesRequest? request = null, CancellationToken cancellationToken = default) =>
+        Paging.ByCursorAsync(request ?? new ListPoliciesRequest(), ListPoliciesRequest.CreateFromDiscriminatorValue,
+            static (page, after) =>
+            {
+                page.Limit = MaxPageSize;
+                page.Before = null;
+                page.After = after;
+            },
+            ListPoliciesAsync, static page => page.Items, static page => page.After, cancellationToken);
 
     /// <summary>Gets one policy's content without its role attachments.</summary>
     public Task<GetPolicyResponse> GetPolicyAsync(GetPolicyRequest request, CancellationToken cancellationToken = default) =>
@@ -245,6 +297,18 @@ public sealed class CasClient : IDisposable
     public Task<ListUsersResponse> ListUsersAsync(ListUsersRequest? request = null, CancellationToken cancellationToken = default) =>
         ServiceTransport.RequiredAsync(
             _api.Api.ListUsers.PostAsync(request ?? new ListUsersRequest(), cancellationToken: cancellationToken));
+
+    /// <summary>Lists every user in the authenticated caller's own tenant, following cursors through all pages.</summary>
+    /// <remarks>The query applies to every page of up to 200 items. <c>Limit</c>, <c>After</c> and <c>Before</c> are ignored, and <paramref name="request"/> is not modified.</remarks>
+    public IAsyncEnumerable<TenantUserSummary> ListAllUsersAsync(ListUsersRequest? request = null, CancellationToken cancellationToken = default) =>
+        Paging.ByCursorAsync(request ?? new ListUsersRequest(), ListUsersRequest.CreateFromDiscriminatorValue,
+            static (page, after) =>
+            {
+                page.Limit = MaxPageSize;
+                page.Before = null;
+                page.After = after;
+            },
+            ListUsersAsync, static page => page.Items, static page => page.After, cancellationToken);
 
     /// <summary>Suspends an active member in the authenticated caller's tenant.</summary>
     public Task<SuspendUserResponse> SuspendUserAsync(SuspendUserRequest request, CancellationToken cancellationToken = default) =>

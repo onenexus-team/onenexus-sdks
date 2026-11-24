@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -53,10 +54,15 @@ internal static class Program
         }
 
         using var mlops = new MLOpsClient(new Uri("https://mlops.example.test"), credentials, options);
-        ListResponse_DatasetSummaryResponse_ datasets = await mlops.ListDatasetsAsync(new RpcListDatasetsRequest { Name = "training" });
-        if (datasets.TotalPages != 1 || datasets.Items?.Single().Name != "training")
+        // ListAll pages a copy of the request, so the name filter must survive Kiota's native round trip.
+        var datasets = new List<string?>();
+        await foreach (DatasetSummaryResponse dataset in mlops.ListAllDatasetsAsync(new RpcListDatasetsRequest { Name = "training" }))
         {
-            throw new InvalidOperationException("Failed to read the MLOps dataset page.");
+            datasets.Add(dataset.Name);
+        }
+        if (datasets.SingleOrDefault() != "training")
+        {
+            throw new InvalidOperationException("Failed to read the MLOps dataset pages.");
         }
 
         try
