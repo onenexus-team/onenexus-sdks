@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -165,23 +166,84 @@ public sealed class MLOpsContractTests
     }
 
     [TestMethod]
-    public async Task DecodesServiceValidationProblem()
+    public async Task RaisesPlatformExceptionForServiceProblem()
     {
         using var http = new HttpClient(new TestHandler((_, _) =>
         {
+            // The body shape MLOps returns, including its snake_case trace_id and list-shaped errors.
             HttpResponseMessage response = TestHandler.Json(
-                """{"type":"https://api-mlops.onenexus.cloud/problems/validation-failed","title":"Validation failed","status":422,"detail":"Invalid dataset","instance":"urn:onenexus:request:example","errors":[{"field":"name","code":"missing","message":"required"}]}""",
+                """{"type":"https://api-mlops.onenexus.cloud/problems/validation-failed","title":"Validation failed","status":422,"detail":"Invalid dataset","instance":"urn:onenexus:request:example","trace_id":"de95291a152c67a8f1eb94049b6f85cd","errors":[{"field":"name","code":"missing","message":"required"},{"field":"name","code":"too_short","message":"too short"},{"code":"conflict","message":"whole request"}]}""",
                 HttpStatusCode.UnprocessableEntity, "application/problem+json");
             response.Headers.Add("X-Request-ID", "example");
             return Task.FromResult(response);
         }));
         using var client = new MLOpsClient(Origin, new TokenGrantCredentials(new AccessToken("cas", DateTimeOffset.UtcNow.AddHours(1))),
             new SdkClientOptions { HttpClient = http });
-        ProblemResponse error = await Assert.ThrowsExactlyAsync<ProblemResponse>(() => client.CreateDatasetAsync(new RpcCreateDatasetRequest()));
-        Assert.AreEqual(422, error.ResponseStatusCode);
+        PlatformException error = await Assert.ThrowsExactlyAsync<PlatformException>(() => client.CreateDatasetAsync(new RpcCreateDatasetRequest()));
+        Assert.AreEqual(HttpStatusCode.UnprocessableEntity, error.StatusCode);
+        Assert.AreEqual("https://api-mlops.onenexus.cloud/problems/validation-failed", error.ProblemType);
         Assert.AreEqual("Invalid dataset", error.Detail);
-        Assert.AreEqual("missing", error.Errors?.Single().Code);
-        Assert.AreEqual("example", error.ResponseHeaders["X-Request-ID"].Single());
+        Assert.AreEqual("example", error.RequestId);
+        Assert.AreEqual("de95291a152c67a8f1eb94049b6f85cd", error.TraceId);
+        Assert.AreEqual("required|too short", string.Join('|', error.FieldErrors["name"]));
+        Assert.AreEqual("whole request", error.FieldErrors[""].Single());
+    }
+
+    public static IEnumerable<object[]> PagedOperations => WireTests.PagedOperations("mlops", ["page", "limit"], ["items", "total_pages"]);
+
+    // Every list paged by page number has a ListAll method that reads each page in turn.
+    [TestMethod]
+    [DynamicData(nameof(PagedOperations))]
+    public async Task ListAllReadsEveryPage(string path, string method, int limit)
+    {
+        var pages = new List<int>();
+        using var http = new HttpClient(new TestHandler(async (request, ct) =>
+        {
+            Assert.AreEqual(new Uri(Origin, path), request.RequestUri);
+            JsonNode body = JsonNode.Parse(await request.Content!.ReadAsStringAsync(ct))!;
+            Assert.AreEqual(limit, (int?)body["limit"] ?? 0);
+            pages.Add((int)body["page"]!);
+            return TestHandler.Json("""{"items":[{}],"total_pages":2}""");
+        }));
+        using var client = new MLOpsClient(Origin, new TokenGrantCredentials(new AccessToken("cas", DateTimeOffset.UtcNow.AddHours(1))),
+            new SdkClientOptions { HttpClient = http });
+        Assert.AreEqual(2, await WireTests.CountAllAsync(client, method));
+        Assert.AreEqual("1,2", string.Join(',', pages));
+    }
+
+    [TestMethod]
+    [DataRow(3, 4, 3, 3)]
+    [DataRow(0, 1, 1, 0)]
+    [DataRow(1, 1, 1, 0)]
+    [DataRow(3, 2, 2, 1)]
+    public async Task ListAllStopsAtTheLastPageOrAnEmptyPage(int totalPages, int firstEmptyPage, int requests, int datasets)
+    {
+        var bodies = new List<JsonNode>();
+        using var http = new HttpClient(new TestHandler(async (request, ct) =>
+        {
+            JsonNode body = JsonNode.Parse(await request.Content!.ReadAsStringAsync(ct))!;
+            bodies.Add(body);
+            var items = (int)body["page"]! < firstEmptyPage ? """[{"name":"training"}]""" : "[]";
+            return TestHandler.Json($$"""{"items":{{items}},"total_pages":{{totalPages}}}""");
+        }));
+        using var client = new MLOpsClient(Origin, new TokenGrantCredentials(new AccessToken("cas", DateTimeOffset.UtcNow.AddHours(1))),
+            new SdkClientOptions { HttpClient = http });
+        var request = new RpcListDatasetsRequest { Name = "training", Page = 7, Limit = 5 };
+        var names = new List<string?>();
+        await foreach (DatasetSummaryResponse dataset in client.ListAllDatasetsAsync(request))
+        {
+            names.Add(dataset.Name);
+        }
+
+        Assert.HasCount(datasets, names);
+        Assert.HasCount(requests, bodies);
+        for (var i = 0; i < bodies.Count; i++)
+        {
+            Assert.AreEqual(i + 1, (int)bodies[i]["page"]!);
+            Assert.AreEqual(100, (int)bodies[i]["limit"]!);
+            Assert.AreEqual("training", (string?)bodies[i]["name"]);
+        }
+        Assert.AreEqual(("training", 7, 5), (request.Name, request.Page, request.Limit));
     }
 
     [TestMethod]

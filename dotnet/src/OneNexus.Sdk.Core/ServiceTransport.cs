@@ -26,7 +26,7 @@ internal sealed class ServiceTransport : IDisposable
 
     private readonly HttpClient _pipeline;
 
-    internal ServiceTransport(Uri baseUrl, IAccessTokenCredential? credentials, SdkClientOptions? options, bool useKiotaErrors = false)
+    internal ServiceTransport(Uri baseUrl, IAccessTokenCredential? credentials, SdkClientOptions? options)
     {
         OidcClient.ValidateEndpoint(baseUrl);
         if (baseUrl.Query.Length != 0)
@@ -39,7 +39,7 @@ internal sealed class ServiceTransport : IDisposable
         ArgumentOutOfRangeException.ThrowIfNegative(options.MaxRetries);
         ArgumentOutOfRangeException.ThrowIfLessThan(options.MaxRetryDelay, TimeSpan.Zero);
         var handler = new Handler(credentials, options);
-        _pipeline = new HttpClient(useKiotaErrors ? handler : new CasProblemHandler { InnerHandler = handler }) { Timeout = options.Timeout };
+        _pipeline = new HttpClient(new ProblemHandler { InnerHandler = handler }) { Timeout = options.Timeout };
         Adapter = new HttpClientRequestAdapter(new AnonymousAuthenticationProvider(), httpClient: _pipeline)
         {
             BaseUrl = baseUrl.AbsoluteUri.TrimEnd('/'),
@@ -80,7 +80,7 @@ internal sealed class ServiceTransport : IDisposable
         internal bool AllowRetries { get; init; } = true;
     }
 
-    private sealed class CasProblemHandler : DelegatingHandler
+    private sealed class ProblemHandler : DelegatingHandler
     {
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {

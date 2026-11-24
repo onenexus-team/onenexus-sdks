@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../Shared/TestHandler.cs" Link="Shared/%(Filename)%(Extension)" />
+    <Compile Include="../Shared/WireTests.cs" Link="Shared/%(Filename)%(Extension)" />
     <None Include="../../../specs/mlops/openapi.json" Link="contracts/mlops.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

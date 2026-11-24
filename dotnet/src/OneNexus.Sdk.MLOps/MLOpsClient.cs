@@ -14,7 +14,7 @@ public sealed partial class MLOpsClient : IDisposable
     /// <summary>Connects to the MLOps service root. Supply CAS credentials for control-plane operations.</summary>
     public MLOpsClient(Uri baseUrl, IAccessTokenCredential? credentials = null, SdkClientOptions? options = null)
     {
-        _transport = new ServiceTransport(baseUrl, credentials, options, useKiotaErrors: true);
+        _transport = new ServiceTransport(baseUrl, credentials, options);
         _api = new MLOpsGeneratedClient(_transport.Adapter);
     }
 

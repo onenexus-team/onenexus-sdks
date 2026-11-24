@@ -31,6 +31,53 @@ internal static class WireTests
         }
     }
 
+    // List operations whose request and 200 response declare the given paging fields, with the ListAll method expected
+    // for each and the request's largest limit (0 when the contract sets none).
+    internal static IEnumerable<object[]> PagedOperations(string service, string[] requestFields, string[] responseFields)
+    {
+        using var spec = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "contracts", service + ".json")));
+        JsonElement schemas = spec.RootElement.GetProperty("components").GetProperty("schemas");
+        foreach (JsonProperty path in spec.RootElement.GetProperty("paths").EnumerateObject())
+        {
+            var name = path.Name.Split('/')[^1];
+            JsonElement operation = path.Value.EnumerateObject().Single().Value;
+            if (!name.StartsWith("List", StringComparison.Ordinal)
+                || !operation.TryGetProperty("requestBody", out JsonElement body)
+                || !operation.GetProperty("responses").TryGetProperty("200", out JsonElement ok)
+                || Properties(schemas, body) is not JsonElement request
+                || Properties(schemas, ok) is not JsonElement response
+                || !requestFields.All(field => request.TryGetProperty(field, out _))
+                || !responseFields.All(field => response.TryGetProperty(field, out _)))
+            {
+                continue;
+            }
+            var limit = request.GetProperty("limit").TryGetProperty("maximum", out JsonElement maximum) ? (int)maximum.GetDouble() : 0;
+            yield return [path.Name, "ListAll" + name["List".Length..] + "Async", limit];
+        }
+    }
+
+    // Enumerates a public ListAll method with a default request and counts the items it yields.
+    internal static async Task<int> CountAllAsync(object client, string name)
+    {
+        MethodInfo method = client.GetType().GetMethod(name) ?? throw new AssertFailedException($"{client.GetType().Name} has no {name}.");
+        object? request = Activator.CreateInstance(method.GetParameters()[0].ParameterType);
+        var items = (IAsyncEnumerable<object>)method.Invoke(client, [request, CancellationToken.None])!;
+        var count = 0;
+        await foreach (object _ in items)
+        {
+            count++;
+        }
+        return count;
+    }
+
+    private static JsonElement? Properties(JsonElement schemas, JsonElement message) =>
+        message.TryGetProperty("content", out JsonElement content)
+        && content.TryGetProperty("application/json", out JsonElement json)
+        && json.GetProperty("schema").TryGetProperty("$ref", out JsonElement reference)
+        && schemas.GetProperty(reference.GetString()!.Split('/')[^1]).TryGetProperty("properties", out JsonElement properties)
+            ? properties
+            : null;
+
     // Drive the public method for every operation declared in the independent, committed contract.
     internal static async Task ExerciseAsync<T>(Func<SdkClientOptions, T> create, string operation, string path, bool keyed, bool noContent)
         where T : IDisposable
