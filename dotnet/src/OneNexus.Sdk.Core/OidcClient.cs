@@ -32,6 +32,7 @@ public sealed class OidcOptions
     public string? Scope { get; init; }
 
     /// <summary>Optional caller-owned HTTP client for discovery and token requests.</summary>
+    /// <remarks>Use <see cref="SdkClientOptions.CreateDefaultHttpHandler"/> for the transport and keep redirects disabled to protect token request bodies.</remarks>
     public HttpClient? HttpClient { get; init; }
 }
 

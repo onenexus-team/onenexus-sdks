@@ -11,7 +11,12 @@ public sealed class SdkClientOptions
     public HttpClient? HttpClient { get; init; }
 
     /// <summary>Creates a caller-owned transport handler with the SDK's HTTP defaults.</summary>
-    /// <remarks>Use it as the inner handler for custom middleware. Reuse the resulting HTTP client across requests.</remarks>
+    /// <remarks>
+    /// Automatic redirects and cookies are disabled. Automatic decompression is set to <see cref="DecompressionMethods.All"/>,
+    /// and pooled connections have a five-minute lifetime. Keep redirects disabled because a 307 or 308 redirect can resend
+    /// a token request body to another endpoint. Use this as the inner handler for custom middleware and reuse the
+    /// resulting HTTP client across requests.
+    /// </remarks>
     public static SocketsHttpHandler CreateDefaultHttpHandler() => new SocketsHttpHandler
     {
         AllowAutoRedirect = false,
