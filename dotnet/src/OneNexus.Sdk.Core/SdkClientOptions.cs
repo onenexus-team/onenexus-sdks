@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 
 namespace OneNexus.Sdk.Core;
@@ -8,6 +9,16 @@ public sealed class SdkClientOptions
 {
     /// <summary>Optional caller-owned HTTP client. Configure it without a second retry policy.</summary>
     public HttpClient? HttpClient { get; init; }
+
+    /// <summary>Creates a caller-owned transport handler with the SDK's HTTP defaults.</summary>
+    /// <remarks>Use it as the inner handler for custom middleware. Reuse the resulting HTTP client across requests.</remarks>
+    public static SocketsHttpHandler CreateDefaultHttpHandler() => new SocketsHttpHandler
+    {
+        AllowAutoRedirect = false,
+        AutomaticDecompression = DecompressionMethods.All,
+        UseCookies = false,
+        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+    };
 
     /// <summary>The credential clock shared across requests made by this client.</summary>
     public ClientContext Context { get; init; } = new ClientContext();

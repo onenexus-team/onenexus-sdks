@@ -16,13 +16,7 @@ namespace OneNexus.Sdk.Core;
 
 internal sealed class ServiceTransport : IDisposable
 {
-    internal static readonly HttpClient SharedHttp = new HttpClient(new SocketsHttpHandler
-    {
-        AllowAutoRedirect = false,
-        AutomaticDecompression = DecompressionMethods.All,
-        UseCookies = false,
-        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
-    });
+    internal static readonly HttpClient SharedHttp = new HttpClient(SdkClientOptions.CreateDefaultHttpHandler());
 
     private readonly HttpClient _pipeline;
 
