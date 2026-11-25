@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.GetRunCheckpoint
         {
         }
         /// <summary>
-        /// Get Run Checkpoint
+        /// Inspect a checkpoint using its experiment, run and checkpoint IDs. ListRunCheckpointslocates the available checkpoints.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_RunCheckpointPublicResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.GetRunCheckpoint
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_RunCheckpointPublicResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_RunCheckpointPublicResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Run Checkpoint
+        /// Inspect a checkpoint using its experiment, run and checkpoint IDs. ListRunCheckpointslocates the available checkpoints.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

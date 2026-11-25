@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.CancelRunTokenizerUpload
         {
         }
         /// <summary>
-        /// Cancel Run Tokenizer Upload
+        /// Cancel the run tokenizer upload. A cleanup response can precede removal of the stagedfiles.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TrainingActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.CancelRunTokenizerUpload
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TrainingActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TrainingActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Cancel Run Tokenizer Upload
+        /// Cancel the run tokenizer upload. A cleanup response can precede removal of the stagedfiles.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

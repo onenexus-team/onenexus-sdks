@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.ResolveInferenceConfiguration
         {
         }
         /// <summary>
-        /// Resolve Inference Configuration
+        /// Preview the configuration for a model, flavor and runtime before creating or updatinga serving instance.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceConfigurationPreviewResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.ResolveInferenceConfiguration
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceConfigurationPreviewResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceConfigurationPreviewResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Resolve Inference Configuration
+        /// Preview the configuration for a model, flavor and runtime before creating or updatinga serving instance.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

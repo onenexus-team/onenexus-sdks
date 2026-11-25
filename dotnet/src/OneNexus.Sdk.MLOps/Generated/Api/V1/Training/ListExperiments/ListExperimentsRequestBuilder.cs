@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.ListExperiments
         {
         }
         /// <summary>
-        /// List Experiments
+        /// Find training experiments by name or creation time. Pass a returned experiment ID toListExperimentRuns.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_ExperimentSummaryResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.ListExperiments
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_ExperimentSummaryResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_ExperimentSummaryResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Experiments
+        /// Find training experiments by name or creation time. Pass a returned experiment ID toListExperimentRuns.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

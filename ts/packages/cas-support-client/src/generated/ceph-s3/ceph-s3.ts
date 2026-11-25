@@ -21,6 +21,8 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
   export const getCephS3 = () => {
 /**
+ * Inspect the configured first-party account before provisioning. A successful response can contain no
+ * live account yet.
  * @summary Describe the first-party default S3 account and whether it has been
 provisioned yet.
  */
@@ -35,6 +37,8 @@ const getS3DefaultAccount = (
       options);
     }
   /**
+ * Returns the existing account on a repeat call. The root secret is returned only when its user is
+ * first created and must be handled as a credential.
  * @summary Provision the first-party default S3 account and its account-root user.
 Idempotent on the account: if it already exists the existing account is
 returned and the root user is not (re)created.
@@ -51,6 +55,8 @@ const provisionS3DefaultAccount = (
       options);
     }
   /**
+ * Use this cluster-wide inventory for Support investigations. To inspect only the configured first-
+ * party account, use GetS3DefaultAccount.
  * @summary List every RGW account known to the cluster.
  */
 const listS3Accounts = (

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.GetDownloadDatasetInstruction
         {
         }
         /// <summary>
-        /// Get Download Dataset Instruction
+        /// Return instructions for how to download artifacts for one dataset. The caller performsthe transfer separately.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_DownloadDatasetInstructionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.GetDownloadDatasetInstruction
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_DownloadDatasetInstructionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_DownloadDatasetInstructionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Download Dataset Instruction
+        /// Return instructions for how to download artifacts for one dataset. The caller performsthe transfer separately.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

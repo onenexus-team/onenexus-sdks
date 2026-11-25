@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.CreateWorkloadImage
         {
         }
         /// <summary>
-        /// Create Workload Image
+        /// Register a workload image in the platform catalog with its image location and workloadselection settings.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_WorkloadImageResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.CreateWorkloadImage
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_WorkloadImageResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_WorkloadImageResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create Workload Image
+        /// Register a workload image in the platform catalog with its image location and workloadselection settings.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

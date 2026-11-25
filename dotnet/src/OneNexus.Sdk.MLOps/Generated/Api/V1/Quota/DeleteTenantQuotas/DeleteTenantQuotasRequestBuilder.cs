@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.DeleteTenantQuotas
         {
         }
         /// <summary>
-        /// Delete Tenant Quotas
+        /// Remove the listed quota assignments for one tenant using their expected revisions.Check the resulting operation before retrying.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaMutationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.DeleteTenantQuotas
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaMutationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaMutationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Delete Tenant Quotas
+        /// Remove the listed quota assignments for one tenant using their expected revisions.Check the resulting operation before retrying.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

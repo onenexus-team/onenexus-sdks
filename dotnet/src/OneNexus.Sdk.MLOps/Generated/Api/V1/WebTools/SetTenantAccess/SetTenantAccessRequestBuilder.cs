@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.WebTools.SetTenantAccess
         {
         }
         /// <summary>
-        /// Set Access
+        /// Change web-tool availability and request limits for one tenant using its expectedrevision.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TenantAccessResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -75,7 +75,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.WebTools.SetTenantAccess
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TenantAccessResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TenantAccessResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Set Access
+        /// Change web-tool availability and request limits for one tenant using its expectedrevision.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

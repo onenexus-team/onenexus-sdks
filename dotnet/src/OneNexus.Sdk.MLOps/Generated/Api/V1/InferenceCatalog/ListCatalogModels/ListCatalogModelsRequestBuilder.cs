@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.ListCatalogModels
         {
         }
         /// <summary>
-        /// List Catalog Models
+        /// Page through catalog model listings visible to the caller. Use the listing&apos;s rate keywith GetCatalogModel.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_CatalogListingResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.ListCatalogModels
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_CatalogListingResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_CatalogListingResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Catalog Models
+        /// Page through catalog model listings visible to the caller. Use the listing&apos;s rate keywith GetCatalogModel.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

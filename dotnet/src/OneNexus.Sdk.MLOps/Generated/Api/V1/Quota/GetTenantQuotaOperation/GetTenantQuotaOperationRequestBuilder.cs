@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.GetTenantQuotaOperation
         {
         }
         /// <summary>
-        /// Get Tenant Quota Operation
+        /// Inspect a previously submitted quota operation using the tenant ID and the returnedoperation ID.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaOperationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.GetTenantQuotaOperation
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaOperationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaOperationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Tenant Quota Operation
+        /// Inspect a previously submitted quota operation using the tenant ID and the returnedoperation ID.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

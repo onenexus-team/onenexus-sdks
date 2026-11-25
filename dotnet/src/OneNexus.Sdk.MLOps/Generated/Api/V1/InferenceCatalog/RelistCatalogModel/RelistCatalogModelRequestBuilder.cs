@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.RelistCatalogModel
         {
         }
         /// <summary>
-        /// Relist Catalog Model
+        /// Return a previously delisted model listing to the catalog by rate key.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_PublicationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.RelistCatalogModel
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_PublicationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_PublicationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Relist Catalog Model
+        /// Return a previously delisted model listing to the catalog by rate key.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

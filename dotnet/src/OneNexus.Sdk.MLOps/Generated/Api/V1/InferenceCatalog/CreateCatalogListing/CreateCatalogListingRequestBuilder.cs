@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.CreateCatalogListing
         {
         }
         /// <summary>
-        /// Create Catalog Listing
+        /// Publish an inference instance as a catalog listing with the specified listing metadataand pricing.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_PublicationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.CreateCatalogListing
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_PublicationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_PublicationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create Catalog Listing
+        /// Publish an inference instance as a catalog listing with the specified listing metadataand pricing.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

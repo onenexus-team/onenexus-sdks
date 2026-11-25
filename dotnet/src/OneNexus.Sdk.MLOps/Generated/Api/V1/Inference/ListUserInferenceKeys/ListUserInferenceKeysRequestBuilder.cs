@@ -37,7 +37,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.ListUserInferenceKeys
         /// Operator only: every key one user owns in one tenant, in this region.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_UserInferenceKeysResponse_"/></returns>
-        /// <param name="body">Support/operator: one user of one tenant, both explicit (never the caller&apos;s).`user_id` is the CAS User id; a key belongs to it only when the key&apos;simmutable owner principal names that User in `tenant_id`.</param>
+        /// <param name="body">Support/operator: one user of one tenant, both explicit (never the caller&apos;s).`user_id` is the CAS User id or ServiceClient application id; a key belongsto it only when the key&apos;s immutable owner principal names that User orServiceClient in `tenant_id`.</param>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
         /// <exception cref="global::OneNexus.Sdk.MLOps.Models.ProblemResponse">When receiving a 400 status code</exception>
@@ -82,7 +82,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.ListUserInferenceKeys
         /// Operator only: every key one user owns in one tenant, in this region.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
-        /// <param name="body">Support/operator: one user of one tenant, both explicit (never the caller&apos;s).`user_id` is the CAS User id; a key belongs to it only when the key&apos;simmutable owner principal names that User in `tenant_id`.</param>
+        /// <param name="body">Support/operator: one user of one tenant, both explicit (never the caller&apos;s).`user_id` is the CAS User id or ServiceClient application id; a key belongsto it only when the key&apos;s immutable owner principal names that User orServiceClient in `tenant_id`.</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable

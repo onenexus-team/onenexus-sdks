@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.SetLatestWorkloadImage
         {
         }
         /// <summary>
-        /// Set Latest Workload Image
+        /// Mark the selected workload image as the latest image for its matching workloadcategory.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_WorkloadImageResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.SetLatestWorkloadImage
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_WorkloadImageResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_WorkloadImageResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Set Latest Workload Image
+        /// Mark the selected workload image as the latest image for its matching workloadcategory.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.GetRunLogs
         {
         }
         /// <summary>
-        /// Get Run Logs
+        /// Read logs for one training run, optionally selecting an attempt or time window.Returned monitoring links can grant temporary access.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_RunLogsResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.GetRunLogs
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_RunLogsResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_RunLogsResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Run Logs
+        /// Read logs for one training run, optionally selecting an attempt or time window.Returned monitoring links can grant temporary access.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

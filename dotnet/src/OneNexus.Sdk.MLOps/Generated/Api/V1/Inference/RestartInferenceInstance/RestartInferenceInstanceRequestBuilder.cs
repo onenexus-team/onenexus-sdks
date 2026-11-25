@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.RestartInferenceInstance
         {
         }
         /// <summary>
-        /// Restart Inference Instance
+        /// Request a restart of the selected serving instance. Use GetInferenceInstance tomonitor its state.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.RestartInferenceInstance
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Restart Inference Instance
+        /// Request a restart of the selected serving instance. Use GetInferenceInstance tomonitor its state.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

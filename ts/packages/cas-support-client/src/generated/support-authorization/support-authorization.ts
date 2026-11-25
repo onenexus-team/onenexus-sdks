@@ -18,6 +18,8 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
   export const getSupportAuthorization = () => {
 /**
+ * Tests the supplied principal, action and resource against CAS authorization and returns the decision
+ * and its diagnostic entities. This support operation does not execute the action being evaluated.
  * @summary Evaluates one principal/action/resource tuple exactly as the owning
 service's PEP would, without performing the operation itself.
  */

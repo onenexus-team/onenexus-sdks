@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.DeleteInferenceInstance
         {
         }
         /// <summary>
-        /// Delete Inference Instance
+        /// Request deletion of a serving instance. A 202 response means cleanup is still running.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.DeleteInferenceInstance
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Delete Inference Instance
+        /// Request deletion of a serving instance. A 202 response means cleanup is still running.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

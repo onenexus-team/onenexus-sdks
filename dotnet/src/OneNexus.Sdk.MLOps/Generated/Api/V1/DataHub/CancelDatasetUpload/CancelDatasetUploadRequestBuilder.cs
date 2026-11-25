@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.CancelDatasetUpload
         {
         }
         /// <summary>
-        /// Cancel Dataset Upload
+        /// Cancel the dataset upload. A cleanup response can precede removal of the staged files.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_DatasetActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.CancelDatasetUpload
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_DatasetActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_DatasetActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Cancel Dataset Upload
+        /// Cancel the dataset upload. A cleanup response can precede removal of the staged files.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

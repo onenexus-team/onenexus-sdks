@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.GetRun
         {
         }
         /// <summary>
-        /// Get Run
+        /// Read the current state of one run in its parent experiment. Use ListExperimentRuns tolocate both IDs.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_RunDetailResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.GetRun
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_RunDetailResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_RunDetailResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Run
+        /// Read the current state of one run in its parent experiment. Use ListExperimentRuns tolocate both IDs.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

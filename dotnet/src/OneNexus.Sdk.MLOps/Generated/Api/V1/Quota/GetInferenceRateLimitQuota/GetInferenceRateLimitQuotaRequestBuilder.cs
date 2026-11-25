@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.GetInferenceRateLimitQuota
         {
         }
         /// <summary>
-        /// Get Inference Rate Limit Quota
+        /// Read the inference rate limit for a tenant. Use the returned revision when changing orremoving the limit.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceRateLimitQuotaResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.GetInferenceRateLimitQuota
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceRateLimitQuotaResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceRateLimitQuotaResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Inference Rate Limit Quota
+        /// Read the inference rate limit for a tenant. Use the returned revision when changing orremoving the limit.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

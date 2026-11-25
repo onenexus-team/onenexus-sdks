@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.ProvisionS3DefaultAccount
         {
         }
         /// <summary>
-        /// Provision the first-party default S3 account and its account-root user.Idempotent on the account: if it already exists the existing account isreturned and the root user is not (re)created.
+        /// Returns the existing account on a repeat call. The root secret is returned only when its user isfirst created and must be handled as a credential.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.ProvisionS3DefaultAccountResponse"/></returns>
         /// <param name="body">Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`.</param>
@@ -63,7 +63,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.ProvisionS3DefaultAccount
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Support.Models.ProvisionS3DefaultAccountResponse>(requestInfo, global::OneNexus.Sdk.Cas.Support.Models.ProvisionS3DefaultAccountResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Provision the first-party default S3 account and its account-root user.Idempotent on the account: if it already exists the existing account isreturned and the root user is not (re)created.
+        /// Returns the existing account on a repeat call. The root secret is returned only when its user isfirst created and must be handled as a credential.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`.</param>

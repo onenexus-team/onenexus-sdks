@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.StopRun
         {
         }
         /// <summary>
-        /// Stop Run
+        /// Request a stop for a run in its experiment. Read GetRun to see its resulting lifecyclestate.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TrainingActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.StopRun
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TrainingActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TrainingActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Stop Run
+        /// Request a stop for a run in its experiment. Read GetRun to see its resulting lifecyclestate.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

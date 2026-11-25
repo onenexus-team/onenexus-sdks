@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.ListModelVersionFiles
         {
         }
         /// <summary>
-        /// List Model Version Files
+        /// Page through the artifact files of a selected model version. Supply both IDs from theregistry.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_ModelVersionFileResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.ListModelVersionFiles
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_ModelVersionFileResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_ModelVersionFileResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Model Version Files
+        /// Page through the artifact files of a selected model version. Supply both IDs from theregistry.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.GetInferenceInstanceEndpoint
         {
         }
         /// <summary>
-        /// Get Inference Instance Endpoint
+        /// Retrieve the invocation endpoint for an existing serving instance by ID. Invoking itis a separate operation.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceEndpointPublicResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.GetInferenceInstanceEndpoint
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceEndpointPublicResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceEndpointPublicResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Inference Instance Endpoint
+        /// Retrieve the invocation endpoint for an existing serving instance by ID. Invoking itis a separate operation.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

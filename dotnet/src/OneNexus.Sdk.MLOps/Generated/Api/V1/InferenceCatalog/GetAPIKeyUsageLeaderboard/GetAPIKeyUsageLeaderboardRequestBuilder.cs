@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetAPIKeyUsageLeaderboard
         {
         }
         /// <summary>
-        /// Get Api Key Usage Leaderboard
+        /// Rank API-key usage within the caller&apos;s tenant for the selected dates and optional ratekey.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_APIKeyLeaderboardResponse_"/></returns>
         /// <param name="body">Half-open UTC day range, at most 90 days. Defaults to 30 days including today.</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetAPIKeyUsageLeaderboard
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_APIKeyLeaderboardResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_APIKeyLeaderboardResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Api Key Usage Leaderboard
+        /// Rank API-key usage within the caller&apos;s tenant for the selected dates and optional ratekey.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Half-open UTC day range, at most 90 days. Defaults to 30 days including today.</param>

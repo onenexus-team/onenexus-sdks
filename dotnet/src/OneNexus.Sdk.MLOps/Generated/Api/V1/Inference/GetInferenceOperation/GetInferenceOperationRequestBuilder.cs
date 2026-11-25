@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.GetInferenceOperation
         {
         }
         /// <summary>
-        /// Get Inference Operation
+        /// Inspect a serving operation using the instance ID and the operation ID returned by alifecycle command.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceOperationPublicResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.GetInferenceOperation
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceOperationPublicResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceOperationPublicResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Inference Operation
+        /// Inspect a serving operation using the instance ID and the operation ID returned by alifecycle command.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

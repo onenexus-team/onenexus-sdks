@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.UpdateCatalogListing
         {
         }
         /// <summary>
-        /// Update Catalog Listing
+        /// Change a catalog listing&apos;s public identity, title, description or advertisedcapabilities by rate key.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_PublicationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.UpdateCatalogListing
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_PublicationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_PublicationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Update Catalog Listing
+        /// Change a catalog listing&apos;s public identity, title, description or advertisedcapabilities by rate key.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

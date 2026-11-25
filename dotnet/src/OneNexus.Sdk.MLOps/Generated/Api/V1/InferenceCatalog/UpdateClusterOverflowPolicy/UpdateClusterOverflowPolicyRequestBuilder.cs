@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.UpdateClusterOverflowPolicy
         {
         }
         /// <summary>
-        /// Update Cluster Overflow Policy
+        /// Update the cluster overflow policy using the expected revision to detect a concurrentchange.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ClusterOverflowPolicyResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.UpdateClusterOverflowPolicy
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ClusterOverflowPolicyResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ClusterOverflowPolicyResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Update Cluster Overflow Policy
+        /// Update the cluster overflow policy using the expected revision to detect a concurrentchange.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

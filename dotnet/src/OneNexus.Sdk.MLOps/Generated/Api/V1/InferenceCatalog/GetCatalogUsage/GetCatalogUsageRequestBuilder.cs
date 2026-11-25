@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetCatalogUsage
         {
         }
         /// <summary>
-        /// Get Catalog Usage
+        /// Read consumption for the caller&apos;s tenant over a reporting period, optionally groupedby bucket and limited to a rate key.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_UsageResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetCatalogUsage
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_UsageResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_UsageResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Catalog Usage
+        /// Read consumption for the caller&apos;s tenant over a reporting period, optionally groupedby bucket and limited to a rate key.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

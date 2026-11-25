@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetCatalogBilling
         {
         }
         /// <summary>
-        /// Get Catalog Billing
+        /// Read catalog billing totals for the caller&apos;s tenant over the requested number of days.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_CatalogBillingResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetCatalogBilling
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_CatalogBillingResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_CatalogBillingResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Catalog Billing
+        /// Read catalog billing totals for the caller&apos;s tenant over the requested number of days.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.CancelModelVersionUpload
         {
         }
         /// <summary>
-        /// Cancel Model Version Upload
+        /// Cancel the model version upload. A cleanup response can precede removal of the stagedfiles.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.CancelModelVersionUpload
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Cancel Model Version Upload
+        /// Cancel the model version upload. A cleanup response can precede removal of the stagedfiles.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

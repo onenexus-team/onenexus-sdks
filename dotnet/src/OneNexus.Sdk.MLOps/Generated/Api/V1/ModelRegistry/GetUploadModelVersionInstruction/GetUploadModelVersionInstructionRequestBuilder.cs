@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.GetUploadModelVersionInstructi
         {
         }
         /// <summary>
-        /// Get Upload Model Version Instruction
+        /// Return instructions for how to upload artifacts for one model version. The callerperforms the transfer separately.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionInstructionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.GetUploadModelVersionInstructi
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionInstructionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionInstructionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Upload Model Version Instruction
+        /// Return instructions for how to upload artifacts for one model version. The callerperforms the transfer separately.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

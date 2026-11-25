@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.RollbackTenantQuotaOperation
         {
         }
         /// <summary>
-        /// Rollback Tenant Quota Operation
+        /// Request rollback of a quota operation for one tenant. Use its operation ID to inspectthe resulting state.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaOperationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.RollbackTenantQuotaOperation
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaOperationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaOperationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Rollback Tenant Quota Operation
+        /// Request rollback of a quota operation for one tenant. Use its operation ID to inspectthe resulting state.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

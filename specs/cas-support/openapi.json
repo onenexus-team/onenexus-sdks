@@ -12,6 +12,7 @@
           "CephS3"
         ],
         "summary": "Describe the first-party default S3 account and whether it has been\nprovisioned yet.",
+        "description": "Inspect the configured first-party account before provisioning. A successful response can contain no\nlive account yet.",
         "operationId": "GetS3DefaultAccount",
         "requestBody": {
           "content": {
@@ -64,7 +65,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "platform",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::GetS3DefaultAccount"
+          ]
+        }
       }
     },
     "/support-api/ProvisionS3DefaultAccount": {
@@ -73,6 +82,7 @@
           "CephS3"
         ],
         "summary": "Provision the first-party default S3 account and its account-root user.\nIdempotent on the account: if it already exists the existing account is\nreturned and the root user is not (re)created.",
+        "description": "Returns the existing account on a repeat call. The root secret is returned only when its user is\nfirst created and must be handled as a credential.",
         "operationId": "ProvisionS3DefaultAccount",
         "parameters": [
           {
@@ -146,7 +156,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "platform",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::ProvisionS3DefaultAccount"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key",
+          "sensitiveData": "credentials"
+        }
       }
     },
     "/support-api/ListS3Accounts": {
@@ -155,6 +175,7 @@
           "CephS3"
         ],
         "summary": "List every RGW account known to the cluster.",
+        "description": "Use this cluster-wide inventory for Support investigations. To inspect only the configured first-\nparty account, use GetS3DefaultAccount.",
         "operationId": "ListS3Accounts",
         "requestBody": {
           "content": {
@@ -207,7 +228,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "allTenants",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::ListS3Accounts"
+          ]
+        }
       }
     },
     "/support-api/DescribeAccount": {
@@ -279,7 +308,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "selectedAccount",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::DescribeAccount"
+          ],
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/support-api/DeleteAccount": {
@@ -378,7 +416,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "selectedAccount",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::DeleteAccount"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key",
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/support-api/EvaluateAuthorization": {
@@ -387,6 +435,7 @@
           "SupportAuthorization"
         ],
         "summary": "Evaluates one principal/action/resource tuple exactly as the owning\nservice's PEP would, without performing the operation itself.",
+        "description": "Tests the supplied principal, action and resource against CAS authorization and returns the decision\nand its diagnostic entities. This support operation does not execute the action being evaluated.",
         "operationId": "EvaluateAuthorization",
         "requestBody": {
           "content": {
@@ -459,7 +508,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "selectedTenant",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::EvaluateAuthorization"
+          ],
+          "sensitiveData": "authorizationPolicy"
+        }
       }
     },
     "/support-api/CreateTenant": {
@@ -468,6 +526,7 @@
           "Tenant"
         ],
         "summary": "Create a new tenant.",
+        "description": "Creates a tenant and starts onboarding its root user. Use the returned tenant ID for subsequent\nlookups. Tenant display names can repeat.",
         "operationId": "CreateTenant",
         "parameters": [
           {
@@ -542,7 +601,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "platform",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::CreateTenant"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key",
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/support-api/DescribeTenant": {
@@ -551,6 +620,7 @@
           "Tenant"
         ],
         "summary": "Look up a tenant by Guid PK.",
+        "description": "Use the ID returned by CreateTenant or ListTenants to inspect one tenant. To enumerate its members,\nuse ListTenantUsers.",
         "operationId": "DescribeTenant",
         "requestBody": {
           "description": "Request body. Carries the tenant's Guid PK as `tenantId`.",
@@ -634,7 +704,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "selectedTenant",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::DescribeTenant"
+          ]
+        }
       }
     },
     "/support-api/ListTenants": {
@@ -697,7 +775,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "allTenants",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::ListTenants"
+          ]
+        }
       }
     },
     "/support-api/ListTenantUsers": {
@@ -790,7 +876,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "selectedTenant",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::ListTenantUsers"
+          ],
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/support-api/SearchUsers": {
@@ -853,7 +948,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "allTenants",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::SearchUsers"
+          ],
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/support-api/AddTenantUser": {
@@ -937,7 +1041,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "selectedTenant",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::AddTenantUser"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key",
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/support-api/ResendInvitation": {
@@ -1031,7 +1145,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "selectedTenant",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::ResendInvitation"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key",
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/support-api/SuspendTenant": {
@@ -1040,6 +1164,7 @@
           "Tenant"
         ],
         "summary": "Suspends a tenant, preventing normal sign-in and onboarding traffic.",
+        "description": "Suspends the target tenant by ID. This affects sign-in and onboarding for the tenant as a whole. Use\nSuspendTenantUser to suspend a single member.",
         "operationId": "SuspendTenant",
         "parameters": [
           {
@@ -1113,7 +1238,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "selectedTenant",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::SuspendTenant"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/support-api/UnsuspendTenant": {
@@ -1122,6 +1256,7 @@
           "Tenant"
         ],
         "summary": "Re-activates a suspended tenant.",
+        "description": "Reactivates the selected tenant. Member lifecycle state is tracked separately. Use DescribeTenant to\ninspect the current tenant status.",
         "operationId": "UnsuspendTenant",
         "parameters": [
           {
@@ -1205,7 +1340,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "selectedTenant",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::UnsuspendTenant"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/support-api/SuspendTenantUser": {
@@ -1299,7 +1443,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "selectedTenant",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::SuspendTenantUser"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/support-api/UnsuspendTenantUser": {
@@ -1393,7 +1546,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "selectedTenant",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::UnsuspendTenantUser"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/support-api/RemoveTenantUser": {
@@ -1483,7 +1645,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "selectedTenant",
+          "caller": "operator",
+          "authorizationActions": [
+            "CAS::RemoveTenantUser"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     }
   },

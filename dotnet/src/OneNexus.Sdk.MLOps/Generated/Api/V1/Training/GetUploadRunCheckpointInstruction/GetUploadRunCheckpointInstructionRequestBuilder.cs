@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.GetUploadRunCheckpointInstruction
         {
         }
         /// <summary>
-        /// Get Upload Run Checkpoint Instruction
+        /// Return instructions for how to upload artifacts for one run checkpoint. The callerperforms the transfer separately.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_RunCheckpointInstructionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.GetUploadRunCheckpointInstruction
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_RunCheckpointInstructionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_RunCheckpointInstructionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Upload Run Checkpoint Instruction
+        /// Return instructions for how to upload artifacts for one run checkpoint. The callerperforms the transfer separately.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.FailModelVersionUpload
         {
         }
         /// <summary>
-        /// Fail Model Version Upload
+        /// Record why the model version upload failed so its staged artifacts can be cleaned up.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.FailModelVersionUpload
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Fail Model Version Upload
+        /// Record why the model version upload failed so its staged artifacts can be cleaned up.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

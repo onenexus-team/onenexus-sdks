@@ -106,7 +106,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "human",
+          "authorizationActions": [ ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key",
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/api/ListMyTenants": {
@@ -178,7 +186,13 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "callerAccount",
+          "caller": "human",
+          "authorizationActions": [ ]
+        }
       }
     },
     "/api/AssignRole": {
@@ -187,7 +201,7 @@
           "AuthorizationAdministration"
         ],
         "summary": "Idempotently assigns one role to a user or service client.",
-        "description": "The assignee and role must belong to the caller's tenant. Repeating the\nsame request does not create a second assignment; inspect\n`created` to tell whether CAS created it on this call.",
+        "description": "Use the role URI returned by ListRoles. The assignee and role must belong to the caller's tenant.\nCAS checks CAS::AssignRole on the assignee and CAS::PassRole on the role.\nRepeating the same request keeps the existing assignment. Inspect\n`created` to tell whether CAS created it on this call.",
         "operationId": "AssignRole",
         "parameters": [
           {
@@ -291,7 +305,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::AssignRole",
+            "CAS::PassRole"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/RemoveRoleAssignment": {
@@ -404,7 +428,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::RemoveRoleAssignment"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/ListRoleAssignments": {
@@ -506,7 +539,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::ListRoleAssignments"
+          ]
+        }
       }
     },
     "/api/AttachPolicyToRole": {
@@ -619,7 +660,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::AttachPolicyToRole",
+            "CAS::PassRole"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/DetachPolicyFromRole": {
@@ -732,7 +783,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::DetachPolicyFromRole"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/ListPolicyAttachments": {
@@ -834,7 +894,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::ListPolicyAttachments"
+          ]
+        }
       }
     },
     "/api/ListRolePolicies": {
@@ -936,7 +1004,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::ListPolicyAttachments"
+          ]
+        }
       }
     },
     "/api/PublishPolicy": {
@@ -1039,7 +1115,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::PublishPolicy"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key",
+          "sensitiveData": "authorizationPolicy"
+        }
       }
     },
     "/api/ListPolicies": {
@@ -1121,7 +1207,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::ListPolicies"
+          ]
+        }
       }
     },
     "/api/GetPolicy": {
@@ -1213,7 +1307,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::GetPolicy"
+          ],
+          "sensitiveData": "authorizationPolicy"
+        }
       }
     },
     "/api/UpdatePolicy": {
@@ -1316,7 +1419,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::UpdatePolicy"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key",
+          "sensitiveData": "authorizationPolicy"
+        }
       }
     },
     "/api/DeletePolicy": {
@@ -1429,7 +1542,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::DeletePolicy"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/DeleteRole": {
@@ -1542,7 +1664,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::DeleteRole"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/CreateRole": {
@@ -1645,7 +1776,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::CreateRole"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/UpdateRoleDescription": {
@@ -1748,7 +1888,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::UpdateRoleDescription"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/ListRoles": {
@@ -1790,7 +1939,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::ListRoles"
+          ]
+        }
       }
     },
     "/api/ListS3Roles": {
@@ -1872,7 +2029,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::ListS3Roles"
+          ],
+          "sensitiveData": "authorizationPolicy"
+        }
       }
     },
     "/api/AssumeS3Role": {
@@ -1964,7 +2130,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "execute",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::AssumeS3Role"
+          ],
+          "sensitiveData": "credentials"
+        }
       }
     },
     "/api/ListServiceClients": {
@@ -2036,7 +2211,15 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::ListServiceClients"
+          ]
+        }
       }
     },
     "/api/CreateServiceClient": {
@@ -2129,7 +2312,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::CreateServiceClient"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/AddServiceClientKey": {
@@ -2242,7 +2434,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::AddServiceClientKey"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/RemoveServiceClientKey": {
@@ -2355,7 +2556,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::RemoveServiceClientKey"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/DisableServiceClient": {
@@ -2458,7 +2668,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::DisableServiceClient"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/CreateUser": {
@@ -2562,7 +2781,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::CreateUser"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key",
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/api/ResendUserInvitation": {
@@ -2671,7 +2900,17 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::ResendUserInvitation"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key",
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/api/ListUsers": {
@@ -2753,7 +2992,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "read",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::ListUsers"
+          ],
+          "sensitiveData": "personalData"
+        }
       }
     },
     "/api/SuspendUser": {
@@ -2866,7 +3114,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::SuspendUser"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/UnsuspendUser": {
@@ -2979,7 +3236,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::UnsuspendUser"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     },
     "/api/RemoveUser": {
@@ -3088,7 +3354,16 @@
           {
             "Bearer": [ ]
           }
-        ]
+        ],
+        "x-onenexus": {
+          "effect": "write",
+          "tenantScope": "callerTenant",
+          "caller": "authenticated",
+          "authorizationActions": [
+            "CAS::RemoveUser"
+          ],
+          "idempotencyKeyHeader": "X-Nx1-Idempotency-Key"
+        }
       }
     }
   },

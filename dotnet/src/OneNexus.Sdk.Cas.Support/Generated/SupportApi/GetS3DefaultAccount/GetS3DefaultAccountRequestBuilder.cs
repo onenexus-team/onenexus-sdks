@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.GetS3DefaultAccount
         {
         }
         /// <summary>
-        /// Describe the first-party default S3 account and whether it has beenprovisioned yet.
+        /// Inspect the configured first-party account before provisioning. A successful response can contain nolive account yet.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.S3DefaultAccountResponse"/></returns>
         /// <param name="body">Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`.</param>
@@ -61,7 +61,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.GetS3DefaultAccount
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Support.Models.S3DefaultAccountResponse>(requestInfo, global::OneNexus.Sdk.Cas.Support.Models.S3DefaultAccountResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Describe the first-party default S3 account and whether it has beenprovisioned yet.
+        /// Inspect the configured first-party account before provisioning. A successful response can contain nolive account yet.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`.</param>

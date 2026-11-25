@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.UpdateModelVersion
         {
         }
         /// <summary>
-        /// Update Model Version
+        /// Change a version&apos;s name or extra metadata while keeping it under the specified model.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionDetailResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.UpdateModelVersion
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionDetailResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionDetailResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Update Model Version
+        /// Change a version&apos;s name or extra metadata while keeping it under the specified model.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

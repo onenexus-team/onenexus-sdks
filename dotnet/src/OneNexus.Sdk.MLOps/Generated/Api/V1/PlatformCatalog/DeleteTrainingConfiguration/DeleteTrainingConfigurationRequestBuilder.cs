@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.DeleteTrainingConfiguration
         {
         }
         /// <summary>
-        /// Delete Training Configuration
+        /// Remove the training configuration from the platform catalog using the ID returned byits list operation.
         /// </summary>
         /// <param name="body">The request body</param>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
@@ -78,7 +78,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.DeleteTrainingConfiguration
             await RequestAdapter.SendNoContentAsync(requestInfo, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Delete Training Configuration
+        /// Remove the training configuration from the platform catalog using the ID returned byits list operation.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

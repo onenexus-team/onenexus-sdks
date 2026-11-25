@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetTenantCatalogUsage
         {
         }
         /// <summary>
-        /// Get Tenant Catalog Usage
+        /// Read usage for an explicitly selected tenant and date range, optionally limited to onecatalog rate key.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_UsageResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetTenantCatalogUsage
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_UsageResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_UsageResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Tenant Catalog Usage
+        /// Read usage for an explicitly selected tenant and date range, optionally limited to onecatalog rate key.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

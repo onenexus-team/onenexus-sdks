@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.ListCatalogModelConsumers
         {
         }
         /// <summary>
-        /// List Catalog Model Consumers
+        /// Page through the consumers of a model listing for the selected reporting period. Theresult can identify other tenants.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_ConsumerUsageRow_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.ListCatalogModelConsumers
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_ConsumerUsageRow_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_ConsumerUsageRow_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Catalog Model Consumers
+        /// Page through the consumers of a model listing for the selected reporting period. Theresult can identify other tenants.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

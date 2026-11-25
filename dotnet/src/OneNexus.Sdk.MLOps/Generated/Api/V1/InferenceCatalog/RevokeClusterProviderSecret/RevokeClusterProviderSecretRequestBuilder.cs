@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.RevokeClusterProviderSecret
         {
         }
         /// <summary>
-        /// Revoke Cluster Provider Secret
+        /// Revoke the named provider credential using its ID and expected revision. This affectsoverflow requests that depend on it.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ClusterProviderSecretsResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.RevokeClusterProviderSecret
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ClusterProviderSecretsResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ClusterProviderSecretsResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Revoke Cluster Provider Secret
+        /// Revoke the named provider credential using its ID and expected revision. This affectsoverflow requests that depend on it.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>
