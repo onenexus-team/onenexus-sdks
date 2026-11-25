@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.UpdateInferenceInstance
         {
         }
         /// <summary>
-        /// Update Inference Instance
+        /// Change the selected serving instance&apos;s model, configuration or metadata. UseGetInferenceOperation when the response returns an operation ID.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.UpdateInferenceInstance
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Update Inference Instance
+        /// Change the selected serving instance&apos;s model, configuration or metadata. UseGetInferenceOperation when the response returns an operation ID.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

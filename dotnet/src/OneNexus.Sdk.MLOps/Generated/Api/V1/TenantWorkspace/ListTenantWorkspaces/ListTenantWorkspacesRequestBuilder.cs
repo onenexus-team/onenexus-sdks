@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.TenantWorkspace.ListTenantWorkspaces
         {
         }
         /// <summary>
-        /// List Tenant Workspaces
+        /// Find visible workspaces by name or creation time. Use a returned workspace ID toinspect provisioning state.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_TenantWorkspaceSummaryResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.TenantWorkspace.ListTenantWorkspaces
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_TenantWorkspaceSummaryResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_TenantWorkspaceSummaryResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Tenant Workspaces
+        /// Find visible workspaces by name or creation time. Use a returned workspace ID toinspect provisioning state.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

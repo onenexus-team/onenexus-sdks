@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.SuspendTenant
         {
         }
         /// <summary>
-        /// Suspends a tenant, preventing normal sign-in and onboarding traffic.
+        /// Suspends the target tenant by ID. This affects sign-in and onboarding for the tenant as a whole. UseSuspendTenantUser to suspend a single member.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.SuspendTenantResponse"/></returns>
         /// <param name="body">Request body for `POST /support-api/SuspendTenant`.</param>
@@ -63,7 +63,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.SuspendTenant
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Support.Models.SuspendTenantResponse>(requestInfo, global::OneNexus.Sdk.Cas.Support.Models.SuspendTenantResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Suspends a tenant, preventing normal sign-in and onboarding traffic.
+        /// Suspends the target tenant by ID. This affects sign-in and onboarding for the tenant as a whole. UseSuspendTenantUser to suspend a single member.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Request body for `POST /support-api/SuspendTenant`.</param>

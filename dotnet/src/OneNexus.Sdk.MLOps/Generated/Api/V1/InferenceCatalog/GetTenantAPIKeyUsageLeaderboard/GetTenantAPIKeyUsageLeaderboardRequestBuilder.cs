@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetTenantAPIKeyUsageLeaderb
         {
         }
         /// <summary>
-        /// Get Tenant Api Key Usage Leaderboard
+        /// Rank API-key usage for the named tenant. Members are limited to their own tenant whileauthorized support callers can select another.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_APIKeyLeaderboardResponse_"/></returns>
         /// <param name="body">Support/superadmin variant: the target tenant is explicit, not the caller&apos;s.</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetTenantAPIKeyUsageLeaderb
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_APIKeyLeaderboardResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_APIKeyLeaderboardResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Tenant Api Key Usage Leaderboard
+        /// Rank API-key usage for the named tenant. Members are limited to their own tenant whileauthorized support callers can select another.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Support/superadmin variant: the target tenant is explicit, not the caller&apos;s.</param>

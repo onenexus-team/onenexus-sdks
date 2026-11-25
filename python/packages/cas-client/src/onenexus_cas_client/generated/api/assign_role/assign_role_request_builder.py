@@ -33,7 +33,7 @@ class AssignRoleRequestBuilder(BaseRequestBuilder):
     
     async def post(self,body: AssignRoleRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> Optional[AssignRoleResponse]:
         """
-        The assignee and role must belong to the caller's tenant. Repeating thesame request does not create a second assignment; inspect`created` to tell whether CAS created it on this call.
+        Use the role URI returned by ListRoles. The assignee and role must belong to the caller's tenant.CAS checks CAS::AssignRole on the assignee and CAS::PassRole on the role.Repeating the same request keeps the existing assignment. Inspect`created` to tell whether CAS created it on this call.
         param body: Request body for `POST /api/AssignRole`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: Optional[AssignRoleResponse]
@@ -61,7 +61,7 @@ class AssignRoleRequestBuilder(BaseRequestBuilder):
     
     def to_post_request_information(self,body: AssignRoleRequest, request_configuration: Optional[RequestConfiguration[QueryParameters]] = None) -> RequestInformation:
         """
-        The assignee and role must belong to the caller's tenant. Repeating thesame request does not create a second assignment; inspect`created` to tell whether CAS created it on this call.
+        Use the role URI returned by ListRoles. The assignee and role must belong to the caller's tenant.CAS checks CAS::AssignRole on the assignee and CAS::PassRole on the role.Repeating the same request keeps the existing assignment. Inspect`created` to tell whether CAS created it on this call.
         param body: Request body for `POST /api/AssignRole`.
         param request_configuration: Configuration for the request such as headers, query parameters, and middleware options.
         Returns: RequestInformation

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant
         {
         }
         /// <summary>
-        /// Re-activates a suspended tenant.
+        /// Reactivates the selected tenant. Member lifecycle state is tracked separately. Use DescribeTenant toinspect the current tenant status.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse"/></returns>
         /// <param name="body">Request body for `POST /support-api/UnsuspendTenant`.</param>
@@ -65,7 +65,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.UnsuspendTenant
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse>(requestInfo, global::OneNexus.Sdk.Cas.Support.Models.UnsuspendTenantResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Re-activates a suspended tenant.
+        /// Reactivates the selected tenant. Member lifecycle state is tracked separately. Use DescribeTenant toinspect the current tenant status.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Request body for `POST /support-api/UnsuspendTenant`.</param>

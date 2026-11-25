@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.GetDatasetSize
         {
         }
         /// <summary>
-        /// Get Dataset Size
+        /// Read the stored size of a dataset by ID. Use ListDatasetFiles for individual fileentries.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_DatasetSizeResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.GetDatasetSize
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_DatasetSizeResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_DatasetSizeResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Dataset Size
+        /// Read the stored size of a dataset by ID. Use ListDatasetFiles for individual fileentries.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.CreateModelVersionFromCheckpoi
         {
         }
         /// <summary>
-        /// Create Model Version From Checkpoint
+        /// Create a registry version from a training checkpoint. Identify the destination modeland the source experiment, run, and checkpoint.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.CreateModelVersionFromCheckpoi
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create Model Version From Checkpoint
+        /// Create a registry version from a training checkpoint. Identify the destination modeland the source experiment, run, and checkpoint.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

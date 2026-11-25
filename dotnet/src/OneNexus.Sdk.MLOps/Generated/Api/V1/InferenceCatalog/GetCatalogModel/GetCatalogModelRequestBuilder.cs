@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetCatalogModel
         {
         }
         /// <summary>
-        /// Get Catalog Model
+        /// Look up a published catalog listing by rate key. To inspect the underlying registrymodel, use GetModel instead.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_CatalogListingResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetCatalogModel
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_CatalogListingResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_CatalogListingResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Catalog Model
+        /// Look up a published catalog listing by rate key. To inspect the underlying registrymodel, use GetModel instead.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

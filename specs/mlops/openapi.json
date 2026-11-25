@@ -10899,7 +10899,7 @@
         "type": "object"
       },
       "RpcListUserInferenceKeysRequest": {
-        "description": "Support/operator: one user of one tenant, both explicit (never the caller's).\n\n`user_id` is the CAS User id; a key belongs to it only when the key's\nimmutable owner principal names that User in `tenant_id`.",
+        "description": "Support/operator: one user of one tenant, both explicit (never the caller's).\n\n`user_id` is the CAS User id or ServiceClient application id; a key belongs\nto it only when the key's immutable owner principal names that User or\nServiceClient in `tenant_id`.",
         "properties": {
           "tenant_id": {
             "format": "uuid",
@@ -15154,7 +15154,17 @@
         "summary": "Cancel Dataset Upload",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Cancel the dataset upload. A cleanup response can precede removal of the staged files.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageDatasetUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/CreateDataset": {
@@ -15304,7 +15314,17 @@
         "summary": "Create Dataset",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Register a dataset in the tenant workspace and keep the returned dataset ID for upload\nand training requests.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateDataset"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/DeleteDataset": {
@@ -15457,7 +15477,17 @@
         "summary": "Delete Dataset",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Request removal of the selected dataset. A 202 response means cleanup is still\nrunning.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DeleteDataSet"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/FailDatasetUpload": {
@@ -15617,7 +15647,17 @@
         "summary": "Fail Dataset Upload",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Record why the dataset upload failed so its staged artifacts can be cleaned up.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageDatasetUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/FinalizeDatasetUpload": {
@@ -15767,7 +15807,17 @@
         "summary": "Finalize Dataset Upload",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Complete the dataset upload with the reported manifest, file count and byte total.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageDatasetUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/GetDataset": {
@@ -15917,7 +15967,16 @@
         "summary": "Get Dataset",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Read dataset details by ID. Use ListDatasets to find that ID from a dataset name.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadDataset"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/GetDatasetSize": {
@@ -16067,7 +16126,16 @@
         "summary": "Get Dataset Size",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Read the stored size of a dataset by ID. Use ListDatasetFiles for individual file\nentries.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadDatasetArtifacts"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/GetDownloadDatasetInstruction": {
@@ -16217,7 +16285,16 @@
         "summary": "Get Download Dataset Instruction",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Return instructions for how to download artifacts for one dataset. The caller performs\nthe transfer separately.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadDatasetArtifacts"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/GetUploadDatasetInstruction": {
@@ -16367,7 +16444,16 @@
         "summary": "Get Upload Dataset Instruction",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Return instructions for how to upload artifacts for one dataset. The caller performs\nthe transfer separately.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageDatasetUpload"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/ListDatasetFiles": {
@@ -16517,7 +16603,16 @@
         "summary": "List Dataset Files",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Page through files belonging to one dataset. Pass the dataset ID from GetDataset or\nListDatasets.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadDatasetArtifacts"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/ListDatasets": {
@@ -16667,7 +16762,16 @@
         "summary": "List Datasets",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Find datasets by name or creation time. Use a returned dataset ID with GetDataset or\nListDatasetFiles.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadDataset"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/StartDatasetUpload": {
@@ -16817,7 +16921,17 @@
         "summary": "Start Dataset Upload",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Begin an upload for the dataset. Use the resulting upload state to transfer files\nbefore finalizing.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageDatasetUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/DataHub/UpdateDataset": {
@@ -16967,7 +17081,17 @@
         "summary": "Update Dataset",
         "tags": [
           "DataHub"
-        ]
+        ],
+        "description": "Change the selected dataset's name or extra metadata. Use the dataset ID from\nListDatasets.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::UpdateDataset"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/CreateInferenceInstance": {
@@ -17117,7 +17241,19 @@
         "summary": "Create Inference Instance",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Create a serving instance from the specified model and runtime settings. Use\nResolveInferenceConfiguration to preview the configuration first.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateInferenceInstance",
+            "MLOps::UseModelVersion",
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/CreateInferenceKey": {
@@ -17267,7 +17403,21 @@
         "summary": "Create Inference Key",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Mint an inference credential with the requested kind, instance scope and lifetime. The\nreturned token is sensitive.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateInferenceKey",
+            "MLOps::CreateTenantWideInferenceKey",
+            "MLOps::CreatePlatformInferenceKey",
+            "MLOps::InvokeInferenceInstance"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "sensitiveData": "credentials",
+          "tenantScope": "accessibleResources"
+        }
       }
     },
     "/api/v1/Inference/DeleteInferenceInstance": {
@@ -17420,7 +17570,17 @@
         "summary": "Delete Inference Instance",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Request deletion of a serving instance. A 202 response means cleanup is still running.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DeleteInferenceInstance"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/FinalizeInferenceInstance": {
@@ -17570,7 +17730,17 @@
         "summary": "Finalize Inference Instance",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Remove runtime resources and mark the serving instance finalized. This changes the\ninstance lifecycle.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ControlInferenceInstance"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/GetInferenceInstance": {
@@ -17720,7 +17890,16 @@
         "summary": "Get Inference Instance",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Read current serving-instance details by ID. Use GetInferenceInstanceEndpoint to\nretrieve its invocation address.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceInstance"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/GetInferenceInstanceEndpoint": {
@@ -17870,7 +18049,16 @@
         "summary": "Get Inference Instance Endpoint",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Retrieve the invocation endpoint for an existing serving instance by ID. Invoking it\nis a separate operation.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceInstance"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/GetInferenceInstanceLogs": {
@@ -18020,7 +18208,17 @@
         "summary": "Get Inference Instance Logs",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Read instance logs for the selected time window and optional search text. Log contents\ncan include workload data.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceLogs"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "sensitiveData": "workloadMonitoring",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/GetInferenceInstanceMetrics": {
@@ -18170,7 +18368,17 @@
         "summary": "Get Inference Instance Metrics",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Read instance monitoring metrics. The optional embed view can create a dashboard\nsession for the caller.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceMetrics"
+          ],
+          "caller": "user",
+          "effect": "execute",
+          "sensitiveData": "workloadMonitoring",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/GetInferenceOperation": {
@@ -18320,7 +18528,16 @@
         "summary": "Get Inference Operation",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Inspect a serving operation using the instance ID and the operation ID returned by a\nlifecycle command.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceOperation"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/GetInferenceRevision": {
@@ -18470,7 +18687,16 @@
         "summary": "Get Inference Revision",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Read one revision of a serving instance using the revision ID from\nListInferenceRevisions.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceRevision"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/GetInferenceRuntimeConfig": {
@@ -18621,7 +18847,16 @@
         "summary": "Get Inference Runtime Config",
         "tags": [
           "Inference"
-        ]
+        ],
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceInstance"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "sensitiveData": "configuration",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/InvokeInferencePublicEndpoint": {
@@ -18771,7 +19006,17 @@
         "summary": "Invoke Inference Public Endpoint",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Submit the payload to a live model endpoint using an inference key. This runs\ninference and can consume quota on each call.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::InvokeInferenceInstance"
+          ],
+          "caller": "user",
+          "effect": "execute",
+          "sensitiveData": "credentials",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/ListInferenceInstances": {
@@ -18921,7 +19166,16 @@
         "summary": "List Inference Instances",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Find serving instances by model, version, name, creation time or status. Use the\nreturned ID for instance operations.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceInstance"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/ListInferenceKeys": {
@@ -19071,7 +19325,17 @@
         "summary": "List Inference Keys",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Page through inference-key records visible to the caller, optionally filtered by kind.\nUse a lookup ID to revoke a key.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ListInferenceKeys",
+            "MLOps::ReadInferenceKey"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/ListInferenceRevisions": {
@@ -19221,7 +19485,16 @@
         "summary": "List Inference Revisions",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Page through revisions belonging to a serving instance. Use a revision ID with\nGetInferenceRevision.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceRevision"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/ListUserInferenceKeys": {
@@ -19372,7 +19645,16 @@
         "summary": "List User Inference Keys",
         "tags": [
           "Inference"
-        ]
+        ],
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ListInferenceKeys"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "sensitiveData": "personalData",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Inference/ResolveInferenceConfiguration": {
@@ -19522,7 +19804,18 @@
         "summary": "Resolve Inference Configuration",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Preview the configuration for a model, flavor and runtime before creating or updating\na serving instance.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadModel",
+            "MLOps::UseModelVersion",
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/RestartInferenceInstance": {
@@ -19672,7 +19965,17 @@
         "summary": "Restart Inference Instance",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Request a restart of the selected serving instance. Use GetInferenceInstance to\nmonitor its state.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ControlInferenceInstance"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/RevokeInferenceKey": {
@@ -19822,7 +20125,17 @@
         "summary": "Revoke Inference Key",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Revoke a specific inference key by lookup ID. Use ListInferenceKeys to locate the\nrecord.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::RevokeInferenceKey"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/RevokeUserInferenceKeys": {
@@ -19973,7 +20286,17 @@
         "summary": "Revoke User Inference Keys",
         "tags": [
           "Inference"
-        ]
+        ],
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::RevokeInferenceKey"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "sensitiveData": "personalData",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Inference/StopInferenceInstance": {
@@ -20123,7 +20446,17 @@
         "summary": "Stop Inference Instance",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Request that serving stop for the selected inference instance. Inspect its state with\nGetInferenceInstance.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ControlInferenceInstance"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/UpdateInferenceInstance": {
@@ -20273,7 +20606,19 @@
         "summary": "Update Inference Instance",
         "tags": [
           "Inference"
-        ]
+        ],
+        "description": "Change the selected serving instance's model, configuration or metadata. Use\nGetInferenceOperation when the response returns an operation ID.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::UpdateInferenceInstance",
+            "MLOps::UseModelVersion",
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/UpdateInferenceRuntimeConfig": {
@@ -20424,7 +20769,19 @@
         "summary": "Update Inference Runtime Config",
         "tags": [
           "Inference"
-        ]
+        ],
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::UpdateInferenceInstance",
+            "MLOps::UseModelVersion",
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "sensitiveData": "configuration",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Inference/ValidateInferenceKey": {
@@ -20575,7 +20932,14 @@
         "summary": "Validate Inference Key",
         "tags": [
           "Inference"
-        ]
+        ],
+        "x-onenexus": {
+          "authorizationActions": [],
+          "caller": "api_key",
+          "effect": "read",
+          "sensitiveData": "credentials",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/CorrectCatalogModelPricing": {
@@ -20716,7 +21080,16 @@
         "summary": "Correct Catalog Model Pricing",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/InferenceCatalog/CreateCatalogListing": {
@@ -20856,7 +21229,17 @@
         "summary": "Create Catalog Listing",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Publish an inference instance as a catalog listing with the specified listing metadata\nand pricing.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageInferenceInstancePublication"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/DelistCatalogModel": {
@@ -20996,7 +21379,17 @@
         "summary": "Delist Catalog Model",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Withdraw the specified model listing from the catalog. Use the rate key returned for\nthat listing.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageInferenceInstancePublication"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetAPIKeyUsageLeaderboard": {
@@ -21136,7 +21529,15 @@
         "summary": "Get Api Key Usage Leaderboard",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Rank API-key usage within the caller's tenant for the selected dates and optional rate\nkey.",
+        "x-onenexus": {
+          "authorizationActions": [],
+          "caller": "tenant",
+          "effect": "read",
+          "sensitiveData": "usageAndBilling",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetCatalogBilling": {
@@ -21276,7 +21677,17 @@
         "summary": "Get Catalog Billing",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Read catalog billing totals for the caller's tenant over the requested number of days.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceBilling"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "sensitiveData": "usageAndBilling",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetCatalogCapabilities": {
@@ -21416,7 +21827,16 @@
         "summary": "Get Catalog Capabilities",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Read the catalog capabilities available to the caller before choosing a publication or\nusage operation.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetCatalogModel": {
@@ -21556,7 +21976,16 @@
         "summary": "Get Catalog Model",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Look up a published catalog listing by rate key. To inspect the underlying registry\nmodel, use GetModel instead.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "accessibleResources"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetCatalogModelTiers": {
@@ -21696,7 +22125,16 @@
         "summary": "Get Catalog Model Tiers",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Read the platform configuration for catalog model tiers before changing the tier\nassignments.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetCatalogUsage": {
@@ -21836,7 +22274,17 @@
         "summary": "Get Catalog Usage",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Read consumption for the caller's tenant over a reporting period, optionally grouped\nby bucket and limited to a rate key.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceBilling"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "sensitiveData": "usageAndBilling",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetClusterOverflowPolicy": {
@@ -21976,7 +22424,17 @@
         "summary": "Get Cluster Overflow Policy",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Read the cluster overflow policy and its revision before attempting a change.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "sensitiveData": "configuration",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetClusterProviderSecrets": {
@@ -22116,7 +22574,17 @@
         "summary": "Get Cluster Provider Secrets",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Read provider credential metadata and revision information for cluster overflow\nconfiguration.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "sensitiveData": "configuration",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetTenantAPIKeyUsageLeaderboard": {
@@ -22256,7 +22724,15 @@
         "summary": "Get Tenant Api Key Usage Leaderboard",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Rank API-key usage for the named tenant. Members are limited to their own tenant while\nauthorized support callers can select another.",
+        "x-onenexus": {
+          "authorizationActions": [],
+          "caller": "tenant",
+          "effect": "read",
+          "sensitiveData": "usageAndBilling",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetTenantCatalogBilling": {
@@ -22396,7 +22872,17 @@
         "summary": "Get Tenant Catalog Billing",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Read billing for an explicitly selected tenant and date range through the support\nreporting surface.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceBilling"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "sensitiveData": "usageAndBilling",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetTenantCatalogUsage": {
@@ -22536,7 +23022,17 @@
         "summary": "Get Tenant Catalog Usage",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Read usage for an explicitly selected tenant and date range, optionally limited to one\ncatalog rate key.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceBilling"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "sensitiveData": "usageAndBilling",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/ListCatalogModelConsumers": {
@@ -22676,7 +23172,17 @@
         "summary": "List Catalog Model Consumers",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Page through the consumers of a model listing for the selected reporting period. The\nresult can identify other tenants.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceBilling"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "sensitiveData": "usageAndBilling",
+          "tenantScope": "accessibleResources"
+        }
       }
     },
     "/api/v1/InferenceCatalog/ListCatalogModels": {
@@ -22816,7 +23322,16 @@
         "summary": "List Catalog Models",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Page through catalog model listings visible to the caller. Use the listing's rate key\nwith GetCatalogModel.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "accessibleResources"
+        }
       }
     },
     "/api/v1/InferenceCatalog/ListCatalogRequests": {
@@ -22956,7 +23471,17 @@
         "summary": "List Catalog Requests",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Page through request events for the caller's tenant. Filter by reporting period and\noptionally by catalog rate key.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadInferenceBilling"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "sensitiveData": "usageAndBilling",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/PutClusterProviderSecret": {
@@ -23096,7 +23621,18 @@
         "summary": "Put Cluster Provider Secret",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Store or replace a provider API key for the specified origin using the expected\nrevision. The request contains a secret.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "sensitiveData": "credentials",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/InferenceCatalog/RelistCatalogModel": {
@@ -23236,7 +23772,17 @@
         "summary": "Relist Catalog Model",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Return a previously delisted model listing to the catalog by rate key.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageInferenceInstancePublication"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/ResolveSupportRequestLineage": {
@@ -23377,7 +23923,16 @@
         "summary": "Resolve Support Request Lineage",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ResolveInferenceSupportLineage"
+          ],
+          "caller": "service_client",
+          "effect": "read",
+          "sensitiveData": "personalData",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/RevokeClusterProviderSecret": {
@@ -23517,7 +24072,17 @@
         "summary": "Revoke Cluster Provider Secret",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Revoke the named provider credential using its ID and expected revision. This affects\noverflow requests that depend on it.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/InferenceCatalog/SetCatalogModelPricing": {
@@ -23657,7 +24222,17 @@
         "summary": "Set Catalog Model Pricing",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Set prices for the specified listing and effective time. Use\nCorrectCatalogModelPricing for an audited historical correction.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::SetInferenceInstancePublicationPricing"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/UpdateCatalogListing": {
@@ -23797,7 +24372,17 @@
         "summary": "Update Catalog Listing",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Change a catalog listing's public identity, title, description or advertised\ncapabilities by rate key.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageInferenceInstancePublication"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/InferenceCatalog/UpdateCatalogModelTiers": {
@@ -23937,7 +24522,17 @@
         "summary": "Update Catalog Model Tiers",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Apply the supplied catalog tier configuration. This changes platform model\navailability by tier.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/InferenceCatalog/UpdateClusterOverflowPolicy": {
@@ -24077,7 +24672,18 @@
         "summary": "Update Cluster Overflow Policy",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "description": "Update the cluster overflow policy using the expected revision to detect a concurrent\nchange.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "sensitiveData": "configuration",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/ModelRegistry/CancelModelVersionUpload": {
@@ -24237,7 +24843,17 @@
         "summary": "Cancel Model Version Upload",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Cancel the model version upload. A cleanup response can precede removal of the staged\nfiles.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageModelVersionUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/CreateModel": {
@@ -24387,7 +25003,17 @@
         "summary": "Create Model",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Register a model and its source metadata. Keep the returned model ID to create or\nlocate versions.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateModel"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/CreateModelVersion": {
@@ -24537,7 +25163,18 @@
         "summary": "Create Model Version",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Create a version under an existing registry model. Use the parent model ID from\nListModels.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateModelVersion",
+            "MLOps::UpdateModel"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/CreateModelVersionFromCheckpoint": {
@@ -24687,7 +25324,19 @@
         "summary": "Create Model Version From Checkpoint",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Create a registry version from a training checkpoint. Identify the destination model\nand the source experiment, run, and checkpoint.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateModelVersion",
+            "MLOps::UpdateModel",
+            "MLOps::UseCheckpoint"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/DeleteModel": {
@@ -24840,7 +25489,17 @@
         "summary": "Delete Model",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Request removal of the registry model by ID. A 202 response means cleanup is still\nrunning.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DeleteModel"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/DeleteModelVersion": {
@@ -24993,7 +25652,17 @@
         "summary": "Delete Model Version",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Request removal of one version under its parent model. A 202 response means cleanup is\nstill running.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DeleteModelVersion"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/FailModelVersionUpload": {
@@ -25153,7 +25822,17 @@
         "summary": "Fail Model Version Upload",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Record why the model version upload failed so its staged artifacts can be cleaned up.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageModelVersionUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/FinalizeModelVersionUpload": {
@@ -25303,7 +25982,17 @@
         "summary": "Finalize Model Version Upload",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Complete the model version upload with the reported manifest, file count and byte\ntotal.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageModelVersionUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/GetDownloadModelVersionInstruction": {
@@ -25453,7 +26142,16 @@
         "summary": "Get Download Model Version Instruction",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Return instructions for how to download artifacts for one model version. The caller\nperforms the transfer separately.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadModelVersionArtifacts"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/GetModel": {
@@ -25603,7 +26301,16 @@
         "summary": "Get Model",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Read a registry model by ID. To fetch a particular artifact version, use\nGetModelVersion.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadModel"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/GetModelVersion": {
@@ -25753,7 +26460,16 @@
         "summary": "Get Model Version",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Inspect a version using its model ID and version ID. Use ListModelVersions to resolve\na name.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadModelVersion"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/GetModelVersionSize": {
@@ -25903,7 +26619,16 @@
         "summary": "Get Model Version Size",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Read the stored artifact size for a single model version identified by its parent and\nversion IDs.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadModelVersionArtifacts"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/GetUploadModelVersionInstruction": {
@@ -26053,7 +26778,16 @@
         "summary": "Get Upload Model Version Instruction",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Return instructions for how to upload artifacts for one model version. The caller\nperforms the transfer separately.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageModelVersionUpload"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/ListModelVersionFiles": {
@@ -26203,7 +26937,16 @@
         "summary": "List Model Version Files",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Page through the artifact files of a selected model version. Supply both IDs from the\nregistry.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadModelVersionArtifacts"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/ListModelVersions": {
@@ -26353,7 +27096,16 @@
         "summary": "List Model Versions",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Find versions under one model, optionally narrowing by name or source training run.\nKeep both the parent and version IDs.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadModelVersion"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/ListModels": {
@@ -26503,7 +27255,16 @@
         "summary": "List Models",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Find models by name or creation time. Use a returned model ID to inspect its details\nor list versions.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadModel"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/StartModelVersionUpload": {
@@ -26653,7 +27414,17 @@
         "summary": "Start Model Version Upload",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Begin an upload for the model version. Use the resulting upload state to transfer\nfiles before finalizing.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageModelVersionUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/UpdateModel": {
@@ -26803,7 +27574,17 @@
         "summary": "Update Model",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Change model metadata or the latest-version reference for the specified registry\nmodel.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::UpdateModel"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/ModelRegistry/UpdateModelVersion": {
@@ -26953,7 +27734,17 @@
         "summary": "Update Model Version",
         "tags": [
           "ModelRegistry"
-        ]
+        ],
+        "description": "Change a version's name or extra metadata while keeping it under the specified model.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::UpdateModelVersion"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/PlatformCatalog/CreateFlavor": {
@@ -27103,7 +27894,17 @@
         "summary": "Create Flavor",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Register a compute flavor in the platform catalog with its CPU, memory, GPU SKU and\nnode settings.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreatePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/CreateInferenceConfiguration": {
@@ -27253,7 +28054,17 @@
         "summary": "Create Inference Configuration",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Register an inference configuration in the platform catalog with its model family,\nruntime and serving defaults.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreatePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/CreateTrainingConfiguration": {
@@ -27403,7 +28214,17 @@
         "summary": "Create Training Configuration",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Register a training configuration in the platform catalog with its training type and\nworkload defaults.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreatePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/CreateWorkloadImage": {
@@ -27553,7 +28374,17 @@
         "summary": "Create Workload Image",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Register a workload image in the platform catalog with its image location and workload\nselection settings.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreatePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/DeleteFlavor": {
@@ -27696,7 +28527,17 @@
         "summary": "Delete Flavor",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Remove the compute flavor from the platform catalog using the ID returned by its list\noperation.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManagePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/DeleteInferenceConfiguration": {
@@ -27839,7 +28680,17 @@
         "summary": "Delete Inference Configuration",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Remove the inference configuration from the platform catalog using the ID returned by\nits list operation.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManagePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/DeleteTrainingConfiguration": {
@@ -27982,7 +28833,17 @@
         "summary": "Delete Training Configuration",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Remove the training configuration from the platform catalog using the ID returned by\nits list operation.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManagePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/DeleteWorkloadImage": {
@@ -28125,7 +28986,17 @@
         "summary": "Delete Workload Image",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Remove the workload image from the platform catalog using the ID returned by its list\noperation.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManagePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/GetFlavor": {
@@ -28275,7 +29146,16 @@
         "summary": "Get Flavor",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Inspect the CPU, memory, GPU SKU and node settings returned for the selected compute\nflavor before using it in a workload.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/GetInferenceConfiguration": {
@@ -28425,7 +29305,16 @@
         "summary": "Get Inference Configuration",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Inspect the model family, runtime and serving defaults returned for the selected\ninference configuration before using it in a workload.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/GetLatestWorkloadImage": {
@@ -28575,7 +29464,16 @@
         "summary": "Get Latest Workload Image",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Resolve the latest matching image by workload service, type and optional training\nconfiguration filters.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/GetTrainingConfiguration": {
@@ -28725,7 +29623,16 @@
         "summary": "Get Training Configuration",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Inspect the training type and workload defaults returned for the selected training\nconfiguration before using it in a workload.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/GetWorkloadImage": {
@@ -28875,7 +29782,16 @@
         "summary": "Get Workload Image",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Inspect the image location and workload selection settings returned for the selected\nworkload image before using it in a workload.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/ListFlavors": {
@@ -29025,7 +29941,16 @@
         "summary": "List Flavors",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Find compute flavor options in the platform catalog. Keep the returned ID to inspect\nthe CPU, memory, GPU SKU and node settings.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/ListInferenceConfigurations": {
@@ -29175,7 +30100,16 @@
         "summary": "List Inference Configurations",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Find inference configuration options in the platform catalog. Keep the returned ID to\ninspect the model family, runtime and serving defaults.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/ListSKUs": {
@@ -29325,7 +30259,16 @@
         "summary": "List Skus",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Page through the GPU SKUs available for platform compute flavors.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/ListTrainingConfigurations": {
@@ -29475,7 +30418,16 @@
         "summary": "List Training Configurations",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Find training configuration options in the platform catalog. Keep the returned ID to\ninspect the training type and workload defaults.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/ListWorkloadImages": {
@@ -29625,7 +30577,16 @@
         "summary": "List Workload Images",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Find workload image options in the platform catalog. Keep the returned ID to inspect\nthe image location and workload selection settings.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/SetLatestWorkloadImage": {
@@ -29775,7 +30736,17 @@
         "summary": "Set Latest Workload Image",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Mark the selected workload image as the latest image for its matching workload\ncategory.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManagePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/UpdateFlavor": {
@@ -29925,7 +30896,17 @@
         "summary": "Update Flavor",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Change the CPU, memory, GPU SKU and node settings for an existing compute flavor using\nits catalog ID.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManagePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/UpdateInferenceConfiguration": {
@@ -30075,7 +31056,17 @@
         "summary": "Update Inference Configuration",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Change the model family, runtime and serving defaults for an existing inference\nconfiguration using its catalog ID.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManagePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/UpdateTrainingConfiguration": {
@@ -30225,7 +31216,17 @@
         "summary": "Update Training Configuration",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Change the training type and workload defaults for an existing training configuration\nusing its catalog ID.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManagePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/PlatformCatalog/UpdateWorkloadImage": {
@@ -30375,7 +31376,17 @@
         "summary": "Update Workload Image",
         "tags": [
           "PlatformCatalog"
-        ]
+        ],
+        "description": "Change the image location and workload selection settings for an existing workload\nimage using its catalog ID.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManagePlatformCatalogEntry"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "platform"
+        }
       }
     },
     "/api/v1/Quota/CreateTenantQuotas": {
@@ -30515,7 +31526,17 @@
         "summary": "Create Tenant Quotas",
         "tags": [
           "Quota"
-        ]
+        ],
+        "description": "Create quota assignments for the selected tenant. Use the returned operation ID to\nfollow the change.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateTenantQuotas"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Quota/DeleteInferenceRateLimitQuota": {
@@ -30655,7 +31676,17 @@
         "summary": "Delete Inference Rate Limit Quota",
         "tags": [
           "Quota"
-        ]
+        ],
+        "description": "Remove the inference rate limit for the selected tenant using the expected revision.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::UpdateTenantQuotas"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Quota/DeleteTenantQuotas": {
@@ -30795,7 +31826,17 @@
         "summary": "Delete Tenant Quotas",
         "tags": [
           "Quota"
-        ]
+        ],
+        "description": "Remove the listed quota assignments for one tenant using their expected revisions.\nCheck the resulting operation before retrying.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DeleteTenantQuotas"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Quota/GetInferenceRateLimitQuota": {
@@ -30935,7 +31976,16 @@
         "summary": "Get Inference Rate Limit Quota",
         "tags": [
           "Quota"
-        ]
+        ],
+        "description": "Read the inference rate limit for a tenant. Use the returned revision when changing or\nremoving the limit.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadTenantQuotas"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Quota/GetTenantQuotaOperation": {
@@ -31075,7 +32125,16 @@
         "summary": "Get Tenant Quota Operation",
         "tags": [
           "Quota"
-        ]
+        ],
+        "description": "Inspect a previously submitted quota operation using the tenant ID and the returned\noperation ID.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadTenantQuotaOperation"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Quota/ListTenantQuotas": {
@@ -31215,7 +32274,16 @@
         "summary": "List Tenant Quotas",
         "tags": [
           "Quota"
-        ]
+        ],
+        "description": "Page through one tenant's quota assignments. Tenant callers can inspect their own\ntenant and authorized operators can select another.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadTenantQuotas"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Quota/RetryTenantQuotaOperation": {
@@ -31355,7 +32423,17 @@
         "summary": "Retry Tenant Quota Operation",
         "tags": [
           "Quota"
-        ]
+        ],
+        "description": "Retry the selected quota operation for the tenant. Inspect GetTenantQuotaOperation\nfirst to identify the failed operation.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::RetryTenantQuotaOperation"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Quota/RollbackTenantQuotaOperation": {
@@ -31495,7 +32573,17 @@
         "summary": "Rollback Tenant Quota Operation",
         "tags": [
           "Quota"
-        ]
+        ],
+        "description": "Request rollback of a quota operation for one tenant. Use its operation ID to inspect\nthe resulting state.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::RollbackTenantQuotaOperation"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Quota/SetInferenceRateLimitQuota": {
@@ -31635,7 +32723,17 @@
         "summary": "Set Inference Rate Limit Quota",
         "tags": [
           "Quota"
-        ]
+        ],
+        "description": "Set a tenant's inference request limit and window using the expected revision.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::UpdateTenantQuotas"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/Quota/UpdateTenantQuotas": {
@@ -31775,7 +32873,17 @@
         "summary": "Update Tenant Quotas",
         "tags": [
           "Quota"
-        ]
+        ],
+        "description": "Apply the requested quota changes to the selected tenant. Inspect the resulting\noperation through GetTenantQuotaOperation.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::UpdateTenantQuotas"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/TenantWorkspace/CreateTenantWorkspace": {
@@ -31915,7 +33023,17 @@
         "summary": "Create Tenant Workspace",
         "tags": [
           "TenantWorkspace"
-        ]
+        ],
+        "description": "Request workspace provisioning with the supplied name and storage settings. Follow the\nreturned workspace's lifecycle state.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateTenantWorkspace"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/TenantWorkspace/GetTenantWorkspace": {
@@ -32055,7 +33173,16 @@
         "summary": "Get Tenant Workspace",
         "tags": [
           "TenantWorkspace"
-        ]
+        ],
+        "description": "Inspect the selected tenant workspace, including its storage configuration and\nresource statistics.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadTenantWorkspace"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/TenantWorkspace/ListTenantWorkspaces": {
@@ -32195,7 +33322,16 @@
         "summary": "List Tenant Workspaces",
         "tags": [
           "TenantWorkspace"
-        ]
+        ],
+        "description": "Find visible workspaces by name or creation time. Use a returned workspace ID to\ninspect provisioning state.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadTenantWorkspace"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/TenantWorkspace/RepairTenantWorkspace": {
@@ -32336,6 +33472,15 @@
               }
             }
           }
+        },
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateTenantWorkspace"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "selectedTenant"
         }
       }
     },
@@ -32496,7 +33641,17 @@
         "summary": "Cancel Checkpoint Upload",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Cancel the training checkpoint upload. A cleanup response can precede removal of the\nstaged files.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageCheckpointUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/CancelRun": {
@@ -32646,7 +33801,17 @@
         "summary": "Cancel Run",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Request cancellation of a training run. Use the experiment and run IDs to check its\nsubsequent state.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CancelRun"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/CancelRunTokenizerUpload": {
@@ -32806,7 +33971,17 @@
         "summary": "Cancel Run Tokenizer Upload",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Cancel the run tokenizer upload. A cleanup response can precede removal of the staged\nfiles.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageRunTokenizerUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/CreateExperiment": {
@@ -32956,7 +34131,17 @@
         "summary": "Create Experiment",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Create an experiment to group training runs. Keep its ID for subsequent run\noperations.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateExperiment"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/CreateRun": {
@@ -33106,7 +34291,24 @@
         "summary": "Create Run",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Start a training run in an experiment with the selected dataset, model, compute flavor\nand training configuration. Follow progress with GetRun.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateRun",
+            "MLOps::UpdateExperiment",
+            "MLOps::UseDataset",
+            "MLOps::UseModelVersion",
+            "MLOps::ReadPlatformCatalog",
+            "MLOps::UpdateModel",
+            "MLOps::CreateModel",
+            "MLOps::CreateModelVersion"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/DeleteExperiment": {
@@ -33259,7 +34461,17 @@
         "summary": "Delete Experiment",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Request deletion of the experiment. A 202 response means the service has accepted\ncleanup.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DeleteExperiment"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/DeleteRun": {
@@ -33412,7 +34624,17 @@
         "summary": "Delete Run",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Request removal of one training run. A 202 response means cleanup is still running.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DeleteRun"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/DeleteRunCheckpoint": {
@@ -33565,7 +34787,17 @@
         "summary": "Delete Run Checkpoint",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Request removal of one checkpoint in a training run. A 202 response means cleanup is\nstill running.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DeleteCheckpoint"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/DeleteRunCheckpoints": {
@@ -33718,7 +34950,17 @@
         "summary": "Delete Run Checkpoints",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Request removal of the checkpoints for the entire selected run. Use\nDeleteRunCheckpoint to remove one checkpoint.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DeleteCheckpoint"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/DeleteRunTokenizer": {
@@ -33871,7 +35113,17 @@
         "summary": "Delete Run Tokenizer",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Request removal of the tokenizer associated with one training run. A 202 response\nmeans cleanup is still running.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DeleteRunTokenizer"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/FailCheckpointUpload": {
@@ -34031,7 +35283,17 @@
         "summary": "Fail Checkpoint Upload",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Record why the training checkpoint upload failed so its staged artifacts can be\ncleaned up.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageCheckpointUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/FailRunCheckpoint": {
@@ -34191,7 +35453,17 @@
         "summary": "Fail Run Checkpoint",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Mark a selected run checkpoint as failed and record the supplied failure details. Use\nFailCheckpointUpload for an upload failure.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageCheckpointUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/FailRunTokenizerUpload": {
@@ -34351,7 +35623,17 @@
         "summary": "Fail Run Tokenizer Upload",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Record why the run tokenizer upload failed so its staged artifacts can be cleaned up.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageRunTokenizerUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/FinalizeCheckpointUpload": {
@@ -34501,7 +35783,17 @@
         "summary": "Finalize Checkpoint Upload",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Complete the training checkpoint upload with the reported manifest, file count and\nbyte total.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageCheckpointUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/FinalizeRunTokenizerUpload": {
@@ -34651,7 +35943,17 @@
         "summary": "Finalize Run Tokenizer Upload",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Complete the run tokenizer upload with the reported manifest, file count and byte\ntotal.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageRunTokenizerUpload"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/GetDownloadRunCheckpointInstruction": {
@@ -34801,7 +36103,16 @@
         "summary": "Get Download Run Checkpoint Instruction",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Return instructions for how to download artifacts for one run checkpoint. The caller\nperforms the transfer separately.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadCheckpointArtifacts"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/GetExperiment": {
@@ -34951,7 +36262,16 @@
         "summary": "Get Experiment",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Inspect a training experiment by ID. To find its individual runs, use\nListExperimentRuns.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadExperiment"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/GetRun": {
@@ -35101,7 +36421,16 @@
         "summary": "Get Run",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Read the current state of one run in its parent experiment. Use ListExperimentRuns to\nlocate both IDs.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DescribeRun"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/GetRunCheckpoint": {
@@ -35251,7 +36580,16 @@
         "summary": "Get Run Checkpoint",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Inspect a checkpoint using its experiment, run and checkpoint IDs. ListRunCheckpoints\nlocates the available checkpoints.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::DescribeCheckpoint"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/GetRunLogs": {
@@ -35401,7 +36739,17 @@
         "summary": "Get Run Logs",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Read logs for one training run, optionally selecting an attempt or time window.\nReturned monitoring links can grant temporary access.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadRunLogs"
+          ],
+          "caller": "user",
+          "effect": "execute",
+          "sensitiveData": "workloadMonitoring",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/GetRunMetrics": {
@@ -35551,7 +36899,17 @@
         "summary": "Get Run Metrics",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Read monitoring data for a training run and attempt. Returned dashboard links can\ngrant temporary access.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadRunMetrics"
+          ],
+          "caller": "user",
+          "effect": "execute",
+          "sensitiveData": "workloadMonitoring",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/GetRunTokenizer": {
@@ -35701,7 +37059,16 @@
         "summary": "Get Run Tokenizer",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Inspect the tokenizer associated with one run using its experiment and run IDs.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadRunTokenizer"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/GetUploadRunCheckpointInstruction": {
@@ -35851,7 +37218,16 @@
         "summary": "Get Upload Run Checkpoint Instruction",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Return instructions for how to upload artifacts for one run checkpoint. The caller\nperforms the transfer separately.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ManageCheckpointUpload"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/ListExperimentRuns": {
@@ -36001,7 +37377,16 @@
         "summary": "List Experiment Runs",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Find runs inside one experiment by name, status, input dataset or output model. Use a\nreturned run ID for monitoring.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ListRuns"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/ListExperiments": {
@@ -36151,7 +37536,16 @@
         "summary": "List Experiments",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Find training experiments by name or creation time. Pass a returned experiment ID to\nListExperimentRuns.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadExperiment"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/ListRunCheckpointFiles": {
@@ -36301,7 +37695,16 @@
         "summary": "List Run Checkpoint Files",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Page through artifact files for a checkpoint under the selected training run.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadCheckpointArtifacts"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/ListRunCheckpoints": {
@@ -36451,7 +37854,16 @@
         "summary": "List Run Checkpoints",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "List checkpoints for one training run. Use the returned checkpoint ID for inspection,\ndownload instructions or removal.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ListCheckpoint"
+          ],
+          "caller": "user",
+          "effect": "read",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/ResumeRun": {
@@ -36601,7 +38013,17 @@
         "summary": "Resume Run",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Resume training in the selected run with the requested checkpoint and optional\nhyperparameter changes.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ResumeRun"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/StartCheckpointUpload": {
@@ -36751,7 +38173,18 @@
         "summary": "Start Checkpoint Upload",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Begin an upload for the training checkpoint. Use the resulting upload state to\ntransfer files before finalizing.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateCheckpoint",
+            "MLOps::DescribeRun"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/StartRunTokenizerUpload": {
@@ -36901,7 +38334,18 @@
         "summary": "Start Run Tokenizer Upload",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Begin an upload for the run tokenizer. Use the resulting upload state to transfer\nfiles before finalizing.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::CreateRunTokenizer",
+            "MLOps::DescribeRun"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/StopRun": {
@@ -37051,7 +38495,17 @@
         "summary": "Stop Run",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Request a stop for a run in its experiment. Read GetRun to see its resulting lifecycle\nstate.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::StopRun"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/Training/UpdateExperiment": {
@@ -37201,7 +38655,17 @@
         "summary": "Update Experiment",
         "tags": [
           "Training"
-        ]
+        ],
+        "description": "Change a training experiment's name or extra metadata using its ID.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::UpdateExperiment"
+          ],
+          "caller": "user",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/WebTools/Fetch": {
@@ -37341,7 +38805,14 @@
         "summary": "Fetch",
         "tags": [
           "Web Tools"
-        ]
+        ],
+        "description": "Retrieve content from the supplied public URL through the tenant's web-tools\ncapability. The request may be metered.",
+        "x-onenexus": {
+          "authorizationActions": [],
+          "caller": "api_key",
+          "effect": "execute",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/WebTools/GetTenantAccess": {
@@ -37471,7 +38942,16 @@
         "summary": "Get Access",
         "tags": [
           "Web Tools"
-        ]
+        ],
+        "description": "Inspect web-tool availability and limits for the explicitly selected tenant before\nchanging access.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "read",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/WebTools/Search": {
@@ -37611,7 +39091,14 @@
         "summary": "Search",
         "tags": [
           "Web Tools"
-        ]
+        ],
+        "description": "Search the public web using the tenant's enabled web-tools capability. The query is\nsent to a retrieval service and may be metered.",
+        "x-onenexus": {
+          "authorizationActions": [],
+          "caller": "api_key",
+          "effect": "execute",
+          "tenantScope": "callerTenant"
+        }
       }
     },
     "/api/v1/WebTools/SetTenantAccess": {
@@ -37741,7 +39228,17 @@
         "summary": "Set Access",
         "tags": [
           "Web Tools"
-        ]
+        ],
+        "description": "Change web-tool availability and request limits for one tenant using its expected\nrevision.",
+        "x-onenexus": {
+          "authorizationActions": [
+            "MLOps::ReadPlatformCatalog"
+          ],
+          "caller": "operator",
+          "effect": "write",
+          "idempotencyKeyHeader": "Idempotency-Key",
+          "tenantScope": "selectedTenant"
+        }
       }
     },
     "/api/v1/composer-configs": {
@@ -37861,7 +39358,14 @@
         "summary": "Get Config",
         "tags": [
           "Composer Configs"
-        ]
+        ],
+        "description": "Discover the models and web-tool capabilities available to the supplied platform key\nwhen configuring a Composer client.",
+        "x-onenexus": {
+          "authorizationActions": [],
+          "caller": "api_key",
+          "effect": "read",
+          "tenantScope": "accessibleResources"
+        }
       }
     },
     "/api/v1/health": {
@@ -37880,7 +39384,14 @@
         "summary": "Health Check",
         "tags": [
           "Health Check"
-        ]
+        ],
+        "description": "Check that the HTTP process is responding. The response reports its health status.",
+        "x-onenexus": {
+          "authorizationActions": [],
+          "caller": "infrastructure",
+          "effect": "read",
+          "tenantScope": "platform"
+        }
       }
     },
     "/v1/models": {
@@ -37902,7 +39413,13 @@
         "summary": "List Openai Models",
         "tags": [
           "Inference Catalog"
-        ]
+        ],
+        "x-onenexus": {
+          "authorizationActions": [],
+          "caller": "api_key",
+          "effect": "read",
+          "tenantScope": "accessibleResources"
+        }
       }
     },
     "/api/v1/InferenceCatalog/GetBudgetStatus": {
@@ -38043,6 +39560,13 @@
               }
             }
           }
+        },
+        "x-onenexus": {
+          "authorizationActions": [],
+          "caller": "tenant",
+          "effect": "read",
+          "sensitiveData": "usageAndBilling",
+          "tenantScope": "selectedTenant"
         }
       }
     }

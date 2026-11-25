@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.RevokeInferenceKey
         {
         }
         /// <summary>
-        /// Revoke Inference Key
+        /// Revoke a specific inference key by lookup ID. Use ListInferenceKeys to locate therecord.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceKeyRevocationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.RevokeInferenceKey
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceKeyRevocationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceKeyRevocationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Revoke Inference Key
+        /// Revoke a specific inference key by lookup ID. Use ListInferenceKeys to locate therecord.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

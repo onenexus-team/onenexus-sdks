@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.CreateModelVersion
         {
         }
         /// <summary>
-        /// Create Model Version
+        /// Create a version under an existing registry model. Use the parent model ID fromListModels.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionDetailResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.CreateModelVersion
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionDetailResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionDetailResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create Model Version
+        /// Create a version under an existing registry model. Use the parent model ID fromListModels.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

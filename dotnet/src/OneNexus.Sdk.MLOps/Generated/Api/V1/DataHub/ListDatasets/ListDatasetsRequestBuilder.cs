@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.ListDatasets
         {
         }
         /// <summary>
-        /// List Datasets
+        /// Find datasets by name or creation time. Use a returned dataset ID with GetDataset orListDatasetFiles.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_DatasetSummaryResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.ListDatasets
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_DatasetSummaryResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_DatasetSummaryResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Datasets
+        /// Find datasets by name or creation time. Use a returned dataset ID with GetDataset orListDatasetFiles.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

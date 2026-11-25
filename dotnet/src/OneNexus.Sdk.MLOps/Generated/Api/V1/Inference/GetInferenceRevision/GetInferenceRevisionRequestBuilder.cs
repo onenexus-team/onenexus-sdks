@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.GetInferenceRevision
         {
         }
         /// <summary>
-        /// Get Inference Revision
+        /// Read one revision of a serving instance using the revision ID fromListInferenceRevisions.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceRevisionPublicResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.GetInferenceRevision
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceRevisionPublicResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceRevisionPublicResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Inference Revision
+        /// Read one revision of a serving instance using the revision ID fromListInferenceRevisions.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

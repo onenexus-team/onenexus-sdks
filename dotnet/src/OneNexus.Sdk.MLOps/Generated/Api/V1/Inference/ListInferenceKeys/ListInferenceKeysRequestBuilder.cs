@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.ListInferenceKeys
         {
         }
         /// <summary>
-        /// List Inference Keys
+        /// Page through inference-key records visible to the caller, optionally filtered by kind.Use a lookup ID to revoke a key.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_InferenceKeyPublicResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.ListInferenceKeys
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_InferenceKeyPublicResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_InferenceKeyPublicResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Inference Keys
+        /// Page through inference-key records visible to the caller, optionally filtered by kind.Use a lookup ID to revoke a key.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

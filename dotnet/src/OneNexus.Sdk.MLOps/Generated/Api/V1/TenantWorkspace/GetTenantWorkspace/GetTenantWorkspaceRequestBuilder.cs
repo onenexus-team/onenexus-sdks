@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.TenantWorkspace.GetTenantWorkspace
         {
         }
         /// <summary>
-        /// Get Tenant Workspace
+        /// Inspect the selected tenant workspace, including its storage configuration andresource statistics.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TenantWorkspaceDetailResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.TenantWorkspace.GetTenantWorkspace
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TenantWorkspaceDetailResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TenantWorkspaceDetailResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Tenant Workspace
+        /// Inspect the selected tenant workspace, including its storage configuration andresource statistics.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

@@ -32,8 +32,9 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
   export const getAuthorizationAdministration = () => {
 /**
- * The assignee and role must belong to the caller's tenant. Repeating the
- * same request does not create a second assignment; inspect
+ * Use the role URI returned by ListRoles. The assignee and role must belong to the caller's tenant.
+ * CAS checks CAS::AssignRole on the assignee and CAS::PassRole on the role.
+ * Repeating the same request keeps the existing assignment. Inspect
  * `created` to tell whether CAS created it on this call.
  * @summary Idempotently assigns one role to a user or service client.
  */

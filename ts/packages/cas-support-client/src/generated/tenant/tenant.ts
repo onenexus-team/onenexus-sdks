@@ -47,6 +47,8 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
   export const getTenant = () => {
 /**
+ * Creates a tenant and starts onboarding its root user. Use the returned tenant ID for subsequent
+ * lookups. Tenant display names can repeat.
  * @summary Create a new tenant.
  */
 const createTenant = (
@@ -61,6 +63,8 @@ const createTenant = (
       options);
     }
   /**
+ * Use the ID returned by CreateTenant or ListTenants to inspect one tenant. To enumerate its members,
+ * use ListTenantUsers.
  * @summary Look up a tenant by Guid PK.
  */
 const describeTenant = (
@@ -192,6 +196,8 @@ const resendInvitation = (
       options);
     }
   /**
+ * Suspends the target tenant by ID. This affects sign-in and onboarding for the tenant as a whole. Use
+ * SuspendTenantUser to suspend a single member.
  * @summary Suspends a tenant, preventing normal sign-in and onboarding traffic.
  */
 const suspendTenant = (
@@ -206,6 +212,8 @@ const suspendTenant = (
       options);
     }
   /**
+ * Reactivates the selected tenant. Member lifecycle state is tracked separately. Use DescribeTenant to
+ * inspect the current tenant status.
  * @summary Re-activates a suspended tenant.
  */
 const unsuspendTenant = (

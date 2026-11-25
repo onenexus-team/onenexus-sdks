@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetCatalogCapabilities
         {
         }
         /// <summary>
-        /// Get Catalog Capabilities
+        /// Read the catalog capabilities available to the caller before choosing a publication orusage operation.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_CatalogCapabilitiesResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetCatalogCapabilities
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_CatalogCapabilitiesResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_CatalogCapabilitiesResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Catalog Capabilities
+        /// Read the catalog capabilities available to the caller before choosing a publication orusage operation.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

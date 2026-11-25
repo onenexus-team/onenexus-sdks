@@ -33,7 +33,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Health
         {
         }
         /// <summary>
-        /// Health Check
+        /// Check that the HTTP process is responding. The response reports its health status.
         /// </summary>
         /// <returns>A <see cref="UntypedNode"/></returns>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
@@ -51,7 +51,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Health
             return await RequestAdapter.SendAsync<UntypedNode>(requestInfo, UntypedNode.CreateFromDiscriminatorValue, default, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Health Check
+        /// Check that the HTTP process is responding. The response reports its health status.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>

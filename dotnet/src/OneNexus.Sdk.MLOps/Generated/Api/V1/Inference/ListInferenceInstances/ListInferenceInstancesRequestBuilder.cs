@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.ListInferenceInstances
         {
         }
         /// <summary>
-        /// List Inference Instances
+        /// Find serving instances by model, version, name, creation time or status. Use thereturned ID for instance operations.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_InferenceInstanceSummaryResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.ListInferenceInstances
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_InferenceInstanceSummaryResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_InferenceInstanceSummaryResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Inference Instances
+        /// Find serving instances by model, version, name, creation time or status. Use thereturned ID for instance operations.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

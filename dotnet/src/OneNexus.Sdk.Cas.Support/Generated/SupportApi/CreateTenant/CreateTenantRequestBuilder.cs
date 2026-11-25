@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.CreateTenant
         {
         }
         /// <summary>
-        /// Create a new tenant.
+        /// Creates a tenant and starts onboarding its root user. Use the returned tenant ID for subsequentlookups. Tenant display names can repeat.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.CreateTenantResponse"/></returns>
         /// <param name="body">Request body for `POST /support-api/CreateTenant`.</param>
@@ -63,7 +63,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.CreateTenant
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Support.Models.CreateTenantResponse>(requestInfo, global::OneNexus.Sdk.Cas.Support.Models.CreateTenantResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create a new tenant.
+        /// Creates a tenant and starts onboarding its root user. Use the returned tenant ID for subsequentlookups. Tenant display names can repeat.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Request body for `POST /support-api/CreateTenant`.</param>

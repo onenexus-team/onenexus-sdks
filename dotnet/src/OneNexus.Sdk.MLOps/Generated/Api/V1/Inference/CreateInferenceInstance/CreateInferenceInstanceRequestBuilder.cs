@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.CreateInferenceInstance
         {
         }
         /// <summary>
-        /// Create Inference Instance
+        /// Create a serving instance from the specified model and runtime settings. UseResolveInferenceConfiguration to preview the configuration first.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.CreateInferenceInstance
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create Inference Instance
+        /// Create a serving instance from the specified model and runtime settings. UseResolveInferenceConfiguration to preview the configuration first.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.CreateInferenceKey
         {
         }
         /// <summary>
-        /// Create Inference Key
+        /// Mint an inference credential with the requested kind, instance scope and lifetime. Thereturned token is sensitive.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_MintedInferenceKeyPublicResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.CreateInferenceKey
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_MintedInferenceKeyPublicResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_MintedInferenceKeyPublicResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create Inference Key
+        /// Mint an inference credential with the requested kind, instance scope and lifetime. Thereturned token is sensitive.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

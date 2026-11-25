@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.WebTools.Search
         {
         }
         /// <summary>
-        /// Search
+        /// Search the public web using the tenant&apos;s enabled web-tools capability. The query issent to a retrieval service and may be metered.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_SearchResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.WebTools.Search
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_SearchResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_SearchResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Search
+        /// Search the public web using the tenant&apos;s enabled web-tools capability. The query issent to a retrieval service and may be metered.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

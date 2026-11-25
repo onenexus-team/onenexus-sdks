@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.InvokeInferencePublicEndpoint
         {
         }
         /// <summary>
-        /// Invoke Inference Public Endpoint
+        /// Submit the payload to a live model endpoint using an inference key. This runsinference and can consume quota on each call.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceInvocationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.InvokeInferencePublicEndpoint
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceInvocationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceInvocationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Invoke Inference Public Endpoint
+        /// Submit the payload to a live model endpoint using an inference key. This runsinference and can consume quota on each call.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

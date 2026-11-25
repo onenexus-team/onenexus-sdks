@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.Cas.Api.AssignRole
         {
         }
         /// <summary>
-        /// The assignee and role must belong to the caller&apos;s tenant. Repeating thesame request does not create a second assignment; inspect`created` to tell whether CAS created it on this call.
+        /// Use the role URI returned by ListRoles. The assignee and role must belong to the caller&apos;s tenant.CAS checks CAS::AssignRole on the assignee and CAS::PassRole on the role.Repeating the same request keeps the existing assignment. Inspect`created` to tell whether CAS created it on this call.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Models.AssignRoleResponse"/></returns>
         /// <param name="body">Request body for `POST /api/AssignRole`.</param>
@@ -69,7 +69,7 @@ namespace OneNexus.Sdk.Cas.Api.AssignRole
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Models.AssignRoleResponse>(requestInfo, global::OneNexus.Sdk.Cas.Models.AssignRoleResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// The assignee and role must belong to the caller&apos;s tenant. Repeating thesame request does not create a second assignment; inspect`created` to tell whether CAS created it on this call.
+        /// Use the role URI returned by ListRoles. The assignee and role must belong to the caller&apos;s tenant.CAS checks CAS::AssignRole on the assignee and CAS::PassRole on the role.Repeating the same request keeps the existing assignment. Inspect`created` to tell whether CAS created it on this call.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Request body for `POST /api/AssignRole`.</param>

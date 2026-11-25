@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.TenantWorkspace.CreateTenantWorkspace
         {
         }
         /// <summary>
-        /// Create Tenant Workspace
+        /// Request workspace provisioning with the supplied name and storage settings. Follow thereturned workspace&apos;s lifecycle state.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TenantWorkspaceActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.TenantWorkspace.CreateTenantWorkspace
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TenantWorkspaceActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TenantWorkspaceActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create Tenant Workspace
+        /// Request workspace provisioning with the supplied name and storage settings. Follow thereturned workspace&apos;s lifecycle state.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

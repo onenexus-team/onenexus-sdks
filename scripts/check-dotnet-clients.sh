@@ -22,7 +22,23 @@ mkdir -p "$consumer/dotnet/tests/Shared" "$consumer/specs"
 cp global.json "$consumer/"
 cp dotnet/Directory.Packages.props "$consumer/dotnet/"
 cp dotnet/tests/Shared/*.cs "$consumer/dotnet/tests/Shared/"
-cp -R specs/cas specs/cas-support specs/mlops "$consumer/specs/"
+# Exercise the specs shipped to consumers and check their bytes against the generation inputs.
+python3 - "$out" "$version" "$consumer/specs" <<'PY'
+from pathlib import Path
+import sys
+from zipfile import ZipFile
+
+packages, version, specs = sys.argv[1:]
+for service, name in (("cas", "Cas"), ("cas-support", "Cas.Support"), ("mlops", "MLOps")):
+    package = Path(packages) / f"OneNexus.Sdk.{name}.{version}.nupkg"
+    with ZipFile(package) as archive:
+        contract = archive.read("contracts/openapi.json")
+    if contract != (Path("specs") / service / "openapi.json").read_bytes():
+        raise SystemExit(f"{package.name} contains a different {service} contract")
+    target = Path(specs) / service / "openapi.json"
+    target.parent.mkdir()
+    target.write_bytes(contract)
+PY
 export NUGET_PACKAGES="$consumer/packages" ONENEXUS_LOCAL_NUGET="$out"
 for project in dotnet/tests/OneNexus.Sdk.*.Tests; do
   mkdir -p "$consumer/$project"

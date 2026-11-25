@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ComposerConfigs
         {
         }
         /// <summary>
-        /// Get Config
+        /// Discover the models and web-tool capabilities available to the supplied platform keywhen configuring a Composer client.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ComposerConfig_"/></returns>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
@@ -73,7 +73,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ComposerConfigs
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ComposerConfig_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ComposerConfig_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Config
+        /// Discover the models and web-tool capabilities available to the supplied platform keywhen configuring a Composer client.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>

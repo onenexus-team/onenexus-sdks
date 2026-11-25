@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.CreateModel
         {
         }
         /// <summary>
-        /// Create Model
+        /// Register a model and its source metadata. Keep the returned model ID to create orlocate versions.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ModelDetailResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.CreateModel
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ModelDetailResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ModelDetailResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create Model
+        /// Register a model and its source metadata. Keep the returned model ID to create orlocate versions.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

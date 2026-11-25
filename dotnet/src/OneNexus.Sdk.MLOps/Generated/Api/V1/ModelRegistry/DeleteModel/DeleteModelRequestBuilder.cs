@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.DeleteModel
         {
         }
         /// <summary>
-        /// Delete Model
+        /// Request removal of the registry model by ID. A 202 response means cleanup is stillrunning.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.DeleteModel
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ModelRegistryActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Delete Model
+        /// Request removal of the registry model by ID. A 202 response means cleanup is stillrunning.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

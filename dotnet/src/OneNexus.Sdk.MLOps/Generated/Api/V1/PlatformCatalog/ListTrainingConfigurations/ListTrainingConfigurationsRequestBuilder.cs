@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.ListTrainingConfigurations
         {
         }
         /// <summary>
-        /// List Training Configurations
+        /// Find training configuration options in the platform catalog. Keep the returned ID toinspect the training type and workload defaults.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_TrainingConfigurationOptionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.ListTrainingConfigurations
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_TrainingConfigurationOptionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_TrainingConfigurationOptionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Training Configurations
+        /// Find training configuration options in the platform catalog. Keep the returned ID toinspect the training type and workload defaults.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

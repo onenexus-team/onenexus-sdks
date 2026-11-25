@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.DescribeTenant
         {
         }
         /// <summary>
-        /// Look up a tenant by Guid PK.
+        /// Use the ID returned by CreateTenant or ListTenants to inspect one tenant. To enumerate its members,use ListTenantUsers.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.DescribeTenantResponse"/></returns>
         /// <param name="body">Request body for `POST /support-api/DescribeTenant`.</param>
@@ -67,7 +67,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.DescribeTenant
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Support.Models.DescribeTenantResponse>(requestInfo, global::OneNexus.Sdk.Cas.Support.Models.DescribeTenantResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Look up a tenant by Guid PK.
+        /// Use the ID returned by CreateTenant or ListTenants to inspect one tenant. To enumerate its members,use ListTenantUsers.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Request body for `POST /support-api/DescribeTenant`.</param>

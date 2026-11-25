@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.ListModels
         {
         }
         /// <summary>
-        /// List Models
+        /// Find models by name or creation time. Use a returned model ID to inspect its detailsor list versions.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_ModelSummaryResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.ListModels
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_ModelSummaryResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_ModelSummaryResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Models
+        /// Find models by name or creation time. Use a returned model ID to inspect its detailsor list versions.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

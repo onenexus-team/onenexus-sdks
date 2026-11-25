@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 using System;
 namespace OneNexus.Sdk.Cas.Models
 {
-    /// <summary>The catalogue that owns this policy.</summary>
+    /// <summary>The catalogue that owns the updated policy.</summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public enum AuthorizationPolicyKind
     {

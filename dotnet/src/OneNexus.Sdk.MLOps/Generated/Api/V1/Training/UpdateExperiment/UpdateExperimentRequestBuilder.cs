@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.UpdateExperiment
         {
         }
         /// <summary>
-        /// Update Experiment
+        /// Change a training experiment&apos;s name or extra metadata using its ID.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ExperimentDetailResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.UpdateExperiment
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ExperimentDetailResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ExperimentDetailResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Update Experiment
+        /// Change a training experiment&apos;s name or extra metadata using its ID.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

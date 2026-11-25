@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.StartDatasetUpload
         {
         }
         /// <summary>
-        /// Start Dataset Upload
+        /// Begin an upload for the dataset. Use the resulting upload state to transfer filesbefore finalizing.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_DatasetActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.StartDatasetUpload
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_DatasetActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_DatasetActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Start Dataset Upload
+        /// Begin an upload for the dataset. Use the resulting upload state to transfer filesbefore finalizing.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

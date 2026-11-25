@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.GetRunTokenizer
         {
         }
         /// <summary>
-        /// Get Run Tokenizer
+        /// Inspect the tokenizer associated with one run using its experiment and run IDs.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_RunTokenizerPublicResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.GetRunTokenizer
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_RunTokenizerPublicResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_RunTokenizerPublicResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Run Tokenizer
+        /// Inspect the tokenizer associated with one run using its experiment and run IDs.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

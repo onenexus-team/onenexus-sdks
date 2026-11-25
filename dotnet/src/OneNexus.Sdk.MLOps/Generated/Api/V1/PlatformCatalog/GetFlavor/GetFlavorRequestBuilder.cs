@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.GetFlavor
         {
         }
         /// <summary>
-        /// Get Flavor
+        /// Inspect the CPU, memory, GPU SKU and node settings returned for the selected computeflavor before using it in a workload.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_FlavorOptionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.GetFlavor
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_FlavorOptionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_FlavorOptionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Flavor
+        /// Inspect the CPU, memory, GPU SKU and node settings returned for the selected computeflavor before using it in a workload.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

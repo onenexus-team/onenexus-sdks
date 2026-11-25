@@ -8,7 +8,7 @@ using System;
 namespace OneNexus.Sdk.MLOps.Models
 {
     /// <summary>
-    /// Support/operator: one user of one tenant, both explicit (never the caller&apos;s).`user_id` is the CAS User id; a key belongs to it only when the key&apos;simmutable owner principal names that User in `tenant_id`.
+    /// Support/operator: one user of one tenant, both explicit (never the caller&apos;s).`user_id` is the CAS User id or ServiceClient application id; a key belongsto it only when the key&apos;s immutable owner principal names that User orServiceClient in `tenant_id`.
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class RpcListUserInferenceKeysRequest : IAdditionalDataHolder, IParsable

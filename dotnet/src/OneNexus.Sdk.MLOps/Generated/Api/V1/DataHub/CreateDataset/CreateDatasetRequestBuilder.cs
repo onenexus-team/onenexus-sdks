@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.CreateDataset
         {
         }
         /// <summary>
-        /// Create Dataset
+        /// Register a dataset in the tenant workspace and keep the returned dataset ID for uploadand training requests.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_DatasetDetailResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.DataHub.CreateDataset
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_DatasetDetailResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_DatasetDetailResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create Dataset
+        /// Register a dataset in the tenant workspace and keep the returned dataset ID for uploadand training requests.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.CreateTenantQuotas
         {
         }
         /// <summary>
-        /// Create Tenant Quotas
+        /// Create quota assignments for the selected tenant. Use the returned operation ID tofollow the change.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaMutationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.CreateTenantQuotas
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaMutationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaMutationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Create Tenant Quotas
+        /// Create quota assignments for the selected tenant. Use the returned operation ID tofollow the change.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

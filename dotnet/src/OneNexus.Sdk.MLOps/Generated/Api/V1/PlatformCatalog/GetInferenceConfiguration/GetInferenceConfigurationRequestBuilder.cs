@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.GetInferenceConfiguration
         {
         }
         /// <summary>
-        /// Get Inference Configuration
+        /// Inspect the model family, runtime and serving defaults returned for the selectedinference configuration before using it in a workload.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceConfigurationOptionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.GetInferenceConfiguration
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceConfigurationOptionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceConfigurationOptionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Inference Configuration
+        /// Inspect the model family, runtime and serving defaults returned for the selectedinference configuration before using it in a workload.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.GetModelVersionSize
         {
         }
         /// <summary>
-        /// Get Model Version Size
+        /// Read the stored artifact size for a single model version identified by its parent andversion IDs.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionSizeResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.ModelRegistry.GetModelVersionSize
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionSizeResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ModelVersionSizeResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Model Version Size
+        /// Read the stored artifact size for a single model version identified by its parent andversion IDs.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

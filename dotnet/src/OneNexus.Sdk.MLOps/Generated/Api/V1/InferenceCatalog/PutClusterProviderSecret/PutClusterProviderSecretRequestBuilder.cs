@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.PutClusterProviderSecret
         {
         }
         /// <summary>
-        /// Put Cluster Provider Secret
+        /// Store or replace a provider API key for the specified origin using the expectedrevision. The request contains a secret.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ClusterProviderSecretsResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.PutClusterProviderSecret
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ClusterProviderSecretsResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ClusterProviderSecretsResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Put Cluster Provider Secret
+        /// Store or replace a provider API key for the specified origin using the expectedrevision. The request contains a secret.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

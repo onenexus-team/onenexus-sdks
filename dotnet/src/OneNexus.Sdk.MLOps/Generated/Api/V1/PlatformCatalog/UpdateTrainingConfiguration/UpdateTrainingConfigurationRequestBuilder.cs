@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.UpdateTrainingConfiguration
         {
         }
         /// <summary>
-        /// Update Training Configuration
+        /// Change the training type and workload defaults for an existing training configurationusing its catalog ID.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TrainingConfigurationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.PlatformCatalog.UpdateTrainingConfiguration
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TrainingConfigurationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TrainingConfigurationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Update Training Configuration
+        /// Change the training type and workload defaults for an existing training configurationusing its catalog ID.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

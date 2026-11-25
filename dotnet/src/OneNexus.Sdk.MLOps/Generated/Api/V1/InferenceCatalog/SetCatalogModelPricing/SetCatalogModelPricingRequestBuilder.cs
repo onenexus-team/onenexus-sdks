@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.SetCatalogModelPricing
         {
         }
         /// <summary>
-        /// Set Catalog Model Pricing
+        /// Set prices for the specified listing and effective time. UseCorrectCatalogModelPricing for an audited historical correction.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_ListingPricing_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.SetCatalogModelPricing
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_ListingPricing_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_ListingPricing_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Set Catalog Model Pricing
+        /// Set prices for the specified listing and effective time. UseCorrectCatalogModelPricing for an audited historical correction.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.ListTenantQuotas
         {
         }
         /// <summary>
-        /// List Tenant Quotas
+        /// Page through one tenant&apos;s quota assignments. Tenant callers can inspect their owntenant and authorized operators can select another.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.ListResponse_TenantQuotaResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.ListTenantQuotas
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.ListResponse_TenantQuotaResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.ListResponse_TenantQuotaResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List Tenant Quotas
+        /// Page through one tenant&apos;s quota assignments. Tenant callers can inspect their owntenant and authorized operators can select another.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

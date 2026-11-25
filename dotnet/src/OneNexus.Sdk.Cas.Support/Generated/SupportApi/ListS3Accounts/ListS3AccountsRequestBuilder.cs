@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.ListS3Accounts
         {
         }
         /// <summary>
-        /// List every RGW account known to the cluster.
+        /// Use this cluster-wide inventory for Support investigations. To inspect only the configured first-party account, use GetS3DefaultAccount.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.ListS3AccountsResponse"/></returns>
         /// <param name="body">Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`.</param>
@@ -61,7 +61,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.ListS3Accounts
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Support.Models.ListS3AccountsResponse>(requestInfo, global::OneNexus.Sdk.Cas.Support.Models.ListS3AccountsResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// List every RGW account known to the cluster.
+        /// Use this cluster-wide inventory for Support investigations. To inspect only the configured first-party account, use GetS3DefaultAccount.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Request body for `GetS3DefaultAccount` / `ProvisionS3DefaultAccount` / `ListS3Accounts`.</param>

@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.GetInferenceInstanceLogs
         {
         }
         /// <summary>
-        /// Get Inference Instance Logs
+        /// Read instance logs for the selected time window and optional search text. Log contentscan include workload data.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceLogsPublicResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.GetInferenceInstanceLogs
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceLogsPublicResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceLogsPublicResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Inference Instance Logs
+        /// Read instance logs for the selected time window and optional search text. Log contentscan include workload data.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

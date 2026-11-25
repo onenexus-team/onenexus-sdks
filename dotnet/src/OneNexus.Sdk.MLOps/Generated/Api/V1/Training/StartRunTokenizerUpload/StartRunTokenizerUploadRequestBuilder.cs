@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.StartRunTokenizerUpload
         {
         }
         /// <summary>
-        /// Start Run Tokenizer Upload
+        /// Begin an upload for the run tokenizer. Use the resulting upload state to transferfiles before finalizing.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TrainingActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Training.StartRunTokenizerUpload
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TrainingActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TrainingActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Start Run Tokenizer Upload
+        /// Begin an upload for the run tokenizer. Use the resulting upload state to transferfiles before finalizing.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

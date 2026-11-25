@@ -12,6 +12,8 @@ The Core, CAS, CAS Support and MLOps libraries support .NET 10 Native AOT. A con
 
 Applications install the service packages at the chosen SDK release version from the OneNexus GitHub NuGet feed. Each service package brings in the shared core. For local development, build the artifacts below and use their output directory as a NuGet source.
 
+Each CAS, CAS Support and MLOps NuGet package includes its matching service specification at `contracts/openapi.json`. Build tools can read this file from the restored package to access operation descriptions and `x-onenexus` metadata for that SDK version.
+
 ## Solutions
 
 `OneNexus.Sdk.slnx` contains four libraries in `src/<ProjectName>/` and one matching project per library in `tests/<ProjectName>.Tests/`. Project names, NuGet IDs, and public namespaces use the same spelling. The separate [observability solution](packages/observability/OneNexus.Observability.slnx) owns the logging package, tests, and executable probe. Each solution manages dependencies in its own `Directory.Packages.props`.

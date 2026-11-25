@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.FinalizeInferenceInstance
         {
         }
         /// <summary>
-        /// Finalize Inference Instance
+        /// Remove runtime resources and mark the serving instance finalized. This changes theinstance lifecycle.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -79,7 +79,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Inference.FinalizeInferenceInstance
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_InferenceActionResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Finalize Inference Instance
+        /// Remove runtime resources and mark the serving instance finalized. This changes theinstance lifecycle.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

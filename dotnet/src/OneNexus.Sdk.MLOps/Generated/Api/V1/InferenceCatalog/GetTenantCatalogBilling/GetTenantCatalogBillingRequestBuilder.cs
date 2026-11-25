@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetTenantCatalogBilling
         {
         }
         /// <summary>
-        /// Get Tenant Catalog Billing
+        /// Read billing for an explicitly selected tenant and date range through the supportreporting surface.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_CatalogBillingResponse_"/></returns>
         /// <param name="body">Operator-only, half-open UTC day range; 30 days by default, at most 90.</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.InferenceCatalog.GetTenantCatalogBilling
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_CatalogBillingResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_CatalogBillingResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Get Tenant Catalog Billing
+        /// Read billing for an explicitly selected tenant and date range through the supportreporting surface.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Operator-only, half-open UTC day range; 30 days by default, at most 90.</param>

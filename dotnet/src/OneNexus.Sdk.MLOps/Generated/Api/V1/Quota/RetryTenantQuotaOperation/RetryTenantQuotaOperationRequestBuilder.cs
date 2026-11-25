@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.RetryTenantQuotaOperation
         {
         }
         /// <summary>
-        /// Retry Tenant Quota Operation
+        /// Retry the selected quota operation for the tenant. Inspect GetTenantQuotaOperationfirst to identify the failed operation.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaOperationResponse_"/></returns>
         /// <param name="body">The request body</param>
@@ -77,7 +77,7 @@ namespace OneNexus.Sdk.MLOps.Api.V1.Quota.RetryTenantQuotaOperation
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaOperationResponse_>(requestInfo, global::OneNexus.Sdk.MLOps.Models.Response_TenantQuotaOperationResponse_.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Retry Tenant Quota Operation
+        /// Retry the selected quota operation for the tenant. Inspect GetTenantQuotaOperationfirst to identify the failed operation.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">The request body</param>

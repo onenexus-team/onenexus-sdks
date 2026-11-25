@@ -34,7 +34,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.EvaluateAuthorization
         {
         }
         /// <summary>
-        /// Evaluates one principal/action/resource tuple exactly as the owningservice&apos;s PEP would, without performing the operation itself.
+        /// Tests the supplied principal, action and resource against CAS authorization and returns the decisionand its diagnostic entities. This support operation does not execute the action being evaluated.
         /// </summary>
         /// <returns>A <see cref="global::OneNexus.Sdk.Cas.Support.Models.EvaluateAuthorizationResponse"/></returns>
         /// <param name="body">Request body for `POST /support-api/EvaluateAuthorization`.</param>
@@ -65,7 +65,7 @@ namespace OneNexus.Sdk.Cas.Support.SupportApi.EvaluateAuthorization
             return await RequestAdapter.SendAsync<global::OneNexus.Sdk.Cas.Support.Models.EvaluateAuthorizationResponse>(requestInfo, global::OneNexus.Sdk.Cas.Support.Models.EvaluateAuthorizationResponse.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
-        /// Evaluates one principal/action/resource tuple exactly as the owningservice&apos;s PEP would, without performing the operation itself.
+        /// Tests the supplied principal, action and resource against CAS authorization and returns the decisionand its diagnostic entities. This support operation does not execute the action being evaluated.
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
         /// <param name="body">Request body for `POST /support-api/EvaluateAuthorization`.</param>
