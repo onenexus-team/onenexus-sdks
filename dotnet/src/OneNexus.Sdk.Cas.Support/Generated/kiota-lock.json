@@ -2,7 +2,7 @@
   "descriptionHash": "F01BE1515A85779BCFB1E1D1D3A57FC2C53F6CDA4F81131C230978AAD61891EC11D7CB1570B290BBAE65C39A85BE75CF598201F0EE8965CBE5FAD3DA7EFE1B68",
   "descriptionLocation": "../../../../specs/cas-support/openapi.json",
   "lockFileVersion": "1.0.0",
-  "kiotaVersion": "1.36.1",
+  "kiotaVersion": "1.39.0",
   "clientClassName": "CasSupportGeneratedClient",
   "typeAccessModifier": "Public",
   "clientNamespaceName": "OneNexus.Sdk.Cas.Support",

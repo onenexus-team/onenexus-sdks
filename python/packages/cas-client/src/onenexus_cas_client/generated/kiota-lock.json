@@ -2,7 +2,7 @@
   "descriptionHash": "6096AAEAF9330D1D6964D222624A7C5920117FC09656D36DF4E45B4E18B224459CD55FBE61B8F24288900E663D8D96711F8C10586A08D576DE6E0C490643F3BD",
   "descriptionLocation": "../../../../../../specs/cas/openapi.json",
   "lockFileVersion": "1.0.0",
-  "kiotaVersion": "1.36.1",
+  "kiotaVersion": "1.39.0",
   "clientClassName": "CasGeneratedClient",
   "typeAccessModifier": "Public",
   "clientNamespaceName": "onenexus_cas_client.generated",

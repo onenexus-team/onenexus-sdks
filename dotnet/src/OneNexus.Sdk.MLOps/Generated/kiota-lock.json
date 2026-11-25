@@ -2,7 +2,7 @@
   "descriptionHash": "639FF81AA42ED1E19A9E00F350EC196989675FD4C16D407C51FB18A6C94520FD58C6B79052721A1E61E2E0FEF56A7A948881220194826EA9255979B1E91D61C0",
   "descriptionLocation": "../obj/kiota/openapi.json",
   "lockFileVersion": "1.0.0",
-  "kiotaVersion": "1.36.1",
+  "kiotaVersion": "1.39.0",
   "clientClassName": "MLOpsGeneratedClient",
   "typeAccessModifier": "Public",
   "clientNamespaceName": "OneNexus.Sdk.MLOps",
