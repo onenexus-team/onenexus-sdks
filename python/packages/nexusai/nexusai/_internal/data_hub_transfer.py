@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from .cas_storage import create_runtime_s3_credential
 from ..config import CAS_S3_ROLE_NAME, S3_ENDPOINT_URL
-from ..errors import OneNexusError
+from ..errors import OneNexusAPIError, ProblemType
 from .http import APIClient
 from .results import (
     InternalDownloadResult as DownloadResult,
@@ -291,9 +291,12 @@ class DataHubTransferClient:
 def _require_downloadable_dataset(dataset_id: str, dataset: dict[str, Any]) -> None:
     status = str(dataset.get("status") or "").upper()
     if status not in DOWNLOADABLE_DATASET_STATUSES:
-        raise OneNexusError(
+        raise OneNexusAPIError(
+            409,
+            "Conflict",
             f"Dataset {dataset_id} cannot be downloaded while its status is "
-            f"{status or 'unknown'}"
+            f"{status or 'unknown'}",
+            problem_type=ProblemType.INVALID_STATE,
         )
 
 

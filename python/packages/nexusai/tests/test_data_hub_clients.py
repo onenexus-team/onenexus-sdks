@@ -291,3 +291,19 @@ def test_dataset_download_refuses_symlink_escape_from_destination(
         _download_client(api).download_dataset("dataset-1", str(destination))
 
     assert list(outside.iterdir()) == []
+
+
+def test_dataset_download_refusal_is_an_invalid_state_conflict(monkeypatch, tmp_path):
+    from nexusai.cli_errors import ExitCode, exit_code_for
+    from nexusai.errors import ProblemType
+
+    api = SequencedDatasetAPI("DELETING")
+    monkeypatch.setattr(data_hub_transfer, "download_prefix", _fake_download_prefix([]))
+
+    with pytest.raises(OneNexusAPIError) as raised:
+        _download_client(api).download_dataset("dataset-1", str(tmp_path))
+
+    assert raised.value.status_code == 409
+    assert raised.value.problem_type == ProblemType.INVALID_STATE
+    assert "DELETING" in raised.value.detail
+    assert exit_code_for(raised.value) == ExitCode.VALIDATION_OR_CONFLICT
