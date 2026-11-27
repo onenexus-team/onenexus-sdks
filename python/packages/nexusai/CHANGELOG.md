@@ -3,15 +3,12 @@
 All notable NexusAI changes are recorded here. The project follows semantic
 versioning and the compatibility policy in `COMPATIBILITY.md`.
 
-## Unreleased
+## 1.1.1
 
 - `download_dataset` now refuses datasets that are not `FINALIZED`, `READY` or
   `IN_USE`, and fails closed when a delete starts during the download: files are
   staged, the dataset status is checked again, and nothing is written to the
   destination unless the dataset is still downloadable.
-
-## 1.1.1
-
 - Replaced the expired `api.onenexus.vn` RFC 7807 namespace with the canonical
   MLOps API domain.
 - Kept read compatibility for known problem identifiers returned by older
