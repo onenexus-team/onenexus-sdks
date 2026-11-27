@@ -1,14 +1,22 @@
+import os
+import shutil
 from collections.abc import Callable, Iterable
+from dataclasses import replace
+from pathlib import Path
 from typing import Any, Optional
+from uuid import uuid4
 
 from .cas_storage import create_runtime_s3_credential
 from ..config import CAS_S3_ROLE_NAME, S3_ENDPOINT_URL
+from ..errors import OneNexusError
 from .http import APIClient
 from .results import (
     InternalDownloadResult as DownloadResult,
     InternalUploadResult as UploadResult,
 )
 from .storage import StorageTransferFile, download_prefix, upload_path
+
+DOWNLOADABLE_DATASET_STATUSES = frozenset({"FINALIZED", "READY", "IN_USE"})
 
 
 class DataHubTransferClient:
@@ -249,8 +257,20 @@ class DataHubTransferClient:
         destination_path: str,
     ) -> DownloadResult[dict[str, Any]]:
         dataset = self.get_dataset(dataset_id)
+        _require_downloadable_dataset(dataset_id, dataset)
         credential = self._create_dataset_runtime_credential(dataset_id=dataset_id)
-        files = download_prefix(destination_path, credential)
+        destination = Path(destination_path).expanduser().resolve()
+        destination.mkdir(parents=True, exist_ok=True)
+        staging = destination / f".nexusai-download-{uuid4().hex}"
+        try:
+            staged_files = download_prefix(staging, credential)
+            # A delete may have started while objects were being copied, so
+            # the staged copy is published only if the dataset is still
+            # downloadable once the copy is complete.
+            _require_downloadable_dataset(dataset_id, self.get_dataset(dataset_id))
+            files = _publish_staged_files(staged_files, staging, destination)
+        finally:
+            shutil.rmtree(staging, ignore_errors=True)
         return DownloadResult(resource=dataset, files=files)
 
     def _create_dataset_runtime_credential(self, dataset_id: str) -> dict[str, Any]:
@@ -266,6 +286,30 @@ class DataHubTransferClient:
             prefix=str(target["prefix"]),
             retry_policy=self._api.retry_policy,
         )
+
+
+def _require_downloadable_dataset(dataset_id: str, dataset: dict[str, Any]) -> None:
+    status = str(dataset.get("status") or "").upper()
+    if status not in DOWNLOADABLE_DATASET_STATUSES:
+        raise OneNexusError(
+            f"Dataset {dataset_id} cannot be downloaded while its status is "
+            f"{status or 'unknown'}"
+        )
+
+
+def _publish_staged_files(
+    staged_files: Iterable[StorageTransferFile],
+    staging: Path,
+    destination: Path,
+) -> list[StorageTransferFile]:
+    published: list[StorageTransferFile] = []
+    for file in staged_files:
+        relative_path = Path(file.local_path).relative_to(staging)
+        local_path = destination / relative_path
+        local_path.parent.mkdir(parents=True, exist_ok=True)
+        os.replace(file.local_path, local_path)
+        published.append(replace(file, local_path=str(local_path)))
+    return published
 
 
 def _manifest_from_uploaded_files(
