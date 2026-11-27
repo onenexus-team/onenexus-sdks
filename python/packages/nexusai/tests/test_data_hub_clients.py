@@ -274,3 +274,20 @@ def test_dataset_download_storage_failure_leaves_no_partial_files(
         _download_client(api).download_dataset("dataset-1", str(tmp_path))
 
     assert list(tmp_path.iterdir()) == []
+
+
+def test_dataset_download_refuses_symlink_escape_from_destination(
+    monkeypatch, tmp_path
+):
+    destination = tmp_path / "dest"
+    outside = tmp_path / "outside"
+    destination.mkdir()
+    outside.mkdir()
+    (destination / "nested").symlink_to(outside, target_is_directory=True)
+    api = SequencedDatasetAPI("READY", "READY")
+    monkeypatch.setattr(data_hub_transfer, "download_prefix", _fake_download_prefix([]))
+
+    with pytest.raises(ValueError, match="Unsafe object key"):
+        _download_client(api).download_dataset("dataset-1", str(destination))
+
+    assert list(outside.iterdir()) == []

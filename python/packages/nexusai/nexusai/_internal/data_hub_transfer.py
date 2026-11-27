@@ -305,7 +305,11 @@ def _publish_staged_files(
     published: list[StorageTransferFile] = []
     for file in staged_files:
         relative_path = Path(file.local_path).relative_to(staging)
-        local_path = destination / relative_path
+        local_path = (destination / relative_path).resolve()
+        if not local_path.is_relative_to(destination):
+            raise ValueError(
+                f"Unsafe object key returned by storage: {file.object_key!r}"
+            )
         local_path.parent.mkdir(parents=True, exist_ok=True)
         os.replace(file.local_path, local_path)
         published.append(replace(file, local_path=str(local_path)))
